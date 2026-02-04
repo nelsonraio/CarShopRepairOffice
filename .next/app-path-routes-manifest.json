@@ -1,0 +1,22 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/agenda/page": "/agenda",
+  "/api/agendamentos/route": "/api/agendamentos",
+  "/api/clientes/route": "/api/clientes",
+  "/api/veiculos/route": "/api/veiculos",
+  "/balanco/page": "/balanco",
+  "/clientes/[id]/page": "/clientes/[id]",
+  "/clientes/page": "/clientes",
+  "/faturacao/page": "/faturacao",
+  "/favicon.ico/route": "/favicon.ico",
+  "/kanban/page": "/kanban",
+  "/orcamentos/novo/page": "/orcamentos/novo",
+  "/orcamentos/page": "/orcamentos",
+  "/ordens-trabalho/novo/page": "/ordens-trabalho/novo",
+  "/ordens-trabalho/page": "/ordens-trabalho",
+  "/page": "/",
+  "/pecas/page": "/pecas",
+  "/tabelas/page": "/tabelas",
+  "/veiculos/page": "/veiculos"
+}

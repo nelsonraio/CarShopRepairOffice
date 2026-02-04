@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../../../generated/client';
 
-const prisma = new PrismaClient();
+// @ts-ignore
+const prisma = new PrismaClient({
+  log: ['error'],
+});
 
 export async function GET() {
   try {
     const agendamentos = await prisma.agendamentos.findMany({
+      // @ts-ignore
       include: {
         clientes: true,
         veiculos: true,
@@ -21,7 +25,7 @@ export async function GET() {
 
     // Transform to match Appointment interface
     interface Agendamento {
-      id: number;
+      id: bigint;
       cliente_id: number;
       veiculo_id: number;
       titulo: string;
@@ -31,7 +35,7 @@ export async function GET() {
         nome: string;
       } | null;
       descricao?: string | null;
-      estado: 'agendado' | 'em_andamento';
+      estado: string | null;
       notas?: string | null;
     }
 

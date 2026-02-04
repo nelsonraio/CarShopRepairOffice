@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import { PrismaClient } from '../../../generated/client';
+// @ts-ignore
+const prisma = new PrismaClient({
+  log: ['error'],
+});
 
 export async function GET() {
   try {
@@ -10,14 +13,14 @@ export async function GET() {
     });
 
     // Transform to match Cliente interface
-    const transformedClientes = clientes.map((cliente: { id: { toString: () => any; }; nome: any; email: any; telefone: any; nif: any; endereco: any; perfil: string; data_registo: { getFullYear: () => { (): any; new(): any; toString: { (): any; new(): any; }; }; }; total_gasto: any; visitas: any; }) => ({
+    const transformedClientes = clientes.map((cliente) => ({
       id: cliente.id.toString(),
       nome: cliente.nome,
       email: cliente.email || '',
       telefone: cliente.telefone,
       nif: cliente.nif || '',
       endereco: cliente.endereco || '',
-      perfil: cliente.perfil === 'TVDE_Interno' ? 'TVDE Interno' : cliente.perfil,
+      perfil: cliente.perfil === 'TVDE_Interno' ? 'TVDE Interno' : (cliente.perfil || 'Normal'),
       veiculos: 0, // TODO: Count vehicles for this client
       dataRegistro: cliente.data_registo ? cliente.data_registo.getFullYear().toString() : new Date().getFullYear().toString(),
       totalGasto: Number(cliente.total_gasto),

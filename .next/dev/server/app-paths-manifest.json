@@ -1,0 +1,15 @@
+{
+  "/agenda/page": "app/agenda/page.js",
+  "/api/agendamentos/route": "app/api/agendamentos/route.js",
+  "/api/clientes/route": "app/api/clientes/route.js",
+  "/api/veiculos/route": "app/api/veiculos/route.js",
+  "/balanco/page": "app/balanco/page.js",
+  "/clientes/page": "app/clientes/page.js",
+  "/faturacao/page": "app/faturacao/page.js",
+  "/kanban/page": "app/kanban/page.js",
+  "/orcamentos/page": "app/orcamentos/page.js",
+  "/ordens-trabalho/page": "app/ordens-trabalho/page.js",
+  "/page": "app/page.js",
+  "/pecas/page": "app/pecas/page.js",
+  "/veiculos/page": "app/veiculos/page.js"
+}
