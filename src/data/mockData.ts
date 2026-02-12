@@ -8,7 +8,7 @@ export interface Cliente {
   telefone: string;
   nif: string;
   endereco: string;
-  perfil: 'Normal' | 'TVDE Interno' | 'Empresa';
+  perfil: 'Normal' | 'TVDE Interno' | 'TVDE Externo' | 'Empresa';
   veiculos: number;
   dataRegistro: string;
   totalGasto: number;

@@ -1,17 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import Sidebar from "../../components/Sidebar";
 import ClientTable from "../../components/ClientTable";
 import ClientModal from "../../components/ClientModal";
-import { Cliente } from "../../data/mockData";
+import type { Cliente } from "../../data/mockData";
 
 export default function ClientesPage() {
   const [clients, setClients] = useState<Cliente[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
 
   useEffect(() => {
     const fetchClients = async () => {
@@ -32,16 +34,37 @@ export default function ClientesPage() {
     fetchClients();
   }, []);
 
-  const handleAddClient = (newClient: Omit<Cliente, 'id' | 'dataRegistro' | 'totalGasto' | 'visitas'>) => {
-    const client: Cliente = {
-      ...newClient,
-      id: Date.now().toString(),
-      dataRegistro: new Date().getFullYear().toString(),
-      totalGasto: 0,
-      visitas: 0
-    };
-    setClients(prev => [...prev, client]);
+  const handleAddClient = async (newClient: Omit<Cliente, 'id' | 'dataRegistro' | 'totalGasto' | 'visitas'>) => {
+    try {
+      const response = await fetch('/api/clientes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newClient)
+      });
+      if (response.ok) {
+        const savedClient = await response.json();
+        setClients(prev => [...prev, savedClient]);
+      }
+    } catch (err) {
+      console.error('Failed to add client:', err);
+    }
   };
+
+
+
+  const handleDelete = async (id: string) => {
+    try {
+      const response = await fetch(`/api/clientes/${id}`, {
+        method: 'DELETE'
+      });
+      if (response.ok) {
+        setClients(prev => prev.filter(c => c.id !== id));
+      }
+    } catch (err) {
+      console.error('Failed to delete client:', err);
+    }
+  };
+
 
   const filteredClients = clients.filter(client =>
     client.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -60,15 +83,15 @@ export default function ClientesPage() {
             <h2 className="text-3xl font-bold text-gray-100 leading-tight">Clientes</h2>
             <p className="mt-1 text-gray-400">Gerencie a sua base de clientes</p>
           </div>
-          <button
-            onClick={() => setIsModalOpen(true)}
+          <Link
+            href="/clientes/novo"
             className="px-4 py-2 bg-brand-yellow-dark text-white font-bold hover:bg-yellow-600 transition-colors rounded-none flex items-center shadow-md"
           >
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
             </svg>
             Novo Cliente
-          </button>
+          </Link>
         </div>
 
         {/* Filters & Search */}
@@ -99,15 +122,15 @@ export default function ClientesPage() {
             Erro ao carregar clientes: {error}
           </div>
         ) : (
-          <ClientTable clients={filteredClients} />
+          <ClientTable
+            clients={filteredClients}
+            onDelete={handleDelete}
+          />
+
         )}
       </main>
 
-      <ClientModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onAddClient={handleAddClient}
-      />
     </div>
+
   );
 }

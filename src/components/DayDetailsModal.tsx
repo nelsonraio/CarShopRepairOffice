@@ -35,7 +35,7 @@ const DayDetailsModal: React.FC<DayDetailsModalProps> = ({ isOpen, onClose, day,
           </button>
         </div>
 
-        <div className="overflow-hidden">
+        <div className="overflow-y-auto max-h-[50vh] pr-2">
           <table className="w-full text-sm text-left">
             <thead className="text-xs text-gray-300 uppercase bg-gray-700">
               <tr>

@@ -139,7 +139,7 @@ export default function BalancoPage() {
 
   const calculateTotals = (data: BalanceProcess[]) => {
     const totalEntradas = data.reduce((sum, item) => sum + item.valorEntrada, 0);
-    const totalSaidas = data.reduce((sum, item) => sum + item.gastoPecas, 0);
+    const totalSaidas = data.reduce((sum, item) => sum + item.gastoPecas + item.maoObra, 0);
     const saldoLiquido = totalEntradas - totalSaidas;
 
     return {

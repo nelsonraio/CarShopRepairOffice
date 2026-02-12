@@ -64,7 +64,10 @@ export default function FaturacaoPage() {
       if (dateFilter === "todos") return true;
 
       // Parse date from DD/MM/YYYY format
-      const [day, month, year] = invoice.issueDate.split('/').map(Number);
+      const parts = invoice.issueDate.split('/').map(Number);
+      const day = parts[0] || 1;
+      const month = parts[1] || 1;
+      const year = parts[2] || new Date().getFullYear();
       const invoiceDate = new Date(year, month - 1, day);
       const now = new Date();
 

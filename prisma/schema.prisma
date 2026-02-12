@@ -1,637 +1,438 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
-  engineType = "library"
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-model Utilizadores {
-  id                  Int      @id @default(autoincrement())
-  nome_utilizador     String   @unique @db.VarChar(50)
-  email               String   @unique @db.VarChar(255)
-  hash_palavra_passe  String   @db.VarChar(255)
-  nome_completo       String   @db.VarChar(100)
-  papel               Papel
-  ativo               Boolean  @default(true)
-  ultimo_login        DateTime? @db.Timestamp(0)
-  criado_em           DateTime @default(now()) @db.Timestamp(0)
-  atualizado_em       DateTime @default(now()) @updatedAt @db.Timestamp(0)
-
-  // Relations
-  mecanicos           Mecanicos?
-  log_auditoria       LogAuditoria[]
-  configuracoes_sistema ConfiguracoesSistema[]
-
-  @@map("utilizadores")
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model agendamentos {
+  id               BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  cliente_id       Int
+  cliente          clientes  @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
+  mecanico_id      Int?
+  matricula        String?   @db.VarChar(50)
+  titulo           String    @db.VarChar(255)
+  descricao        String?   @db.Text
+  data_agendamento DateTime  @db.Date
+  hora_inicio      DateTime  @db.Time(0)
+  estado           String?   @default("agendado") @db.VarChar(20)
+  prioridade       String?   @default("normal") @db.VarChar(10)
+  criado_em        DateTime? @default(now()) @db.Timestamp(0)
+  atualizado_em    DateTime? @default(now()) @db.Timestamp(0)
+  criado_por       Int?
+  atualizado_por   Int?
+  marca            String?   @db.VarChar(150)
+  modelo           String?   @db.VarChar(150)
+  ano              Int?
 }
 
-model Clientes {
-  id            Int      @id @default(autoincrement())
-  nome          String   @db.VarChar(100)
-  email         String?  @db.VarChar(255)
-  telefone      String   @db.VarChar(20)
-  nif           String?  @unique @db.VarChar(20)
-  endereco      String?  @db.Text
-  perfil        Perfil   @default(Normal)
-  data_registo  DateTime @default(now()) @db.Date
-  total_gasto   Decimal  @default(0.00) @db.Decimal(10, 2)
-  visitas       Int      @default(0)
-  notas         String?  @db.Text
-  ativo         Boolean  @default(true)
-  criado_em     DateTime @default(now()) @db.Timestamp(0)
-  atualizado_em DateTime @default(now()) @updatedAt @db.Timestamp(0)
-
-  // Relations
-  veiculos      Veiculos[]
-  agendamentos  Agendamentos[]
-  orcamentos    Orcamentos[]
-  ordens_trabalho OrdensTrabalho[]
-  faturas       Faturas[]
-
-  @@map("clientes")
-}
-
-model Veiculos {
-  id                  BigInt   @id @default(autoincrement())
-  cliente_id          Int
-  marca               String   @db.VarChar(50)
-  modelo              String   @db.VarChar(50)
-  matricula           String   @unique @db.VarChar(20)
-  ano                 Int?
-  numero_chassis      String?  @unique @db.VarChar(17)
-  tipo_motor          String?  @db.VarChar(50)
-  tipo_combustivel    TipoCombustivel?
-  estado              EstadoVeiculo @default(disponivel)
-  quilometragem       Int      @default(0)
-  ultima_intervencao  DateTime? @db.Date
-  proxima_revisao     DateTime? @db.Date
-  companhia_seguros   String?  @db.VarChar(100)
-  apolice_seguro      String?  @db.VarChar(50)
-  validade_seguro     DateTime? @db.Date
-  notas               String?  @db.Text
-  criado_em           DateTime @default(now()) @db.Timestamp(0)
-  atualizado_em       DateTime @default(now()) @updatedAt @db.Timestamp(0)
-
-  // Relations
-  cliente             Clientes @relation(fields: [cliente_id], references: [id])
-  agendamentos        Agendamentos[]
-  orcamentos          Orcamentos[]
-  ordens_trabalho     OrdensTrabalho[]
-
-  @@map("veiculos")
-}
-
-model Mecanicos {
-  id                Int      @id @default(autoincrement())
-  utilizador_id     Int?     @unique
-  nome              String   @db.VarChar(100)
-  especialidade     String?  @db.VarChar(100)
-  telefone          String?  @db.VarChar(20)
-  email             String?  @db.VarChar(255)
-  tarifa_horaria    Decimal? @db.Decimal(8, 2)
-  ativo             Boolean  @default(true)
-  data_contratacao  DateTime? @db.Date
-  notas             String?  @db.Text
-  criado_em         DateTime @default(now()) @db.Timestamp(0)
-  atualizado_em     DateTime @default(now()) @updatedAt @db.Timestamp(0)
-
-  // Relations
-  utilizador        Utilizadores? @relation(fields: [utilizador_id], references: [id])
-  agendamentos      Agendamentos[]
-  ordens_trabalho   OrdensTrabalho[]
-
-  @@map("mecanicos")
-}
-
-model Fornecedores {
-  id                Int      @id @default(autoincrement())
-  nome              String   @db.VarChar(100)
-  pessoa_contato    String?  @db.VarChar(100)
-  email             String?  @db.VarChar(255)
-  telefone          String?  @db.VarChar(20)
-  endereco          String?  @db.Text
-  nif               String?  @db.VarChar(20)
-  termos_pagamento  String?  @db.VarChar(50)
-  ativo             Boolean  @default(true)
-  notas             String?  @db.Text
-  criado_em         DateTime @default(now()) @db.Timestamp(0)
-  atualizado_em     DateTime @default(now()) @updatedAt @db.Timestamp(0)
-  criado_por        Int?
-
-  // Relations
-  pecas             Pecas[]
-  transacoes_pecas  TransacoesPecas[]
-
-  @@map("fornecedores")
-}
-
-model Pecas {
-  id                    BigInt   @id @default(autoincrement())
-  referencia            String   @unique @db.VarChar(50)
-  nome                  String   @db.VarChar(255)
-  descricao             String?  @db.Text
-  categoria             String   @db.VarChar(50)
-  fornecedor_id         Int?
-  custo_unitario        Decimal  @db.Decimal(10, 2)
-  preco_venda           Decimal  @db.Decimal(10, 2)
-  quantidade_stock      Int      @default(0)
-  nivel_stock_minimo    Int      @default(0)
-  nivel_stock_maximo    Int?
-  localizacao           String?  @db.VarChar(100)
-  veiculos_compativeis  String?  @db.Text
-  ativo                 Boolean  @default(true)
-  notas                 String?  @db.Text
-  criado_em             DateTime @default(now()) @db.Timestamp(0)
-  atualizado_em         DateTime @default(now()) @updatedAt @db.Timestamp(0)
-  criado_por            Int?
-
-  // Relations
-  fornecedor            Fornecedores? @relation(fields: [fornecedor_id], references: [id])
-  transacoes_pecas      TransacoesPecas[]
-  itens_orcamento       ItensOrcamento[]
-  itens_ordem_trabalho  ItensOrdemTrabalho[]
-  pecas_ordem_trabalho  PecasOrdemTrabalho[]
-
-  @@map("pecas")
-}
-
-model TransacoesPecas {
-  id                  BigInt     @id @default(autoincrement())
-  peca_id             BigInt
-  tipo_transacao      TipoTransacao
-  quantidade          Int
-  custo_unitario      Decimal?   @db.Decimal(10, 2)
-  custo_total         Decimal?   @db.Decimal(10, 2)
-  documento_referencia String?   @db.VarChar(50)
-  fornecedor_id       Int?
-  notas               String?    @db.Text
-  criado_em           DateTime   @default(now()) @db.Timestamp(0)
-  criado_por          Int?
-
-  // Relations
-  peca                Pecas @relation(fields: [peca_id], references: [id])
-  fornecedor          Fornecedores? @relation(fields: [fornecedor_id], references: [id])
-
-  @@map("transacoes_pecas")
-}
-
-model CategoriasServico {
-  id                BigInt   @id @default(autoincrement())
-  nome              String   @db.VarChar(100)
-  descricao         String?  @db.Text
-  duracao_estimada  DateTime? @db.Time(0)
-  ativo             Boolean  @default(true)
-  criado_em         DateTime @default(now()) @db.Timestamp(0)
-
-  // Relations
-  servicos          Servicos[]
-
-  @@map("categorias_servico")
-}
-
-model Servicos {
-  id                BigInt   @id @default(autoincrement())
-  categoria_id      BigInt?
-  nome              String   @db.VarChar(255)
-  descricao         String?  @db.Text
-  preco_base        Decimal? @db.Decimal(10, 2)
-  duracao_estimada  DateTime? @db.Time(0)
-  requer_pecas      Boolean  @default(false)
-  ativo             Boolean  @default(true)
-  criado_em         DateTime @default(now()) @db.Timestamp(0)
-  atualizado_em     DateTime @default(now()) @updatedAt @db.Timestamp(0)
-
-  // Relations
-  categoria         CategoriasServico? @relation(fields: [categoria_id], references: [id])
-  agendamentos      Agendamentos[]
-  itens_orcamento   ItensOrcamento[]
-  itens_ordem_trabalho ItensOrdemTrabalho[]
-
-  @@map("servicos")
-}
-
-model Agendamentos {
-  id                BigInt     @id @default(autoincrement())
-  cliente_id        Int
-  veiculo_id        BigInt
-  mecanico_id       Int?
-  servico_id        BigInt?
-  titulo            String     @db.VarChar(255)
-  descricao         String?    @db.Text
-  data_agendamento  DateTime   @db.Date
-  hora_inicio       DateTime   @db.Time(0)
-  hora_fim          DateTime?  @db.Time(0)
-  estado            EstadoAgendamento @default(agendado)
-  prioridade        Prioridade @default(normal)
-  custo_estimado    Decimal?   @db.Decimal(10, 2)
-  notas             String?    @db.Text
-  criado_em         DateTime   @default(now()) @db.Timestamp(0)
-  atualizado_em     DateTime   @default(now()) @updatedAt @db.Timestamp(0)
-  criado_por        Int?
-  atualizado_por    Int?
-
-  // Relations
-  cliente           Clientes @relation(fields: [cliente_id], references: [id])
-  veiculo           Veiculos @relation(fields: [veiculo_id], references: [id])
-  mecanico          Mecanicos? @relation(fields: [mecanico_id], references: [id])
-  servico           Servicos? @relation(fields: [servico_id], references: [id])
-  ordens_trabalho   OrdensTrabalho[]
-
-  @@map("agendamentos")
-}
-
-model Orcamentos {
-  id                BigInt     @id @default(autoincrement())
-  ref_orcamento     String     @unique @db.VarChar(20)
-  cliente_id        Int
-  veiculo_id        BigInt
-  preparado_por     Int?
-  data_emissao      DateTime?  @db.Date
-  data_expiracao    DateTime?  @db.Date
-  estado            EstadoOrcamento @default(pendente)
-  total_pecas       Decimal    @default(0.00) @db.Decimal(10, 2)
-  total_mao_obra    Decimal    @default(0.00) @db.Decimal(10, 2)
-  total_desconto    Decimal    @default(0.00) @db.Decimal(10, 2)
-  total_imposto     Decimal    @default(0.00) @db.Decimal(10, 2)
-  total_geral       Decimal    @db.Decimal(10, 2)
-  notas             String?    @db.Text
-  data_aprovacao    DateTime?  @db.Date
-  aprovado_por      Int?
-  criado_em         DateTime   @default(now()) @db.Timestamp(0)
-  atualizado_em     DateTime   @default(now()) @updatedAt @db.Timestamp(0)
-
-  // Relations
-  cliente           Clientes @relation(fields: [cliente_id], references: [id])
-  veiculo           Veiculos @relation(fields: [veiculo_id], references: [id])
-  itens_orcamento   ItensOrcamento[]
-  ordens_trabalho   OrdensTrabalho[]
-
-  @@map("orcamentos")
-}
-
-model ItensOrcamento {
-  id                BigInt     @id @default(autoincrement())
-  orcamento_id      BigInt
-  tipo_item         TipoItem
-  servico_id        BigInt?
-  peca_id           BigInt?
-  descricao         String     @db.Text
-  quantidade        Decimal    @default(1.00) @db.Decimal(8, 2)
-  preco_unitario    Decimal    @db.Decimal(10, 2)
-  percentual_desconto Decimal? @default(0.00) @db.Decimal(5, 2)
-  valor_desconto    Decimal    @default(0.00) @db.Decimal(10, 2)
-  percentual_imposto Decimal?  @default(23.00) @db.Decimal(5, 2)
-  valor_imposto     Decimal    @default(0.00) @db.Decimal(10, 2)
-  valor_total       Decimal    @db.Decimal(10, 2)
-  notas             String?    @db.Text
-  criado_em         DateTime   @default(now()) @db.Timestamp(0)
-
-  // Relations
-  orcamento         Orcamentos @relation(fields: [orcamento_id], references: [id], onDelete: Cascade)
-  servico           Servicos? @relation(fields: [servico_id], references: [id])
-  peca              Pecas? @relation(fields: [peca_id], references: [id])
-
-  @@map("itens_orcamento")
-}
-
-model OrdensTrabalho {
-  id                    BigInt     @id @default(autoincrement())
-  ref_ordem_trabalho    String     @unique @db.VarChar(20)
-  cliente_id            Int
-  veiculo_id            BigInt
-  mecanico_id           Int?
-  orcamento_id          BigInt?
-  agendamento_id        BigInt?
-  data_inicio           DateTime?  @db.Date
-  data_conclusao        DateTime?  @db.Date
-  estado                EstadoOrdemTrabalho @default(em_andamento)
-  quilometragem_servico Int?
-  descricao_problema    String?    @db.Text
-  trabalho_realizado    String?    @db.Text
-  recomendacoes         String?    @db.Text
-  total_pecas           Decimal    @default(0.00) @db.Decimal(10, 2)
-  total_mao_obra        Decimal    @default(0.00) @db.Decimal(10, 2)
-  total_desconto        Decimal    @default(0.00) @db.Decimal(10, 2)
-  total_imposto         Decimal    @default(0.00) @db.Decimal(10, 2)
-  total_geral           Decimal    @db.Decimal(10, 2)
-  criado_em             DateTime   @default(now()) @db.Timestamp(0)
-  atualizado_em         DateTime   @default(now()) @updatedAt @db.Timestamp(0)
-  criado_por            Int?
-  atualizado_por        Int?
-
-  // Relations
-  cliente               Clientes @relation(fields: [cliente_id], references: [id])
-  veiculo               Veiculos @relation(fields: [veiculo_id], references: [id])
-  mecanico              Mecanicos? @relation(fields: [mecanico_id], references: [id])
-  orcamento             Orcamentos? @relation(fields: [orcamento_id], references: [id])
-  agendamento           Agendamentos? @relation(fields: [agendamento_id], references: [id])
-  itens_ordem_trabalho  ItensOrdemTrabalho[]
-  pecas_ordem_trabalho  PecasOrdemTrabalho[]
-  faturas               Faturas[]
-  cartoes_kanban       CartoesKanban[]
-
-  @@map("ordens_trabalho")
-}
-
-model ItensOrdemTrabalho {
-  id                BigInt     @id @default(autoincrement())
-  ordem_trabalho_id BigInt
-  tipo_item         TipoItem
-  servico_id        BigInt?
-  peca_id           BigInt?
-  descricao         String     @db.Text
-  quantidade        Decimal    @default(1.00) @db.Decimal(8, 2)
-  preco_unitario    Decimal    @db.Decimal(10, 2)
-  horas_trabalho    Decimal?   @db.Decimal(6, 2)
-  tarifa_horaria    Decimal?   @db.Decimal(8, 2)
-  percentual_desconto Decimal? @default(0.00) @db.Decimal(5, 2)
-  valor_desconto    Decimal    @default(0.00) @db.Decimal(10, 2)
-  percentual_imposto Decimal?  @default(23.00) @db.Decimal(5, 2)
-  valor_imposto     Decimal    @default(0.00) @db.Decimal(10, 2)
-  valor_total       Decimal    @db.Decimal(10, 2)
-  notas             String?    @db.Text
-  criado_em         DateTime   @default(now()) @db.Timestamp(0)
-
-  // Relations
-  ordem_trabalho    OrdensTrabalho @relation(fields: [ordem_trabalho_id], references: [id], onDelete: Cascade)
-  servico           Servicos? @relation(fields: [servico_id], references: [id])
-  peca              Pecas? @relation(fields: [peca_id], references: [id])
-
-  @@map("itens_ordem_trabalho")
-}
-
-model PecasOrdemTrabalho {
-  id                BigInt     @id @default(autoincrement())
-  ordem_trabalho_id BigInt
-  peca_id           BigInt
-  quantidade_utilizada Decimal @db.Decimal(8, 2)
-  custo_unitario    Decimal    @db.Decimal(10, 2)
-  custo_total       Decimal    @db.Decimal(10, 2)
-  notas             String?    @db.Text
-  criado_em         DateTime   @default(now()) @db.Timestamp(0)
-
-  // Relations
-  ordem_trabalho    OrdensTrabalho @relation(fields: [ordem_trabalho_id], references: [id], onDelete: Cascade)
-  peca              Pecas @relation(fields: [peca_id], references: [id])
-
-  @@map("pecas_ordem_trabalho")
-}
-
-model Faturas {
-  id                BigInt     @id @default(autoincrement())
-  numero_fatura     String     @unique @db.VarChar(20)
-  cliente_id        Int
-  ordem_trabalho_id BigInt?
-  data_emissao      DateTime?  @db.Date
-  data_vencimento   DateTime?  @db.Date
-  data_pagamento    DateTime?  @db.Date
-  estado            EstadoFatura @default(pendente)
-  subtotal          Decimal    @db.Decimal(10, 2)
-  valor_imposto     Decimal    @default(0.00) @db.Decimal(10, 2)
-  valor_desconto    Decimal    @default(0.00) @db.Decimal(10, 2)
-  valor_total       Decimal    @db.Decimal(10, 2)
-  valor_pago        Decimal    @default(0.00) @db.Decimal(10, 2)
-  notas             String?    @db.Text
-  criado_em         DateTime   @default(now()) @db.Timestamp(0)
-  atualizado_em     DateTime   @default(now()) @updatedAt @db.Timestamp(0)
-  criado_por        Int?
-
-  // Relations
-  cliente           Clientes @relation(fields: [cliente_id], references: [id])
-  ordem_trabalho    OrdensTrabalho? @relation(fields: [ordem_trabalho_id], references: [id])
-  itens_fatura      ItensFatura[]
-  pagamentos        Pagamentos[]
-
-  @@map("faturas")
-}
-
-model ItensFatura {
-  id                BigInt     @id @default(autoincrement())
-  fatura_id         BigInt
-  item_ordem_trabalho_id BigInt?
-  descricao         String     @db.Text
-  quantidade        Decimal    @default(1.00) @db.Decimal(8, 2)
-  preco_unitario    Decimal    @db.Decimal(10, 2)
-  valor_desconto    Decimal    @default(0.00) @db.Decimal(10, 2)
-  valor_imposto     Decimal    @default(0.00) @db.Decimal(10, 2)
-  valor_total       Decimal    @db.Decimal(10, 2)
-  criado_em         DateTime   @default(now()) @db.Timestamp(0)
-
-  // Relations
-  fatura            Faturas @relation(fields: [fatura_id], references: [id], onDelete: Cascade)
-
-  @@map("itens_fatura")
-}
-
-model Pagamentos {
-  id                BigInt     @id @default(autoincrement())
-  fatura_id         BigInt
-  data_pagamento    DateTime?  @db.Date
-  valor             Decimal    @db.Decimal(10, 2)
-  metodo_pagamento  MetodoPagamento
-  referencia        String?    @db.VarChar(100)
-  notas             String?    @db.Text
-  criado_em         DateTime   @default(now()) @db.Timestamp(0)
-  criado_por        Int?
-
-  // Relations
-  fatura            Faturas @relation(fields: [fatura_id], references: [id])
-
-  @@map("pagamentos")
-}
-
-model ColunasKanban {
-  id                BigInt   @id @default(autoincrement())
-  nome              String   @db.VarChar(100)
-  descricao         String?  @db.Text
-  posicao           Int
-  cor               String?  @db.VarChar(7)
-  ativo             Boolean  @default(true)
-  criado_em         DateTime @default(now()) @db.Timestamp(0)
-  atualizado_em     DateTime @default(now()) @updatedAt @db.Timestamp(0)
-
-  // Relations
-  cartoes_kanban    CartoesKanban[]
-  historico_cartao_kanban HistoricoCartaoKanban[]
-
-  @@map("colunas_kanban")
-}
-
-model CartoesKanban {
-  id                BigInt     @id @default(autoincrement())
-  coluna_id         BigInt
-  ordem_trabalho_id BigInt?
-  titulo            String     @db.VarChar(255)
-  descricao         String?    @db.Text
-  prioridade        Prioridade @default(normal)
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model cartoes_kanban {
+  id                BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  coluna_id         Int
+  ordem_trabalho_id Int?
+  titulo            String    @db.VarChar(255)
+  descricao         String?   @db.Text
+  prioridade        String?   @default("normal") @db.VarChar(10)
   atribuido_a       Int?
-  data_limite       DateTime?  @db.Date
-  etiquetas         String?    @db.Text
+  data_limite       DateTime? @db.Date
+  etiquetas         String?   @db.Text
   posicao           Int
-  criado_em         DateTime   @default(now()) @db.Timestamp(0)
-  atualizado_em     DateTime   @default(now()) @updatedAt @db.Timestamp(0)
+  criado_em         DateTime? @default(now()) @db.Timestamp(0)
+  atualizado_em     DateTime? @default(now()) @db.Timestamp(0)
   criado_por        Int?
   atualizado_por    Int?
-
-  // Relations
-  coluna            ColunasKanban @relation(fields: [coluna_id], references: [id])
-  ordem_trabalho    OrdensTrabalho? @relation(fields: [ordem_trabalho_id], references: [id])
-  historico_cartao_kanban HistoricoCartaoKanban[]
-
-  @@map("cartoes_kanban")
 }
 
-model HistoricoCartaoKanban {
-  id                BigInt     @id @default(autoincrement())
-  cartao_id         BigInt
-  coluna_origem_id  BigInt?
-  coluna_destino_id BigInt
+model categorias_servico {
+  id               BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  nome             String    @db.VarChar(100)
+  descricao        String?   @db.Text
+  duracao_estimada DateTime? @db.Time(0)
+  ativo            Boolean?  @default(true)
+  criado_em        DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model clientes {
+  id            Int              @id @default(autoincrement())
+  nome          String           @db.VarChar(100)
+  email         String?          @db.VarChar(255)
+  telefone      String           @db.VarChar(20)
+  nif           String?          @unique(map: "nif") @db.VarChar(20)
+  endereco      String?          @db.Text
+  perfil        clientes_perfil? @default(Normal)
+  data_registo  DateTime?        @default(dbgenerated("(curdate())")) @db.Date
+  total_gasto   Decimal?         @default(0.00) @db.Decimal(10, 2)
+  visitas       Int?             @default(0)
+  notas         String?          @db.Text
+  ativo         Boolean?         @default(true)
+  criado_em     DateTime?        @default(now()) @db.Timestamp(0)
+  atualizado_em DateTime?        @default(now()) @db.Timestamp(0)
+  veiculos      veiculos[]
+  agendamentos  agendamentos[]
+  orcamentos    orcamentos[]
+}
+
+model colunas_kanban {
+  id            BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  nome          String    @db.VarChar(100)
+  descricao     String?   @db.Text
+  posicao       Int
+  cor           String?   @db.VarChar(7)
+  ativo         Boolean?  @default(true)
+  criado_em     DateTime? @default(now()) @db.Timestamp(0)
+  atualizado_em DateTime? @default(now()) @db.Timestamp(0)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model configuracoes_sistema {
+  id                 BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  chave_configuracao String    @unique(map: "chave_configuracao") @db.VarChar(100)
+  valor_configuracao String?   @db.Text
+  tipo_configuracao  String?   @default("string") @db.VarChar(20)
+  descricao          String?   @db.Text
+  sistema            Boolean?  @default(false)
+  atualizado_em      DateTime? @default(now()) @db.Timestamp(0)
+  atualizado_por     Int?
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model faturas {
+  id                BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  numero_fatura     String    @unique(map: "numero_fatura") @db.VarChar(20)
+  cliente_id        Int
+  ordem_trabalho_id Int?
+  data_emissao      DateTime? @db.Date
+  data_vencimento   DateTime? @db.Date
+  data_pagamento    DateTime? @db.Date
+  estado            String?   @default("pendente") @db.VarChar(20)
+  subtotal          Decimal   @db.Decimal(10, 2)
+  valor_imposto     Decimal?  @default(0.00) @db.Decimal(10, 2)
+  valor_desconto    Decimal?  @default(0.00) @db.Decimal(10, 2)
+  valor_total       Decimal   @db.Decimal(10, 2)
+  valor_pago        Decimal?  @default(0.00) @db.Decimal(10, 2)
+  notas             String?   @db.Text
+  criado_em         DateTime? @default(now()) @db.Timestamp(0)
+  atualizado_em     DateTime? @default(now()) @db.Timestamp(0)
+  criado_por        Int?
+}
+
+model fornecedores {
+  id               Int       @id @default(autoincrement())
+  nome             String    @db.VarChar(100)
+  pessoa_contato   String?   @db.VarChar(100)
+  email            String?   @db.VarChar(255)
+  telefone         String?   @db.VarChar(20)
+  endereco         String?   @db.Text
+  nif              String?   @db.VarChar(20)
+  termos_pagamento String?   @db.VarChar(50)
+  ativo            Boolean?  @default(true)
+  notas            String?   @db.Text
+  criado_em        DateTime? @default(now()) @db.Timestamp(0)
+  atualizado_em    DateTime? @default(now()) @db.Timestamp(0)
+  criado_por       Int?
+}
+
+model historico_cartao_kanban {
+  id                BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  cartao_id         Int
+  coluna_origem_id  Int?
+  coluna_destino_id Int
   movido_por        Int?
-  movido_em         DateTime   @default(now()) @db.Timestamp(0)
-  notas             String?    @db.Text
-
-  // Relations
-  cartao            CartoesKanban @relation(fields: [cartao_id], references: [id], onDelete: Cascade)
-  coluna_origem     ColunasKanban? @relation("historico_origem", fields: [coluna_origem_id], references: [id])
-  coluna_destino    ColunasKanban @relation("historico_destino", fields: [coluna_destino_id], references: [id])
-
-  @@map("historico_cartao_kanban")
+  movido_em         DateTime? @default(now()) @db.Timestamp(0)
+  notas             String?   @db.Text
 }
 
-model ConfiguracoesSistema {
-  id                BigInt   @id @default(autoincrement())
-  chave_configuracao String  @unique @db.VarChar(100)
-  valor_configuracao String? @db.Text
-  tipo_configuracao TipoConfiguracao @default(string)
-  descricao         String?  @db.Text
-  sistema           Boolean  @default(false)
-  atualizado_em     DateTime @default(now()) @updatedAt @db.Timestamp(0)
-  atualizado_por    Int?
-
-  // Relations
-  atualizado_por_utilizador Utilizadores? @relation(fields: [atualizado_por], references: [id])
-
-  @@map("configuracoes_sistema")
+model itens_fatura {
+  id                     BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  fatura_id              Int
+  item_ordem_trabalho_id Int?
+  descricao              String    @db.Text
+  quantidade             Decimal?  @default(1.00) @db.Decimal(8, 2)
+  preco_unitario         Decimal   @db.Decimal(10, 2)
+  valor_desconto         Decimal?  @default(0.00) @db.Decimal(10, 2)
+  valor_imposto          Decimal?  @default(0.00) @db.Decimal(10, 2)
+  valor_total            Decimal   @db.Decimal(10, 2)
+  criado_em              DateTime? @default(now()) @db.Timestamp(0)
 }
 
-model LogAuditoria {
-  id                BigInt     @id @default(autoincrement())
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model itens_orcamento {
+  id                  BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  orcamento_id        BigInt
+  orcamento           orcamentos @relation(fields: [orcamento_id], references: [id], onDelete: Cascade)
+  tipo_item           String    @db.VarChar(20)
+  servico_id          Int?
+  peca_id             Int?
+  descricao           String    @db.Text
+  quantidade          Decimal?  @default(1.00) @db.Decimal(8, 2)
+  preco_unitario      Decimal   @db.Decimal(10, 2)
+  percentual_desconto Decimal?  @default(0.00) @db.Decimal(5, 2)
+  valor_desconto      Decimal?  @default(0.00) @db.Decimal(10, 2)
+  percentual_imposto  Decimal?  @default(23.00) @db.Decimal(5, 2)
+  valor_imposto       Decimal?  @default(0.00) @db.Decimal(10, 2)
+  valor_total         Decimal   @db.Decimal(10, 2)
+  notas               String?   @db.Text
+  criado_em           DateTime? @default(now()) @db.Timestamp(0)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model itens_ordem_trabalho {
+  id                  BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  ordem_trabalho_id   Int?
+  tipo_item           String    @db.VarChar(20)
+  servico_id          Int?
+  peca_id             Int?
+  descricao           String    @db.Text
+  quantidade          Decimal?  @default(1.00) @db.Decimal(8, 2)
+  preco_unitario      Decimal   @db.Decimal(10, 2)
+  horas_trabalho      Decimal?  @db.Decimal(6, 2)
+  tarifa_horaria      Decimal?  @db.Decimal(8, 2)
+  percentual_desconto Decimal?  @default(0.00) @db.Decimal(5, 2)
+  valor_desconto      Decimal?  @default(0.00) @db.Decimal(10, 2)
+  percentual_imposto  Decimal?  @default(23.00) @db.Decimal(5, 2)
+  valor_imposto       Decimal?  @default(0.00) @db.Decimal(10, 2)
+  valor_total         Decimal   @db.Decimal(10, 2)
+  notas               String?   @db.Text
+  criado_em           DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model log_auditoria {
+  id                BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
   utilizador_id     Int?
-  acao              String     @db.VarChar(100)
-  nome_tabela       String?    @db.VarChar(50)
+  acao              String    @db.VarChar(100)
+  nome_tabela       String?   @db.VarChar(50)
   id_registo        Int?
   valores_antigos   Json?
   valores_novos     Json?
-  endereco_ip       String?    @db.VarChar(100)
-  agente_utilizador String?    @db.Text
-  criado_em         DateTime   @default(now()) @db.Timestamp(0)
-
-  // Relations
-  utilizador        Utilizadores? @relation(fields: [utilizador_id], references: [id])
-
-  @@map("log_auditoria")
+  endereco_ip       String?   @db.VarChar(100)
+  agente_utilizador String?   @db.Text
+  criado_em         DateTime? @default(now()) @db.Timestamp(0)
 }
 
-// Enums
-enum Papel {
+model marcas {
+  id            Int       @id @default(autoincrement())
+  nome          String    @unique(map: "nome_marca") @db.VarChar(100)
+  pais_origem   String?   @db.VarChar(50)
+  ativo         Boolean?  @default(true)
+  criado_em     DateTime? @default(now()) @db.Timestamp(0)
+  atualizado_em DateTime? @default(now()) @db.Timestamp(0)
+  modelos       modelos[]
+}
+
+model modelos {
+  id            Int       @id @default(autoincrement())
+  marca_id      Int
+  nome          String    @db.VarChar(100)
+  tipo_veiculo  String?   @db.VarChar(50)
+  ativo         Boolean?  @default(true)
+  criado_em     DateTime? @default(now()) @db.Timestamp(0)
+  atualizado_em DateTime? @default(now()) @db.Timestamp(0)
+  marca         marcas    @relation(fields: [marca_id], references: [id], onDelete: Cascade)
+
+  @@index([marca_id], map: "modelos_marca_id_fkey")
+}
+
+model mecanicos {
+  id               Int       @id @default(autoincrement())
+  utilizador_id    Int?
+  nome             String    @db.VarChar(100)
+  especialidade    String?   @db.VarChar(100)
+  telefone         String?   @db.VarChar(20)
+  email            String?   @db.VarChar(255)
+  tarifa_horaria   Decimal?  @db.Decimal(8, 2)
+  ativo            Boolean?  @default(true)
+  data_contratacao DateTime? @db.Date
+  notas            String?   @db.Text
+  criado_em        DateTime? @default(now()) @db.Timestamp(0)
+  atualizado_em    DateTime? @default(now()) @db.Timestamp(0)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model orcamentos {
+  id             BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  ref_orcamento  String    @unique(map: "numero_orcamento") @db.VarChar(20)
+  cliente_id     Int?
+  cliente        clientes?  @relation(fields: [cliente_id], references: [id], onDelete: SetNull)
+  veiculo_id     BigInt?
+  veiculo        veiculos?  @relation(fields: [veiculo_id], references: [id], onDelete: SetNull)
+  preparado_por  Int?
+  data_emissao   DateTime? @db.Date
+  data_expiracao DateTime? @db.Date
+  estado         String?   @default("pendente") @db.VarChar(20)
+  total_pecas    Decimal?  @default(0.00) @db.Decimal(10, 2)
+  total_mao_obra Decimal?  @default(0.00) @db.Decimal(10, 2)
+  total_desconto Decimal?  @default(0.00) @db.Decimal(10, 2)
+  total_imposto  Decimal?  @default(0.00) @db.Decimal(10, 2)
+  total_geral    Decimal   @db.Decimal(10, 2)
+  notas          String?   @db.Text
+  data_aprovacao DateTime? @db.Date
+  aprovado_por   Int?
+  criado_em      DateTime? @default(now()) @db.Timestamp(0)
+  atualizado_em  DateTime? @default(now()) @db.Timestamp(0)
+  itens_orcamento itens_orcamento[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model ordens_trabalho {
+  id                    BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  ref_ordem_trabalho    String    @unique(map: "numero_ordem_trabalho") @db.VarChar(20)
+  cliente_id            Int
+  veiculo_id            Int
+  mecanico_id           Int?
+  orcamento_id          Int?
+  agendamento_id        Int?
+  data_inicio           DateTime? @db.Date
+  data_conclusao        DateTime? @db.Date
+  estado                String?   @default("em_andamento") @db.VarChar(20)
+  quilometragem_servico Int?
+  descricao_problema    String?   @db.Text
+  trabalho_realizado    String?   @db.Text
+  recomendacoes         String?   @db.Text
+  total_pecas           Decimal?  @default(0.00) @db.Decimal(10, 2)
+  total_mao_obra        Decimal?  @default(0.00) @db.Decimal(10, 2)
+  total_desconto        Decimal?  @default(0.00) @db.Decimal(10, 2)
+  total_imposto         Decimal?  @default(0.00) @db.Decimal(10, 2)
+  total_geral           Decimal   @db.Decimal(10, 2)
+  criado_em             DateTime? @default(now()) @db.Timestamp(0)
+  atualizado_em         DateTime? @default(now()) @db.Timestamp(0)
+  criado_por            Int?
+  atualizado_por        Int?
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model pagamentos {
+  id               BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  fatura_id        Int
+  data_pagamento   DateTime? @db.Date
+  valor            Decimal   @db.Decimal(10, 2)
+  metodo_pagamento String    @db.VarChar(50)
+  referencia       String?   @db.VarChar(100)
+  notas            String?   @db.Text
+  criado_em        DateTime? @default(now()) @db.Timestamp(0)
+  criado_por       Int?
+}
+
+model pecas {
+  id                   BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  referencia           String    @unique(map: "referencia") @db.VarChar(50)
+  nome                 String    @db.VarChar(255)
+  descricao            String?   @db.Text
+  categoria            String    @db.VarChar(50)
+  fornecedor_id        Int?
+  custo_unitario       Decimal   @db.Decimal(10, 2)
+  preco_venda          Decimal   @db.Decimal(10, 2)
+  quantidade_stock     Int?      @default(0)
+  nivel_stock_minimo   Int?      @default(0)
+  nivel_stock_maximo   Int?
+  localizacao          String?   @db.VarChar(100)
+  veiculos_compativeis String?   @db.Text
+  ativo                Boolean?  @default(true)
+  notas                String?   @db.Text
+  criado_em            DateTime? @default(now()) @db.Timestamp(0)
+  atualizado_em        DateTime? @default(now()) @db.Timestamp(0)
+  criado_por           Int?
+}
+
+model pecas_ordem_trabalho {
+  id                   BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  ordem_trabalho_id    Int
+  peca_id              Int
+  quantidade_utilizada Decimal   @db.Decimal(8, 2)
+  custo_unitario       Decimal   @db.Decimal(10, 2)
+  custo_total          Decimal   @db.Decimal(10, 2)
+  notas                String?   @db.Text
+  criado_em            DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model servicos {
+  id               BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  categoria_id     Int?
+  nome             String    @db.VarChar(255)
+  descricao        String?   @db.Text
+  preco_base       Decimal?  @db.Decimal(10, 2)
+  duracao_estimada String?   @db.VarChar(8)
+  requer_pecas     Boolean?  @default(false)
+  ativo            Boolean?  @default(true)
+  criado_em        DateTime? @default(now()) @db.Timestamp(0)
+  atualizado_em    DateTime? @default(now()) @db.Timestamp(0)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model transacoes_pecas {
+  id                   BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  peca_id              Int
+  tipo_transacao       String    @db.VarChar(20)
+  quantidade           Int
+  custo_unitario       Decimal?  @db.Decimal(10, 2)
+  custo_total          Decimal?  @db.Decimal(10, 2)
+  documento_referencia String?   @db.VarChar(50)
+  fornecedor_id        Int?
+  notas                String?   @db.Text
+  criado_em            DateTime? @default(now()) @db.Timestamp(0)
+  criado_por           Int?
+}
+
+model utilizadores {
+  id                 Int                @id @default(autoincrement())
+  nome_utilizador    String             @unique(map: "nome_utilizador") @db.VarChar(50)
+  email              String             @unique(map: "email") @db.VarChar(255)
+  hash_palavra_passe String             @db.VarChar(255)
+  nome_completo      String             @db.VarChar(100)
+  papel              utilizadores_papel
+  ativo              Boolean?           @default(true)
+  ultimo_login       DateTime?          @db.Timestamp(0)
+  criado_em          DateTime?          @default(now()) @db.Timestamp(0)
+  atualizado_em      DateTime?          @default(now()) @db.Timestamp(0)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model veiculos {
+  id                 BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  cliente_id         Int?
+  cliente            clientes? @relation(fields: [cliente_id], references: [id], onDelete: SetNull)
+  marca              String    @db.VarChar(50)
+  modelo             String    @db.VarChar(50)
+  matricula          String    @unique(map: "matricula") @db.VarChar(20)
+  ano                Int?
+  numero_chassis     String?   @unique(map: "numero_chassis") @db.VarChar(17)
+  tipo_motor         String?   @db.VarChar(50)
+  tipo_combustivel   String?   @db.VarChar(20)
+  estado             String?   @default("disponivel") @db.VarChar(20)
+  ultima_intervencao DateTime? @db.Date
+  proxima_revisao    DateTime? @db.Date
+  companhia_seguros  String?   @db.VarChar(100)
+  apolice_seguro     String?   @db.VarChar(50)
+  validade_seguro    DateTime? @db.Date
+  notas              String?   @db.Text
+  criado_em          DateTime? @default(now()) @db.Timestamp(0)
+  atualizado_em      DateTime? @default(now()) @db.Timestamp(0)
+  orcamentos         orcamentos[]
+}
+
+model perfis_clientes {
+  id            Int       @id @default(autoincrement())
+  nome          String    @unique(map: "nome_perfil") @db.VarChar(50)
+  descricao     String?   @db.Text
+  desconto      Decimal   @default(0.00) @db.Decimal(5, 2)
+  ativo         Boolean?  @default(true)
+  criado_em     DateTime? @default(now()) @db.Timestamp(0)
+  atualizado_em DateTime? @default(now()) @db.Timestamp(0)
+}
+
+enum utilizadores_papel {
   admin
   gestor
   mecanico
   rececionista
 }
 
-enum Perfil {
+enum clientes_perfil {
   Normal
-  TVDE_Interno
+  TVDE_Interno @map("TVDE Interno")
+  TVDE_Externo @map("TVDE Externo")
   Empresa
-}
-
-enum TipoCombustivel {
-  Gasolina
-  Gasoleo
-  Eletrico
-  Hibrido
-}
-
-enum EstadoVeiculo {
-  na_oficina
-  disponivel
-  vendido
-  abandonado
-}
-
-enum TipoTransacao {
-  entrada
-  saida
-  ajuste
-  devolucao
-}
-
-enum EstadoAgendamento {
-  agendado
-  confirmado
-  em_andamento
-  concluido
-  cancelado
-  nao_compareceu
-}
-
-enum Prioridade {
-  baixa
-  normal
-  alta
-  urgente
-}
-
-enum EstadoOrcamento {
-  pendente
-  aprovado
-  rejeitado
-  expirado
-  convertido
-}
-
-enum TipoItem {
-  servico
-  peca
-  outro
-}
-
-enum EstadoOrdemTrabalho {
-  pendente
-  em_andamento
-  concluido
-  cancelado
-  faturado
-}
-
-enum EstadoFatura {
-  pendente
-  parcial
-  paga
-  vencida
-  cancelada
-}
-
-enum MetodoPagamento {
-  dinheiro
-  cartao_credito
-  cartao_debito
-  transferencia
-  cheque
-  mbway
-  paypal
-}
-
-enum TipoConfiguracao {
-  string
-  number
-  boolean
-  json
 }

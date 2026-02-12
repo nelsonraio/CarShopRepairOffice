@@ -3,19 +3,39 @@ import React, { useState } from 'react';
 interface CalendarProps {
   onDayClick: (day: number, appointments: any[]) => void;
   onAppointmentClick?: (appointment: any, day: number) => void;
+  appointments?: any[]; // list of appointments from API
 }
 
-const Calendar: React.FC<CalendarProps> = ({ onDayClick, onAppointmentClick }) => {
+const Calendar: React.FC<CalendarProps> = ({ onDayClick, onAppointmentClick, appointments }) => {
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'today'>('month');
 
-  // Sample appointments data
-  const appointmentsData: { [key: number]: any[] } = {
-    4: [{ time: '14:00', car: 'BMW X5', plate: '12-AB-34', client: 'João Silva' }],
-    6: [{ time: '09:00', car: 'Audi A4', plate: '22-CC-44', client: 'Ana Costa' }],
-    13: [{ time: '11:30', car: 'Peugeot 308', plate: '55-DD-66', client: 'Pedro Martins' }],
-    21: [{ time: '10:00', car: 'Ferrari SF90', plate: '99-ZZ-00', client: 'Marco Polo' }],
-    27: [{ time: '16:15', car: 'Mercedes C-Class', plate: '11-AA-22', client: 'Maria Joana' }]
+  // Build appointments map from props if provided, else use sample data
+  const buildAppointmentsMap = () => {
+    const map: { [key: number]: any[] } = {};
+
+    if (appointments && appointments.length > 0) {
+      appointments.forEach((a) => {
+        // Expecting `date` in DD/MM/YYYY
+        const parts = (a.date || '').split('/');
+        const dayNum = parts.length === 3 ? parseInt(parts[0], 10) : NaN;
+        if (!isNaN(dayNum)) {
+          if (!map[dayNum]) map[dayNum] = [];
+          map[dayNum].push({ time: a.time || '', car: a.title || '', plate: a.plate || '', client: a.client || '', raw: a });
+        }
+      });
+      return map;
+    }
+
+    return {
+      4: [{ time: '14:00', car: 'BMW X5', plate: '12-AB-34', client: 'João Silva' }],
+      6: [{ time: '09:00', car: 'Audi A4', plate: '22-CC-44', client: 'Ana Costa' }],
+      13: [{ time: '11:30', car: 'Peugeot 308', plate: '55-DD-66', client: 'Pedro Martins' }],
+      21: [{ time: '10:00', car: 'Ferrari SF90', plate: '99-ZZ-00', client: 'Marco Polo' }],
+      27: [{ time: '16:15', car: 'Mercedes C-Class', plate: '11-AA-22', client: 'Maria Joana' }]
+    };
   };
+
+  const appointmentsData: { [key: number]: any[] } = buildAppointmentsMap();
 
   const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   const calendarDays = [
@@ -89,8 +109,8 @@ const Calendar: React.FC<CalendarProps> = ({ onDayClick, onAppointmentClick }) =
         <h4 className="text-lg font-semibold text-gray-100 mb-4">Vista Semanal</h4>
         <div className="grid grid-cols-7 gap-4">
           {daysOfWeek.map((dayName, index) => {
-            const dayNumber = weekDays[index];
-            const dayAppointments = appointmentsData[dayNumber] || [];
+            const dayNumber = weekDays[index] ?? -1;
+            const dayAppointments = dayNumber > 0 ? (appointmentsData[dayNumber] || []) : [];
 
             return (
               <div key={dayName} className="bg-gray-800 p-3 rounded-none border border-gray-600">

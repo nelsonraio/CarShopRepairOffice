@@ -86,8 +86,10 @@ const NewWorkOrderPage = () => {
 
   const updateItemQuantity = (index: number, quantity: number) => {
     const updatedItems = [...workOrderItems];
-    updatedItems[index].quantity = quantity;
-    updatedItems[index].total = quantity * updatedItems[index].unitPrice;
+    const item = updatedItems[index];
+    if (!item) return;
+    item.quantity = quantity;
+    item.total = quantity * item.unitPrice;
     setWorkOrderItems(updatedItems);
   };
 

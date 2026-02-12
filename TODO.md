@@ -1,4 +1,6 @@
-# TODO: Fix PrismaClient Import Paths
-
-- [x] Update import in src/app/api/veiculos/route.ts to use '@prisma/client'
-- [x] Update import in src/app/api/agendamentos/route.ts to use '@prisma/client'
+- [x] Add license plate existence check and indicator to Novo Veículo page
+- [x] Modify auto-fill logic in Novo Veículo to only trigger if license plate not exists in vehicles
+- [x] Add license plate existence check and indicator to Editar Veículo page
+- [x] Add auto-fill logic from appointments to Editar Veículo page, conditional on not existing in vehicles
+- [x] Remove status and date filters from appointment search to allow auto-fill from any appointment
+- [x] Test the changes with existing and non-existing license plates

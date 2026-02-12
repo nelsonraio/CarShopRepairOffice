@@ -14,16 +14,6 @@ var _s = __turbopack_context__.k.signature();
 ;
 function AgendaPage() {
     _s();
-    const mockVehicles = [
-        {
-            id: 1,
-            licensePlate: 'ABC1234'
-        },
-        {
-            id: 2,
-            licensePlate: 'XYZ5678'
-        }
-    ];
     const [upcomingAppointments, setUpcomingAppointments] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])([]);
     const [loading, setLoading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(true);
     const [error, setError] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
@@ -41,10 +31,8 @@ function AgendaPage() {
                             "AgendaPage.useEffect.fetchAppointments.transformedAppointments": (appointment)=>({
                                     id: appointment.id,
                                     title: appointment.title,
-                                    client: getClientById(appointment.clientId)?.nome || '',
-                                    plate: mockVehicles.find({
-                                        "AgendaPage.useEffect.fetchAppointments.transformedAppointments": (v)=>v.id === appointment.vehicleId
-                                    }["AgendaPage.useEffect.fetchAppointments.transformedAppointments"])?.licensePlate || '',
+                                    client: appointment.client || '',
+                                    plate: appointment.plate || '',
                                     date: appointment.date,
                                     mechanic: appointment.mechanic
                                 })
@@ -60,25 +48,12 @@ function AgendaPage() {
             fetchAppointments();
         }
     }["AgendaPage.useEffect"], []);
-    function getClientById(clientId) {
-        const mockClients = [
-            {
-                id: 1,
-                nome: 'John Doe'
-            },
-            {
-                id: 2,
-                nome: 'Jane Smith'
-            }
-        ];
-        return mockClients.find((client)=>client.id === clientId) || null;
-    }
     if (loading) {
         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             children: "Loading..."
         }, void 0, false, {
             fileName: "[project]/src/app/agenda/page.tsx",
-            lineNumber: 52,
+            lineNumber: 38,
             columnNumber: 12
         }, this);
     }
@@ -90,7 +65,7 @@ function AgendaPage() {
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/agenda/page.tsx",
-            lineNumber: 56,
+            lineNumber: 42,
             columnNumber: 12
         }, this);
     }
@@ -100,7 +75,7 @@ function AgendaPage() {
                 children: "Agenda"
             }, void 0, false, {
                 fileName: "[project]/src/app/agenda/page.tsx",
-                lineNumber: 61,
+                lineNumber: 47,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
@@ -118,18 +93,18 @@ function AgendaPage() {
                         ]
                     }, appointment.id, true, {
                         fileName: "[project]/src/app/agenda/page.tsx",
-                        lineNumber: 64,
+                        lineNumber: 50,
                         columnNumber: 11
                     }, this))
             }, void 0, false, {
                 fileName: "[project]/src/app/agenda/page.tsx",
-                lineNumber: 62,
+                lineNumber: 48,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/app/agenda/page.tsx",
-        lineNumber: 60,
+        lineNumber: 46,
         columnNumber: 5
     }, this);
 }

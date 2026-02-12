@@ -20,111 +20,100 @@ Este documento descreve o esquema completo da base de dados para o Sistema de Ge
 Tabela de autenticação e autorização de utilizadores.
 
 ```sql
-CREATE TABLE utilizadores (
-    id SERIAL PRIMARY KEY,
-    nome_utilizador VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    hash_palavra_passe VARCHAR(255) NOT NULL,
-    nome_completo VARCHAR(100) NOT NULL,
-    papel VARCHAR(20) NOT NULL CHECK (papel IN ('admin', 'gestor', 'mecanico', 'rececionista')),
-    ativo BOOLEAN DEFAULT true,
-    ultimo_login TIMESTAMP,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Índices
-
-
-
+CREATE TABLE `utilizadores` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nome_utilizador` varchar(50) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `hash_palavra_passe` varchar(255) NOT NULL,
+  `nome_completo` varchar(100) NOT NULL,
+  `papel` enum('admin','gestor','mecanico','rececionista') NOT NULL,
+  `ativo` tinyint(1) DEFAULT '1',
+  `ultimo_login` timestamp NULL DEFAULT NULL,
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `atualizado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `nome_utilizador` (`nome_utilizador`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
 #### 2. clientes
 Informações de clientes e relacionamento comercial.
 
 ```sql
-CREATE TABLE clientes (
-    id SERIAL PRIMARY KEY,
-    nome VARCHAR(100) NOT NULL,
-    email VARCHAR(255),
-    telefone VARCHAR(20) NOT NULL,
-    nif VARCHAR(20) UNIQUE,
-    endereco TEXT,
-    perfil VARCHAR(20) DEFAULT 'Normal' CHECK (perfil IN ('Normal', 'TVDE Interno', 'Empresa')),
-    data_registo DATE DEFAULT CURRENT_DATE,
-    total_gasto DECIMAL(10,2) DEFAULT 0.00,
-    visitas INTEGER DEFAULT 0,
-    notas TEXT,
-    ativo BOOLEAN DEFAULT true,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Índices
-
-
-
-
-
+CREATE TABLE `clientes` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nome` varchar(100) NOT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `telefone` varchar(20) NOT NULL,
+  `nif` varchar(20) DEFAULT NULL,
+  `endereco` text,
+  `perfil` enum('Normal','TVDE Interno','Empresa') DEFAULT 'Normal',
+  `data_registo` date DEFAULT (curdate()),
+  `total_gasto` decimal(10,2) DEFAULT '0.00',
+  `visitas` int DEFAULT '0',
+  `notas` text,
+  `ativo` tinyint(1) DEFAULT '1',
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `atualizado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `nif` (`nif`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
 #### 3. veiculos
 Informações de veículos ligadas aos clientes.
 
 ```sql
-CREATE TABLE veiculos (
-    id SERIAL PRIMARY KEY,
-    cliente_id INTEGER NOT NULL,
-    marca VARCHAR(50) NOT NULL,
-    modelo VARCHAR(50) NOT NULL,
-    matricula VARCHAR(20) UNIQUE NOT NULL,
-    ano INTEGER CHECK (ano >= 1900 AND ano <= EXTRACT(YEAR FROM CURRENT_DATE) + 1),
-    numero_chassis VARCHAR(17) UNIQUE,
-    tipo_motor VARCHAR(50),
-    tipo_combustivel VARCHAR(20) CHECK (tipo_combustivel IN ('Gasolina', 'Gasóleo', 'Elétrico', 'Híbrido')),
-    estado VARCHAR(20) DEFAULT 'disponivel' CHECK (estado IN ('na_oficina', 'disponivel', 'vendido', 'abandonado')),
-    quilometragem INTEGER DEFAULT 0,
-    ultima_intervencao DATE,
-    proxima_revisao DATE,
-    companhia_seguros VARCHAR(100),
-    apolice_seguro VARCHAR(50),
-    validade_seguro DATE,
-    notas TEXT,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Índices
-
-
-
-
-
+CREATE TABLE `veiculos` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `cliente_id` int NOT NULL,
+  `marca` varchar(50) NOT NULL,
+  `modelo` varchar(50) NOT NULL,
+  `matricula` varchar(20) NOT NULL,
+  `ano` int DEFAULT NULL,
+  `numero_chassis` varchar(17) DEFAULT NULL,
+  `tipo_motor` varchar(50) DEFAULT NULL,
+  `tipo_combustivel` varchar(20) DEFAULT NULL,
+  `estado` varchar(20) DEFAULT 'disponivel',
+  `quilometragem` int DEFAULT '0',
+  `ultima_intervencao` date DEFAULT NULL,
+  `proxima_revisao` date DEFAULT NULL,
+  `companhia_seguros` varchar(100) DEFAULT NULL,
+  `apolice_seguro` varchar(50) DEFAULT NULL,
+  `validade_seguro` date DEFAULT NULL,
+  `notas` text,
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `atualizado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`),
+  UNIQUE KEY `matricula` (`matricula`),
+  UNIQUE KEY `numero_chassis` (`numero_chassis`),
+  CONSTRAINT `veiculos_chk_1` CHECK ((`ano` >= 1900)),
+  CONSTRAINT `veiculos_chk_2` CHECK ((`tipo_combustivel` in (_utf8mb4'Gasolina',_utf8mb4'Gasóleo',_utf8mb4'Elétrico',_utf8mb4'Híbrido'))),
+  CONSTRAINT `veiculos_chk_3` CHECK ((`estado` in (_utf8mb4'na_oficina',_utf8mb4'disponivel',_utf8mb4'vendido',_utf8mb4'abandonado')))
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
 #### 4. mecanicos
 Informações de funcionários para mecânicos e técnicos.
 
 ```sql
-CREATE TABLE mecanicos (
-    id SERIAL PRIMARY KEY,
-    utilizador_id INTEGER,
-    nome VARCHAR(100) NOT NULL,
-    especialidade VARCHAR(100),
-    telefone VARCHAR(20),
-    email VARCHAR(255),
-    tarifa_horaria DECIMAL(8,2),
-    ativo BOOLEAN DEFAULT true,
-    data_contratacao DATE,
-    notas TEXT,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Índices
-
-
-
+CREATE TABLE `mecanicos` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `utilizador_id` int DEFAULT NULL,
+  `nome` varchar(100) NOT NULL,
+  `especialidade` varchar(100) DEFAULT NULL,
+  `telefone` varchar(20) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `tarifa_horaria` decimal(8,2) DEFAULT NULL,
+  `ativo` tinyint(1) DEFAULT '1',
+  `data_contratacao` date DEFAULT NULL,
+  `notas` text,
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `atualizado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
 ### Gestão de Peças e Inventário
@@ -133,82 +122,73 @@ CREATE TABLE mecanicos (
 Informações de fornecedores para aquisição de peças.
 
 ```sql
-CREATE TABLE fornecedores (
-    id SERIAL PRIMARY KEY,
-    nome VARCHAR(100) NOT NULL,
-    pessoa_contato VARCHAR(100),
-    email VARCHAR(255),
-    telefone VARCHAR(20),
-    endereco TEXT,
-    nif VARCHAR(20),
-    termos_pagamento VARCHAR(50),
-    ativo BOOLEAN DEFAULT true,
-    notas TEXT,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    criado_por INTEGER
-);
-
--- Índices
-
-
+CREATE TABLE `fornecedores` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nome` varchar(100) NOT NULL,
+  `pessoa_contato` varchar(100) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `telefone` varchar(20) DEFAULT NULL,
+  `endereco` text,
+  `nif` varchar(20) DEFAULT NULL,
+  `termos_pagamento` varchar(50) DEFAULT NULL,
+  `ativo` tinyint(1) DEFAULT '1',
+  `notas` text,
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `atualizado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `criado_por` int DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
 #### 6. pecas
 Inventário e catálogo de peças.
 
 ```sql
-CREATE TABLE pecas (
-    id SERIAL PRIMARY KEY,
-    referencia VARCHAR(50) UNIQUE NOT NULL,
-    nome VARCHAR(255) NOT NULL,
-    descricao TEXT,
-    categoria VARCHAR(50) NOT NULL,
-    fornecedor_id INTEGER,
-    custo_unitario DECIMAL(10,2) NOT NULL,
-    preco_venda DECIMAL(10,2) NOT NULL,
-    quantidade_stock INTEGER DEFAULT 0,
-    nivel_stock_minimo INTEGER DEFAULT 0,
-    nivel_stock_maximo INTEGER,
-    localizacao VARCHAR(100),
-    veiculos_compativeis TEXT[], -- Array of compatible vehicle models
-    ativo BOOLEAN DEFAULT true,
-    notas TEXT,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    criado_por INTEGER
-);
-
--- Índices
-
-
-
-
-
+CREATE TABLE `pecas` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `referencia` varchar(50) NOT NULL,
+  `nome` varchar(255) NOT NULL,
+  `descricao` text,
+  `categoria` varchar(50) NOT NULL,
+  `fornecedor_id` int DEFAULT NULL,
+  `custo_unitario` decimal(10,2) NOT NULL,
+  `preco_venda` decimal(10,2) NOT NULL,
+  `quantidade_stock` int DEFAULT '0',
+  `nivel_stock_minimo` int DEFAULT '0',
+  `nivel_stock_maximo` int DEFAULT NULL,
+  `localizacao` varchar(100) DEFAULT NULL,
+  `veiculos_compativeis` text,
+  `ativo` tinyint(1) DEFAULT '1',
+  `notas` text,
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `atualizado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `criado_por` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`),
+  UNIQUE KEY `referencia` (`referencia`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
 #### 7. transacoes_pecas
 Movimentos de stock e transações de inventário.
 
 ```sql
-CREATE TABLE transacoes_pecas (
-    id SERIAL PRIMARY KEY,
-    peca_id INTEGER NOT NULL,
-    tipo_transacao VARCHAR(20) NOT NULL CHECK (tipo_transacao IN ('entrada', 'saida', 'ajuste', 'devolucao')),
-    quantidade INTEGER NOT NULL,
-    custo_unitario DECIMAL(10,2),
-    custo_total DECIMAL(10,2),
-    documento_referencia VARCHAR(50), -- Fatura, número de encomenda, etc.
-    fornecedor_id INTEGER,
-    notas TEXT,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    criado_por INTEGER
-);
-
--- Indexes
-
-
-
+CREATE TABLE `transacoes_pecas` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `peca_id` int NOT NULL,
+  `tipo_transacao` varchar(20) NOT NULL,
+  `quantidade` int NOT NULL,
+  `custo_unitario` decimal(10,2) DEFAULT NULL,
+  `custo_total` decimal(10,2) DEFAULT NULL,
+  `documento_referencia` varchar(50) DEFAULT NULL,
+  `fornecedor_id` int DEFAULT NULL,
+  `notas` text,
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `criado_por` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`),
+  CONSTRAINT `transacoes_pecas_chk_1` CHECK ((`tipo_transacao` in (_utf8mb4'entrada',_utf8mb4'saida',_utf8mb4'ajuste',_utf8mb4'devolucao')))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
 ### Gestão de Serviços
@@ -217,75 +197,66 @@ CREATE TABLE transacoes_pecas (
 Categorias para diferentes tipos de serviços.
 
 ```sql
-CREATE TABLE categorias_servico (
-    id SERIAL PRIMARY KEY,
-    nome VARCHAR(100) NOT NULL,
-    descricao TEXT,
-    duracao_estimada INTERVAL, -- Tempo médio para este serviço
-    ativo BOOLEAN DEFAULT true,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Indexes
-
-
+CREATE TABLE `categorias_servico` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `nome` varchar(100) NOT NULL,
+  `descricao` text,
+  `duracao_estimada` time DEFAULT NULL,
+  `ativo` tinyint(1) DEFAULT '1',
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
 #### 9. servicos
 Serviços disponíveis oferecidos pela oficina.
 
 ```sql
-CREATE TABLE servicos (
-    id SERIAL PRIMARY KEY,
-    categoria_id INTEGER ),
-    nome VARCHAR(255) NOT NULL,
-    descricao TEXT,
-    preco_base DECIMAL(10,2),
-    duracao_estimada INTERVAL,
-    requer_pecas BOOLEAN DEFAULT false,
-    ativo BOOLEAN DEFAULT true,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Indexes
-
-
-
+CREATE TABLE `servicos` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `categoria_id` int DEFAULT NULL,
+  `nome` varchar(255) NOT NULL,
+  `descricao` text,
+  `preco_base` decimal(10,2) DEFAULT NULL,
+  `duracao_estimada` time DEFAULT NULL,
+  `requer_pecas` tinyint(1) DEFAULT '0',
+  `ativo` tinyint(1) DEFAULT '1',
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `atualizado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
 #### 10. agendamentos
 Agendamentos de serviços programados.
 
 ```sql
-CREATE TABLE agendamentos (
-    id SERIAL PRIMARY KEY,
-    cliente_id INTEGER NOT NULL ),
-    veiculo_id INTEGER NOT NULL ),
-    mecanico_id INTEGER ),
-    servico_id INTEGER ),
-    titulo VARCHAR(255) NOT NULL,
-    descricao TEXT,
-    data_agendamento DATE NOT NULL,
-    hora_inicio TIME NOT NULL,
-    hora_fim TIME,
-    estado VARCHAR(20) DEFAULT 'agendado' CHECK (estado IN ('agendado', 'confirmado', 'em_andamento', 'concluido', 'cancelado', 'nao_compareceu')),
-    prioridade VARCHAR(10) DEFAULT 'normal' CHECK (prioridade IN ('baixa', 'normal', 'alta', 'urgente')),
-    custo_estimado DECIMAL(10,2),
-    notas TEXT,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    criado_por INTEGER ),
-    atualizado_por INTEGER )
-);
-
--- Índices
-
-
-
-
-
-
+CREATE TABLE `agendamentos` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `cliente_id` int NOT NULL,
+  `veiculo_id` int NOT NULL,
+  `mecanico_id` int DEFAULT NULL,
+  `servico_id` int DEFAULT NULL,
+  `titulo` varchar(255) NOT NULL,
+  `descricao` text,
+  `data_agendamento` date NOT NULL,
+  `hora_inicio` time NOT NULL,
+  `hora_fim` time DEFAULT NULL,
+  `estado` varchar(20) DEFAULT 'agendado',
+  `prioridade` varchar(10) DEFAULT 'normal',
+  `custo_estimado` decimal(10,2) DEFAULT NULL,
+  `notas` text,
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `atualizado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `criado_por` int DEFAULT NULL,
+  `atualizado_por` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`),
+  CONSTRAINT `agendamentos_chk_1` CHECK ((`estado` in (_utf8mb4'agendado',_utf8mb4'confirmado',_utf8mb4'em_andamento',_utf8mb4'concluido',_utf8mb4'cancelado',_utf8mb4'nao_compareceu'))),
+  CONSTRAINT `agendamentos_chk_2` CHECK ((`prioridade` in (_utf8mb4'baixa',_utf8mb4'normal',_utf8mb4'alta',_utf8mb4'urgente')))
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
 ### Quotes & Estimates
@@ -294,61 +265,56 @@ CREATE TABLE agendamentos (
 Orçamentos de serviços e estimativas.
 
 ```sql
-CREATE TABLE orcamentos (
-    id SERIAL PRIMARY KEY,
-    numero_orcamento VARCHAR(20) UNIQUE NOT NULL,
-    cliente_id INTEGER NOT NULL ),
-    veiculo_id INTEGER NOT NULL ),
-    preparado_por INTEGER ),
-    data_emissao DATE DEFAULT CURRENT_DATE,
-    data_expiracao DATE,
-    estado VARCHAR(20) DEFAULT 'pendente' CHECK (estado IN ('pendente', 'aprovado', 'rejeitado', 'expirado', 'convertido')),
-    total_pecas DECIMAL(10,2) DEFAULT 0.00,
-    total_mao_obra DECIMAL(10,2) DEFAULT 0.00,
-    total_desconto DECIMAL(10,2) DEFAULT 0.00,
-    total_imposto DECIMAL(10,2) DEFAULT 0.00,
-    total_geral DECIMAL(10,2) NOT NULL,
-    notas TEXT,
-    data_aprovacao DATE,
-    aprovado_por INTEGER ),
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Índices
-
-
-
-
-
+CREATE TABLE `orcamentos` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `ref_orcamento` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `cliente_id` int NOT NULL,
+  `veiculo_id` int NOT NULL,
+  `preparado_por` int DEFAULT NULL,
+  `data_emissao` date DEFAULT NULL,
+  `data_expiracao` date DEFAULT NULL,
+  `estado` varchar(20) DEFAULT 'pendente',
+  `total_pecas` decimal(10,2) DEFAULT '0.00',
+  `total_mao_obra` decimal(10,2) DEFAULT '0.00',
+  `total_desconto` decimal(10,2) DEFAULT '0.00',
+  `total_imposto` decimal(10,2) DEFAULT '0.00',
+  `total_geral` decimal(10,2) NOT NULL,
+  `notas` text,
+  `data_aprovacao` date DEFAULT NULL,
+  `aprovado_por` int DEFAULT NULL,
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `atualizado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`),
+  UNIQUE KEY `numero_orcamento` (`ref_orcamento`) USING BTREE,
+  CONSTRAINT `orcamentos_chk_1` CHECK ((`estado` in (_utf8mb4'pendente',_utf8mb4'aprovado',_utf8mb4'rejeitado',_utf8mb4'expirado',_utf8mb4'convertido')))
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
 #### 12. itens_orcamento
 Itens individuais dentro de um orçamento.
 
 ```sql
-CREATE TABLE itens_orcamento (
-    id SERIAL PRIMARY KEY,
-    orcamento_id INTEGER NOT NULL ) ON DELETE CASCADE,
-    tipo_item VARCHAR(20) NOT NULL CHECK (tipo_item IN ('servico', 'peca', 'outro')),
-    servico_id INTEGER ),
-    peca_id INTEGER ),
-    descricao TEXT NOT NULL,
-    quantidade DECIMAL(8,2) DEFAULT 1.00,
-    preco_unitario DECIMAL(10,2) NOT NULL,
-    percentual_desconto DECIMAL(5,2) DEFAULT 0.00,
-    valor_desconto DECIMAL(10,2) DEFAULT 0.00,
-    percentual_imposto DECIMAL(5,2) DEFAULT 23.00,
-    valor_imposto DECIMAL(10,2) DEFAULT 0.00,
-    valor_total DECIMAL(10,2) NOT NULL,
-    notas TEXT,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Índices
-
-
-
+CREATE TABLE `itens_orcamento` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `orcamento_id` int NOT NULL,
+  `tipo_item` varchar(20) NOT NULL,
+  `servico_id` int DEFAULT NULL,
+  `peca_id` int DEFAULT NULL,
+  `descricao` text NOT NULL,
+  `quantidade` decimal(8,2) DEFAULT '1.00',
+  `preco_unitario` decimal(10,2) NOT NULL,
+  `percentual_desconto` decimal(5,2) DEFAULT '0.00',
+  `valor_desconto` decimal(10,2) DEFAULT '0.00',
+  `percentual_imposto` decimal(5,2) DEFAULT '23.00',
+  `valor_imposto` decimal(10,2) DEFAULT '0.00',
+  `valor_total` decimal(10,2) NOT NULL,
+  `notas` text,
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`),
+  CONSTRAINT `itens_orcamento_chk_1` CHECK ((`tipo_item` in (_utf8mb4'servico',_utf8mb4'peca',_utf8mb4'outro')))
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
 ### Ordens de Trabalho e Histórico de Serviços
@@ -357,89 +323,81 @@ CREATE TABLE itens_orcamento (
 Trabalho real realizado nos veículos.
 
 ```sql
-CREATE TABLE ordens_trabalho (
-    id SERIAL PRIMARY KEY,
-    numero_ordem_trabalho VARCHAR(20) UNIQUE NOT NULL,
-    cliente_id INTEGER NOT NULL ),
-    veiculo_id INTEGER NOT NULL ),
-    mecanico_id INTEGER ),
-    orcamento_id INTEGER ),
-    agendamento_id INTEGER ),
-    data_inicio DATE,
-    data_conclusao DATE,
-    estado VARCHAR(20) DEFAULT 'em_andamento' CHECK (estado IN ('pendente', 'em_andamento', 'concluido', 'cancelado', 'faturado')),
-    quilometragem_servico INTEGER,
-    descricao_problema TEXT,
-    trabalho_realizado TEXT,
-    recomendacoes TEXT,
-    total_pecas DECIMAL(10,2) DEFAULT 0.00,
-    total_mao_obra DECIMAL(10,2) DEFAULT 0.00,
-    total_desconto DECIMAL(10,2) DEFAULT 0.00,
-    total_imposto DECIMAL(10,2) DEFAULT 0.00,
-    total_geral DECIMAL(10,2) NOT NULL,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    criado_por INTEGER ),
-    atualizado_por INTEGER )
-);
-
--- Índices
-
-
-
-
-
-
+CREATE TABLE `ordens_trabalho` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `ref_ordem_trabalho` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `cliente_id` int NOT NULL,
+  `veiculo_id` int NOT NULL,
+  `mecanico_id` int DEFAULT NULL,
+  `orcamento_id` int DEFAULT NULL,
+  `agendamento_id` int DEFAULT NULL,
+  `data_inicio` date DEFAULT NULL,
+  `data_conclusao` date DEFAULT NULL,
+  `estado` varchar(20) DEFAULT 'em_andamento',
+  `quilometragem_servico` int DEFAULT NULL,
+  `descricao_problema` text,
+  `trabalho_realizado` text,
+  `recomendacoes` text,
+  `total_pecas` decimal(10,2) DEFAULT '0.00',
+  `total_mao_obra` decimal(10,2) DEFAULT '0.00',
+  `total_desconto` decimal(10,2) DEFAULT '0.00',
+  `total_imposto` decimal(10,2) DEFAULT '0.00',
+  `total_geral` decimal(10,2) NOT NULL,
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `atualizado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `criado_por` int DEFAULT NULL,
+  `atualizado_por` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`),
+  UNIQUE KEY `numero_ordem_trabalho` (`ref_ordem_trabalho`) USING BTREE,
+  CONSTRAINT `ordens_trabalho_chk_1` CHECK ((`estado` in (_utf8mb4'pendente',_utf8mb4'em_andamento',_utf8mb4'concluido',_utf8mb4'cancelado',_utf8mb4'faturado')))
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
 #### 14. itens_ordem_trabalho
 Itens detalhados em uma ordem de trabalho.
 
 ```sql
-CREATE TABLE itens_ordem_trabalho (
-    id SERIAL PRIMARY KEY,
-    ordem_trabalho_id INTEGER NOT NULL ) ON DELETE CASCADE,
-    tipo_item VARCHAR(20) NOT NULL CHECK (tipo_item IN ('servico', 'peca', 'outro')),
-    servico_id INTEGER ),
-    peca_id INTEGER ),
-    descricao TEXT NOT NULL,
-    quantidade DECIMAL(8,2) DEFAULT 1.00,
-    preco_unitario DECIMAL(10,2) NOT NULL,
-    horas_trabalho DECIMAL(6,2),
-    tarifa_horaria DECIMAL(8,2),
-    percentual_desconto DECIMAL(5,2) DEFAULT 0.00,
-    valor_desconto DECIMAL(10,2) DEFAULT 0.00,
-    percentual_imposto DECIMAL(5,2) DEFAULT 23.00,
-    valor_imposto DECIMAL(10,2) DEFAULT 0.00,
-    valor_total DECIMAL(10,2) NOT NULL,
-    notas TEXT,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Índices
-
-
-
+CREATE TABLE `itens_ordem_trabalho` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `ordem_trabalho_id` int DEFAULT NULL,
+  `tipo_item` varchar(20) NOT NULL,
+  `servico_id` int DEFAULT NULL,
+  `peca_id` int DEFAULT NULL,
+  `descricao` text NOT NULL,
+  `quantidade` decimal(8,2) DEFAULT '1.00',
+  `preco_unitario` decimal(10,2) NOT NULL,
+  `horas_trabalho` decimal(6,2) DEFAULT NULL,
+  `tarifa_horaria` decimal(8,2) DEFAULT NULL,
+  `percentual_desconto` decimal(5,2) DEFAULT '0.00',
+  `valor_desconto` decimal(10,2) DEFAULT '0.00',
+  `percentual_imposto` decimal(5,2) DEFAULT '23.00',
+  `valor_imposto` decimal(10,2) DEFAULT '0.00',
+  `valor_total` decimal(10,2) NOT NULL,
+  `notas` text,
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`),
+  CONSTRAINT `itens_ordem_trabalho_chk_1` CHECK ((`tipo_item` in (_utf8mb4'servico',_utf8mb4'peca',_utf8mb4'outro')))
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
 #### 15. pecas_ordem_trabalho
 Peças utilizadas em ordens de trabalho (tabela de junção com quantidades).
 
 ```sql
-CREATE TABLE pecas_ordem_trabalho (
-    id SERIAL PRIMARY KEY,
-    ordem_trabalho_id INTEGER NOT NULL ) ON DELETE CASCADE,
-    peca_id INTEGER NOT NULL ),
-    quantidade_utilizada DECIMAL(8,2) NOT NULL,
-    custo_unitario DECIMAL(10,2) NOT NULL,
-    custo_total DECIMAL(10,2) NOT NULL,
-    notas TEXT,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Índices
-
-
+CREATE TABLE `pecas_ordem_trabalho` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `ordem_trabalho_id` int NOT NULL,
+  `peca_id` int NOT NULL,
+  `quantidade_utilizada` decimal(8,2) NOT NULL,
+  `custo_unitario` decimal(10,2) NOT NULL,
+  `custo_total` decimal(10,2) NOT NULL,
+  `notas` text,
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
 ### Faturação
@@ -448,77 +406,69 @@ CREATE TABLE pecas_ordem_trabalho (
 Faturas de clientes.
 
 ```sql
-CREATE TABLE faturas (
-    id SERIAL PRIMARY KEY,
-    numero_fatura VARCHAR(20) UNIQUE NOT NULL,
-    cliente_id INTEGER NOT NULL ),
-    ordem_trabalho_id INTEGER ),
-    data_emissao DATE DEFAULT CURRENT_DATE,
-    data_vencimento DATE,
-    data_pagamento DATE,
-    estado VARCHAR(20) DEFAULT 'pendente' CHECK (estado IN ('pendente', 'parcial', 'paga', 'vencida', 'cancelada')),
-    subtotal DECIMAL(10,2) NOT NULL,
-    valor_imposto DECIMAL(10,2) DEFAULT 0.00,
-    valor_desconto DECIMAL(10,2) DEFAULT 0.00,
-    valor_total DECIMAL(10,2) NOT NULL,
-    valor_pago DECIMAL(10,2) DEFAULT 0.00,
-    notas TEXT,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    criado_por INTEGER )
-);
-
--- Índices
-
-
-
-
-
-
+CREATE TABLE `faturas` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `numero_fatura` varchar(20) NOT NULL,
+  `cliente_id` int NOT NULL,
+  `ordem_trabalho_id` int DEFAULT NULL,
+  `data_emissao` date DEFAULT NULL,
+  `data_vencimento` date DEFAULT NULL,
+  `data_pagamento` date DEFAULT NULL,
+  `estado` varchar(20) DEFAULT 'pendente',
+  `subtotal` decimal(10,2) NOT NULL,
+  `valor_imposto` decimal(10,2) DEFAULT '0.00',
+  `valor_desconto` decimal(10,2) DEFAULT '0.00',
+  `valor_total` decimal(10,2) NOT NULL,
+  `valor_pago` decimal(10,2) DEFAULT '0.00',
+  `notas` text,
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `atualizado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `criado_por` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`),
+  UNIQUE KEY `numero_fatura` (`numero_fatura`),
+  CONSTRAINT `faturas_chk_1` CHECK ((`estado` in (_utf8mb4'pendente',_utf8mb4'parcial',_utf8mb4'paga',_utf8mb4'vencida',_utf8mb4'cancelada')))
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
 #### 17. itens_fatura
 Itens dentro de uma fatura.
 
 ```sql
-CREATE TABLE itens_fatura (
-    id SERIAL PRIMARY KEY,
-    fatura_id INTEGER NOT NULL ) ON DELETE CASCADE,
-    item_ordem_trabalho_id INTEGER ),
-    descricao TEXT NOT NULL,
-    quantidade DECIMAL(8,2) DEFAULT 1.00,
-    preco_unitario DECIMAL(10,2) NOT NULL,
-    valor_desconto DECIMAL(10,2) DEFAULT 0.00,
-    valor_imposto DECIMAL(10,2) DEFAULT 0.00,
-    valor_total DECIMAL(10,2) NOT NULL,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Índices
-
-
+CREATE TABLE `itens_fatura` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `fatura_id` int NOT NULL,
+  `item_ordem_trabalho_id` int DEFAULT NULL,
+  `descricao` text NOT NULL,
+  `quantidade` decimal(8,2) DEFAULT '1.00',
+  `preco_unitario` decimal(10,2) NOT NULL,
+  `valor_desconto` decimal(10,2) DEFAULT '0.00',
+  `valor_imposto` decimal(10,2) DEFAULT '0.00',
+  `valor_total` decimal(10,2) NOT NULL,
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
 #### 18. pagamentos
 Registos de pagamentos para faturas.
 
 ```sql
-CREATE TABLE pagamentos (
-    id SERIAL PRIMARY KEY,
-    fatura_id INTEGER NOT NULL ),
-    data_pagamento DATE DEFAULT CURRENT_DATE,
-    valor DECIMAL(10,2) NOT NULL,
-    metodo_pagamento VARCHAR(50) NOT NULL CHECK (metodo_pagamento IN ('dinheiro', 'cartao_credito', 'cartao_debito', 'transferencia', 'cheque', 'mbway', 'paypal')),
-    referencia VARCHAR(100), -- Referência da transação, número do cheque, etc.
-    notas TEXT,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    criado_por INTEGER )
-);
-
--- Índices
-
-
-
+CREATE TABLE `pagamentos` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `fatura_id` int NOT NULL,
+  `data_pagamento` date DEFAULT NULL,
+  `valor` decimal(10,2) NOT NULL,
+  `metodo_pagamento` varchar(50) NOT NULL,
+  `referencia` varchar(100) DEFAULT NULL,
+  `notas` text,
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `criado_por` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`),
+  CONSTRAINT `pagamentos_chk_1` CHECK ((`metodo_pagamento` in (_utf8mb4'dinheiro',_utf8mb4'cartao_credito',_utf8mb4'cartao_debito',_utf8mb4'transferencia',_utf8mb4'cheque',_utf8mb4'mbway',_utf8mb4'paypal')))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
 ### Kanban & Workflow Management
@@ -527,68 +477,59 @@ CREATE TABLE pagamentos (
 Colunas do quadro Kanban.
 
 ```sql
-CREATE TABLE colunas_kanban (
-    id SERIAL PRIMARY KEY,
-    nome VARCHAR(100) NOT NULL,
-    descricao TEXT,
-    posicao INTEGER NOT NULL,
-    cor VARCHAR(7), -- Código de cor hexadecimal
-    ativo BOOLEAN DEFAULT true,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Índices
-
-
+CREATE TABLE `colunas_kanban` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `nome` varchar(100) NOT NULL,
+  `descricao` text,
+  `posicao` int NOT NULL,
+  `cor` varchar(7) DEFAULT NULL,
+  `ativo` tinyint(1) DEFAULT '1',
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `atualizado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
 #### 20. cartoes_kanban
 Cartões Kanban representando itens de trabalho.
 
 ```sql
-CREATE TABLE cartoes_kanban (
-    id SERIAL PRIMARY KEY,
-    coluna_id INTEGER NOT NULL ),
-    ordem_trabalho_id INTEGER ),
-    titulo VARCHAR(255) NOT NULL,
-    descricao TEXT,
-    prioridade VARCHAR(10) DEFAULT 'normal' CHECK (prioridade IN ('baixa', 'normal', 'alta', 'urgente')),
-    atribuido_a INTEGER ),
-    data_limite DATE,
-    etiquetas TEXT[], -- Array of tags
-    posicao INTEGER NOT NULL,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    criado_por INTEGER ),
-    atualizado_por INTEGER )
-);
-
--- Índices
-
-
-
-
-
+CREATE TABLE `cartoes_kanban` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `coluna_id` int NOT NULL,
+  `ordem_trabalho_id` int DEFAULT NULL,
+  `titulo` varchar(255) NOT NULL,
+  `descricao` text,
+  `prioridade` varchar(10) DEFAULT 'normal',
+  `atribuido_a` int DEFAULT NULL,
+  `data_limite` date DEFAULT NULL,
+  `etiquetas` text,
+  `posicao` int NOT NULL,
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `atualizado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `criado_por` int DEFAULT NULL,
+  `atualizado_por` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
 #### 21. historico_cartao_kanban
 Rastreamento de auditoria para movimentos de cartões Kanban.
 
 ```sql
-CREATE TABLE historico_cartao_kanban (
-    id SERIAL PRIMARY KEY,
-    cartao_id INTEGER NOT NULL ) ON DELETE CASCADE,
-    coluna_origem_id INTEGER ),
-    coluna_destino_id INTEGER NOT NULL ),
-    movido_por INTEGER ),
-    movido_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    notas TEXT
-);
-
--- Índices
-
-
+CREATE TABLE `historico_cartao_kanban` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `cartao_id` int NOT NULL,
+  `coluna_origem_id` int DEFAULT NULL,
+  `coluna_destino_id` int NOT NULL,
+  `movido_por` int DEFAULT NULL,
+  `movido_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `notas` text,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
 ### System Configuration & Audit
@@ -597,44 +538,40 @@ CREATE TABLE historico_cartao_kanban (
 Definições de configuração da aplicação.
 
 ```sql
-CREATE TABLE configuracoes_sistema (
-    id SERIAL PRIMARY KEY,
-    chave_configuracao VARCHAR(100) UNIQUE NOT NULL,
-    valor_configuracao TEXT,
-    tipo_configuracao VARCHAR(20) DEFAULT 'string' CHECK (tipo_configuracao IN ('string', 'number', 'boolean', 'json')),
-    descricao TEXT,
-    sistema BOOLEAN DEFAULT false,
-    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    atualizado_por INTEGER )
-);
-
--- Índices
-
+CREATE TABLE `configuracoes_sistema` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `chave_configuracao` varchar(100) NOT NULL,
+  `valor_configuracao` text,
+  `tipo_configuracao` varchar(20) DEFAULT 'string',
+  `descricao` text,
+  `sistema` tinyint(1) DEFAULT '0',
+  `atualizado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `atualizado_por` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`),
+  UNIQUE KEY `chave_configuracao` (`chave_configuracao`),
+  CONSTRAINT `configuracoes_sistema_chk_1` CHECK ((`tipo_configuracao` in (_utf8mb4'string',_utf8mb4'number',_utf8mb4'boolean',_utf8mb4'json')))
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
 #### 23. log_auditoria
 Rastreamento de auditoria em todo o sistema.
 
 ```sql
-CREATE TABLE log_auditoria (
-    id SERIAL PRIMARY KEY,
-    utilizador_id INTEGER ),
-    acao VARCHAR(100) NOT NULL,
-    nome_tabela VARCHAR(50),
-    id_registo INTEGER,
-    valores_antigos JSONB,
-    valores_novos JSONB,
-    endereco_ip INET,
-    agente_utilizador TEXT,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Índices
-
-
-
-
-
+CREATE TABLE `log_auditoria` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `utilizador_id` int DEFAULT NULL,
+  `acao` varchar(100) NOT NULL,
+  `nome_tabela` varchar(50) DEFAULT NULL,
+  `id_registo` int DEFAULT NULL,
+  `valores_antigos` json DEFAULT NULL,
+  `valores_novos` json DEFAULT NULL,
+  `endereco_ip` varchar(100) DEFAULT NULL,
+  `agente_utilizador` text,
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
 ## Database Views

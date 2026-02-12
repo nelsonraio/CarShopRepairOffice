@@ -2,6 +2,28 @@
 
 import { useState, useEffect } from 'react';
 import Sidebar from '../../../components/Sidebar';
+import Link from 'next/link';
+
+interface Client {
+  id: number;
+  nome: string;
+  telefone: string;
+  email: string;
+  nif: string;
+  endereco: string;
+  perfil: string;
+}
+
+interface Vehicle {
+  id: string;
+  clientId: string;
+  make: string;
+  model: string;
+  licensePlate: string;
+  year: number;
+  status: string;
+  lastIntervention: string;
+}
 
 interface CatalogItem {
   id: string;
@@ -18,18 +40,8 @@ interface BudgetItem {
   unitPrice: number;
   unit: string;
   total: number;
+  type: 'service' | 'part';
 }
-
-const catalogItems: CatalogItem[] = [
-  { id: 'SERV-001', name: 'Mão de Obra (Hora)', type: 'service', price: 45.00, unit: 'h' },
-  { id: 'SERV-002', name: 'Diagnóstico Computorizado', type: 'service', price: 35.00, unit: 'un' },
-  { id: 'SERV-003', name: 'Alinhamento de Direção', type: 'service', price: 40.00, unit: 'un' },
-  { id: 'PART-001', name: 'Filtro de Óleo Bosch', type: 'part', price: 12.50, unit: 'un' },
-  { id: 'PART-002', name: 'Óleo Castrol Edge 5W30 (5L)', type: 'part', price: 55.00, unit: 'un' },
-  { id: 'PART-003', name: 'Pastilhas Travão Brembo (Frente)', type: 'part', price: 45.90, unit: 'un' },
-  { id: 'PART-004', name: 'Filtro de Ar Mann', type: 'part', price: 15.80, unit: 'un' },
-  { id: 'PART-005', name: 'Vela de Ignição NGK', type: 'part', price: 18.20, unit: 'un' }
-];
 
 const NewBudgetPage = () => {
   const [clientType, setClientType] = useState('C');
@@ -38,6 +50,31 @@ const NewBudgetPage = () => {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
   const [total, setTotal] = useState(0);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [clientSuggestions, setClientSuggestions] = useState<Client[]>([]);
+  const [showClientSuggestions, setShowClientSuggestions] = useState(false);
+  const [clientVehicles, setClientVehicles] = useState<Vehicle[]>([]);
+  const [selectedVehicle, setSelectedVehicle] = useState<string>('');
+
+  const [services, setServices] = useState<CatalogItem[]>([]);
+  const [parts, setParts] = useState<CatalogItem[]>([]);
+  const [searchResults, setSearchResults] = useState<CatalogItem[]>([]);
+  const [isVehicleAutoFilled, setIsVehicleAutoFilled] = useState(false);
+  const [clientSearch, setClientSearch] = useState('');
+  const [customItem, setCustomItem] = useState({
+    name: '',
+    quantity: 1,
+    unitPrice: 0
+  });
+  const [formData, setFormData] = useState({
+    matricula: '',
+    marca: '',
+    modelo: '',
+    ano: '',
+    cliente: ''
+  });
+
+
 
   useEffect(() => {
     updateIdPreview();
@@ -47,6 +84,83 @@ const NewBudgetPage = () => {
     const newTotal = budgetItems.reduce((sum, item) => sum + item.total, 0);
     setTotal(newTotal);
   }, [budgetItems]);
+
+  useEffect(() => {
+    fetchServices();
+    fetchParts();
+  }, []);
+
+  const fetchServices = async () => {
+    try {
+      const response = await fetch('/api/servicos');
+      if (response.ok) {
+        const data = await response.json();
+        const formattedServices: CatalogItem[] = data.map((service: any) => ({
+          id: service.id,
+          name: service.nome,
+          type: 'service' as const,
+          price: service.preco_base || 0,
+          unit: 'h'
+        }));
+        setServices(formattedServices);
+      }
+    } catch (error) {
+      console.error('Failed to fetch services:', error);
+    }
+  };
+
+  const fetchParts = async () => {
+    try {
+      const response = await fetch('/api/pecas');
+      if (response.ok) {
+        const data = await response.json();
+        const formattedParts: CatalogItem[] = data.map((part: any) => ({
+          id: part.id,
+          name: part.nome,
+          type: 'part' as const,
+          price: parseFloat(part.preco_venda) || 0,
+          unit: 'un'
+        }));
+        setParts(formattedParts);
+      }
+    } catch (error) {
+      console.error('Failed to fetch parts:', error);
+    }
+  };
+
+  const searchCatalogItems = async (query: string) => {
+    try {
+      const [servicesResponse, partsResponse] = await Promise.all([
+        fetch(`/api/servicos/search?q=${encodeURIComponent(query)}`),
+        fetch(`/api/pecas/search?q=${encodeURIComponent(query)}`)
+      ]);
+
+      const servicesData = servicesResponse.ok ? await servicesResponse.json() : [];
+      const partsData = partsResponse.ok ? await partsResponse.json() : [];
+
+      const formattedServices: CatalogItem[] = servicesData.map((service: any) => ({
+        id: service.id,
+        name: service.nome,
+        type: 'service' as const,
+        price: parseFloat(service.preco_base) || 0,
+        unit: 'h'
+      }));
+
+      const formattedParts: CatalogItem[] = partsData.map((part: any) => ({
+        id: part.id,
+        name: part.nome,
+        type: 'part' as const,
+        price: parseFloat(part.preco_venda) || 0,
+        unit: 'un'
+      }));
+
+      const combinedResults = [...formattedServices, ...formattedParts];
+      setSearchResults(combinedResults);
+    } catch (error) {
+      console.error('Failed to search catalog items:', error);
+      setSearchResults([]);
+    }
+  };
 
   const updateIdPreview = () => {
     const randomNum = Math.floor(1000 + Math.random() * 9000);
@@ -59,10 +173,7 @@ const NewBudgetPage = () => {
     }
   };
 
-  const filteredItems = catalogItems.filter(item =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+
 
   const addItemToBudget = (item: CatalogItem) => {
     const newItem: BudgetItem = {
@@ -71,7 +182,8 @@ const NewBudgetPage = () => {
       quantity: 1,
       unitPrice: item.price,
       unit: item.unit,
-      total: item.price
+      total: item.price,
+      type: item.type
     };
     setBudgetItems([...budgetItems, newItem]);
     setSearchTerm('');
@@ -80,8 +192,10 @@ const NewBudgetPage = () => {
 
   const updateItemQuantity = (index: number, quantity: number) => {
     const updatedItems = [...budgetItems];
-    updatedItems[index].quantity = quantity;
-    updatedItems[index].total = quantity * updatedItems[index].unitPrice;
+    const item = updatedItems[index];
+    if (!item) return;
+    item.quantity = quantity;
+    item.total = quantity * item.unitPrice;
     setBudgetItems(updatedItems);
   };
 
@@ -90,24 +204,195 @@ const NewBudgetPage = () => {
     setBudgetItems(updatedItems);
   };
 
-  const createBudget = () => {
-    // Here you would typically send the data to your backend API
-    // For now, we'll just show an alert with the budget details
-    const budgetData = {
-      id: budgetId,
-      clientType,
-      items: budgetItems,
-      total,
-      date: new Date().toISOString().split('T')[0]
-    };
+  const handleClientSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setClientSearch(value);
 
-    console.log('Creating budget:', budgetData);
-    alert(`Orçamento ${budgetId} criado com sucesso!\nTotal: €${total.toFixed(2)}\nItens: ${budgetItems.length}`);
+    if (value && value.length >= 2) {
+      searchClients(value);
+    } else {
+      setClientSuggestions([]);
+      setShowClientSuggestions(false);
+    }
+  };
 
-    // Reset form after creation
-    setBudgetItems([]);
-    setTotal(0);
-    updateIdPreview();
+  const searchClients = async (query: string) => {
+    try {
+      const response = await fetch(`/api/clientes/search?q=${encodeURIComponent(query)}`);
+      if (response.ok) {
+        const data = await response.json();
+        setClientSuggestions(data);
+        setShowClientSuggestions(true);
+      }
+    } catch (error) {
+      console.error('Failed to search clients:', error);
+    }
+  };
+
+  const fetchClientVehicles = async (clientId: string) => {
+    try {
+      const response = await fetch(`/api/veiculos?cliente_id=${clientId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setClientVehicles(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch client vehicles:', error);
+    }
+  };
+
+  const selectClient = (client: Client) => {
+    setSelectedClient(client);
+    setClientSearch(client.nome);
+    setClientSuggestions([]);
+    setShowClientSuggestions(false);
+    fetchClientVehicles(client.id.toString());
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    // Handle license plate formatting and auto-fill
+    if (name === 'matricula') {
+      const cleaned = value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      let formatted = cleaned;
+      if (cleaned.length > 2 && cleaned.length <= 4) {
+        formatted = cleaned.slice(0, 2) + '-' + cleaned.slice(2);
+      } else if (cleaned.length > 4) {
+        formatted = cleaned.slice(0, 2) + '-' + cleaned.slice(2, 4) + '-' + cleaned.slice(4, 6);
+      }
+
+      setFormData(prev => ({ ...prev, matricula: formatted }));
+
+      // Auto-fill vehicle data when license plate is complete
+      if (formatted.length >= 6) {
+        searchVehicleByLicensePlate(formatted);
+      }
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const searchVehicleByLicensePlate = async (licensePlate: string) => {
+    try {
+      const response = await fetch(`/api/veiculos/search?matricula=${encodeURIComponent(licensePlate)}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.found) {
+          const vehicle = data.vehicle;
+          const client = data.client;
+          setFormData(prev => ({
+            ...prev,
+            marca: vehicle.marca || '',
+            modelo: vehicle.modelo || '',
+            ano: vehicle.ano || ''
+          }));
+          setIsVehicleAutoFilled(true);
+          setSelectedVehicle(vehicle.id);
+          // Select client associated with the vehicle
+          selectClient(client);
+        } else {
+          // Vehicle not found, clear auto-filled data
+          setFormData(prev => ({
+            ...prev,
+            marca: '',
+            modelo: '',
+            ano: ''
+          }));
+          setIsVehicleAutoFilled(false);
+          setSelectedVehicle('');
+          setSelectedClient(null);
+          setClientSearch('');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to search vehicle:', error);
+    }
+  };
+
+  const fetchClientById = async (clientId: number) => {
+    try {
+      const response = await fetch(`/api/clientes/${clientId}`);
+      if (response.ok) {
+        const client = await response.json();
+        selectClient(client);
+      }
+    } catch (error) {
+      console.error('Failed to fetch client:', error);
+    }
+  };
+
+  const createBudget = async () => {
+    if (budgetItems.length === 0) {
+      alert('Adicione pelo menos um item ao orçamento antes de criar.');
+      return;
+    }
+
+    if (!selectedClient) {
+      alert('Selecione um cliente antes de criar o orçamento.');
+      return;
+    }
+
+    try {
+      // Calculate totals
+      const totalPecas = budgetItems
+        .filter(item => item.type === 'part')
+        .reduce((sum, item) => sum + item.total, 0);
+
+      const totalMaoObra = budgetItems
+        .filter(item => item.type === 'service')
+        .reduce((sum, item) => sum + item.total, 0);
+
+      const budgetData = {
+        ref_orcamento: budgetId,
+        cliente_id: selectedClient.id,
+        veiculo_id: selectedVehicle ? parseInt(selectedVehicle) : null,
+        preparado_por: null, // TODO: Add user ID when authentication is implemented
+        data_emissao: new Date().toISOString().split('T')[0],
+        data_expiracao: null,
+        estado: 'pendente',
+        total_pecas: totalPecas,
+        total_mao_obra: totalMaoObra,
+        total_desconto: 0,
+        total_imposto: 0,
+        total_geral: total,
+        notas: '',
+        items: budgetItems.map(item => ({
+          type: item.type,
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          total: item.total
+        }))
+      };
+
+      const response = await fetch('/api/orcamentos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(budgetData),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(`Orçamento ${budgetId} criado com sucesso!\nTotal: €${total.toFixed(2)}\nItens: ${budgetItems.length}`);
+
+        // Reset form after creation
+        setBudgetItems([]);
+        setTotal(0);
+        setSelectedClient(null);
+        setClientSearch('');
+        updateIdPreview();
+      } else {
+        const error = await response.json();
+        alert(`Erro ao criar orçamento: ${error.error || 'Erro desconhecido'}`);
+      }
+    } catch (error) {
+      console.error('Error creating budget:', error);
+      alert('Erro ao criar orçamento. Verifique a conexão com o servidor.');
+    }
   };
 
   const approveBudget = () => {
@@ -131,6 +416,8 @@ const NewBudgetPage = () => {
     // Reset form after approval
     setBudgetItems([]);
     setTotal(0);
+    setSelectedClient(null);
+    setClientSearch('');
     updateIdPreview();
   };
 
@@ -146,16 +433,22 @@ const NewBudgetPage = () => {
                 <p className="text-sm text-gray-400 mt-1">ID: <span className="font-mono text-brand-yellow">{budgetId}</span></p>
               </div>
               <div className="flex space-x-3">
+                <Link href="/orcamentos" className="px-4 py-2 bg-gray-600 text-gray-200 font-medium hover:bg-gray-500 transition-colors rounded-none flex items-center">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                  </svg>
+                  Voltar
+                </Link>
                 <button className="px-4 py-2 bg-gray-600 text-gray-200 font-medium hover:bg-gray-500 transition-colors rounded-none flex items-center">
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
                   </svg>
                   Imprimir
                 </button>
-                <button className="px-4 py-2 bg-gray-600 text-gray-200 font-medium hover:bg-gray-500 transition-colors rounded-none">Voltar</button>
+                
                 <button
                   onClick={createBudget}
-                  className="px-4 py-2 bg-brand-yellow text-gray-900 font-bold hover:bg-brand-yellow-dark transition-colors rounded-none flex items-center"
+                  className="px-4 py-2 bg-brand-yellow-dark text-white font-bold hover:bg-yellow-600 transition-colors rounded-none flex items-center shadow-md"
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
@@ -167,45 +460,169 @@ const NewBudgetPage = () => {
           </header>
 
           <div className="p-6">
-            {/* Form Header */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Tipo de Cliente</label>
-                <select
-                  value={clientType}
-                  onChange={(e) => setClientType(e.target.value)}
-                  className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none transition-colors"
-                >
-                  <option value="C">Cliente Particular</option>
-                  <option value="TVDE">TVDE / Empresa</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Cliente</label>
-                <select className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none transition-colors">
-                  <option value="">Selecione um cliente...</option>
-                  <option value="1">João Silva</option>
-                  <option value="2">Maria Santos</option>
-                  <option value="3">Pedro Costa</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Veículo</label>
-                <select className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none transition-colors">
-                  <option value="">Selecione um veículo...</option>
-                  <option value="1">Peugeot 308 | 45-GH-23</option>
-                  <option value="2">Renault Clio | 12-AB-34</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Data</label>
-                <input
-                  type="date"
-                  defaultValue={new Date().toISOString().split('T')[0]}
-                  className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none transition-colors"
-                />
+
+            {/* Vehicle Data Section */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-200 mb-4">Dados do Veículo</h3>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Matrícula *</label>
+                  <input
+                    type="text"
+                    name="matricula"
+                    value={formData.matricula}
+                    onChange={handleInputChange}
+                    className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                    placeholder="Digite a matrícula..."
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Marca</label>
+                  <input
+                    type="text"
+                    name="marca"
+                    value={formData.marca}
+                    onChange={handleInputChange}
+                    readOnly={isVehicleAutoFilled}
+                    className={`w-full ${isVehicleAutoFilled ? 'bg-gray-800 text-gray-400 cursor-not-allowed' : 'bg-gray-900'} border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600`}
+                    placeholder="Marca do veículo"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Modelo</label>
+                  <input
+                    type="text"
+                    name="modelo"
+                    value={formData.modelo}
+                    onChange={handleInputChange}
+                    readOnly={isVehicleAutoFilled}
+                    className={`w-full ${isVehicleAutoFilled ? 'bg-gray-800 text-gray-400 cursor-not-allowed' : 'bg-gray-900'} border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600`}
+                    placeholder="Modelo do veículo"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Ano</label>
+                  <input
+                    type="text"
+                    name="ano"
+                    value={formData.ano}
+                    onChange={handleInputChange}
+                    readOnly={isVehicleAutoFilled}
+                    className={`w-full ${isVehicleAutoFilled ? 'bg-gray-800 text-gray-400 cursor-not-allowed' : 'bg-gray-900'} border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600`}
+                    placeholder="Ano do veículo"
+                  />
+                </div>
               </div>
             </div>
+
+            {/* Client Data Section */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-200 mb-4">Dados do Cliente</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="relative">
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Cliente *</label>
+                  <input
+                    type="text"
+                    value={clientSearch}
+                    onChange={handleClientSearchChange}
+                    className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                    placeholder="Pesquisar cliente..."
+                    required
+                  />
+                  {showClientSuggestions && clientSuggestions.length > 0 && (
+                    <div className="absolute z-10 w-full bg-gray-700 border border-gray-600 shadow-lg max-h-60 overflow-y-auto mt-1">
+                      {clientSuggestions.map(client => (
+                        <div
+                          key={client.id}
+                          className="p-3 hover:bg-gray-600 cursor-pointer border-b border-gray-600 last:border-0"
+                          onClick={() => selectClient(client)}
+                        >
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <div className="font-medium text-gray-200">{client.nome}</div>
+                              <div className="text-xs text-gray-400">{client.telefone} • {client.email}</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Data</label>
+                  <input
+                    type="date"
+                    defaultValue={new Date().toISOString().split('T')[0]}
+                    className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none transition-colors"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Client Details */}
+            {selectedClient && (
+              <div className="bg-gray-800 p-4 border border-gray-600 rounded-none mb-8">
+                <h4 className="text-lg font-semibold text-gray-200 mb-4">Dados do Cliente</h4>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Nome</label>
+                    <input
+                      type="text"
+                      value={selectedClient?.nome || ''}
+                      readOnly
+                      className="w-full bg-gray-900 border border-gray-600 text-gray-400 px-3 py-2 rounded-none cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Telefone</label>
+                    <input
+                      type="text"
+                      value={selectedClient?.telefone || ''}
+                      readOnly
+                      className="w-full bg-gray-900 border border-gray-600 text-gray-400 px-3 py-2 rounded-none cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Email</label>
+                    <input
+                      type="text"
+                      value={selectedClient?.email || ''}
+                      readOnly
+                      className="w-full bg-gray-900 border border-gray-600 text-gray-400 px-3 py-2 rounded-none cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">NIF</label>
+                    <input
+                      type="text"
+                      value={selectedClient?.nif || ''}
+                      readOnly
+                      className="w-full bg-gray-900 border border-gray-600 text-gray-400 px-3 py-2 rounded-none cursor-not-allowed"
+                    />
+                  </div>
+                  <div className="col-span-3">
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Endereço</label>
+                    <input
+                      type="text"
+                      value={selectedClient?.endereco || ''}
+                      readOnly
+                      className="w-full bg-gray-900 border border-gray-600 text-gray-400 px-3 py-2 rounded-none cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Perfil</label>
+                    <input
+                      type="text"
+                      value={selectedClient?.perfil || ''}
+                      readOnly
+                      className="w-full bg-gray-900 border border-gray-600 text-gray-400 px-3 py-2 rounded-none cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
             <hr className="border-gray-600 mb-6" />
 
@@ -226,14 +643,21 @@ const NewBudgetPage = () => {
                   className="w-full pl-10 pr-4 py-2.5 bg-gray-800 border border-gray-600 text-white rounded-none focus:ring-2 focus:ring-brand-yellow focus:border-brand-yellow transition placeholder-gray-500"
                   value={searchTerm}
                   onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setShowSearchResults(e.target.value.length >= 2);
+                    const value = e.target.value;
+                    setSearchTerm(value);
+                    if (value.length >= 2) {
+                      searchCatalogItems(value);
+                      setShowSearchResults(true);
+                    } else {
+                      setSearchResults([]);
+                      setShowSearchResults(false);
+                    }
                   }}
                   onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
                 />
                 {showSearchResults && (
                   <div className="absolute z-10 w-full bg-gray-700 border border-gray-600 shadow-lg max-h-60 overflow-y-auto">
-                    {filteredItems.map(item => (
+                    {searchResults.map(item => (
                       <div
                         key={item.id}
                         className="p-3 hover:bg-gray-600 cursor-pointer border-b border-gray-600 last:border-0"
@@ -250,6 +674,79 @@ const NewBudgetPage = () => {
                     ))}
                   </div>
                 )}
+              </div>
+
+              {/* Custom Item Form */}
+              <div className="bg-gray-800 p-4 border border-gray-600 rounded-none mb-4">
+                <h4 className="text-lg font-semibold text-gray-200 mb-4">Adicionar Item Personalizado</h4>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Descrição *</label>
+                    <input
+                      type="text"
+                      value={customItem.name}
+                      onChange={(e) => setCustomItem(prev => ({ ...prev, name: e.target.value }))}
+                      className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                      placeholder="Descrição do item personalizado"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Quantidade *</label>
+                    <input
+                      type="number"
+                      value={customItem.quantity}
+                      onChange={(e) => setCustomItem(prev => ({ ...prev, quantity: parseFloat(e.target.value) || 1 }))}
+                      min="0.1"
+                      step="0.1"
+                      className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                      placeholder="1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Preço Unitário *</label>
+                    <input
+                      type="number"
+                      value={customItem.unitPrice}
+                      onChange={(e) => setCustomItem(prev => ({ ...prev, unitPrice: parseFloat(e.target.value) || 0 }))}
+                      min="0"
+                      step="0.01"
+                      className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600 mb-2"
+                      placeholder="0.00"
+                      style={{
+                        WebkitAppearance: 'none',
+                        MozAppearance: 'textfield'
+                      }}
+                    />
+                    <button
+                      onClick={() => {
+                        if (!customItem.name.trim()) {
+                          alert('Por favor, insira uma descrição para o item.');
+                          return;
+                        }
+                        if (customItem.unitPrice <= 0) {
+                          alert('Por favor, insira um preço válido.');
+                          return;
+                        }
+
+                        const newItem: BudgetItem = {
+                          id: `custom-${Date.now()}`,
+                          name: customItem.name,
+                          quantity: customItem.quantity,
+                          unitPrice: customItem.unitPrice,
+                          unit: 'h',
+                          total: customItem.quantity * customItem.unitPrice,
+                          type: 'service'
+                        };
+
+                        setBudgetItems([...budgetItems, newItem]);
+                        setCustomItem({ name: '', quantity: 1, unitPrice: 0 });
+                      }}
+                      className="w-full px-4 py-2 bg-brand-yellow text-gray-900 font-bold hover:bg-brand-yellow-dark transition-colors rounded-none"
+                    >
+                      Adicionar
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* Items Table */}

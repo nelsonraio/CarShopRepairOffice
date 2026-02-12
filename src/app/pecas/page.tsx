@@ -220,7 +220,7 @@ export default function PartsPage() {
         onClose={() => setIsOrderModalOpen(false)}
         parts={parts}
         onOrderParts={handleOrderParts}
-        initialSelectedParts={reorderSelectedParts}
+        initialSelectedParts={reorderSelectedParts ?? []}
       />
 
       <OrdersModal
