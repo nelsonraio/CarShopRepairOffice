@@ -4,7 +4,8 @@ const prisma = new PrismaClient();
 
 async function main() {
   try {
-    console.log('🚀 Conectando ao PostgreSQL...')
+    console.log('🚀 Conectando ao MySQL...')
+
 
     // Verifique se o modelo no seu schema.prisma é 'clientes'
     const contagemClientes = await prisma.clientes.count()

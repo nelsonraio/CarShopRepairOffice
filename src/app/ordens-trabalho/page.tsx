@@ -26,6 +26,33 @@ const WorkOrdersPage = () => {
   const [filteredWorkOrders, setFilteredWorkOrders] = useState<WorkOrder[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Tem a certeza que deseja eliminar esta ordem de trabalho?')) {
+      return;
+    }
+
+    setDeletingId(id);
+    try {
+      const response = await fetch(`/api/ordens-trabalho?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete work order');
+      }
+
+      // Remove the deleted work order from the state
+      setWorkOrders(prev => prev.filter(wo => wo.id !== id));
+      setFilteredWorkOrders(prev => prev.filter(wo => wo.id !== id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao eliminar ordem de trabalho');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   useEffect(() => {
     const fetchWorkOrders = async () => {
@@ -163,8 +190,8 @@ const WorkOrdersPage = () => {
                   <thead className="text-xs text-gray-300 uppercase bg-gray-800 border-b border-gray-600">
                     <tr>
                       <th scope="col" className="px-6 py-3">Nº OT</th>
-                      <th scope="col" className="px-6 py-3">Cliente</th>
                       <th scope="col" className="px-6 py-3">Veículo</th>
+                      <th scope="col" className="px-6 py-3">Cliente</th>
                       <th scope="col" className="px-6 py-3">Mecânico</th>
                       <th scope="col" className="px-6 py-3">Data Abertura</th>
                       <th scope="col" className="px-6 py-3">Data Fechamento</th>
@@ -184,8 +211,9 @@ const WorkOrdersPage = () => {
                       filteredWorkOrders.map(workOrder => (
                         <tr key={workOrder.id} className="bg-gray-800 hover:bg-gray-700 transition-colors">
                           <td className="px-6 py-4 font-medium text-gray-200 whitespace-nowrap">{workOrder.id}</td>
-                          <td className="px-6 py-4">{workOrder.client}</td>
+                          
                           <td className="px-6 py-4 text-gray-400">{workOrder.vehicle}</td>
+                          <td className="px-6 py-4">{workOrder.client}</td>
                           <td className="px-6 py-4 text-gray-400">{workOrder.mechanic}</td>
                           <td className="px-6 py-4 text-gray-400">{workOrder.openDate}</td>
                           <td className="px-6 py-4 text-gray-400">{workOrder.closeDate || '-'}</td>
@@ -210,12 +238,20 @@ const WorkOrdersPage = () => {
                                 </svg>
                               </button>
                               <button
-                                className="text-red-400 hover:text-red-300 transition-colors"
+                                className="text-red-400 hover:text-red-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 title="Eliminar"
+                                onClick={() => handleDelete(workOrder.id)}
+                                disabled={deletingId === workOrder.id}
                               >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
+                                {deletingId === workOrder.id ? (
+                                  <svg className="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                  </svg>
+                                ) : (
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                  </svg>
+                                )}
                               </button>
                             </div>
                           </td>

@@ -76,9 +76,7 @@ const NewBudgetPage = () => {
 
 
 
-  useEffect(() => {
-    updateIdPreview();
-  }, [clientType]);
+
 
   useEffect(() => {
     const newTotal = budgetItems.reduce((sum, item) => sum + item.total, 0);
@@ -162,14 +160,17 @@ const NewBudgetPage = () => {
     }
   };
 
-  const updateIdPreview = () => {
-    const randomNum = Math.floor(1000 + Math.random() * 9000);
-    const year = new Date().getFullYear();
+  const generateNextBudgetId = async () => {
+    if (!selectedClient) return;
 
-    if (clientType === 'TVDE') {
-      setBudgetId(`OR-${year}-TVDE${randomNum}`);
-    } else {
-      setBudgetId(`OR-${year}-C${randomNum}`);
+    try {
+      const response = await fetch(`/api/orcamentos/next-id?perfil=${encodeURIComponent(selectedClient.perfil)}`);
+      if (response.ok) {
+        const data = await response.json();
+        setBudgetId(data.nextId);
+      }
+    } catch (error) {
+      console.error('Failed to generate next budget ID:', error);
     }
   };
 
@@ -247,6 +248,7 @@ const NewBudgetPage = () => {
     setClientSuggestions([]);
     setShowClientSuggestions(false);
     fetchClientVehicles(client.id.toString());
+    generateNextBudgetId();
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -334,6 +336,17 @@ const NewBudgetPage = () => {
     }
 
     try {
+      // Generate budget ID if not set
+      let ref_orcamento = budgetId;
+      if (!ref_orcamento && selectedClient) {
+        const response = await fetch(`/api/orcamentos/next-id?perfil=${encodeURIComponent(selectedClient.perfil)}`);
+        if (response.ok) {
+          const data = await response.json();
+          ref_orcamento = data.nextId;
+          setBudgetId(ref_orcamento);
+        }
+      }
+
       // Calculate totals
       const totalPecas = budgetItems
         .filter(item => item.type === 'part')
@@ -344,7 +357,7 @@ const NewBudgetPage = () => {
         .reduce((sum, item) => sum + item.total, 0);
 
       const budgetData = {
-        ref_orcamento: budgetId,
+        ref_orcamento,
         cliente_id: selectedClient.id,
         veiculo_id: selectedVehicle ? parseInt(selectedVehicle) : null,
         preparado_por: null, // TODO: Add user ID when authentication is implemented
@@ -384,7 +397,7 @@ const NewBudgetPage = () => {
         setTotal(0);
         setSelectedClient(null);
         setClientSearch('');
-        updateIdPreview();
+        setBudgetId('');
       } else {
         const error = await response.json();
         alert(`Erro ao criar orçamento: ${error.error || 'Erro desconhecido'}`);

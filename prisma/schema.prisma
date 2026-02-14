@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -11,7 +11,6 @@ datasource db {
 model agendamentos {
   id               BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
   cliente_id       Int
-  cliente          clientes  @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
   mecanico_id      Int?
   matricula        String?   @db.VarChar(50)
   titulo           String    @db.VarChar(255)
@@ -27,6 +26,9 @@ model agendamentos {
   marca            String?   @db.VarChar(150)
   modelo           String?   @db.VarChar(150)
   ano              Int?
+  cliente          clientes  @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
+
+  @@index([cliente_id], map: "agendamentos_cliente_id_fkey")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -71,8 +73,8 @@ model clientes {
   ativo         Boolean?         @default(true)
   criado_em     DateTime?        @default(now()) @db.Timestamp(0)
   atualizado_em DateTime?        @default(now()) @db.Timestamp(0)
-  veiculos      veiculos[]
   agendamentos  agendamentos[]
+  veiculos      veiculos[]
   orcamentos    orcamentos[]
 }
 
@@ -163,7 +165,6 @@ model itens_fatura {
 model itens_orcamento {
   id                  BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
   orcamento_id        BigInt
-  orcamento           orcamentos @relation(fields: [orcamento_id], references: [id], onDelete: Cascade)
   tipo_item           String    @db.VarChar(20)
   servico_id          Int?
   peca_id             Int?
@@ -177,6 +178,7 @@ model itens_orcamento {
   valor_total         Decimal   @db.Decimal(10, 2)
   notas               String?   @db.Text
   criado_em           DateTime? @default(now()) @db.Timestamp(0)
+  orcamento           orcamentos @relation(fields: [orcamento_id], references: [id], onDelete: Cascade)
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -249,16 +251,15 @@ model mecanicos {
   notas            String?   @db.Text
   criado_em        DateTime? @default(now()) @db.Timestamp(0)
   atualizado_em    DateTime? @default(now()) @db.Timestamp(0)
+  ordens_trabalho  ordens_trabalho[]
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model orcamentos {
   id             BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
   ref_orcamento  String    @unique(map: "numero_orcamento") @db.VarChar(20)
-  cliente_id     Int?
-  cliente        clientes?  @relation(fields: [cliente_id], references: [id], onDelete: SetNull)
-  veiculo_id     BigInt?
-  veiculo        veiculos?  @relation(fields: [veiculo_id], references: [id], onDelete: SetNull)
+  cliente_id     Int
+  veiculo_id     BigInt
   preparado_por  Int?
   data_emissao   DateTime? @db.Date
   data_expiracao DateTime? @db.Date
@@ -273,7 +274,12 @@ model orcamentos {
   aprovado_por   Int?
   criado_em      DateTime? @default(now()) @db.Timestamp(0)
   atualizado_em  DateTime? @default(now()) @db.Timestamp(0)
+  cliente        clientes  @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
+  veiculo        veiculos  @relation(fields: [veiculo_id], references: [id], onDelete: Cascade)
   itens_orcamento itens_orcamento[]
+
+  @@index([cliente_id], map: "orcamentos_cliente_id_fkey")
+  @@index([veiculo_id], map: "orcamentos_veiculo_id_fkey")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -301,6 +307,7 @@ model ordens_trabalho {
   atualizado_em         DateTime? @default(now()) @db.Timestamp(0)
   criado_por            Int?
   atualizado_por        Int?
+  mecanico              mecanicos? @relation(fields: [mecanico_id], references: [id])
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -393,7 +400,6 @@ model utilizadores {
 model veiculos {
   id                 BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
   cliente_id         Int?
-  cliente            clientes? @relation(fields: [cliente_id], references: [id], onDelete: SetNull)
   marca              String    @db.VarChar(50)
   modelo             String    @db.VarChar(50)
   matricula          String    @unique(map: "matricula") @db.VarChar(20)
@@ -410,7 +416,10 @@ model veiculos {
   notas              String?   @db.Text
   criado_em          DateTime? @default(now()) @db.Timestamp(0)
   atualizado_em      DateTime? @default(now()) @db.Timestamp(0)
+  cliente            clientes? @relation(fields: [cliente_id], references: [id])
   orcamentos         orcamentos[]
+
+  @@index([cliente_id], map: "veiculos_cliente_id_fkey")
 }
 
 model perfis_clientes {

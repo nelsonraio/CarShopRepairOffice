@@ -458,6 +458,13 @@ const BudgetsPage = ()=>{
     const [filteredBudgets, setFilteredBudgets] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])([]);
     const [loading, setLoading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
     const [error, setError] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    // Estados para o modal de seleção de mecânico
+    const [showMechanicModal, setShowMechanicModal] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [mechanics, setMechanics] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])([]);
+    const [selectedMechanic, setSelectedMechanic] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('');
+    const [selectedMechanicName, setSelectedMechanicName] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('');
+    const [pendingBudgetId, setPendingBudgetId] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [pendingCurrentStatus, setPendingCurrentStatus] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('');
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
         fetchBudgets();
     }, []);
@@ -515,11 +522,356 @@ const BudgetsPage = ()=>{
                 return 'text-gray-400 bg-gray-800 border border-gray-700';
         }
     };
-    const updateBudgetStatus = (budgetId, newStatus)=>{
+    const updateBudgetStatus = (budgetId, newStatus, mechanicName)=>{
         setBudgets((prevBudgets)=>prevBudgets.map((budget)=>budget.id === budgetId ? {
                     ...budget,
-                    estado: newStatus
+                    estado: newStatus,
+                    mecanico_nome: mechanicName || budget.mecanico_nome
                 } : budget));
+    };
+    const fetchMechanics = async ()=>{
+        try {
+            const response = await fetch('/api/mecanicos');
+            if (!response.ok) {
+                throw new Error('Failed to fetch mechanics');
+            }
+            const data = await response.json();
+            setMechanics(data);
+        } catch (err) {
+            console.error('Error fetching mechanics:', err);
+        }
+    };
+    const handleApproveBudget = async (budgetId, currentStatus)=>{
+        const newStatus = currentStatus === 'Aprovado' ? 'Pendente' : 'Aprovado';
+        // Se estiver aprovar (não reverter), mostrar modal de seleção de mecânico
+        if (newStatus === 'Aprovado') {
+            setPendingBudgetId(budgetId);
+            setPendingCurrentStatus(currentStatus);
+            setSelectedMechanic('');
+            setSelectedMechanicName('');
+            await fetchMechanics();
+            setShowMechanicModal(true);
+            return;
+        }
+        // Se for reverter para Pendente, confirmar diretamente
+        if (!confirm('Tem certeza que deseja reverter este orçamento para Pendente?')) {
+            return;
+        }
+        try {
+            const response = await fetch(`/api/orcamentos?id=${budgetId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    estado: newStatus
+                })
+            });
+            if (!response.ok) {
+                throw new Error('Failed to revert budget');
+            }
+            // Update local state
+            updateBudgetStatus(budgetId, newStatus);
+        } catch (err) {
+            alert('Erro ao reverter orçamento: ' + (err instanceof Error ? err.message : 'Erro desconhecido'));
+        }
+    };
+    const confirmApproveWithMechanic = async ()=>{
+        if (!pendingBudgetId || !selectedMechanic) {
+            alert('Por favor selecione um mecânico');
+            return;
+        }
+        try {
+            const response = await fetch(`/api/orcamentos?id=${pendingBudgetId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    estado: 'Aprovado',
+                    mecanico_id: parseInt(selectedMechanic)
+                })
+            });
+            if (!response.ok) {
+                throw new Error('Failed to approve budget');
+            }
+            // Re-fetch budgets to get the mechanic name from the work order
+            await fetchBudgets();
+            // Fechar modal e limpar estados
+            setShowMechanicModal(false);
+            setSelectedMechanic('');
+            setSelectedMechanicName('');
+            setPendingBudgetId(null);
+            setPendingCurrentStatus('');
+        } catch (err) {
+            alert('Erro ao aprovar orçamento: ' + (err instanceof Error ? err.message : 'Erro desconhecido'));
+        }
+    };
+    const handlePrintBudget = (budget)=>{
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+            // Gerar as linhas da tabela dinamicamente
+            const rows = budget.itens_orcamento ? budget.itens_orcamento.map((item)=>`
+      <tr>
+        <td>${item.descricao}</td>
+        <td>${item.quantidade}</td>
+        <td>${item.valor_total.toFixed(2)}€</td>
+      </tr>
+    `).join('') : '<tr><td>-</td><td>-</td><td>-</td></tr>';
+            // Se tiveres uma função para converter o total em extenso, podes usá-la aqui
+            const totalExtenso = ""; // Ex: "Setenta e Nove Euros e Trinta e Seis Cêntimos"
+            printWindow.document.write(`
+      <html>
+        <head>
+          <title>Folha de Orçamento - ${budget.ref_orcamento}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 40px; color: #000; }
+            
+            /* Cabeçalho */
+            .header-container { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+            .logo-section { display: flex; align-items: center; }
+            .logo-section img { width: 70px; margin-right: 15px; }
+            .company-name h1 { margin: 0; font-size: 20px; font-weight: bold; }
+            .company-name p { margin: 0; font-size: 14px; }
+            .contacts-section { text-align: right; font-size: 12px; line-height: 1.4; }
+
+            /* Dados do Orçamento */
+            .doc-info { margin-top: 10px; margin-bottom: 20px; line-height: 1.6; }
+            .doc-title { font-weight: bold; font-size: 16px; margin-bottom: 5px; }
+            .client-details { font-size: 14px; }
+
+            /* Tabela */
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th { background-color: #666; color: #fff; border: 1px solid #000; padding: 10px; text-transform: uppercase; font-size: 13px; }
+            td { border: 1px solid #000; padding: 10px; text-align: center; font-size: 13px; }
+            td:first-child { text-align: left; width: 60%; }
+
+            /* Total */
+            .total-container { 
+              margin-top: 20px; 
+              border: 2px solid #000; 
+              background-color: #e0e0e0; 
+              padding: 8px; 
+              font-weight: bold; 
+              font-size: 14px;
+            }
+
+            /* Assinaturas */
+            .signatures-section { margin-top: 50px; }
+            .sig-block { margin-bottom: 40px; font-size: 12px; }
+            .sig-line { border-bottom: 1px solid #000; width: 250px; margin-top: 35px; }
+            
+            @media print {
+              body { margin: 20mm; }
+              .total-container { -webkit-print-color-adjust: exact; }
+              th { -webkit-print-color-adjust: exact; }
+              img { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            }
+
+          </style>
+        </head>
+        <body>
+          <div class="header-container">
+            <divd
+              </div>
+                <h1>MQ Auto</h1>
+                <p>Oficina Automóvel</p>
+              </div>
+            </div>
+
+
+            <div class="contacts-section">
+              <p>(+351) 935 205 354</p>
+              <p>montesquaresmalda@outlook.com</p>
+            </div>
+          </div>
+
+          <div class="doc-info">
+            <div class="doc-title">Folha de Orçamento: ${budget.ref_orcamento}</div>
+            <div class="client-details">
+              <p>Cliente: ${budget.cliente?.nome || ''}</p>
+              <p>Matrícula: ${budget.veiculo?.matricula || ''}</p>
+              <p>Data: ${new Date(budget.data_emissao).toLocaleDateString('pt-PT')}</p>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>DESCRIÇÃO / SERVIÇO</th>
+                <th>QUANTIDADE</th>
+                <th>VALOR</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+
+          </table>
+
+          <div class="total-container">
+            TOTAL = ${budget.total_geral.toFixed(2)}€ ${("TURBOPACK compile-time falsy", 0) ? "TURBOPACK unreachable" : ''}
+          </div>
+
+          <div class="signatures-section">
+            <div class="sig-block">
+              <p>Responsável pela Manutenção:</p>
+              <div class="sig-line"></div>
+            </div>
+            <div class="sig-block">
+              <p>Supervisor da Manutenção:</p>
+              <div class="sig-line"></div>
+            </div>
+            <div class="sig-block">
+              <p>Recebido por:</p>
+              <div class="sig-line"></div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `);
+            printWindow.document.close();
+            // Pequeno delay para garantir que o estilo é aplicado antes da impressão
+            setTimeout(()=>{
+                printWindow.focus();
+                printWindow.print();
+                printWindow.close();
+            }, 250);
+        }
+    };
+    const handlePrintWorkOrder = (budget, mechanicName)=>{
+        // Generate work order reference from budget reference (replace ORC with OT)
+        const workOrderRef = budget.ref_orcamento.replace(/^ORC/, 'OT');
+        // Open a new window with work order details for printing
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+            // Gerar as linhas da tabela dinamicamente (sem valores)
+            const rows = budget.itens_orcamento ? budget.itens_orcamento.map((item)=>`
+      <tr>
+        <td>${item.descricao}</td>
+        <td>${item.quantidade}</td>
+        <td></td>
+      </tr>
+    `).join('') : '<tr><td>-</td><td>-</td><td></td></tr>';
+            printWindow.document.write(`
+      <html>
+        <head>
+          <title>Ordem de Trabalho - ${workOrderRef}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 40px; color: #000; }
+            
+            /* Cabeçalho */
+            .header-container { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+            .logo-section { display: flex; align-items: center; }
+            .logo-section img { width: 70px; margin-right: 15px; }
+            .company-name h1 { margin: 0; font-size: 20px; font-weight: bold; }
+            .company-name p { margin: 0; font-size: 14px; }
+            .contacts-section { text-align: right; font-size: 12px; line-height: 1.4; }
+
+            /* Dados da Ordem de Trabalho */
+            .doc-info { margin-top: 10px; margin-bottom: 20px; line-height: 1.6; }
+            .doc-title { font-weight: bold; font-size: 16px; margin-bottom: 5px; }
+            .client-details { font-size: 14px; }
+
+            /* Tabela */
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th { background-color: #666; color: #fff; border: 1px solid #000; padding: 10px; text-transform: uppercase; font-size: 13px; }
+            td { border: 1px solid #000; padding: 10px; text-align: center; font-size: 13px; }
+            td:first-child { text-align: left; width: 60%; }
+
+            /* Mecânico */
+            .mechanic-section { 
+              margin-top: 30px; 
+              border: 2px solid #000; 
+              background-color: #f5f5f5; 
+              padding: 15px; 
+              font-size: 14px;
+            }
+            .mechanic-label { font-weight: bold; margin-bottom: 5px; }
+            .mechanic-name { font-size: 16px; color: #333; }
+
+            /* Assinaturas */
+            .signatures-section { margin-top: 50px; }
+            .sig-block { margin-bottom: 40px; font-size: 12px; }
+            .sig-line { border-bottom: 1px solid #000; width: 250px; margin-top: 35px; }
+            
+            @media print {
+              body { margin: 20mm; }
+              th { -webkit-print-color-adjust: exact; }
+              img { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header-container">
+            <div class="logo-section">
+              <div style="background: white; padding: 5px; border-radius: 4px; display: inline-block; margin-right: 15px;">
+                <img src="/logo.png" alt="MQAuto Logo" style="width: 50px; height: 50px; object-fit: contain; display: block;" />
+              </div>
+              <div class="company-name">
+                <h1>MQ Auto</h1>
+                <p>Oficina Automóvel</p>
+              </div>
+            </div>
+            <div class="contacts-section">
+              <p>(+351) 935 205 354</p>
+              <p>montesquaresmalda@outlook.com</p>
+            </div>
+          </div>
+
+          <div class="doc-info">
+            <div class="doc-title">Ordem de Trabalho: ${workOrderRef}</div>
+            <div class="client-details">
+              <p>Orçamento de Origem: ${budget.ref_orcamento}</p>
+              <p>Cliente: ${budget.cliente?.nome || ''}</p>
+              <p>Matrícula: ${budget.veiculo?.matricula || ''}</p>
+              <p>Data: ${new Date().toLocaleDateString('pt-PT')}</p>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>DESCRIÇÃO / SERVIÇO</th>
+                <th>QUANTIDADE</th>
+                <th>CONCLUÍDO</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+
+          <div class="mechanic-section">
+            <div class="mechanic-label">Mecânico Responsável:</div>
+            <div class="mechanic-name">${mechanicName || '_____________________________'}</div>
+          </div>
+
+          <div class="signatures-section">
+            <div class="sig-block">
+              <p>Assinatura do Mecânico:</p>
+              <div class="sig-line"></div>
+            </div>
+            <div class="sig-block">
+              <p>Assinatura do Supervisor:</p>
+              <div class="sig-line"></div>
+            </div>
+            <div class="sig-block">
+              <p>Data de Conclusão:</p>
+              <div class="sig-line"></div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `);
+            printWindow.document.close();
+            // Pequeno delay para garantir que o estilo é aplicado antes da impressão
+            setTimeout(()=>{
+                printWindow.focus();
+                printWindow.print();
+                printWindow.close();
+            }, 250);
+        }
     };
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "flex h-screen bg-gray-800",
@@ -528,7 +880,7 @@ const BudgetsPage = ()=>{
                 activePage: "orcamentos"
             }, void 0, false, {
                 fileName: "[project]/src/app/orcamentos/page.tsx",
-                lineNumber: 105,
+                lineNumber: 506,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
@@ -544,7 +896,7 @@ const BudgetsPage = ()=>{
                                         children: "Orçamentos"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/orcamentos/page.tsx",
-                                        lineNumber: 110,
+                                        lineNumber: 511,
                                         columnNumber: 13
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -552,13 +904,13 @@ const BudgetsPage = ()=>{
                                         children: "Gerencie os orçamentos de reparação"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/orcamentos/page.tsx",
-                                        lineNumber: 111,
+                                        lineNumber: 512,
                                         columnNumber: 13
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/orcamentos/page.tsx",
-                                lineNumber: 109,
+                                lineNumber: 510,
                                 columnNumber: 11
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -579,30 +931,30 @@ const BudgetsPage = ()=>{
                                                 d: "M12 4v16m8-8H4"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                lineNumber: 116,
+                                                lineNumber: 517,
                                                 columnNumber: 17
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/orcamentos/page.tsx",
-                                            lineNumber: 115,
+                                            lineNumber: 516,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         "Novo Orçamento"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/orcamentos/page.tsx",
-                                    lineNumber: 114,
+                                    lineNumber: 515,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             }, void 0, false, {
                                 fileName: "[project]/src/app/orcamentos/page.tsx",
-                                lineNumber: 113,
+                                lineNumber: 514,
                                 columnNumber: 11
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/orcamentos/page.tsx",
-                        lineNumber: 108,
+                        lineNumber: 509,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -627,13 +979,13 @@ const BudgetsPage = ()=>{
                                                     d: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                    lineNumber: 128,
-                                                    columnNumber: 19
+                                                    lineNumber: 529,
+                                                    columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                lineNumber: 127,
-                                                columnNumber: 17
+                                                lineNumber: 528,
+                                                columnNumber: 15
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
                                                 type: "text",
@@ -643,14 +995,14 @@ const BudgetsPage = ()=>{
                                                 onChange: (e)=>setSearchTerm(e.target.value)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                lineNumber: 130,
-                                                columnNumber: 17
+                                                lineNumber: 531,
+                                                columnNumber: 15
                                             }, ("TURBOPACK compile-time value", void 0))
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/orcamentos/page.tsx",
-                                        lineNumber: 126,
-                                        columnNumber: 15
+                                        lineNumber: 527,
+                                        columnNumber: 13
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "w-full md:w-48",
@@ -664,40 +1016,40 @@ const BudgetsPage = ()=>{
                                                     children: "Todos os Estados"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                    lineNumber: 144,
-                                                    columnNumber: 19
+                                                    lineNumber: 545,
+                                                    columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
                                                     value: "Pendente",
                                                     children: "Pendente"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                    lineNumber: 145,
-                                                    columnNumber: 19
+                                                    lineNumber: 546,
+                                                    columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
                                                     value: "Aprovado",
                                                     children: "Aprovado"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                    lineNumber: 146,
-                                                    columnNumber: 19
+                                                    lineNumber: 547,
+                                                    columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/orcamentos/page.tsx",
-                                            lineNumber: 139,
-                                            columnNumber: 17
+                                            lineNumber: 540,
+                                            columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0))
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/orcamentos/page.tsx",
-                                        lineNumber: 138,
-                                        columnNumber: 15
+                                        lineNumber: 539,
+                                        columnNumber: 13
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/orcamentos/page.tsx",
-                                lineNumber: 125,
+                                lineNumber: 526,
                                 columnNumber: 11
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -717,7 +1069,7 @@ const BudgetsPage = ()=>{
                                                             children: "ID Orçamento"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                            lineNumber: 157,
+                                                            lineNumber: 558,
                                                             columnNumber: 21
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -726,7 +1078,7 @@ const BudgetsPage = ()=>{
                                                             children: "Veículo"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                            lineNumber: 158,
+                                                            lineNumber: 559,
                                                             columnNumber: 21
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -735,7 +1087,7 @@ const BudgetsPage = ()=>{
                                                             children: "Cliente"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                            lineNumber: 159,
+                                                            lineNumber: 560,
                                                             columnNumber: 21
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -744,7 +1096,7 @@ const BudgetsPage = ()=>{
                                                             children: "Data"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                            lineNumber: 160,
+                                                            lineNumber: 561,
                                                             columnNumber: 21
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -753,7 +1105,7 @@ const BudgetsPage = ()=>{
                                                             children: "Total"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                            lineNumber: 161,
+                                                            lineNumber: 562,
                                                             columnNumber: 21
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -762,7 +1114,7 @@ const BudgetsPage = ()=>{
                                                             children: "Estado"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                            lineNumber: 162,
+                                                            lineNumber: 563,
                                                             columnNumber: 21
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -771,19 +1123,19 @@ const BudgetsPage = ()=>{
                                                             children: "Ações"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                            lineNumber: 163,
+                                                            lineNumber: 564,
                                                             columnNumber: 21
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                    lineNumber: 156,
+                                                    lineNumber: 557,
                                                     columnNumber: 19
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                lineNumber: 155,
-                                                columnNumber: 19
+                                                lineNumber: 556,
+                                                columnNumber: 17
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
                                                 className: "divide-y divide-gray-600",
@@ -794,12 +1146,12 @@ const BudgetsPage = ()=>{
                                                         children: "Nenhum orçamento encontrado."
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                        lineNumber: 169,
+                                                        lineNumber: 570,
                                                         columnNumber: 23
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                    lineNumber: 168,
+                                                    lineNumber: 569,
                                                     columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0)) : filteredBudgets.map((budget)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
                                                         className: "hover:bg-gray-600 transition-colors",
@@ -809,7 +1161,7 @@ const BudgetsPage = ()=>{
                                                                 children: budget.ref_orcamento
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                                lineNumber: 176,
+                                                                lineNumber: 577,
                                                                 columnNumber: 25
                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -817,7 +1169,7 @@ const BudgetsPage = ()=>{
                                                                 children: budget.veiculo ? `${budget.veiculo.marca} ${budget.veiculo.modelo} | ${budget.veiculo.matricula}` : 'Veículo não informado'
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                                lineNumber: 177,
+                                                                lineNumber: 578,
                                                                 columnNumber: 25
                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -825,7 +1177,7 @@ const BudgetsPage = ()=>{
                                                                 children: budget.cliente?.nome || 'Cliente não informado'
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                                lineNumber: 179,
+                                                                lineNumber: 580,
                                                                 columnNumber: 25
                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -833,7 +1185,7 @@ const BudgetsPage = ()=>{
                                                                 children: new Date(budget.data_emissao).toLocaleDateString('pt-PT')
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                                lineNumber: 180,
+                                                                lineNumber: 581,
                                                                 columnNumber: 25
                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -844,7 +1196,7 @@ const BudgetsPage = ()=>{
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                                lineNumber: 181,
+                                                                lineNumber: 582,
                                                                 columnNumber: 25
                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -854,12 +1206,12 @@ const BudgetsPage = ()=>{
                                                                     children: budget.estado
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                                    lineNumber: 183,
+                                                                    lineNumber: 584,
                                                                     columnNumber: 27
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                                lineNumber: 182,
+                                                                lineNumber: 583,
                                                                 columnNumber: 25
                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -867,6 +1219,93 @@ const BudgetsPage = ()=>{
                                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                     className: "flex justify-center space-x-2",
                                                                     children: [
+                                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                                            onClick: ()=>handleApproveBudget(budget.id, budget.estado),
+                                                                            className: "text-green-400 hover:text-green-300 transition-colors",
+                                                                            title: budget.estado === 'Aprovado' ? 'Reverter para Pendente' : 'Aprovar',
+                                                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
+                                                                                className: "w-4 h-4",
+                                                                                fill: "none",
+                                                                                stroke: "currentColor",
+                                                                                viewBox: "0 0 24 24",
+                                                                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
+                                                                                    strokeLinecap: "round",
+                                                                                    strokeLinejoin: "round",
+                                                                                    strokeWidth: "2",
+                                                                                    d: "M5 13l4 4L19 7"
+                                                                                }, void 0, false, {
+                                                                                    fileName: "[project]/src/app/orcamentos/page.tsx",
+                                                                                    lineNumber: 596,
+                                                                                    columnNumber: 33
+                                                                                }, ("TURBOPACK compile-time value", void 0))
+                                                                            }, void 0, false, {
+                                                                                fileName: "[project]/src/app/orcamentos/page.tsx",
+                                                                                lineNumber: 595,
+                                                                                columnNumber: 31
+                                                                            }, ("TURBOPACK compile-time value", void 0))
+                                                                        }, void 0, false, {
+                                                                            fileName: "[project]/src/app/orcamentos/page.tsx",
+                                                                            lineNumber: 590,
+                                                                            columnNumber: 29
+                                                                        }, ("TURBOPACK compile-time value", void 0)),
+                                                                        budget.estado === 'Aprovado' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                                            onClick: ()=>handlePrintWorkOrder(budget, budget.mecanico_nome),
+                                                                            className: "text-orange-400 hover:text-orange-300 transition-colors",
+                                                                            title: "Imprimir Ordem de Trabalho",
+                                                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
+                                                                                className: "w-4 h-4",
+                                                                                fill: "none",
+                                                                                stroke: "currentColor",
+                                                                                viewBox: "0 0 24 24",
+                                                                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
+                                                                                    strokeLinecap: "round",
+                                                                                    strokeLinejoin: "round",
+                                                                                    strokeWidth: "2",
+                                                                                    d: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                                                                                }, void 0, false, {
+                                                                                    fileName: "[project]/src/app/orcamentos/page.tsx",
+                                                                                    lineNumber: 606,
+                                                                                    columnNumber: 35
+                                                                                }, ("TURBOPACK compile-time value", void 0))
+                                                                            }, void 0, false, {
+                                                                                fileName: "[project]/src/app/orcamentos/page.tsx",
+                                                                                lineNumber: 605,
+                                                                                columnNumber: 33
+                                                                            }, ("TURBOPACK compile-time value", void 0))
+                                                                        }, void 0, false, {
+                                                                            fileName: "[project]/src/app/orcamentos/page.tsx",
+                                                                            lineNumber: 600,
+                                                                            columnNumber: 31
+                                                                        }, ("TURBOPACK compile-time value", void 0)),
+                                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                                            onClick: ()=>handlePrintBudget(budget),
+                                                                            className: "text-blue-400 hover:text-blue-300 transition-colors",
+                                                                            title: "Imprimir Orçamento",
+                                                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
+                                                                                className: "w-4 h-4",
+                                                                                fill: "none",
+                                                                                stroke: "currentColor",
+                                                                                viewBox: "0 0 24 24",
+                                                                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
+                                                                                    strokeLinecap: "round",
+                                                                                    strokeLinejoin: "round",
+                                                                                    strokeWidth: "2",
+                                                                                    d: "M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                                                                                }, void 0, false, {
+                                                                                    fileName: "[project]/src/app/orcamentos/page.tsx",
+                                                                                    lineNumber: 618,
+                                                                                    columnNumber: 33
+                                                                                }, ("TURBOPACK compile-time value", void 0))
+                                                                            }, void 0, false, {
+                                                                                fileName: "[project]/src/app/orcamentos/page.tsx",
+                                                                                lineNumber: 617,
+                                                                                columnNumber: 31
+                                                                            }, ("TURBOPACK compile-time value", void 0))
+                                                                        }, void 0, false, {
+                                                                            fileName: "[project]/src/app/orcamentos/page.tsx",
+                                                                            lineNumber: 612,
+                                                                            columnNumber: 29
+                                                                        }, ("TURBOPACK compile-time value", void 0)),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                                             className: "text-blue-400 hover:text-blue-300 transition-colors",
                                                                             title: "Editar",
@@ -882,17 +1321,17 @@ const BudgetsPage = ()=>{
                                                                                     d: "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                                                    lineNumber: 194,
+                                                                                    lineNumber: 627,
                                                                                     columnNumber: 33
                                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                                                lineNumber: 193,
+                                                                                lineNumber: 626,
                                                                                 columnNumber: 31
                                                                             }, ("TURBOPACK compile-time value", void 0))
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                                            lineNumber: 189,
+                                                                            lineNumber: 622,
                                                                             columnNumber: 29
                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -911,73 +1350,171 @@ const BudgetsPage = ()=>{
                                                                                     d: "M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                                                    lineNumber: 203,
+                                                                                    lineNumber: 636,
                                                                                     columnNumber: 33
                                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                                                lineNumber: 202,
+                                                                                lineNumber: 635,
                                                                                 columnNumber: 31
                                                                             }, ("TURBOPACK compile-time value", void 0))
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                                            lineNumber: 197,
+                                                                            lineNumber: 630,
                                                                             columnNumber: 29
                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                                    lineNumber: 188,
+                                                                    lineNumber: 589,
                                                                     columnNumber: 27
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                                lineNumber: 187,
+                                                                lineNumber: 588,
                                                                 columnNumber: 25
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         ]
                                                     }, budget.id, true, {
                                                         fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                        lineNumber: 175,
+                                                        lineNumber: 576,
                                                         columnNumber: 23
                                                     }, ("TURBOPACK compile-time value", void 0)))
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/orcamentos/page.tsx",
-                                                lineNumber: 166,
+                                                lineNumber: 567,
                                                 columnNumber: 17
                                             }, ("TURBOPACK compile-time value", void 0))
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/orcamentos/page.tsx",
-                                        lineNumber: 154,
-                                        columnNumber: 17
+                                        lineNumber: 555,
+                                        columnNumber: 15
                                     }, ("TURBOPACK compile-time value", void 0))
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/orcamentos/page.tsx",
-                                    lineNumber: 153,
-                                    columnNumber: 15
+                                    lineNumber: 554,
+                                    columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             }, void 0, false, {
                                 fileName: "[project]/src/app/orcamentos/page.tsx",
-                                lineNumber: 152,
-                                columnNumber: 13
+                                lineNumber: 553,
+                                columnNumber: 11
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/orcamentos/page.tsx",
-                        lineNumber: 123,
+                        lineNumber: 524,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/app/orcamentos/page.tsx",
-                lineNumber: 106,
+                lineNumber: 507,
                 columnNumber: 7
+            }, ("TURBOPACK compile-time value", void 0)),
+            showMechanicModal && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50",
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "bg-gray-800 border border-gray-600 rounded-lg p-6 w-96 max-w-full mx-4",
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                            className: "text-xl font-bold text-white mb-4",
+                            children: "Atribuir Mecânico"
+                        }, void 0, false, {
+                            fileName: "[project]/src/app/orcamentos/page.tsx",
+                            lineNumber: 655,
+                            columnNumber: 13
+                        }, ("TURBOPACK compile-time value", void 0)),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                            className: "text-gray-400 mb-4",
+                            children: "Selecione o mecânico para esta ordem de trabalho:"
+                        }, void 0, false, {
+                            fileName: "[project]/src/app/orcamentos/page.tsx",
+                            lineNumber: 656,
+                            columnNumber: 13
+                        }, ("TURBOPACK compile-time value", void 0)),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
+                            className: "w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded mb-4 focus:ring-2 focus:ring-brand-yellow focus:border-brand-yellow",
+                            value: selectedMechanic,
+                            onChange: (e)=>{
+                                const mechanicId = e.target.value;
+                                setSelectedMechanic(mechanicId);
+                                const mechanic = mechanics.find((m)=>m.id === mechanicId);
+                                const mechanicName = mechanic?.nome || '';
+                                setSelectedMechanicName(mechanicName);
+                                console.log('Mecânico selecionado:', mechanicId, '- Nome:', mechanicName);
+                            },
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                    value: "",
+                                    children: "Selecione um mecânico..."
+                                }, void 0, false, {
+                                    fileName: "[project]/src/app/orcamentos/page.tsx",
+                                    lineNumber: 672,
+                                    columnNumber: 15
+                                }, ("TURBOPACK compile-time value", void 0)),
+                                mechanics.map((mechanic)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                        value: mechanic.id,
+                                        children: mechanic.nome
+                                    }, mechanic.id, false, {
+                                        fileName: "[project]/src/app/orcamentos/page.tsx",
+                                        lineNumber: 674,
+                                        columnNumber: 17
+                                    }, ("TURBOPACK compile-time value", void 0)))
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/src/app/orcamentos/page.tsx",
+                            lineNumber: 658,
+                            columnNumber: 13
+                        }, ("TURBOPACK compile-time value", void 0)),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "flex justify-end space-x-3",
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                    onClick: ()=>{
+                                        setShowMechanicModal(false);
+                                        setSelectedMechanic('');
+                                        setPendingBudgetId(null);
+                                    },
+                                    className: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors",
+                                    children: "Cancelar"
+                                }, void 0, false, {
+                                    fileName: "[project]/src/app/orcamentos/page.tsx",
+                                    lineNumber: 681,
+                                    columnNumber: 15
+                                }, ("TURBOPACK compile-time value", void 0)),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                    onClick: confirmApproveWithMechanic,
+                                    disabled: !selectedMechanic,
+                                    className: `px-4 py-2 text-white rounded transition-colors ${selectedMechanic ? 'bg-brand-yellow-dark hover:bg-yellow-600' : 'bg-gray-500 cursor-not-allowed'}`,
+                                    children: "Aprovar e Atribuir"
+                                }, void 0, false, {
+                                    fileName: "[project]/src/app/orcamentos/page.tsx",
+                                    lineNumber: 691,
+                                    columnNumber: 15
+                                }, ("TURBOPACK compile-time value", void 0))
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/src/app/orcamentos/page.tsx",
+                            lineNumber: 680,
+                            columnNumber: 13
+                        }, ("TURBOPACK compile-time value", void 0))
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/src/app/orcamentos/page.tsx",
+                    lineNumber: 654,
+                    columnNumber: 11
+                }, ("TURBOPACK compile-time value", void 0))
+            }, void 0, false, {
+                fileName: "[project]/src/app/orcamentos/page.tsx",
+                lineNumber: 653,
+                columnNumber: 9
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/src/app/orcamentos/page.tsx",
-        lineNumber: 104,
+        lineNumber: 505,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };

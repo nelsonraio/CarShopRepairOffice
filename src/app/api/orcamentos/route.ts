@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       data: {
         ref_orcamento,
         cliente_id: parseInt(cliente_id),
-        veiculo_id: BigInt(veiculo_id),
+        veiculo_id: veiculo_id ? BigInt(veiculo_id) : null,
         preparado_por: preparado_por ? parseInt(preparado_por) : null,
         data_emissao: data_emissao ? new Date(data_emissao) : new Date(),
         data_expiracao: data_expiracao ? new Date(data_expiracao) : null,
@@ -64,9 +64,9 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       orcamento: {
-        id: orcamento.id,
+        id: Number(orcamento.id),
         ref_orcamento: orcamento.ref_orcamento,
-        total_geral: orcamento.total_geral
+        total_geral: Number(orcamento.total_geral)
       }
     });
 
@@ -88,14 +88,6 @@ export async function GET(request: Request) {
         cliente: true,
         veiculo: true,
         itens_orcamento: true
-      },
-      where: {
-        veiculo_id: {
-          not: null
-        },
-        cliente_id: {
-          not: null
-        }
       },
       orderBy: { criado_em: 'desc' },
       skip: offset,
@@ -135,8 +127,37 @@ export async function GET(request: Request) {
       }))
     }));
 
+    // Fetch work orders and their mechanics for approved budgets
+    const orcamentoIds = orcamentos.map(o => Number(o.id));
+    const workOrders = await prisma.ordens_trabalho.findMany({
+      where: {
+        orcamento_id: {
+          in: orcamentoIds
+        }
+      },
+      include: {
+        mecanico: true
+      }
+    });
+
+    // Create a map of orcamento_id -> mecanico_nome
+    const mechanicMap = new Map();
+    workOrders.forEach((wo: any) => {
+      if (wo.orcamento_id && wo.mecanico?.nome) {
+        mechanicMap.set(wo.orcamento_id, wo.mecanico.nome);
+      }
+    });
+
+    // Add mecanico_nome to each orcamento
+    const orcamentosWithMechanic = serializedOrcamentos.map((orcamento: any) => ({
+      ...orcamento,
+      mecanico_nome: mechanicMap.get(orcamento.id) || null
+    }));
+
+
+
     return NextResponse.json({
-      orcamentos: serializedOrcamentos,
+      orcamentos: orcamentosWithMechanic,
       pagination: {
         page,
         limit,
@@ -145,9 +166,133 @@ export async function GET(request: Request) {
       }
     });
 
+
   } catch (error) {
     console.error('Error fetching budgets:', error);
     return NextResponse.json({ error: 'Failed to fetch budgets' }, { status: 500 });
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'Budget ID is required' }, { status: 400 });
+    }
+
+    const body = await request.json();
+    const { estado, mecanico_id } = body;
+
+    if (!estado) {
+      return NextResponse.json({ error: 'Status is required' }, { status: 400 });
+    }
+
+
+    // First, get the current budget to check its current state
+    const currentOrcamento = await prisma.orcamentos.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        itens_orcamento: true,
+        cliente: true,
+        veiculo: true
+      }
+    });
+
+    if (!currentOrcamento) {
+      return NextResponse.json({ error: 'Budget not found' }, { status: 404 });
+    }
+
+    // Update the budget status
+    const updateData: any = { estado };
+    
+    // If approving the budget, set the approval date
+    if (estado === 'Aprovado') {
+      updateData.data_aprovacao = new Date();
+    }
+
+    const updatedOrcamento = await prisma.orcamentos.update({
+      where: { id: parseInt(id) },
+      data: updateData
+    });
+
+    // If the budget is being approved, create or update a work order
+    if (estado === 'Aprovado') {
+      // Generate work order reference from budget reference (replace ORC with OT)
+      const workOrderRef = currentOrcamento.ref_orcamento.replace(/^ORC/, 'OT');
+
+      // Check if a work order already exists for this budget
+      const existingWorkOrder = await prisma.ordens_trabalho.findFirst({
+        where: { orcamento_id: parseInt(id) }
+      });
+
+      if (existingWorkOrder) {
+        // Update existing work order with the new mechanic (if provided)
+        if (mecanico_id) {
+          await prisma.ordens_trabalho.update({
+            where: { id: existingWorkOrder.id },
+            data: {
+              mecanico_id: parseInt(mecanico_id)
+            }
+          });
+          console.log(`Work order ${workOrderRef} updated with mechanic ID: ${mecanico_id}`);
+        }
+      } else {
+        // Create a new work order
+        const ordemTrabalho = await prisma.ordens_trabalho.create({
+          data: {
+            ref_ordem_trabalho: workOrderRef,
+            cliente_id: currentOrcamento.cliente_id || 0,
+            veiculo_id: currentOrcamento.veiculo_id ? Number(currentOrcamento.veiculo_id) : 0,
+            orcamento_id: parseInt(id),
+            mecanico_id: mecanico_id ? parseInt(mecanico_id) : null,
+            data_inicio: new Date(),
+            estado: 'em_andamento',
+            total_pecas: currentOrcamento.total_pecas || 0,
+            total_mao_obra: currentOrcamento.total_mao_obra || 0,
+            total_desconto: currentOrcamento.total_desconto || 0,
+            total_imposto: currentOrcamento.total_imposto || 0,
+            total_geral: currentOrcamento.total_geral || 0
+          }
+        });
+
+        // Copy budget items to work order items
+        if (currentOrcamento.itens_orcamento && currentOrcamento.itens_orcamento.length > 0) {
+          const workOrderItems = currentOrcamento.itens_orcamento.map((item: any) => ({
+            ordem_trabalho_id: Number(ordemTrabalho.id),
+            tipo_item: item.tipo_item,
+            servico_id: item.servico_id ? Number(item.servico_id) : null,
+            peca_id: item.peca_id ? Number(item.peca_id) : null,
+            descricao: item.descricao,
+            quantidade: item.quantidade || 1,
+            preco_unitario: item.preco_unitario || 0,
+            valor_desconto: item.valor_desconto || 0,
+            valor_imposto: item.valor_imposto || 0,
+            valor_total: item.valor_total || 0,
+            notas: item.notas || null
+          }));
+
+          await prisma.itens_ordem_trabalho.createMany({
+            data: workOrderItems
+          });
+        }
+
+        console.log(`Work order created: ${workOrderRef} from budget ${currentOrcamento.ref_orcamento}`);
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      orcamento: {
+        id: Number(updatedOrcamento.id),
+        estado: updatedOrcamento.estado
+      }
+    });
+
+  } catch (error) {
+    console.error('Error updating budget:', error);
+    return NextResponse.json({ error: 'Failed to update budget' }, { status: 500 });
   }
 }
 
