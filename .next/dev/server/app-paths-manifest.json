@@ -1,14 +1,7 @@
 {
-  "/api/mecanicos/route": "app/api/mecanicos/route.js",
-  "/api/orcamentos/next-id/route": "app/api/orcamentos/next-id/route.js",
   "/api/orcamentos/route": "app/api/orcamentos/route.js",
   "/api/ordens-trabalho/route": "app/api/ordens-trabalho/route.js",
-  "/api/pecas/route": "app/api/pecas/route.js",
-  "/api/servicos/route": "app/api/servicos/route.js",
   "/api/veiculos/route": "app/api/veiculos/route.js",
-  "/api/veiculos/search/route": "app/api/veiculos/search/route.js",
-  "/orcamentos/novo/page": "app/orcamentos/novo/page.js",
   "/orcamentos/page": "app/orcamentos/page.js",
-  "/ordens-trabalho/page": "app/ordens-trabalho/page.js",
   "/page": "app/page.js"
 }

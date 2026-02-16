@@ -41,7 +41,7 @@ export async function GET(
       mechanic: mecanico?.nome || '',
       tipoServico: agendamento.titulo.includes(' - ') ? agendamento.titulo.split(' - ')[0] : agendamento.titulo,
       status: agendamento.estado === 'em_andamento' ? 'em_andamento' : 'agendado',
-      notas: agendamento.notas ?? ''
+      notas: agendamento.descricao ?? ''
     };
 
     return NextResponse.json(transformedAgendamento);

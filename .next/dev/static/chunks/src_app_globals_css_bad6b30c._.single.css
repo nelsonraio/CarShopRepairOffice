@@ -146,8 +146,8 @@
     --blur-sm: 8px;
     --default-transition-duration: .15s;
     --default-transition-timing-function: cubic-bezier(.4, 0, .2, 1);
-    --default-font-family: var(--font-geist-sans);
-    --default-mono-font-family: var(--font-geist-mono);
+    --default-font-family: "IBM Plex Mono", monospace;
+    --default-mono-font-family: "IBM Plex Mono", monospace;
   }
 
   @supports (color: lab(0% 0 0)) {
@@ -1123,6 +1123,10 @@
     border-color: var(--color-blue-900);
   }
 
+  .border-brand-yellow {
+    border-color: #facc15;
+  }
+
   .border-gray-500 {
     border-color: var(--color-gray-500);
   }
@@ -1255,6 +1259,14 @@
     .bg-blue-900\/50 {
       background-color: color-mix(in oklab, var(--color-blue-900) 50%, transparent);
     }
+  }
+
+  .bg-brand-yellow {
+    background-color: #facc15;
+  }
+
+  .bg-brand-yellow-dark {
+    background-color: #eab308;
   }
 
   .bg-gray-500 {
@@ -1642,7 +1654,7 @@
   }
 
   .font-mono {
-    font-family: var(--font-geist-mono);
+    font-family: IBM Plex Mono, monospace;
   }
 
   .text-2xl {
@@ -1724,6 +1736,10 @@
 
   .text-blue-400 {
     color: var(--color-blue-400);
+  }
+
+  .text-brand-yellow {
+    color: #facc15;
   }
 
   .text-gray-100 {
@@ -1936,6 +1952,12 @@
   }
 
   @media (hover: hover) {
+    .hover\:border-brand-yellow:hover {
+      border-color: #facc15;
+    }
+  }
+
+  @media (hover: hover) {
     .hover\:bg-blue-600:hover {
       background-color: var(--color-blue-600);
     }
@@ -1944,6 +1966,18 @@
   @media (hover: hover) {
     .hover\:bg-blue-700:hover {
       background-color: var(--color-blue-700);
+    }
+  }
+
+  @media (hover: hover) {
+    .hover\:bg-brand-yellow:hover {
+      background-color: #facc15;
+    }
+  }
+
+  @media (hover: hover) {
+    .hover\:bg-brand-yellow-dark:hover {
+      background-color: #eab308;
     }
   }
 
@@ -2026,6 +2060,18 @@
   }
 
   @media (hover: hover) {
+    .hover\:text-brand-yellow:hover {
+      color: #facc15;
+    }
+  }
+
+  @media (hover: hover) {
+    .hover\:text-brand-yellow-light:hover {
+      color: #fef3c7;
+    }
+  }
+
+  @media (hover: hover) {
     .hover\:text-gray-900:hover {
       color: var(--color-gray-900);
     }
@@ -2061,6 +2107,10 @@
     }
   }
 
+  .focus\:border-brand-yellow:focus {
+    border-color: #facc15;
+  }
+
   .focus\:ring-1:focus {
     --tw-ring-shadow: var(--tw-ring-inset, ) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
@@ -2069,6 +2119,10 @@
   .focus\:ring-2:focus {
     --tw-ring-shadow: var(--tw-ring-inset, ) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
+
+  .focus\:ring-brand-yellow:focus {
+    --tw-ring-color: #facc15;
   }
 
   .focus\:outline-none:focus {
@@ -2216,7 +2270,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: IBM Plex Mono, monospace;
 }
 
 .kanban-container {

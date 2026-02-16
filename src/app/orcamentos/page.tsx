@@ -17,7 +17,7 @@ interface BudgetItem {
   valor_imposto: number;
   valor_total: number;
   notas: string | null;
-};
+}
 
 interface Budget {
   id: number;
@@ -35,7 +35,7 @@ interface Budget {
   estado: string;
   itens_orcamento: BudgetItem[];
   mecanico_nome?: string;
-};
+}
 
 
 const BudgetsPage = () => {
@@ -122,10 +122,18 @@ const BudgetsPage = () => {
     }
   };
 
-  const updateBudgetStatus = (budgetId: number, newStatus: 'Pendente' | 'Aprovado', mechanicName?: string) => {
+  const updateBudgetStatus = (budgetId: number, newStatus: string, mechanicName?: string) => {
     setBudgets(prevBudgets =>
       prevBudgets.map(budget =>
-        budget.id === budgetId ? { ...budget, estado: newStatus, mecanico_nome: mechanicName || budget.mecanico_nome } : budget
+        budget.id === budgetId 
+          ? { 
+              ...budget, 
+              estado: newStatus, 
+              // Only update mechanic name if explicitly provided, otherwise keep existing
+              // When reverting to Pendente, we should clear the mechanic name
+              mecanico_nome: mechanicName !== undefined ? mechanicName : (newStatus === 'Pendente' ? undefined : budget.mecanico_nome)
+            } 
+          : budget
       )
     );
   };
@@ -291,13 +299,15 @@ const BudgetsPage = () => {
         </head>
         <body>
           <div class="header-container">
-            <divd
+            <div class="logo-section">
+              <div style="background: white; padding: 5px; border-radius: 4px; display: inline-block; margin-right: 15px;">
+                <img src="/logoblack.jpg" alt="MQAuto Logo" style="width: 50px; height: 50px; object-fit: contain; display: block;" />
               </div>
+              <div class="company-name">
                 <h1>MQ Auto</h1>
                 <p>Oficina Automóvel</p>
               </div>
             </div>
-
 
             <div class="contacts-section">
               <p>(+351) 935 205 354</p>
@@ -362,6 +372,7 @@ const BudgetsPage = () => {
   };
 
   const handlePrintWorkOrder = (budget: Budget, mechanicName?: string) => {
+    console.log('Printing work order for budget:', budget);
     // Generate work order reference from budget reference (replace ORC with OT)
     const workOrderRef = budget.ref_orcamento.replace(/^ORC/, 'OT');
 
@@ -430,7 +441,7 @@ const BudgetsPage = () => {
           <div class="header-container">
             <div class="logo-section">
               <div style="background: white; padding: 5px; border-radius: 4px; display: inline-block; margin-right: 15px;">
-                <img src="/logo.png" alt="MQAuto Logo" style="width: 50px; height: 50px; object-fit: contain; display: block;" />
+                <img src="/logoblack.jpg" alt="MQAuto Logo" style="width: 50px; height: 50px; object-fit: contain; display: block;" />
               </div>
               <div class="company-name">
                 <h1>MQ Auto</h1>
@@ -666,7 +677,6 @@ const BudgetsPage = () => {
                 setSelectedMechanicName(mechanicName);
                 console.log('Mecânico selecionado:', mechanicId, '- Nome:', mechanicName);
               }}
-
             >
 
               <option value="">Selecione um mecânico...</option>

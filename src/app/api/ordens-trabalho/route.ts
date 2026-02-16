@@ -91,36 +91,32 @@ export async function GET() {
     const ordensTrabalho = await prisma.ordens_trabalho.findMany({
       orderBy: { criado_em: 'desc' },
       include: {
-        mecanico: true
-      }
+        mecanico: true, // Include the related mechanic's data
+      },
     });
-
 
     const clienteIds = Array.from(new Set(ordensTrabalho.map(o => o.cliente_id).filter((v): v is number => v != null)));
     const veiculoIds = Array.from(new Set(ordensTrabalho.map(o => o.veiculo_id).filter((v): v is number => v != null)));
-    const mecanicoIds = Array.from(new Set(ordensTrabalho.map(o => o.mecanico_id).filter((v): v is number => v != null)));
 
-    const [clientes, veiculos, mecanicos] = await Promise.all([
+    const [clientes, veiculos] = await Promise.all([
       clienteIds.length ? prisma.clientes.findMany({ where: { id: { in: clienteIds } } }) : Promise.resolve([]),
       veiculoIds.length ? prisma.veiculos.findMany({ where: { id: { in: veiculoIds } } }) : Promise.resolve([]),
-      mecanicoIds.length ? prisma.mecanicos.findMany({ where: { id: { in: mecanicoIds } } }) : Promise.resolve([]),
     ]);
 
     const clienteMap = new Map(clientes.map(c => [c.id, c]));
-    const veiculoMap = new Map(veiculos.map(v => [Number((v.id as any)), v]));
-    const mecanicoMap = new Map(mecanicos.map(m => [m.id, m]));
+    const veiculoMap = new Map(veiculos.map(v => [Number(v.id), v]));
 
     const transformedOrdens = ordensTrabalho.map((ordem) => ({
       id: ordem.ref_ordem_trabalho,
-      client: (clienteMap.get(ordem.cliente_id) as any)?.nome || '',
-      vehicle: `${(veiculoMap.get(ordem.veiculo_id) as any)?.marca || ''} ${(veiculoMap.get(ordem.veiculo_id) as any)?.modelo || ''} | ${(veiculoMap.get(ordem.veiculo_id) as any)?.matricula || ''}`,
-      mechanic: ordem.mecanico_id != null ? (mecanicoMap.get(ordem.mecanico_id) as any)?.nome || '' : '',
+      client: clienteMap.get(ordem.cliente_id)?.nome ?? '',
+      vehicle: `${veiculoMap.get(ordem.veiculo_id)?.marca ?? ''} ${veiculoMap.get(ordem.veiculo_id)?.modelo ?? ''} | ${veiculoMap.get(ordem.veiculo_id)?.matricula ?? ''}`,
+      mechanic: ordem.mecanico?.nome ?? '', // Directly access the included mechanic's name
       openDate: ordem.data_inicio ? ordem.data_inicio.toLocaleDateString('pt-PT') : '',
       closeDate: ordem.data_conclusao ? ordem.data_conclusao.toLocaleDateString('pt-PT') : '',
-      total: Number((ordem as any).total_geral) || 0,
-      status: mapStatus((ordem as any).estado),
-      priority: mapPriority((ordem as any).prioridade),
-      problem: ordem.descricao_problema || ''
+      total: Number(ordem.total_geral) || 0,
+      status: mapStatus(ordem.estado),
+      priority: mapPriority(ordem.prioridade),
+      problem: ordem.descricao_problema ?? '',
     }));
 
     return NextResponse.json(transformedOrdens);

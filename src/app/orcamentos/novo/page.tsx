@@ -74,10 +74,6 @@ const NewBudgetPage = () => {
     cliente: ''
   });
 
-
-
-
-
   useEffect(() => {
     const newTotal = budgetItems.reduce((sum, item) => sum + item.total, 0);
     setTotal(newTotal);
@@ -176,14 +172,20 @@ const NewBudgetPage = () => {
 
 
 
+  // Margem de lucro para peças (55%)
+  const PARTS_MARKUP = 1.55;
+
   const addItemToBudget = (item: CatalogItem) => {
+    // Aplicar margem de 55% apenas para peças, serviços mantém preço base
+    const markupPrice = item.type === 'part' ? item.price * PARTS_MARKUP : item.price;
+    
     const newItem: BudgetItem = {
       id: item.id,
       name: item.name,
       quantity: 1,
-      unitPrice: item.price,
+      unitPrice: markupPrice,
       unit: item.unit,
-      total: item.price,
+      total: markupPrice,
       type: item.type
     };
     setBudgetItems([...budgetItems, newItem]);
@@ -431,7 +433,7 @@ const NewBudgetPage = () => {
     setTotal(0);
     setSelectedClient(null);
     setClientSearch('');
-    updateIdPreview();
+    //updateIdPreview();
   };
 
   return (

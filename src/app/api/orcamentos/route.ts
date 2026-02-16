@@ -83,8 +83,8 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const offset = (page - 1) * limit;
 
-    const orcamentos = await prisma.orcamentos.findMany({
-      include: {
+       const orcamentos = await (prisma.orcamentos as any).findMany({
+   include: {
         cliente: true,
         veiculo: true,
         itens_orcamento: true
@@ -128,7 +128,7 @@ export async function GET(request: Request) {
     }));
 
     // Fetch work orders and their mechanics for approved budgets
-    const orcamentoIds = orcamentos.map(o => Number(o.id));
+    const orcamentoIds = orcamentos.map((o: any) => o.id);
     const workOrders = await prisma.ordens_trabalho.findMany({
       where: {
         orcamento_id: {
@@ -144,7 +144,7 @@ export async function GET(request: Request) {
     const mechanicMap = new Map();
     workOrders.forEach((wo: any) => {
       if (wo.orcamento_id && wo.mecanico?.nome) {
-        mechanicMap.set(wo.orcamento_id, wo.mecanico.nome);
+        mechanicMap.set(Number(wo.orcamento_id), wo.mecanico.nome);
       }
     });
 
@@ -192,7 +192,7 @@ export async function PUT(request: Request) {
 
     // First, get the current budget to check its current state
     const currentOrcamento = await prisma.orcamentos.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: BigInt(id) },
       include: {
         itens_orcamento: true,
         cliente: true,
@@ -213,7 +213,7 @@ export async function PUT(request: Request) {
     }
 
     const updatedOrcamento = await prisma.orcamentos.update({
-      where: { id: parseInt(id) },
+      where: { id: BigInt(id) },
       data: updateData
     });
 
@@ -224,7 +224,7 @@ export async function PUT(request: Request) {
 
       // Check if a work order already exists for this budget
       const existingWorkOrder = await prisma.ordens_trabalho.findFirst({
-        where: { orcamento_id: parseInt(id) }
+        where: { orcamento_id: BigInt(id) }
       });
 
       if (existingWorkOrder) {
@@ -244,8 +244,8 @@ export async function PUT(request: Request) {
           data: {
             ref_ordem_trabalho: workOrderRef,
             cliente_id: currentOrcamento.cliente_id || 0,
-            veiculo_id: currentOrcamento.veiculo_id ? Number(currentOrcamento.veiculo_id) : 0,
-            orcamento_id: parseInt(id),
+            veiculo_id: currentOrcamento.veiculo_id ? BigInt(currentOrcamento.veiculo_id) : BigInt(0),
+            orcamento_id: BigInt(id),
             mecanico_id: mecanico_id ? parseInt(mecanico_id) : null,
             data_inicio: new Date(),
             estado: 'em_andamento',
@@ -307,12 +307,12 @@ export async function DELETE(request: Request) {
 
     // Delete budget items first due to foreign key constraint
     await prisma.itens_orcamento.deleteMany({
-      where: { orcamento_id: parseInt(id) }
+      where: { orcamento_id: BigInt(id) }
     });
 
     // Delete the budget
     await prisma.orcamentos.delete({
-      where: { id: parseInt(id) }
+      where: { id: BigInt(id) }
     });
 
     return NextResponse.json({ success: true });

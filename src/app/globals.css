@@ -9,8 +9,13 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: 'IBM Plex Mono', monospace;
+  --font-mono: 'IBM Plex Mono', monospace;
+  
+  /* Brand colors */
+  --color-brand-yellow-light: #fef3c7;
+  --color-brand-yellow: #facc15;
+  --color-brand-yellow-dark: #eab308;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,7 +28,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'IBM Plex Mono', monospace;
 }
 
 .kanban-container {

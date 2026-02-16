@@ -326,6 +326,33 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../src/app/api/orcamentos/next-id/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/orcamentos/next-id">> = Specific
+  const handler = {} as typeof import("../../src/app/api/orcamentos/next-id/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/orcamentos/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/orcamentos">> = Specific
+  const handler = {} as typeof import("../../src/app/api/orcamentos/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/ordens-trab orders.alho/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/ordens-trab orders.alho">> = Specific
+  const handler = {} as typeof import("../../src/app/api/ordens-trab orders.alho/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../src/app/api/ordens-trabalho/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/ordens-trabalho">> = Specific

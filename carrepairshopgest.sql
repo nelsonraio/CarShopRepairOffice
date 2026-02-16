@@ -23,36 +23,33 @@ USE `carrepairshopgest`;
 CREATE TABLE IF NOT EXISTS `agendamentos` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `cliente_id` int NOT NULL,
-  `veiculo_id` int NOT NULL,
   `mecanico_id` int DEFAULT NULL,
-  `servico_id` int DEFAULT NULL,
+  `matricula` varchar(50) DEFAULT NULL,
   `titulo` varchar(255) NOT NULL,
   `descricao` text,
   `data_agendamento` date NOT NULL,
   `hora_inicio` time NOT NULL,
-  `hora_fim` time DEFAULT NULL,
   `estado` varchar(20) DEFAULT 'agendado',
   `prioridade` varchar(10) DEFAULT 'normal',
-  `custo_estimado` decimal(10,2) DEFAULT NULL,
-  `notas` text,
   `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `atualizado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `criado_por` int DEFAULT NULL,
   `atualizado_por` int DEFAULT NULL,
+  `marca` varchar(150) DEFAULT NULL,
+  `modelo` varchar(150) DEFAULT NULL,
+  `ano` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`),
+  KEY `agendamentos_cliente_id_fkey` (`cliente_id`),
+  CONSTRAINT `agendamentos_cliente_id_fkey` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `agendamentos_chk_1` CHECK ((`estado` in (_utf8mb4'agendado',_utf8mb4'confirmado',_utf8mb4'em_andamento',_utf8mb4'concluido',_utf8mb4'cancelado',_utf8mb4'nao_compareceu'))),
   CONSTRAINT `agendamentos_chk_2` CHECK ((`prioridade` in (_utf8mb4'baixa',_utf8mb4'normal',_utf8mb4'alta',_utf8mb4'urgente')))
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- A despejar dados para tabela carrepairshopgest.agendamentos: ~5 rows (aproximadamente)
+-- A despejar dados para tabela carrepairshopgest.agendamentos: ~1 rows (aproximadamente)
 DELETE FROM `agendamentos`;
-INSERT INTO `agendamentos` (`id`, `cliente_id`, `veiculo_id`, `mecanico_id`, `servico_id`, `titulo`, `descricao`, `data_agendamento`, `hora_inicio`, `hora_fim`, `estado`, `prioridade`, `custo_estimado`, `notas`, `criado_em`, `atualizado_em`, `criado_por`, `atualizado_por`) VALUES
-	(1, 1, 2, 1, NULL, 'Reparação Fiat Punto', NULL, '2026-01-31', '14:00:00', NULL, 'em_andamento', 'normal', NULL, 'Cliente relatou barulho estranho no motor', '2026-01-31 18:56:27', '2026-01-31 18:56:27', NULL, NULL),
-	(2, 5, 7, 2, NULL, 'Revisão VW Golf', NULL, '2026-02-01', '10:30:00', NULL, 'agendado', 'normal', NULL, 'Revisão de 120.000km', '2026-01-31 18:56:27', '2026-01-31 18:56:27', NULL, NULL),
-	(3, 3, 4, 3, NULL, 'Inspeção BMW X5', NULL, '2026-02-02', '16:00:00', NULL, 'agendado', 'normal', NULL, NULL, '2026-01-31 18:56:27', '2026-01-31 18:56:27', NULL, NULL),
-	(4, 6, 9, 1, NULL, 'Mudança Óleo Seat Leon', NULL, '2026-02-04', '09:00:00', NULL, 'agendado', 'normal', NULL, NULL, '2026-01-31 18:56:27', '2026-01-31 18:56:27', NULL, NULL),
-	(5, 7, 10, 2, NULL, 'Substituição Amortecedores', NULL, '2026-02-05', '11:00:00', NULL, 'agendado', 'normal', NULL, 'Cliente queixou-se de conforto na suspensão', '2026-01-31 18:56:27', '2026-01-31 18:56:27', NULL, NULL);
+INSERT INTO `agendamentos` (`id`, `cliente_id`, `mecanico_id`, `matricula`, `titulo`, `descricao`, `data_agendamento`, `hora_inicio`, `estado`, `prioridade`, `criado_em`, `atualizado_em`, `criado_por`, `atualizado_por`, `marca`, `modelo`, `ano`) VALUES
+	(50, 34, NULL, '99-UU-UU', 'Revisão Geral - Cliente Genérico TVDE Interno', 'Revisão Geral', '2026-02-13', '10:10:00', 'agendado', 'normal', '2026-02-12 10:08:04', '2026-02-12 10:08:04', NULL, NULL, 'Renault', 'Clio', 1976);
 
 -- A despejar estrutura para tabela carrepairshopgest.cartoes_kanban
 CREATE TABLE IF NOT EXISTS `cartoes_kanban` (
@@ -113,7 +110,7 @@ CREATE TABLE IF NOT EXISTS `clientes` (
   `telefone` varchar(20) NOT NULL,
   `nif` varchar(20) DEFAULT NULL,
   `endereco` text,
-  `perfil` enum('Normal','TVDE Interno','Empresa') DEFAULT 'Normal',
+  `perfil` enum('Normal','TVDE Interno','TVDE Externo','Empresa') DEFAULT 'Normal',
   `data_registo` date DEFAULT (curdate()),
   `total_gasto` decimal(10,2) DEFAULT '0.00',
   `visitas` int DEFAULT '0',
@@ -123,19 +120,23 @@ CREATE TABLE IF NOT EXISTS `clientes` (
   `atualizado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `nif` (`nif`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- A despejar dados para tabela carrepairshopgest.clientes: ~8 rows (aproximadamente)
+-- A despejar dados para tabela carrepairshopgest.clientes: ~12 rows (aproximadamente)
 DELETE FROM `clientes`;
 INSERT INTO `clientes` (`id`, `nome`, `email`, `telefone`, `nif`, `endereco`, `perfil`, `data_registo`, `total_gasto`, `visitas`, `notas`, `ativo`, `criado_em`, `atualizado_em`) VALUES
-	(1, 'João Silva', 'joao.silva@email.pt', '351 912 345 678', '234 567 890', 'Rua das Flores, 123, Porto', 'Normal', '2021-01-01', 1250.50, 8, NULL, 1, '2026-01-31 18:56:15', '2026-01-31 18:56:15'),
-	(2, 'Ana Costa', 'ana.costa@email.pt', '351 966 555 444', '198 765 432', 'Avenida da Liberdade, 456, Lisboa', 'TVDE Interno', '2022-01-01', 890.75, 5, NULL, 1, '2026-01-31 18:56:15', '2026-01-31 18:56:15'),
-	(3, 'Pedro Martins', 'pedro.martins@email.pt', '351 927 123 456', '145 678 901', 'Rua do Comércio, 78, Coimbra', 'Normal', '2020-01-01', 2100.25, 12, NULL, 1, '2026-01-31 18:56:15', '2026-01-31 18:56:15'),
-	(4, 'Maria Santos', 'maria.santos@email.pt', '351 934 567 890', '267 890 123', 'Praça da República, 45, Faro', 'Normal', '2023-01-01', 450.00, 3, NULL, 1, '2026-01-31 18:56:15', '2026-01-31 18:56:15'),
-	(5, 'Carlos Ferreira', 'carlos.ferreira@email.pt', '351 918 234 567', '378 901 234', 'Avenida dos Aliados, 234, Porto', 'Empresa', '2019-01-01', 3200.80, 18, NULL, 1, '2026-01-31 18:56:15', '2026-01-31 18:56:15'),
-	(6, 'Sofia Rodrigues', 'sofia.rodrigues@email.pt', '351 965 678 901', '489 012 345', 'Rua Augusta, 67, Lisboa', 'Normal', '2022-01-01', 675.30, 4, NULL, 1, '2026-01-31 18:56:15', '2026-01-31 18:56:15'),
-	(7, 'Miguel Pereira', 'miguel.pereira@email.pt', '351 922 345 678', '590 123 456', 'Rua de Santa Catarina, 89, Porto', 'TVDE Interno', '2021-01-01', 1580.90, 9, NULL, 1, '2026-01-31 18:56:15', '2026-01-31 18:56:15'),
-	(8, 'Isabel Oliveira', 'isabel.oliveira@email.pt', '351 936 789 012', '601 234 567', 'Avenida Almirante Reis, 123, Lisboa', 'Normal', '2023-01-01', 320.50, 2, NULL, 1, '2026-01-31 18:56:15', '2026-01-31 18:56:15');
+	(1, 'Joaquim das Couves', 'couves@coiso.pt', '961376093', '200292722', 'qwerqwer', 'TVDE Interno', '2026-02-10', 0.00, 0, NULL, 1, '2026-02-10 20:22:34', '2026-02-10 23:47:50'),
+	(23, 'Ze da esquina', 'ze@dali.pt', '9121212121', '2222222222', 'morada do ze', 'TVDE Externo', '2026-02-10', 0.00, 0, NULL, 1, '2026-02-10 20:57:16', '2026-02-10 23:47:44'),
+	(26, 'teste 22', 'teste@teste.pt', '9613734342', '123123', 'rua do caneco mais grande 2', 'TVDE Externo', '2026-02-11', 0.00, 0, NULL, 1, '2026-02-11 00:33:05', '2026-02-11 14:59:50'),
+	(27, 'terte', NULL, '', NULL, NULL, 'Normal', '2026-02-11', 0.00, 0, NULL, 0, '2026-02-11 17:10:06', '2026-02-12 01:13:04'),
+	(28, 'tertert', 'nel@fghf.pt', '345345', '1231234455', 'defadfasdf', 'Normal', '2026-02-11', 0.00, 0, NULL, 0, '2026-02-11 17:28:42', '2026-02-12 01:13:00'),
+	(29, 'erterte ertertttte', NULL, '', NULL, NULL, 'Normal', '2026-02-11', 0.00, 0, NULL, 0, '2026-02-11 22:37:58', '2026-02-12 01:12:56'),
+	(32, 'Nelson Raio', '234@gmail.com', '961376093', '12312312313', 'rua do caneco', 'TVDE Externo', '2026-02-11', 0.00, 0, NULL, 1, '2026-02-11 22:55:22', '2026-02-11 22:55:22'),
+	(34, 'Cliente Genérico TVDE Interno', '', '97123123', '', '', 'TVDE Interno', '2026-02-12', 0.00, 0, NULL, 1, '2026-02-12 08:36:47', '2026-02-12 08:36:47'),
+	(36, 'teste 22222', 'nelson@gmail.com', '961376093', '33333333', 'teste', 'TVDE Interno', '2026-02-12', 0.00, 0, NULL, 1, '2026-02-12 10:48:10', '2026-02-12 10:48:10'),
+	(37, 'Cliente Genérico Normal', NULL, '', NULL, NULL, 'Normal', '2026-02-12', 0.00, 0, NULL, 1, '2026-02-12 18:41:00', '2026-02-12 18:41:00'),
+	(38, 'manuel das couves', NULL, '', NULL, NULL, 'Normal', '2026-02-12', 0.00, 0, NULL, 1, '2026-02-12 18:42:02', '2026-02-12 18:42:02'),
+	(39, 'manuel das couves', NULL, '', NULL, NULL, 'Normal', '2026-02-12', 0.00, 0, NULL, 1, '2026-02-12 18:44:20', '2026-02-12 18:44:20');
 
 -- A despejar estrutura para tabela carrepairshopgest.colunas_kanban
 CREATE TABLE IF NOT EXISTS `colunas_kanban` (
@@ -315,7 +316,7 @@ INSERT INTO `itens_fatura` (`id`, `fatura_id`, `item_ordem_trabalho_id`, `descri
 -- A despejar estrutura para tabela carrepairshopgest.itens_orcamento
 CREATE TABLE IF NOT EXISTS `itens_orcamento` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `orcamento_id` int NOT NULL,
+  `orcamento_id` bigint NOT NULL,
   `tipo_item` varchar(20) NOT NULL,
   `servico_id` int DEFAULT NULL,
   `peca_id` int DEFAULT NULL,
@@ -332,23 +333,12 @@ CREATE TABLE IF NOT EXISTS `itens_orcamento` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`),
   CONSTRAINT `itens_orcamento_chk_1` CHECK ((`tipo_item` in (_utf8mb4'servico',_utf8mb4'peca',_utf8mb4'outro')))
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- A despejar dados para tabela carrepairshopgest.itens_orcamento: ~12 rows (aproximadamente)
+-- A despejar dados para tabela carrepairshopgest.itens_orcamento: ~0 rows (aproximadamente)
 DELETE FROM `itens_orcamento`;
 INSERT INTO `itens_orcamento` (`id`, `orcamento_id`, `tipo_item`, `servico_id`, `peca_id`, `descricao`, `quantidade`, `preco_unitario`, `percentual_desconto`, `valor_desconto`, `percentual_imposto`, `valor_imposto`, `valor_total`, `notas`, `criado_em`) VALUES
-	(1, 1, 'peca', NULL, 1, 'Filtro de Óleo Bosch', 1.00, 6.00, 0.00, 0.00, 23.00, 1.38, 7.38, NULL, '2026-01-31 19:36:46'),
-	(2, 1, 'peca', NULL, 2, 'Óleo Castrol Edge 5W30 (5L)', 1.00, 30.00, 0.00, 0.00, 23.00, 6.90, 36.90, NULL, '2026-01-31 19:36:46'),
-	(3, 1, 'servico', NULL, 3, 'Mudança Óleo + Filtros', 1.00, 90.00, 0.00, 0.00, 23.00, 20.70, 110.70, NULL, '2026-01-31 19:36:46'),
-	(4, 2, 'servico', NULL, 4, 'Inspeção Periódica', 1.00, 85.00, 0.00, 0.00, 23.00, 19.55, 104.55, NULL, '2026-01-31 19:36:46'),
-	(5, 3, 'peca', NULL, NULL, 'Pastilhas Travão Brembo (Frente)', 1.00, 25.00, 0.00, 0.00, 23.00, 5.75, 30.75, NULL, '2026-01-31 19:36:46'),
-	(6, 3, 'servico', NULL, NULL, 'Substituição Pastilhas Travão', 1.00, 70.00, 0.00, 0.00, 23.00, 16.10, 86.10, NULL, '2026-01-31 19:36:46'),
-	(7, 4, 'peca', NULL, NULL, 'Filtro de Óleo Bosch', 1.00, 6.00, 0.00, 0.00, 23.00, 1.38, 7.38, NULL, '2026-01-31 19:36:46'),
-	(8, 4, 'peca', NULL, NULL, 'Óleo Castrol Edge 5W30 (5L)', 1.00, 30.00, 0.00, 0.00, 23.00, 6.90, 36.90, NULL, '2026-01-31 19:36:46'),
-	(9, 4, 'peca', NULL, NULL, 'Vela de Ignição NGK Laser Iridium', 4.00, 8.00, 0.00, 0.00, 23.00, 7.36, 39.36, NULL, '2026-01-31 19:36:46'),
-	(10, 4, 'servico', NULL, NULL, 'Revisão Geral', 1.00, 120.00, 0.00, 0.00, 23.00, 27.60, 147.60, NULL, '2026-01-31 19:36:46'),
-	(11, 5, 'peca', NULL, NULL, 'Bateria 12V 70AH', 1.00, 60.00, 0.00, 0.00, 23.00, 13.80, 73.80, NULL, '2026-01-31 19:36:46'),
-	(12, 5, 'servico', NULL, NULL, 'Substituição Bateria', 1.00, 60.00, 0.00, 0.00, 23.00, 13.80, 73.80, NULL, '2026-01-31 19:36:46');
+	(33, 36, 'servico', NULL, NULL, 'teste', 1.00, 19.99, 0.00, 0.00, 23.00, 0.00, 19.99, NULL, '2026-02-14 01:48:57');
 
 -- A despejar estrutura para tabela carrepairshopgest.itens_ordem_trabalho
 CREATE TABLE IF NOT EXISTS `itens_ordem_trabalho` (
@@ -372,9 +362,9 @@ CREATE TABLE IF NOT EXISTS `itens_ordem_trabalho` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`),
   CONSTRAINT `itens_ordem_trabalho_chk_1` CHECK ((`tipo_item` in (_utf8mb4'servico',_utf8mb4'peca',_utf8mb4'outro')))
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- A despejar dados para tabela carrepairshopgest.itens_ordem_trabalho: ~12 rows (aproximadamente)
+-- A despejar dados para tabela carrepairshopgest.itens_ordem_trabalho: ~13 rows (aproximadamente)
 DELETE FROM `itens_ordem_trabalho`;
 INSERT INTO `itens_ordem_trabalho` (`id`, `ordem_trabalho_id`, `tipo_item`, `servico_id`, `peca_id`, `descricao`, `quantidade`, `preco_unitario`, `horas_trabalho`, `tarifa_horaria`, `percentual_desconto`, `valor_desconto`, `percentual_imposto`, `valor_imposto`, `valor_total`, `notas`, `criado_em`) VALUES
 	(1, 1, 'servico', NULL, NULL, 'Mudança Óleo  Filtros', 1.00, 120.00, NULL, NULL, 0.00, 0.00, 23.00, 0.00, 120.00, NULL, '2026-01-31 18:56:41'),
@@ -388,7 +378,8 @@ INSERT INTO `itens_ordem_trabalho` (`id`, `ordem_trabalho_id`, `tipo_item`, `ser
 	(9, 9, 'servico', NULL, NULL, 'Inspeção Pós-Compra', 1.00, 65.00, NULL, NULL, 0.00, 0.00, 23.00, 0.00, 65.00, NULL, '2026-01-31 18:56:41'),
 	(10, 10, 'servico', NULL, NULL, 'Substituição Filtros', 1.00, 95.00, NULL, NULL, 0.00, 0.00, 23.00, 0.00, 95.00, NULL, '2026-01-31 18:56:41'),
 	(11, 11, 'servico', NULL, NULL, 'Revisão 40.000km', 1.00, 140.00, NULL, NULL, 0.00, 0.00, 23.00, 0.00, 140.00, NULL, '2026-01-31 18:56:41'),
-	(12, 12, 'servico', NULL, NULL, 'Inspeção Garantia', 1.00, 0.00, NULL, NULL, 0.00, 0.00, 23.00, 0.00, 0.00, NULL, '2026-01-31 18:56:41');
+	(12, 12, 'servico', NULL, NULL, 'Inspeção Garantia', 1.00, 0.00, NULL, NULL, 0.00, 0.00, 23.00, 0.00, 0.00, NULL, '2026-01-31 18:56:41'),
+	(18, 21, 'servico', NULL, NULL, 'teste', 1.00, 19.99, NULL, NULL, 0.00, 0.00, 23.00, 0.00, 19.99, NULL, '2026-02-14 01:49:07');
 
 -- A despejar estrutura para tabela carrepairshopgest.log_auditoria
 CREATE TABLE IF NOT EXISTS `log_auditoria` (
@@ -420,6 +411,45 @@ INSERT INTO `log_auditoria` (`id`, `utilizador_id`, `acao`, `nome_tabela`, `id_r
 	(9, 1, 'UPDATE', 'clientes', 1, '{"total_gasto": 0.0}', '{"total_gasto": 147.6}', '192.168.1.107', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36', '2026-01-31 19:40:17'),
 	(10, 1, 'INSERT', 'transacoes_pecas', 1, NULL, '{"peca_id": 1, "quantidade": 1, "tipo_transacao": "saida"}', '192.168.1.108', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36', '2026-01-31 19:40:17');
 
+-- A despejar estrutura para tabela carrepairshopgest.marcas
+CREATE TABLE IF NOT EXISTS `marcas` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nome` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `pais_origem` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ativo` tinyint(1) DEFAULT '1',
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `atualizado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `nome_marca` (`nome`)
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- A despejar dados para tabela carrepairshopgest.marcas: ~23 rows (aproximadamente)
+DELETE FROM `marcas`;
+INSERT INTO `marcas` (`id`, `nome`, `pais_origem`, `ativo`, `criado_em`, `atualizado_em`) VALUES
+	(1, 'Audi', 'Alemanha', 1, '2026-02-10 16:15:58', '2026-02-10 16:15:58'),
+	(2, 'BMW', 'Alemanha', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(3, 'Mercedes-Benz', 'Alemanha', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(4, 'Volkswagen', 'Alemanha', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(5, 'Ford', 'Estados Unidos', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(6, 'Toyota', 'Japão', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(7, 'Honda', 'Japão', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(8, 'Nissan', 'Japão', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(9, 'Peugeot', 'França', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(10, 'Renault', 'França', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(11, 'Citroën', 'França', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(12, 'Fiat', 'Itália', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(13, 'Opel', 'Alemanha', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(14, 'Seat', 'Espanha', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(15, 'Skoda', 'República Checa', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(16, 'Volvo', 'Suécia', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(17, 'Mazda', 'Japão', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(18, 'Kia', 'Coreia do Sul', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(19, 'Hyundai', 'Coreia do Sul', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(20, 'Tesla', 'Estados Unidos', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(21, 'Porsche', 'Alemanha', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(22, 'Land Rover', 'Reino Unido', 1, '2026-02-10 16:16:04', '2026-02-10 16:16:04'),
+	(23, 'Jeep', 'Estados Unidos', 1, '2026-02-10 16:16:04', '2026-02-10 16:16:04');
+
 -- A despejar estrutura para tabela carrepairshopgest.mecanicos
 CREATE TABLE IF NOT EXISTS `mecanicos` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -435,21 +465,256 @@ CREATE TABLE IF NOT EXISTS `mecanicos` (
   `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `atualizado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- A despejar dados para tabela carrepairshopgest.mecanicos: ~3 rows (aproximadamente)
 DELETE FROM `mecanicos`;
 INSERT INTO `mecanicos` (`id`, `utilizador_id`, `nome`, `especialidade`, `telefone`, `email`, `tarifa_horaria`, `ativo`, `data_contratacao`, `notas`, `criado_em`, `atualizado_em`) VALUES
 	(1, 1, 'Carlos P.', 'Geral', NULL, NULL, 35.00, 1, NULL, NULL, '2026-01-31 18:55:53', '2026-01-31 19:41:11'),
 	(2, 1, 'Rui Alves', 'Diagnóstico', NULL, NULL, 40.00, 1, NULL, NULL, '2026-01-31 18:55:53', '2026-01-31 19:41:13'),
-	(3, 1, 'Joaquim F.', 'Eletricidade', NULL, NULL, 45.00, 1, NULL, NULL, '2026-01-31 18:55:53', '2026-01-31 19:41:13');
+	(3, 1, 'Joaquim F.', 'Eletricidade', NULL, NULL, 45.00, 1, NULL, NULL, '2026-01-31 18:55:53', '2026-01-31 19:41:13'),
+	(4, 1, 'manel da esquina', 'Eletricidade', NULL, NULL, 45.00, 1, NULL, NULL, '2026-01-31 18:55:53', '2026-02-10 13:41:31');
+
+-- A despejar estrutura para tabela carrepairshopgest.modelos
+CREATE TABLE IF NOT EXISTS `modelos` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `marca_id` int NOT NULL,
+  `nome` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tipo_veiculo` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ativo` tinyint(1) DEFAULT '1',
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `atualizado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `modelos_marca_id_fkey` (`marca_id`),
+  CONSTRAINT `modelos_marca_id_fkey` FOREIGN KEY (`marca_id`) REFERENCES `marcas` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=217 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- A despejar dados para tabela carrepairshopgest.modelos: ~216 rows (aproximadamente)
+DELETE FROM `modelos`;
+INSERT INTO `modelos` (`id`, `marca_id`, `nome`, `tipo_veiculo`, `ativo`, `criado_em`, `atualizado_em`) VALUES
+	(1, 1, 'A1', 'Hatchback', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(2, 1, 'A3', 'Hatchback', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(3, 1, 'A4', 'Sedan', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(4, 1, 'A5', 'Coupe', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(5, 1, 'A6', 'Sedan', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(6, 1, 'A7', 'Sedan', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(7, 1, 'A8', 'Sedan', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(8, 1, 'Q3', 'SUV', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(9, 1, 'Q5', 'SUV', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(10, 1, 'Q7', 'SUV', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(11, 1, 'Q8', 'SUV', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(12, 1, 'TT', 'Coupe', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(13, 1, 'R8', 'Coupe', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(14, 2, '1 Series', 'Hatchback', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(15, 2, '2 Series', 'Coupe', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(16, 2, '3 Series', 'Sedan', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(17, 2, '4 Series', 'Coupe', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(18, 2, '5 Series', 'Sedan', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(19, 2, '6 Series', 'Coupe', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(20, 2, '7 Series', 'Sedan', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(21, 2, '8 Series', 'Coupe', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(22, 2, 'X1', 'SUV', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(23, 2, 'X2', 'SUV', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(24, 2, 'X3', 'SUV', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(25, 2, 'X4', 'SUV', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(26, 2, 'X5', 'SUV', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(27, 2, 'X6', 'SUV', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(28, 2, 'X7', 'SUV', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(29, 2, 'Z4', 'Roadster', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(30, 2, 'i3', 'Hatchback', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(31, 2, 'i8', 'Coupe', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(32, 3, 'A-Class', 'Hatchback', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(33, 3, 'B-Class', 'MPV', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(34, 3, 'C-Class', 'Sedan', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(35, 3, 'E-Class', 'Sedan', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(36, 3, 'S-Class', 'Sedan', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(37, 3, 'CLA', 'Coupe', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(38, 3, 'CLS', 'Coupe', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(39, 3, 'GLA', 'SUV', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(40, 3, 'GLB', 'SUV', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(41, 3, 'GLC', 'SUV', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(42, 3, 'GLE', 'SUV', 1, '2026-02-10 16:15:59', '2026-02-10 16:15:59'),
+	(43, 3, 'GLS', 'SUV', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(44, 3, 'G-Class', 'SUV', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(45, 3, 'SL', 'Roadster', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(46, 3, 'SLC', 'Roadster', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(47, 4, 'Polo', 'Hatchback', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(48, 4, 'Golf', 'Hatchback', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(49, 4, 'Jetta', 'Sedan', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(50, 4, 'Passat', 'Sedan', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(51, 4, 'Arteon', 'Sedan', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(52, 4, 'Tiguan', 'SUV', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(53, 4, 'Touareg', 'SUV', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(54, 4, 'T-Roc', 'SUV', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(55, 4, 'Taos', 'SUV', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(56, 4, 'ID.3', 'Hatchback', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(57, 4, 'ID.4', 'SUV', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(58, 4, 'Scirocco', 'Coupe', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(59, 4, 'Beetle', 'Hatchback', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(60, 5, 'Fiesta', 'Hatchback', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(61, 5, 'Focus', 'Hatchback', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(62, 5, 'Mondeo', 'Sedan', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(63, 5, 'Mustang', 'Coupe', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(64, 5, 'Explorer', 'SUV', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(65, 5, 'Kuga', 'SUV', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(66, 5, 'Puma', 'SUV', 1, '2026-02-10 16:16:00', '2026-02-10 16:16:00'),
+	(67, 5, 'Ranger', 'Pickup', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(68, 5, 'Transit', 'Van', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(69, 5, 'F-150', 'Pickup', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(70, 6, 'Yaris', 'Hatchback', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(71, 6, 'Corolla', 'Sedan', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(72, 6, 'Camry', 'Sedan', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(73, 6, 'Prius', 'Hatchback', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(74, 6, 'RAV4', 'SUV', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(75, 6, 'C-HR', 'SUV', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(76, 6, 'Highlander', 'SUV', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(77, 6, 'Land Cruiser', 'SUV', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(78, 6, 'Hilux', 'Pickup', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(79, 6, 'Proace', 'Van', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(80, 6, 'Supra', 'Coupe', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(81, 7, 'Jazz', 'Hatchback', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(82, 7, 'Civic', 'Sedan', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(83, 7, 'Accord', 'Sedan', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(84, 7, 'HR-V', 'SUV', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(85, 7, 'CR-V', 'SUV', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(86, 7, 'Pilot', 'SUV', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(87, 7, 'City', 'Sedan', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(88, 7, 'NSX', 'Coupe', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(89, 8, 'Micra', 'Hatchback', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(90, 8, 'Pulsar', 'Sedan', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(91, 8, 'Qashqai', 'SUV', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(92, 8, 'X-Trail', 'SUV', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(93, 8, 'Juke', 'SUV', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(94, 8, 'Navara', 'Pickup', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(95, 8, 'Leaf', 'Hatchback', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(96, 8, '370Z', 'Coupe', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(97, 8, 'GT-R', 'Coupe', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(98, 9, '108', 'Hatchback', 1, '2026-02-10 16:16:01', '2026-02-10 16:16:01'),
+	(99, 9, '208', 'Hatchback', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(100, 9, '308', 'Hatchback', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(101, 9, '508', 'Sedan', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(102, 9, '2008', 'SUV', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(103, 9, '3008', 'SUV', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(104, 9, '5008', 'SUV', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(105, 9, 'Partner', 'Van', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(106, 9, 'Expert', 'Van', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(107, 9, 'Boxer', 'Van', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(108, 10, 'Twingo', 'Hatchback', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(109, 10, 'Clio', 'Hatchback', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(110, 10, 'Megane', 'Hatchback', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(111, 10, 'Talisman', 'Sedan', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(112, 10, 'Captur', 'SUV', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(113, 10, 'Kadjar', 'SUV', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(114, 10, 'Koleos', 'SUV', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(115, 10, 'Master', 'Van', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(116, 10, 'Trafic', 'Van', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(117, 10, 'Zoe', 'Hatchback', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(118, 11, 'C1', 'Hatchback', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(119, 11, 'C3', 'Hatchback', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(120, 11, 'C4', 'Hatchback', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(121, 11, 'C5', 'Sedan', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(122, 11, 'C3 Aircross', 'SUV', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(123, 11, 'C5 Aircross', 'SUV', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(124, 11, 'Berlingo', 'MPV', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(125, 11, 'Jumpy', 'Van', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(126, 11, 'Jumper', 'Van', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(127, 12, '500', 'Hatchback', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(128, 12, 'Panda', 'Hatchback', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(129, 12, 'Tipo', 'Sedan', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(130, 12, '500X', 'SUV', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(131, 12, '500L', 'MPV', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(132, 12, 'Ducato', 'Van', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(133, 12, 'Fiorino', 'Van', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(134, 12, 'Talento', 'Van', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(135, 13, 'Corsa', 'Hatchback', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(136, 13, 'Astra', 'Hatchback', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(137, 13, 'Insignia', 'Sedan', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(138, 13, 'Crossland', 'SUV', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(139, 13, 'Grandland', 'SUV', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(140, 13, 'Mokka', 'SUV', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(141, 13, 'Vivaro', 'Van', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(142, 13, 'Movano', 'Van', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(143, 14, 'Ibiza', 'Hatchback', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(144, 14, 'Leon', 'Hatchback', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(145, 14, 'Arona', 'SUV', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(146, 14, 'Ateca', 'SUV', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(147, 14, 'Tarraco', 'SUV', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(148, 14, 'Alhambra', 'MPV', 1, '2026-02-10 16:16:02', '2026-02-10 16:16:02'),
+	(149, 15, 'Fabia', 'Hatchback', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(150, 15, 'Scala', 'Sedan', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(151, 15, 'Octavia', 'Sedan', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(152, 15, 'Superb', 'Sedan', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(153, 15, 'Kamiq', 'SUV', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(154, 15, 'Karoq', 'SUV', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(155, 15, 'Kodiaq', 'SUV', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(156, 15, 'Enyaq', 'SUV', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(157, 16, 'S60', 'Sedan', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(158, 16, 'S90', 'Sedan', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(159, 16, 'V60', 'Wagon', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(160, 16, 'V90', 'Wagon', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(161, 16, 'XC40', 'SUV', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(162, 16, 'XC60', 'SUV', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(163, 16, 'XC90', 'SUV', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(164, 16, 'C40', 'SUV', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(165, 17, 'Mazda2', 'Hatchback', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(166, 17, 'Mazda3', 'Sedan', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(167, 17, 'Mazda6', 'Sedan', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(168, 17, 'CX-3', 'SUV', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(169, 17, 'CX-30', 'SUV', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(170, 17, 'CX-5', 'SUV', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(171, 17, 'CX-9', 'SUV', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(172, 17, 'MX-5', 'Roadster', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(173, 18, 'Picanto', 'Hatchback', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(174, 18, 'Rio', 'Hatchback', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(175, 18, 'Ceed', 'Hatchback', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(176, 18, 'Optima', 'Sedan', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(177, 18, 'Stinger', 'Sedan', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(178, 18, 'Sportage', 'SUV', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(179, 18, 'Sorento', 'SUV', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(180, 18, 'Carnival', 'MPV', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(181, 18, 'EV6', 'SUV', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(182, 19, 'i10', 'Hatchback', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(183, 19, 'i20', 'Hatchback', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(184, 19, 'i30', 'Hatchback', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(185, 19, 'Elantra', 'Sedan', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(186, 19, 'Sonata', 'Sedan', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(187, 19, 'Kona', 'SUV', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(188, 19, 'Tucson', 'SUV', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(189, 19, 'Santa Fe', 'SUV', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(190, 19, 'Palisade', 'SUV', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(191, 19, 'Ioniq 5', 'SUV', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(192, 20, 'Model 3', 'Sedan', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(193, 20, 'Model S', 'Sedan', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(194, 20, 'Model X', 'SUV', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(195, 20, 'Model Y', 'SUV', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(196, 20, 'Cybertruck', 'Pickup', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(197, 21, '718 Boxster', 'Roadster', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(198, 21, '718 Cayman', 'Coupe', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(199, 21, '911', 'Coupe', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(200, 21, 'Panamera', 'Sedan', 1, '2026-02-10 16:16:03', '2026-02-10 16:16:03'),
+	(201, 21, 'Macan', 'SUV', 1, '2026-02-10 16:16:04', '2026-02-10 16:16:04'),
+	(202, 21, 'Cayenne', 'SUV', 1, '2026-02-10 16:16:04', '2026-02-10 16:16:04'),
+	(203, 21, 'Taycan', 'Sedan', 1, '2026-02-10 16:16:04', '2026-02-10 16:16:04'),
+	(204, 22, 'Defender', 'SUV', 1, '2026-02-10 16:16:04', '2026-02-10 16:16:04'),
+	(205, 22, 'Discovery', 'SUV', 1, '2026-02-10 16:16:04', '2026-02-10 16:16:04'),
+	(206, 22, 'Discovery Sport', 'SUV', 1, '2026-02-10 16:16:04', '2026-02-10 16:16:04'),
+	(207, 22, 'Range Rover', 'SUV', 1, '2026-02-10 16:16:04', '2026-02-10 16:16:04'),
+	(208, 22, 'Range Rover Sport', 'SUV', 1, '2026-02-10 16:16:04', '2026-02-10 16:16:04'),
+	(209, 22, 'Range Rover Velar', 'SUV', 1, '2026-02-10 16:16:04', '2026-02-10 16:16:04'),
+	(210, 22, 'Range Rover Evoque', 'SUV', 1, '2026-02-10 16:16:04', '2026-02-10 16:16:04'),
+	(211, 23, 'Renegade', 'SUV', 1, '2026-02-10 16:16:04', '2026-02-10 16:16:04'),
+	(212, 23, 'Compass', 'SUV', 1, '2026-02-10 16:16:04', '2026-02-10 16:16:04'),
+	(213, 23, 'Cherokee', 'SUV', 1, '2026-02-10 16:16:04', '2026-02-10 16:16:04'),
+	(214, 23, 'Grand Cherokee', 'SUV', 1, '2026-02-10 16:16:04', '2026-02-10 16:16:04'),
+	(215, 23, 'Wrangler', 'SUV', 1, '2026-02-10 16:16:04', '2026-02-10 16:16:04'),
+	(216, 23, 'Gladiator', 'Pickup', 1, '2026-02-10 16:16:04', '2026-02-10 16:16:04');
 
 -- A despejar estrutura para tabela carrepairshopgest.orcamentos
 CREATE TABLE IF NOT EXISTS `orcamentos` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `ref_orcamento` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `cliente_id` int NOT NULL,
-  `veiculo_id` int NOT NULL,
+  `veiculo_id` bigint NOT NULL,
   `preparado_por` int DEFAULT NULL,
   `data_emissao` date DEFAULT NULL,
   `data_expiracao` date DEFAULT NULL,
@@ -468,26 +733,12 @@ CREATE TABLE IF NOT EXISTS `orcamentos` (
   UNIQUE KEY `id` (`id`),
   UNIQUE KEY `numero_orcamento` (`ref_orcamento`) USING BTREE,
   CONSTRAINT `orcamentos_chk_1` CHECK ((`estado` in (_utf8mb4'pendente',_utf8mb4'aprovado',_utf8mb4'rejeitado',_utf8mb4'expirado',_utf8mb4'convertido')))
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- A despejar dados para tabela carrepairshopgest.orcamentos: ~15 rows (aproximadamente)
+-- A despejar dados para tabela carrepairshopgest.orcamentos: ~0 rows (aproximadamente)
 DELETE FROM `orcamentos`;
 INSERT INTO `orcamentos` (`id`, `ref_orcamento`, `cliente_id`, `veiculo_id`, `preparado_por`, `data_emissao`, `data_expiracao`, `estado`, `total_pecas`, `total_mao_obra`, `total_desconto`, `total_imposto`, `total_geral`, `notas`, `data_aprovacao`, `aprovado_por`, `criado_em`, `atualizado_em`) VALUES
-	(1, 'TVDE0001', 1, 1, NULL, '2024-10-10', '2024-10-20', 'aprovado', 30.00, 90.00, 0.00, 27.60, 147.60, NULL, NULL, NULL, '2026-01-31 19:54:35', '2026-01-31 19:54:35'),
-	(2, 'C00001', 1, 2, NULL, '2024-10-28', '2024-11-07', 'aprovado', 0.00, 85.00, 0.00, 19.55, 104.55, NULL, NULL, NULL, '2026-01-31 19:54:35', '2026-01-31 19:54:35'),
-	(3, 'TVDE0002', 2, 3, NULL, '2024-10-25', '2024-11-04', 'aprovado', 25.00, 70.00, 0.00, 21.85, 116.85, NULL, NULL, NULL, '2026-01-31 19:54:35', '2026-01-31 19:54:35'),
-	(4, 'C00002', 3, 4, NULL, '2024-09-10', '2024-09-20', 'aprovado', 60.00, 120.00, 0.00, 41.40, 221.40, NULL, NULL, NULL, '2026-01-31 19:54:35', '2026-01-31 19:54:35'),
-	(5, 'TVDE0003', 4, 5, NULL, '2024-08-05', '2024-08-15', 'aprovado', 60.00, 60.00, 0.00, 27.60, 147.60, NULL, NULL, NULL, '2026-01-31 19:54:35', '2026-01-31 19:54:35'),
-	(6, 'C00003', 5, 6, NULL, '2024-11-01', '2024-11-11', 'pendente', 75.00, 100.00, 0.00, 40.25, 215.25, NULL, NULL, NULL, '2026-01-31 19:54:35', '2026-01-31 19:54:35'),
-	(7, 'TVDE0004', 6, 9, NULL, '2024-10-15', '2024-10-25', 'rejeitado', 0.00, 65.00, 0.00, 14.95, 79.95, NULL, NULL, NULL, '2026-01-31 19:54:35', '2026-01-31 19:54:35'),
-	(8, 'C00004', 7, 10, NULL, '2024-09-20', '2024-09-30', 'aprovado', 95.00, 50.00, 0.00, 33.35, 178.35, NULL, NULL, NULL, '2026-01-31 19:54:35', '2026-01-31 19:54:35'),
-	(9, 'TVDE0005', 8, 12, NULL, '2024-11-05', '2024-11-15', 'pendente', 50.00, 80.00, 0.00, 29.90, 159.90, NULL, NULL, NULL, '2026-01-31 19:54:35', '2026-01-31 19:54:35'),
-	(10, 'C00005', 3, 4, NULL, '2024-10-01', '2024-10-11', 'expirado', 40.00, 110.00, 0.00, 34.20, 184.20, NULL, NULL, NULL, '2026-01-31 19:54:35', '2026-01-31 19:54:35'),
-	(11, 'TVDE0006', 1, 1, NULL, '2024-11-10', '2024-11-20', 'pendente', 20.00, 80.00, 0.00, 22.80, 122.80, NULL, NULL, NULL, '2026-01-31 19:54:35', '2026-01-31 19:54:35'),
-	(12, 'C00006', 2, 3, NULL, '2024-09-05', '2024-09-15', 'aprovado', 35.00, 75.00, 0.00, 25.55, 135.55, NULL, NULL, NULL, '2026-01-31 19:54:35', '2026-01-31 19:54:35'),
-	(13, 'TVDE0007', 5, 7, NULL, '2024-10-05', '2024-10-15', 'rejeitado', 100.00, 150.00, 0.00, 57.00, 307.00, NULL, NULL, NULL, '2026-01-31 19:54:35', '2026-01-31 19:54:35'),
-	(14, 'C00007', 6, 9, NULL, '2024-11-15', '2024-11-25', 'pendente', 0.00, 70.00, 0.00, 16.10, 86.10, NULL, NULL, NULL, '2026-01-31 19:54:35', '2026-01-31 19:54:35'),
-	(15, 'TVDE0008', 7, 11, NULL, '2024-08-20', '2024-08-30', 'aprovado', 45.00, 95.00, 0.00, 32.35, 172.35, NULL, NULL, NULL, '2026-01-31 19:54:35', '2026-01-31 19:54:35');
+	(36, 'OR-2026-TVDE0001', 34, 55, NULL, '2026-02-14', NULL, 'Aprovado', 0.00, 19.99, 0.00, 0.00, 19.99, '', '2026-02-14', NULL, '2026-02-14 01:48:57', '2026-02-14 01:48:57');
 
 -- A despejar estrutura para tabela carrepairshopgest.ordens_trabalho
 CREATE TABLE IF NOT EXISTS `ordens_trabalho` (
@@ -518,23 +769,12 @@ CREATE TABLE IF NOT EXISTS `ordens_trabalho` (
   UNIQUE KEY `id` (`id`),
   UNIQUE KEY `numero_ordem_trabalho` (`ref_ordem_trabalho`) USING BTREE,
   CONSTRAINT `ordens_trabalho_chk_1` CHECK ((`estado` in (_utf8mb4'pendente',_utf8mb4'em_andamento',_utf8mb4'concluido',_utf8mb4'cancelado',_utf8mb4'faturado')))
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- A despejar dados para tabela carrepairshopgest.ordens_trabalho: ~12 rows (aproximadamente)
+-- A despejar dados para tabela carrepairshopgest.ordens_trabalho: ~0 rows (aproximadamente)
 DELETE FROM `ordens_trabalho`;
 INSERT INTO `ordens_trabalho` (`id`, `ref_ordem_trabalho`, `cliente_id`, `veiculo_id`, `mecanico_id`, `orcamento_id`, `agendamento_id`, `data_inicio`, `data_conclusao`, `estado`, `quilometragem_servico`, `descricao_problema`, `trabalho_realizado`, `recomendacoes`, `total_pecas`, `total_mao_obra`, `total_desconto`, `total_imposto`, `total_geral`, `criado_em`, `atualizado_em`, `criado_por`, `atualizado_por`) VALUES
-	(1, 'OT-2024-001', 1, 1, 1, NULL, NULL, NULL, '2024-10-15', 'concluido', NULL, NULL, 'Mudança Óleo  Filtros', NULL, 0.00, 0.00, 0.00, 0.00, 120.00, '2026-01-31 18:56:35', '2026-01-31 18:56:35', NULL, NULL),
-	(2, 'OT-2024-002', 1, 2, 2, NULL, NULL, NULL, '2024-11-02', 'concluido', NULL, NULL, 'Inspeção Periódica', NULL, 0.00, 0.00, 0.00, 0.00, 85.00, '2026-01-31 18:56:35', '2026-01-31 18:56:35', NULL, NULL),
-	(3, 'OT-2024-003', 2, 3, 1, NULL, NULL, NULL, '2024-10-28', 'concluido', NULL, NULL, 'Substituição Pastilhas Travão', NULL, 0.00, 0.00, 0.00, 0.00, 95.00, '2026-01-31 18:56:35', '2026-01-31 18:56:35', NULL, NULL),
-	(4, 'OT-2024-004', 3, 4, 3, NULL, NULL, NULL, '2024-09-15', 'concluido', NULL, NULL, 'Revisão Geral', NULL, 0.00, 0.00, 0.00, 0.00, 180.00, '2026-01-31 18:56:35', '2026-01-31 18:56:35', NULL, NULL),
-	(5, 'OT-2024-005', 4, 5, 1, NULL, NULL, NULL, '2024-08-10', 'concluido', NULL, NULL, 'Substituição Bateria', NULL, 0.00, 0.00, 0.00, 0.00, 120.00, '2026-01-31 18:56:35', '2026-01-31 18:56:35', NULL, NULL),
-	(6, 'OT-2024-006', 5, 6, 2, NULL, NULL, NULL, '2024-11-05', 'concluido', NULL, NULL, 'Mudança Óleo', NULL, 0.00, 0.00, 0.00, 0.00, 75.00, '2026-01-31 18:56:35', '2026-01-31 18:56:35', NULL, NULL),
-	(7, 'OT-2024-007', 5, 7, 3, NULL, NULL, NULL, '2024-10-20', 'concluido', NULL, NULL, 'Reparação Sistema Elétrico', NULL, 0.00, 0.00, 0.00, 0.00, 350.00, '2026-01-31 18:56:35', '2026-01-31 18:56:35', NULL, NULL),
-	(8, 'OT-2024-008', 5, 8, 1, NULL, NULL, NULL, '2024-09-12', 'concluido', NULL, NULL, 'Substituição Escovas Limpa-Vidros', NULL, 0.00, 0.00, 0.00, 0.00, 45.00, '2026-01-31 18:56:35', '2026-01-31 18:56:35', NULL, NULL),
-	(9, 'OT-2024-009', 6, 9, 2, NULL, NULL, NULL, '2024-10-18', 'concluido', NULL, NULL, 'Inspeção Pós-Compra', NULL, 0.00, 0.00, 0.00, 0.00, 65.00, '2026-01-31 18:56:35', '2026-01-31 18:56:35', NULL, NULL),
-	(10, 'OT-2024-010', 7, 10, 1, NULL, NULL, NULL, '2024-09-25', 'concluido', NULL, NULL, 'Substituição Filtros', NULL, 0.00, 0.00, 0.00, 0.00, 95.00, '2026-01-31 18:56:35', '2026-01-31 18:56:35', NULL, NULL),
-	(11, 'OT-2024-011', 7, 11, 3, NULL, NULL, NULL, '2024-11-08', 'concluido', NULL, NULL, 'Revisão 40.000km', NULL, 0.00, 0.00, 0.00, 0.00, 140.00, '2026-01-31 18:56:35', '2026-01-31 18:56:35', NULL, NULL),
-	(12, 'OT-2024-012', 8, 12, 1, NULL, NULL, NULL, '2024-10-30', 'concluido', NULL, NULL, 'Inspeção Garantia', NULL, 0.00, 0.00, 0.00, 0.00, 0.00, '2026-01-31 18:56:35', '2026-01-31 18:56:35', NULL, NULL);
+	(21, 'OR-2026-TVDE0001', 34, 55, 1, 36, NULL, '2026-02-14', NULL, 'em_andamento', NULL, NULL, NULL, NULL, 0.00, 19.99, 0.00, 0.00, 19.99, '2026-02-14 01:49:07', '2026-02-14 01:49:07', NULL, NULL);
 
 -- A despejar estrutura para tabela carrepairshopgest.pagamentos
 CREATE TABLE IF NOT EXISTS `pagamentos` (
@@ -628,6 +868,27 @@ INSERT INTO `pecas_ordem_trabalho` (`id`, `ordem_trabalho_id`, `peca_id`, `quant
 	(15, 11, 3, 1.00, 30.00, 30.00, NULL, '2026-01-31 18:56:50'),
 	(16, 11, 1, 1.00, 6.00, 6.00, NULL, '2026-01-31 18:56:50');
 
+-- A despejar estrutura para tabela carrepairshopgest.perfis_clientes
+CREATE TABLE IF NOT EXISTS `perfis_clientes` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nome` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descricao` text COLLATE utf8mb4_unicode_ci,
+  `desconto` decimal(5,2) NOT NULL DEFAULT '0.00',
+  `ativo` tinyint(1) DEFAULT '1',
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `atualizado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `nome_perfil` (`nome`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- A despejar dados para tabela carrepairshopgest.perfis_clientes: ~4 rows (aproximadamente)
+DELETE FROM `perfis_clientes`;
+INSERT INTO `perfis_clientes` (`id`, `nome`, `descricao`, `desconto`, `ativo`, `criado_em`, `atualizado_em`) VALUES
+	(1, 'Normal', 'Cliente normal sem desconto', 0.00, 1, '2026-02-10 18:51:32', '2026-02-10 18:51:32'),
+	(2, 'TVDE Interno', 'Motorista TVDE interno com desconto de 10%', 10.00, 1, '2026-02-10 18:51:32', '2026-02-10 18:51:32'),
+	(3, 'TVDE Externo', 'Motorista TVDE externo com desconto de 5%', 5.00, 1, '2026-02-10 18:51:32', '2026-02-10 18:51:32'),
+	(4, 'Empresa', 'Cliente empresa com desconto de 15%', 15.00, 1, '2026-02-10 18:51:32', '2026-02-10 18:51:32');
+
 -- A despejar estrutura para tabela carrepairshopgest.servicos
 CREATE TABLE IF NOT EXISTS `servicos` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -635,17 +896,38 @@ CREATE TABLE IF NOT EXISTS `servicos` (
   `nome` varchar(255) NOT NULL,
   `descricao` text,
   `preco_base` decimal(10,2) DEFAULT NULL,
-  `duracao_estimada` time DEFAULT NULL,
+  `duracao_estimada` varchar(8) DEFAULT NULL,
   `requer_pecas` tinyint(1) DEFAULT '0',
   `ativo` tinyint(1) DEFAULT '1',
   `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `atualizado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- A despejar dados para tabela carrepairshopgest.servicos: ~0 rows (aproximadamente)
+-- A despejar dados para tabela carrepairshopgest.servicos: ~20 rows (aproximadamente)
 DELETE FROM `servicos`;
+INSERT INTO `servicos` (`id`, `categoria_id`, `nome`, `descricao`, `preco_base`, `duracao_estimada`, `requer_pecas`, `ativo`, `criado_em`, `atualizado_em`) VALUES
+	(11, NULL, 'Revisão Geral', 'Revisão completa do veículo incluindo verificação de fluidos, filtros, freios e sistema elétrico', 150.00, NULL, 1, 1, '2026-02-10 14:04:39', '2026-02-10 14:04:39'),
+	(12, NULL, 'Mudança de Óleo', 'Substituição do óleo do motor e filtros de óleo', 45.00, NULL, 1, 1, '2026-02-10 14:04:39', '2026-02-10 14:04:39'),
+	(13, NULL, 'Substituição de Travões', 'Substituição de pastilhas, discos ou tambores de travão', 120.00, NULL, 1, 1, '2026-02-10 14:04:39', '2026-02-10 14:04:39'),
+	(14, NULL, 'Diagnóstico Eletrónico', 'Diagnóstico completo do sistema elétrico e computador de bordo', 85.00, NULL, 0, 1, '2026-02-10 14:04:39', '2026-02-10 14:04:39'),
+	(15, NULL, 'Substituição de Bateria', 'Substituição da bateria do veículo', 65.00, NULL, 1, 1, '2026-02-10 14:04:39', '2026-02-10 14:04:39'),
+	(16, NULL, 'Alinhamento e Balanceamento', 'Alinhamento das rodas e balanceamento de pneus', 55.00, NULL, 0, 1, '2026-02-10 14:04:39', '2026-02-10 14:04:39'),
+	(17, NULL, 'Substituição de Filtros', 'Substituição de filtros de ar, combustível e habitáculo', 35.00, NULL, 1, 1, '2026-02-10 14:04:39', '2026-02-10 14:04:39'),
+	(18, NULL, 'Reparação de Motor', 'Diagnóstico e reparação de problemas no motor', 0.00, NULL, 1, 1, '2026-02-10 14:04:39', '2026-02-10 14:04:39'),
+	(19, NULL, 'Inspeção Pré-Compra', 'Inspeção completa para compra de veículo usado', 85.00, NULL, 0, 1, '2026-02-10 14:04:39', '2026-02-10 14:04:39'),
+	(20, NULL, 'Substituição de Amortecedores', 'Substituição dos amortecedores dianteiros e traseiros', 180.00, NULL, 1, 1, '2026-02-10 14:04:39', '2026-02-10 14:04:39'),
+	(41, NULL, 'Revisão Geral', 'Revisão completa do veículo incluindo verificação de fluidos, filtros, freios e sistema elétrico', 150.00, NULL, 1, 1, '2026-02-12 13:39:57', '2026-02-12 13:39:57'),
+	(42, NULL, 'Mudança de Óleo', 'Substituição do óleo do motor e filtros de óleo', 45.00, NULL, 1, 1, '2026-02-12 13:39:57', '2026-02-12 13:39:57'),
+	(43, NULL, 'Substituição de Travões', 'Substituição de pastilhas, discos ou tambores de travão', 120.00, NULL, 1, 1, '2026-02-12 13:39:57', '2026-02-12 13:39:57'),
+	(44, NULL, 'Diagnóstico Eletrónico', 'Diagnóstico completo do sistema elétrico e computador de bordo', 85.00, NULL, 0, 1, '2026-02-12 13:39:57', '2026-02-12 13:39:57'),
+	(45, NULL, 'Substituição de Bateria', 'Substituição da bateria do veículo', 65.00, NULL, 1, 1, '2026-02-12 13:39:57', '2026-02-12 13:39:57'),
+	(46, NULL, 'Alinhamento e Balanceamento', 'Alinhamento das rodas e balanceamento de pneus', 55.00, NULL, 0, 1, '2026-02-12 13:39:57', '2026-02-12 13:39:57'),
+	(47, NULL, 'Substituição de Filtros', 'Substituição de filtros de ar, combustível e habitáculo', 35.00, NULL, 1, 1, '2026-02-12 13:39:57', '2026-02-12 13:39:57'),
+	(48, NULL, 'Reparação de Motor', 'Diagnóstico e reparação de problemas no motor', 0.00, NULL, 1, 1, '2026-02-12 13:39:57', '2026-02-12 13:39:57'),
+	(49, NULL, 'Inspeção Pré-Compra', 'Inspeção completa para compra de veículo usado', 85.00, NULL, 0, 1, '2026-02-12 13:39:57', '2026-02-12 13:39:57'),
+	(50, NULL, 'Substituição de Amortecedores', 'Substituição dos amortecedores dianteiros e traseiros', 180.00, NULL, 1, 1, '2026-02-12 13:39:57', '2026-02-12 13:39:57');
 
 -- A despejar estrutura para tabela carrepairshopgest.transacoes_pecas
 CREATE TABLE IF NOT EXISTS `transacoes_pecas` (
@@ -691,7 +973,7 @@ DELETE FROM `utilizadores`;
 -- A despejar estrutura para tabela carrepairshopgest.veiculos
 CREATE TABLE IF NOT EXISTS `veiculos` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `cliente_id` int NOT NULL,
+  `cliente_id` int DEFAULT NULL,
   `marca` varchar(50) NOT NULL,
   `modelo` varchar(50) NOT NULL,
   `matricula` varchar(20) NOT NULL,
@@ -700,7 +982,6 @@ CREATE TABLE IF NOT EXISTS `veiculos` (
   `tipo_motor` varchar(50) DEFAULT NULL,
   `tipo_combustivel` varchar(20) DEFAULT NULL,
   `estado` varchar(20) DEFAULT 'disponivel',
-  `quilometragem` int DEFAULT '0',
   `ultima_intervencao` date DEFAULT NULL,
   `proxima_revisao` date DEFAULT NULL,
   `companhia_seguros` varchar(100) DEFAULT NULL,
@@ -713,26 +994,34 @@ CREATE TABLE IF NOT EXISTS `veiculos` (
   UNIQUE KEY `id` (`id`),
   UNIQUE KEY `matricula` (`matricula`),
   UNIQUE KEY `numero_chassis` (`numero_chassis`),
+  KEY `veiculos_cliente_id_fkey` (`cliente_id`),
+  CONSTRAINT `veiculos_cliente_id_fkey` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `veiculos_chk_1` CHECK ((`ano` >= 1900)),
   CONSTRAINT `veiculos_chk_2` CHECK ((`tipo_combustivel` in (_utf8mb4'Gasolina',_utf8mb4'Gasóleo',_utf8mb4'Elétrico',_utf8mb4'Híbrido'))),
   CONSTRAINT `veiculos_chk_3` CHECK ((`estado` in (_utf8mb4'na_oficina',_utf8mb4'disponivel',_utf8mb4'vendido',_utf8mb4'abandonado')))
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=57 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- A despejar dados para tabela carrepairshopgest.veiculos: ~12 rows (aproximadamente)
+-- A despejar dados para tabela carrepairshopgest.veiculos: ~18 rows (aproximadamente)
 DELETE FROM `veiculos`;
-INSERT INTO `veiculos` (`id`, `cliente_id`, `marca`, `modelo`, `matricula`, `ano`, `numero_chassis`, `tipo_motor`, `tipo_combustivel`, `estado`, `quilometragem`, `ultima_intervencao`, `proxima_revisao`, `companhia_seguros`, `apolice_seguro`, `validade_seguro`, `notas`, `criado_em`, `atualizado_em`) VALUES
-	(1, 1, 'Peugeot', '308', '45-GH-23', 2018, NULL, NULL, NULL, 'disponivel', 125000, '2024-10-15', NULL, NULL, NULL, NULL, NULL, '2026-01-31 18:56:22', '2026-01-31 18:56:22'),
-	(2, 1, 'Fiat', 'Punto', '12-AB-34', 2010, NULL, NULL, NULL, 'na_oficina', 180000, '2024-11-02', NULL, NULL, NULL, NULL, NULL, '2026-01-31 18:56:22', '2026-01-31 18:56:22'),
-	(3, 2, 'Audi', 'A4', '20-XX-45', 2019, NULL, NULL, NULL, 'disponivel', 95000, '2024-10-28', NULL, NULL, NULL, NULL, NULL, '2026-01-31 18:56:22', '2026-01-31 18:56:22'),
-	(4, 3, 'BMW', 'X5', '78-AB-91', 2020, NULL, NULL, NULL, 'disponivel', 78000, '2024-09-15', NULL, NULL, NULL, NULL, NULL, '2026-01-31 18:56:22', '2026-01-31 18:56:22'),
-	(5, 4, 'Renault', 'Clio', '34-CD-56', 2017, NULL, NULL, NULL, 'disponivel', 110000, '2024-08-10', NULL, NULL, NULL, NULL, NULL, '2026-01-31 18:56:22', '2026-01-31 18:56:22'),
-	(6, 5, 'Mercedes-Benz', 'C-Class', '56-EF-78', 2021, NULL, NULL, NULL, 'disponivel', 45000, '2024-11-05', NULL, NULL, NULL, NULL, NULL, '2026-01-31 18:56:22', '2026-01-31 18:56:22'),
-	(7, 5, 'Volkswagen', 'Golf', '89-GH-12', 2016, NULL, NULL, NULL, 'na_oficina', 135000, '2024-10-20', NULL, NULL, NULL, NULL, NULL, '2026-01-31 18:56:22', '2026-01-31 18:56:22'),
-	(8, 5, 'Opel', 'Astra', '67-IJ-34', 2019, NULL, NULL, NULL, 'disponivel', 92000, '2024-09-12', NULL, NULL, NULL, NULL, NULL, '2026-01-31 18:56:22', '2026-01-31 18:56:22'),
-	(9, 6, 'Seat', 'Leon', '23-KL-56', 2022, NULL, NULL, NULL, 'disponivel', 35000, '2024-10-18', NULL, NULL, NULL, NULL, NULL, '2026-01-31 18:56:22', '2026-01-31 18:56:22'),
-	(10, 7, 'Citroën', 'C4', '45-MN-78', 2015, NULL, NULL, NULL, 'disponivel', 145000, '2024-09-25', NULL, NULL, NULL, NULL, NULL, '2026-01-31 18:56:22', '2026-01-31 18:56:22'),
-	(11, 7, 'Nissan', 'Qashqai', '12-OP-90', 2018, NULL, NULL, NULL, 'disponivel', 98000, '2024-11-08', NULL, NULL, NULL, NULL, NULL, '2026-01-31 18:56:22', '2026-01-31 18:56:22'),
-	(12, 8, 'Toyota', 'Corolla', '78-QR-12', 2023, NULL, NULL, NULL, 'disponivel', 15000, '2024-10-30', NULL, NULL, NULL, NULL, NULL, '2026-01-31 18:56:22', '2026-01-31 18:56:22');
+INSERT INTO `veiculos` (`id`, `cliente_id`, `marca`, `modelo`, `matricula`, `ano`, `numero_chassis`, `tipo_motor`, `tipo_combustivel`, `estado`, `ultima_intervencao`, `proxima_revisao`, `companhia_seguros`, `apolice_seguro`, `validade_seguro`, `notas`, `criado_em`, `atualizado_em`) VALUES
+	(3, 23, 'Audi', 'A4', '20-XX-45', 2019, NULL, NULL, NULL, 'disponivel', '2024-10-28', NULL, NULL, NULL, NULL, NULL, '2026-01-31 18:56:22', '2026-01-31 18:56:22'),
+	(4, 1, 'BMW', 'X5', '78-AB-91', 2020, NULL, NULL, NULL, 'disponivel', '2024-09-15', NULL, NULL, NULL, NULL, NULL, '2026-01-31 18:56:22', '2026-01-31 18:56:22'),
+	(5, 23, 'Renault', 'Clio', '34-CD-56', 2017, NULL, NULL, NULL, 'disponivel', '2024-08-10', NULL, NULL, NULL, NULL, NULL, '2026-01-31 18:56:22', '2026-01-31 18:56:22'),
+	(6, 1, 'Mercedes-Benz', 'C-Class', '56-EF-78', 2021, NULL, NULL, NULL, 'disponivel', '2024-11-05', NULL, NULL, NULL, NULL, NULL, '2026-01-31 18:56:22', '2026-01-31 18:56:22'),
+	(7, 23, 'Volkswagen', 'Golf', '89-GH-12', 2016, NULL, NULL, NULL, 'na_oficina', '2024-10-20', NULL, NULL, NULL, NULL, NULL, '2026-01-31 18:56:22', '2026-01-31 18:56:22'),
+	(8, 1, 'Opel', 'Astra', '67-IJ-34', 2019, NULL, NULL, NULL, 'disponivel', '2024-09-12', NULL, NULL, NULL, NULL, NULL, '2026-01-31 18:56:22', '2026-01-31 18:56:22'),
+	(9, 1, 'Seat', 'Leon', '23-KL-56', 2022, NULL, NULL, NULL, 'disponivel', '2024-10-18', NULL, NULL, NULL, NULL, NULL, '2026-01-31 18:56:22', '2026-01-31 18:56:22'),
+	(10, 23, 'Citroën', 'C4', '45-MN-78', 2015, NULL, NULL, NULL, 'disponivel', '2024-09-25', NULL, NULL, NULL, NULL, NULL, '2026-01-31 18:56:22', '2026-01-31 18:56:22'),
+	(11, 1, 'Nissan', 'Qashqai', '12-OP-90', 2018, NULL, NULL, NULL, 'disponivel', '2024-11-08', NULL, NULL, NULL, NULL, NULL, '2026-01-31 18:56:22', '2026-01-31 18:56:22'),
+	(12, 23, 'Toyota', 'Corolla', '78-QR-12', 2023, NULL, NULL, NULL, 'disponivel', '2024-10-30', NULL, NULL, NULL, NULL, NULL, '2026-01-31 18:56:22', '2026-01-31 18:56:22'),
+	(32, 1, 'Fiat', 'Panda', 'XX-13-13', 2019, NULL, NULL, NULL, 'disponivel', NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-10 21:41:14', '2026-02-10 21:41:14'),
+	(34, 1, 'Ford', 'Explorer', 'AA-11-22', 2020, NULL, NULL, NULL, 'disponivel', NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-10 21:50:45', '2026-02-10 21:50:45'),
+	(36, 1, 'Renault', 'Kadjar', 'XX-II-11', 2010, NULL, NULL, NULL, 'disponivel', NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-11 00:33:05', '2026-02-11 11:14:08'),
+	(37, 1, 'Renault', 'Clio', 'XX-11-55', 2011, NULL, NULL, NULL, 'disponivel', NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-11 16:28:47', '2026-02-11 16:28:47'),
+	(39, 1, 'Tesla', 'Cybertruck', '11-11-11', 3333, NULL, NULL, NULL, 'disponivel', NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-11 17:20:48', '2026-02-11 18:05:11'),
+	(50, 1, 'Toyota', 'Corolla', 'AA-12-BB', 2020, NULL, 'Gasolina', 'Gasolina', 'disponivel', NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-12 13:39:39', '2026-02-12 18:36:39'),
+	(55, 34, 'Renault', 'Clio', '99-UU-UU', 1976, NULL, NULL, NULL, 'disponivel', NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-12 17:30:36', '2026-02-12 17:30:36'),
+	(56, 39, 'Volkswagen', 'Golf', 'CC-CC-CC', 2000, NULL, NULL, NULL, 'disponivel', NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-12 18:44:20', '2026-02-12 18:44:20');
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
