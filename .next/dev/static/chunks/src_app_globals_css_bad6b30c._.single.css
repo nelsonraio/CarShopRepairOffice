@@ -86,6 +86,8 @@
     --color-green-700: #008138;
     --color-green-800: #016630;
     --color-green-900: #0d542b;
+    --color-emerald-400: #00d294;
+    --color-emerald-900: #004e3b;
     --color-blue-200: #bedbff;
     --color-blue-300: #90c5ff;
     --color-blue-400: #54a2ff;
@@ -178,6 +180,8 @@
       --color-green-700: lab(47.0329% -47.0239 31.4788);
       --color-green-800: lab(37.4616% -36.7971 22.9692);
       --color-green-900: lab(30.797% -29.6927 17.382);
+      --color-emerald-400: lab(75.0771% -60.7313 19.4146);
+      --color-emerald-900: lab(28.8637% -26.9249 5.45986);
       --color-blue-200: lab(86.15% -4.04379 -21.0797);
       --color-blue-300: lab(77.5052% -6.4629 -36.42);
       --color-blue-400: lab(65.0361% -1.42062 -56.9803);
@@ -702,6 +706,10 @@
     height: calc(var(--spacing) * 16);
   }
 
+  .h-64 {
+    height: calc(var(--spacing) * 64);
+  }
+
   .h-full {
     height: 100%;
   }
@@ -869,10 +877,6 @@
 
   .cursor-pointer {
     cursor: pointer;
-  }
-
-  .resize-none {
-    resize: none;
   }
 
   .grid-cols-1 {
@@ -1127,6 +1131,10 @@
     border-color: #facc15;
   }
 
+  .border-emerald-900 {
+    border-color: var(--color-emerald-900);
+  }
+
   .border-gray-500 {
     border-color: var(--color-gray-500);
   }
@@ -1267,6 +1275,16 @@
 
   .bg-brand-yellow-dark {
     background-color: #eab308;
+  }
+
+  .bg-emerald-900\/30 {
+    background-color: #004e3b4d;
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .bg-emerald-900\/30 {
+      background-color: color-mix(in oklab, var(--color-emerald-900) 30%, transparent);
+    }
   }
 
   .bg-gray-500 {
@@ -1742,6 +1760,10 @@
     color: #facc15;
   }
 
+  .text-emerald-400 {
+    color: var(--color-emerald-400);
+  }
+
   .text-gray-100 {
     color: var(--color-gray-100);
   }
@@ -1934,6 +1956,11 @@
     outline-style: none;
   }
 
+  .select-none {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
   @media (hover: hover) {
     .group-hover\:bg-gray-600:is(:where(.group):hover *) {
       background-color: var(--color-gray-600);
@@ -2086,6 +2113,12 @@
   @media (hover: hover) {
     .hover\:text-orange-300:hover {
       color: var(--color-orange-300);
+    }
+  }
+
+  @media (hover: hover) {
+    .hover\:text-purple-300:hover {
+      color: var(--color-purple-300);
     }
   }
 

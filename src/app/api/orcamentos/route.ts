@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       data: {
         ref_orcamento,
         cliente_id: parseInt(cliente_id),
-        veiculo_id: veiculo_id ? BigInt(veiculo_id) : null,
+        veiculo_id: veiculo_id ? BigInt(veiculo_id) : BigInt(0),
         preparado_por: preparado_por ? parseInt(preparado_por) : null,
         data_emissao: data_emissao ? new Date(data_emissao) : new Date(),
         data_expiracao: data_expiracao ? new Date(data_expiracao) : null,
@@ -261,21 +261,24 @@ export async function PUT(request: Request) {
         if (currentOrcamento.itens_orcamento && currentOrcamento.itens_orcamento.length > 0) {
           const workOrderItems = currentOrcamento.itens_orcamento.map((item: any) => ({
             ordem_trabalho_id: Number(ordemTrabalho.id),
+            ordens_trabalhoId: ordemTrabalho.id, // Use BigInt directly for the relation
             tipo_item: item.tipo_item,
             servico_id: item.servico_id ? Number(item.servico_id) : null,
             peca_id: item.peca_id ? Number(item.peca_id) : null,
             descricao: item.descricao,
-            quantidade: item.quantidade || 1,
-            preco_unitario: item.preco_unitario || 0,
-            valor_desconto: item.valor_desconto || 0,
-            valor_imposto: item.valor_imposto || 0,
-            valor_total: item.valor_total || 0,
+            quantidade: Number(item.quantidade) || 1,
+            preco_unitario: Number(item.preco_unitario) || 0,
+            valor_desconto: Number(item.valor_desconto) || 0,
+            valor_imposto: Number(item.valor_imposto) || 0,
+            valor_total: Number(item.valor_total) || 0,
             notas: item.notas || null
           }));
 
           await prisma.itens_ordem_trabalho.createMany({
             data: workOrderItems
           });
+          
+          console.log(`Created ${workOrderItems.length} work order items for ${workOrderRef}`);
         }
 
         console.log(`Work order created: ${workOrderRef} from budget ${currentOrcamento.ref_orcamento}`);

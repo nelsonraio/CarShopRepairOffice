@@ -6,6 +6,8 @@ interface Part {
   name: string;
   category: string;
   supplier: string;
+  supplierId?: string;
+  supplierName?: string;
   stock: number;
   price: number;
   stockStatus: 'em_stock' | 'baixo_stock' | 'esgotado';
@@ -89,21 +91,16 @@ const OrdersModal: React.FC<OrdersModalProps> = ({ isOpen, onClose, parts, onReo
   );
 
   const handleAddToInventory = (orderId: string, partId: string, quantity: number) => {
-    // In a real app, this would update the inventory
     console.log(`Adding ${quantity} units of part ${partId} from order ${orderId} to inventory`);
-    // Here you would typically call an API to update the inventory
   };
 
   const handleStatusChange = (orderId: string, newStatus: Order['status']) => {
-    // In a real app, this would update the order status via API
     console.log(`Changing status of order ${orderId} to ${newStatus}`);
-    // Update the local state to reflect the change immediately
     setOrders(prevOrders =>
       prevOrders.map(order =>
         order.id === orderId ? { ...order, status: newStatus } : order
       )
     );
-    // Here you would typically call an API to update the order status
   };
 
   const getStatusColor = (status: string) => {
@@ -145,7 +142,6 @@ const OrdersModal: React.FC<OrdersModalProps> = ({ isOpen, onClose, parts, onReo
             </button>
           </div>
 
-          {/* Search & Filters */}
           <div className="mt-6 flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

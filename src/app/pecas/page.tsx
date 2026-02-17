@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import PartsTable from "@/components/PartsTable";
 import AddPartModal from "@/components/AddPartModal";
@@ -13,66 +13,15 @@ interface Part {
   name: string;
   category: string;
   supplier: string;
+  supplierId?: string;
+  supplierName?: string;
   stock: number;
   price: number;
   stockStatus: 'em_stock' | 'baixo_stock' | 'esgotado';
 }
 
-const mockParts: Part[] = [
-  {
-    id: "1",
-    reference: "BOS-0986452058",
-    name: "Filtro de Óleo Bosch",
-    category: "filtros",
-    supplier: "Bosch Portugal",
-    stock: 45,
-    price: 12.50,
-    stockStatus: "em_stock"
-  },
-  {
-    id: "2",
-    reference: "BRE-P85020",
-    name: "Pastilhas Travão Brembo (Frente)",
-    category: "travoes",
-    supplier: "AutoParts SA",
-    stock: 4,
-    price: 45.90,
-    stockStatus: "baixo_stock"
-  },
-  {
-    id: "3",
-    reference: "CAS-EDGE-5W30",
-    name: "Óleo Castrol Edge 5W30 (5L)",
-    category: "motor",
-    supplier: "LubriNorte",
-    stock: 12,
-    price: 55.00,
-    stockStatus: "em_stock"
-  },
-  {
-    id: "4",
-    reference: "NGK-96588",
-    name: "Vela de Ignição NGK Laser Iridium",
-    category: "motor",
-    supplier: "NGK Spark Plugs",
-    stock: 0,
-    price: 18.20,
-    stockStatus: "esgotado"
-  },
-  {
-    id: "5",
-    reference: "VAL-574623",
-    name: "Escovas Limpa-Vidros Valeo Silencio",
-    category: "acessorios",
-    supplier: "Valeo Service",
-    stock: 20,
-    price: 28.50,
-    stockStatus: "em_stock"
-  }
-];
-
 export default function PartsPage() {
-  const [parts] = useState<Part[]>(mockParts);
+  const [parts, setParts] = useState<Part[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [stockFilter, setStockFilter] = useState("");
@@ -80,6 +29,41 @@ export default function PartsPage() {
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isOrdersModalOpen, setIsOrdersModalOpen] = useState(false);
   const [reorderSelectedParts, setReorderSelectedParts] = useState<Array<{part: Part, quantity: number}> | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch parts from database on mount
+  useEffect(() => {
+    fetchParts();
+  }, []);
+
+  const fetchParts = async () => {
+    try {
+      const response = await fetch('/api/pecas');
+      if (response.ok) {
+        const data = await response.json();
+        // Map the database format to the component's Part interface
+        const mappedParts: Part[] = data.map((peca: any) => ({
+          id: peca.id,
+          reference: peca.referencia,
+          name: peca.nome,
+          category: peca.categoria,
+          supplier: peca.fornecedor_nome || '',
+          supplierId: peca.fornecedor_id ? String(peca.fornecedor_id) : '',
+          supplierName: peca.fornecedor_nome || '',
+          stock: peca.quantidade_stock || 0,
+          price: parseFloat(peca.preco_venda) || 0,
+          stockStatus: peca.ativo === false ? 'esgotado' : 
+                      (peca.quantidade_stock || 0) === 0 ? 'esgotado' :
+                      (peca.quantidade_stock || 0) <= (peca.nivel_stock_minimo || 0) ? 'baixo_stock' : 'em_stock'
+        }));
+        setParts(mappedParts);
+      }
+    } catch (error) {
+      console.error('Error fetching parts:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredParts = parts.filter(part => {
     const matchesSearch = searchTerm === "" ||
@@ -92,9 +76,50 @@ export default function PartsPage() {
     return matchesSearch && matchesCategory && matchesStock;
   });
 
-  const handleAddPart = (newPart: Omit<Part, 'id'>) => {
-    // In a real app, this would make an API call
-    console.log("Adding new part:", newPart);
+  const handleAddPart = async (newPart: Omit<Part, 'id'>) => {
+    try {
+      const response = await fetch('/api/pecas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          nome: newPart.name,
+          referencia: newPart.reference,
+          categoria: newPart.category,
+          stock: newPart.stock,
+          minStock: 0,
+          price: newPart.price,
+          fornecedor_id: newPart.supplierId ? parseInt(newPart.supplierId) : null,
+          supplierName: newPart.supplierName,
+        }),
+      });
+
+      if (response.ok) {
+        const savedPart = await response.json();
+        const partToAdd: Part = {
+          id: savedPart.id,
+          reference: savedPart.referencia,
+          name: savedPart.nome,
+          category: savedPart.categoria,
+          supplier: savedPart.supplierName || '',
+          supplierId: savedPart.fornecedor_id ? String(savedPart.fornecedor_id) : '',
+          supplierName: savedPart.supplierName || '',
+          stock: savedPart.stock,
+          price: parseFloat(savedPart.price),
+          stockStatus: savedPart.stockStatus
+        };
+        setParts(prevParts => [...prevParts, partToAdd]);
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Erro ao adicionar peça');
+        return;
+      }
+    } catch (error) {
+      console.error('Error adding part:', error);
+      alert('Erro ao adicionar peça');
+      return;
+    }
     setIsAddModalOpen(false);
   };
 
@@ -205,7 +230,13 @@ export default function PartsPage() {
         </div>
 
         {/* Table */}
-        <PartsTable parts={filteredParts} />
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-gray-400">A carregar peças...</div>
+          </div>
+        ) : (
+          <PartsTable parts={filteredParts} />
+        )}
       </main>
 
       {/* Modals */}

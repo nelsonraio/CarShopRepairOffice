@@ -259,19 +259,19 @@ const Sidebar = ({ activePage = 'dashboard' })=>{
                                     d: "M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Sidebar.tsx",
-                                    lineNumber: 56,
+                                    lineNumber: 58,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Sidebar.tsx",
-                                lineNumber: 55,
+                                lineNumber: 57,
                                 columnNumber: 11
                             }, ("TURBOPACK compile-time value", void 0)),
                             "Quadro da Oficina"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Sidebar.tsx",
-                        lineNumber: 54,
+                        lineNumber: 56,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -291,19 +291,19 @@ const Sidebar = ({ activePage = 'dashboard' })=>{
                                     d: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Sidebar.tsx",
-                                    lineNumber: 62,
+                                    lineNumber: 66,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Sidebar.tsx",
-                                lineNumber: 61,
+                                lineNumber: 65,
                                 columnNumber: 11
                             }, ("TURBOPACK compile-time value", void 0)),
                             "Peças"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Sidebar.tsx",
-                        lineNumber: 60,
+                        lineNumber: 64,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -323,19 +323,19 @@ const Sidebar = ({ activePage = 'dashboard' })=>{
                                     d: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Sidebar.tsx",
-                                    lineNumber: 68,
+                                    lineNumber: 72,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Sidebar.tsx",
-                                lineNumber: 67,
+                                lineNumber: 71,
                                 columnNumber: 11
                             }, ("TURBOPACK compile-time value", void 0)),
                             "Faturação"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Sidebar.tsx",
-                        lineNumber: 66,
+                        lineNumber: 70,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -355,19 +355,19 @@ const Sidebar = ({ activePage = 'dashboard' })=>{
                                     d: "M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Sidebar.tsx",
-                                    lineNumber: 74,
+                                    lineNumber: 78,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Sidebar.tsx",
-                                lineNumber: 73,
+                                lineNumber: 77,
                                 columnNumber: 11
                             }, ("TURBOPACK compile-time value", void 0)),
                             "Balanço"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Sidebar.tsx",
-                        lineNumber: 72,
+                        lineNumber: 76,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -388,7 +388,7 @@ const Sidebar = ({ activePage = 'dashboard' })=>{
                                         d: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/Sidebar.tsx",
-                                        lineNumber: 80,
+                                        lineNumber: 84,
                                         columnNumber: 13
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
@@ -398,20 +398,20 @@ const Sidebar = ({ activePage = 'dashboard' })=>{
                                         d: "M15 12a3 3 0 11-6 0 3 3 0 016 0z"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/Sidebar.tsx",
-                                        lineNumber: 81,
+                                        lineNumber: 85,
                                         columnNumber: 13
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/Sidebar.tsx",
-                                lineNumber: 79,
+                                lineNumber: 83,
                                 columnNumber: 11
                             }, ("TURBOPACK compile-time value", void 0)),
                             "Tabelas"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Sidebar.tsx",
-                        lineNumber: 78,
+                        lineNumber: 82,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
@@ -496,7 +496,7 @@ function PartsTable({ parts }) {
                                         children: "Referência"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/PartsTable.tsx",
-                                        lineNumber: 59,
+                                        lineNumber: 61,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -505,7 +505,7 @@ function PartsTable({ parts }) {
                                         children: "Nome da Peça"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/PartsTable.tsx",
-                                        lineNumber: 60,
+                                        lineNumber: 62,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -514,7 +514,7 @@ function PartsTable({ parts }) {
                                         children: "Categoria"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/PartsTable.tsx",
-                                        lineNumber: 61,
+                                        lineNumber: 63,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -523,7 +523,7 @@ function PartsTable({ parts }) {
                                         children: "Fornecedor"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/PartsTable.tsx",
-                                        lineNumber: 62,
+                                        lineNumber: 64,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -532,7 +532,7 @@ function PartsTable({ parts }) {
                                         children: "Stock"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/PartsTable.tsx",
-                                        lineNumber: 63,
+                                        lineNumber: 65,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -541,7 +541,7 @@ function PartsTable({ parts }) {
                                         children: "Preço Unit."
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/PartsTable.tsx",
-                                        lineNumber: 64,
+                                        lineNumber: 66,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -550,18 +550,18 @@ function PartsTable({ parts }) {
                                         children: "Ações"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/PartsTable.tsx",
-                                        lineNumber: 65,
+                                        lineNumber: 67,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/PartsTable.tsx",
-                                lineNumber: 58,
+                                lineNumber: 60,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/PartsTable.tsx",
-                            lineNumber: 57,
+                            lineNumber: 59,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -575,7 +575,7 @@ function PartsTable({ parts }) {
                                                 children: part.reference
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/PartsTable.tsx",
-                                                lineNumber: 71,
+                                                lineNumber: 73,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -583,7 +583,7 @@ function PartsTable({ parts }) {
                                                 children: part.name
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/PartsTable.tsx",
-                                                lineNumber: 72,
+                                                lineNumber: 74,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -593,20 +593,20 @@ function PartsTable({ parts }) {
                                                     children: getCategoryLabel(part.category)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/PartsTable.tsx",
-                                                    lineNumber: 74,
+                                                    lineNumber: 76,
                                                     columnNumber: 19
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/PartsTable.tsx",
-                                                lineNumber: 73,
+                                                lineNumber: 75,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                 className: "px-6 py-4 text-gray-300",
-                                                children: part.supplier
+                                                children: part.supplierName || part.supplier || '-'
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/PartsTable.tsx",
-                                                lineNumber: 78,
+                                                lineNumber: 80,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -620,7 +620,7 @@ function PartsTable({ parts }) {
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/PartsTable.tsx",
-                                                lineNumber: 79,
+                                                lineNumber: 81,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -631,7 +631,7 @@ function PartsTable({ parts }) {
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/PartsTable.tsx",
-                                                lineNumber: 82,
+                                                lineNumber: 84,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -650,28 +650,28 @@ function PartsTable({ parts }) {
                                                             d: "M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/PartsTable.tsx",
-                                                            lineNumber: 88,
+                                                            lineNumber: 90,
                                                             columnNumber: 23
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/PartsTable.tsx",
-                                                        lineNumber: 87,
+                                                        lineNumber: 89,
                                                         columnNumber: 21
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/PartsTable.tsx",
-                                                    lineNumber: 86,
+                                                    lineNumber: 88,
                                                     columnNumber: 19
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/PartsTable.tsx",
-                                                lineNumber: 85,
+                                                lineNumber: 87,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, part.id, true, {
                                         fileName: "[project]/src/components/PartsTable.tsx",
-                                        lineNumber: 70,
+                                        lineNumber: 72,
                                         columnNumber: 15
                                     }, this)),
                                 parts.length === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
@@ -681,29 +681,29 @@ function PartsTable({ parts }) {
                                         children: "Nenhuma peça encontrada com os filtros aplicados."
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/PartsTable.tsx",
-                                        lineNumber: 96,
+                                        lineNumber: 98,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/PartsTable.tsx",
-                                    lineNumber: 95,
+                                    lineNumber: 97,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/PartsTable.tsx",
-                            lineNumber: 68,
+                            lineNumber: 70,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/PartsTable.tsx",
-                    lineNumber: 56,
+                    lineNumber: 58,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/PartsTable.tsx",
-                lineNumber: 55,
+                lineNumber: 57,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -721,7 +721,7 @@ function PartsTable({ parts }) {
                                         children: "1"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/PartsTable.tsx",
-                                        lineNumber: 110,
+                                        lineNumber: 112,
                                         columnNumber: 25
                                     }, this),
                                     " a ",
@@ -730,7 +730,7 @@ function PartsTable({ parts }) {
                                         children: parts.length
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/PartsTable.tsx",
-                                        lineNumber: 110,
+                                        lineNumber: 112,
                                         columnNumber: 80
                                     }, this),
                                     " de ",
@@ -739,19 +739,19 @@ function PartsTable({ parts }) {
                                         children: parts.length
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/PartsTable.tsx",
-                                        lineNumber: 110,
+                                        lineNumber: 112,
                                         columnNumber: 149
                                     }, this),
                                     " resultados"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/PartsTable.tsx",
-                                lineNumber: 109,
+                                lineNumber: 111,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/PartsTable.tsx",
-                            lineNumber: 108,
+                            lineNumber: 110,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -768,7 +768,7 @@ function PartsTable({ parts }) {
                                                 children: "Anterior"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/PartsTable.tsx",
-                                                lineNumber: 116,
+                                                lineNumber: 118,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
@@ -783,18 +783,18 @@ function PartsTable({ parts }) {
                                                     clipRule: "evenodd"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/PartsTable.tsx",
-                                                    lineNumber: 118,
+                                                    lineNumber: 120,
                                                     columnNumber: 19
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/PartsTable.tsx",
-                                                lineNumber: 117,
+                                                lineNumber: 119,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/PartsTable.tsx",
-                                        lineNumber: 115,
+                                        lineNumber: 117,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
@@ -804,7 +804,7 @@ function PartsTable({ parts }) {
                                         children: "1"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/PartsTable.tsx",
-                                        lineNumber: 121,
+                                        lineNumber: 123,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
@@ -813,7 +813,7 @@ function PartsTable({ parts }) {
                                         children: "2"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/PartsTable.tsx",
-                                        lineNumber: 122,
+                                        lineNumber: 124,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
@@ -822,7 +822,7 @@ function PartsTable({ parts }) {
                                         children: "3"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/PartsTable.tsx",
-                                        lineNumber: 123,
+                                        lineNumber: 125,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
@@ -834,7 +834,7 @@ function PartsTable({ parts }) {
                                                 children: "Seguinte"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/PartsTable.tsx",
-                                                lineNumber: 125,
+                                                lineNumber: 127,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
@@ -849,46 +849,46 @@ function PartsTable({ parts }) {
                                                     clipRule: "evenodd"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/PartsTable.tsx",
-                                                    lineNumber: 127,
+                                                    lineNumber: 129,
                                                     columnNumber: 19
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/PartsTable.tsx",
-                                                lineNumber: 126,
+                                                lineNumber: 128,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/PartsTable.tsx",
-                                        lineNumber: 124,
+                                        lineNumber: 126,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/PartsTable.tsx",
-                                lineNumber: 114,
+                                lineNumber: 116,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/PartsTable.tsx",
-                            lineNumber: 113,
+                            lineNumber: 115,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/PartsTable.tsx",
-                    lineNumber: 107,
+                    lineNumber: 109,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/PartsTable.tsx",
-                lineNumber: 106,
+                lineNumber: 108,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/PartsTable.tsx",
-        lineNumber: 54,
+        lineNumber: 56,
         columnNumber: 5
     }, this);
 }
@@ -913,6 +913,8 @@ var _s = __turbopack_context__.k.signature();
 ;
 const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
     _s();
+    const [suppliers, setSuppliers] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])([]);
+    const [isLoadingSuppliers, setIsLoadingSuppliers] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(true);
     const [formData, setFormData] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])({
         name: '',
         reference: '',
@@ -921,11 +923,44 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
         minStock: 0,
         price: 0,
         supplier: '',
+        supplierId: '',
+        supplierName: '',
         stockStatus: 'em_stock'
     });
+    // Fetch suppliers on mount
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "AddPartModal.useEffect": ()=>{
+            if (isOpen) {
+                fetchSuppliers();
+            }
+        }
+    }["AddPartModal.useEffect"], [
+        isOpen
+    ]);
+    const fetchSuppliers = async ()=>{
+        try {
+            const response = await fetch('/api/fornecedores');
+            if (response.ok) {
+                const data = await response.json();
+                setSuppliers(data);
+            }
+        } catch (error) {
+            console.error('Error fetching suppliers:', error);
+        } finally{
+            setIsLoadingSuppliers(false);
+        }
+    };
     const handleSubmit = (e)=>{
         e.preventDefault();
-        onAddPart(formData);
+        // Get supplier name from selected supplier ID
+        const selectedSupplier = suppliers.find((s)=>s.id === formData.supplierId);
+        const supplierName = selectedSupplier ? selectedSupplier.nome : '';
+        onAddPart({
+            ...formData,
+            supplier: supplierName,
+            supplierId: formData.supplierId,
+            supplierName: supplierName
+        });
         setFormData({
             name: '',
             reference: '',
@@ -934,6 +969,8 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
             minStock: 0,
             price: 0,
             supplier: '',
+            supplierId: '',
+            supplierName: '',
             stockStatus: 'em_stock'
         });
         onClose();
@@ -956,7 +993,7 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
                     children: "Adicionar Nova Peça"
                 }, void 0, false, {
                     fileName: "[project]/src/components/AddPartModal.tsx",
-                    lineNumber: 62,
+                    lineNumber: 108,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("form", {
@@ -970,7 +1007,7 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
                                     children: "Nome da Peça"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/AddPartModal.tsx",
-                                    lineNumber: 66,
+                                    lineNumber: 112,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -982,13 +1019,13 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
                                     className: "w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-brand-yellow"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/AddPartModal.tsx",
-                                    lineNumber: 69,
+                                    lineNumber: 115,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/AddPartModal.tsx",
-                            lineNumber: 65,
+                            lineNumber: 111,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -998,7 +1035,7 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
                                     children: "Referência"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/AddPartModal.tsx",
-                                    lineNumber: 80,
+                                    lineNumber: 126,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1010,13 +1047,13 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
                                     className: "w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-brand-yellow"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/AddPartModal.tsx",
-                                    lineNumber: 83,
+                                    lineNumber: 129,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/AddPartModal.tsx",
-                            lineNumber: 79,
+                            lineNumber: 125,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1026,7 +1063,7 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
                                     children: "Categoria"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/AddPartModal.tsx",
-                                    lineNumber: 94,
+                                    lineNumber: 140,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -1041,7 +1078,7 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
                                             children: "Selecionar categoria"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/AddPartModal.tsx",
-                                            lineNumber: 104,
+                                            lineNumber: 150,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1049,7 +1086,7 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
                                             children: "Filtros"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/AddPartModal.tsx",
-                                            lineNumber: 105,
+                                            lineNumber: 151,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1057,7 +1094,7 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
                                             children: "Óleos"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/AddPartModal.tsx",
-                                            lineNumber: 106,
+                                            lineNumber: 152,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1065,7 +1102,7 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
                                             children: "Pastilhas"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/AddPartModal.tsx",
-                                            lineNumber: 107,
+                                            lineNumber: 153,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1073,7 +1110,7 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
                                             children: "Discos"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/AddPartModal.tsx",
-                                            lineNumber: 108,
+                                            lineNumber: 154,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1081,7 +1118,7 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
                                             children: "Velas"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/AddPartModal.tsx",
-                                            lineNumber: 109,
+                                            lineNumber: 155,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1089,7 +1126,7 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
                                             children: "Baterias"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/AddPartModal.tsx",
-                                            lineNumber: 110,
+                                            lineNumber: 156,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1097,7 +1134,7 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
                                             children: "Correias"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/AddPartModal.tsx",
-                                            lineNumber: 111,
+                                            lineNumber: 157,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1105,19 +1142,19 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
                                             children: "Outros"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/AddPartModal.tsx",
-                                            lineNumber: 112,
+                                            lineNumber: 158,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/AddPartModal.tsx",
-                                    lineNumber: 97,
+                                    lineNumber: 143,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/AddPartModal.tsx",
-                            lineNumber: 93,
+                            lineNumber: 139,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1130,7 +1167,7 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
                                             children: "Stock Atual"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/AddPartModal.tsx",
-                                            lineNumber: 118,
+                                            lineNumber: 164,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1143,13 +1180,13 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
                                             className: "w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-brand-yellow"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/AddPartModal.tsx",
-                                            lineNumber: 121,
+                                            lineNumber: 167,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/AddPartModal.tsx",
-                                    lineNumber: 117,
+                                    lineNumber: 163,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1159,7 +1196,7 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
                                             children: "Stock Mínimo"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/AddPartModal.tsx",
-                                            lineNumber: 133,
+                                            lineNumber: 179,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1172,19 +1209,19 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
                                             className: "w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-brand-yellow"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/AddPartModal.tsx",
-                                            lineNumber: 136,
+                                            lineNumber: 182,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/AddPartModal.tsx",
-                                    lineNumber: 132,
+                                    lineNumber: 178,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/AddPartModal.tsx",
-                            lineNumber: 116,
+                            lineNumber: 162,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1194,7 +1231,7 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
                                     children: "Preço (€)"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/AddPartModal.tsx",
-                                    lineNumber: 149,
+                                    lineNumber: 195,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1208,13 +1245,13 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
                                     className: "w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-brand-yellow"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/AddPartModal.tsx",
-                                    lineNumber: 152,
+                                    lineNumber: 198,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/AddPartModal.tsx",
-                            lineNumber: 148,
+                            lineNumber: 194,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1224,25 +1261,49 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
                                     children: "Fornecedor"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/AddPartModal.tsx",
-                                    lineNumber: 165,
+                                    lineNumber: 211,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
-                                    type: "text",
-                                    name: "supplier",
-                                    value: formData.supplier,
-                                    onChange: handleChange,
-                                    required: true,
-                                    className: "w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+                                isLoadingSuppliers ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-400",
+                                    children: "A carregar fornecedores..."
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/AddPartModal.tsx",
-                                    lineNumber: 168,
-                                    columnNumber: 13
+                                    lineNumber: 215,
+                                    columnNumber: 15
+                                }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
+                                    name: "supplierId",
+                                    value: formData.supplierId,
+                                    onChange: handleChange,
+                                    required: true,
+                                    className: "w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-brand-yellow",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                            value: "",
+                                            children: "Selecionar fornecedor"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/components/AddPartModal.tsx",
+                                            lineNumber: 226,
+                                            columnNumber: 17
+                                        }, ("TURBOPACK compile-time value", void 0)),
+                                        suppliers.map((supplier)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                                value: supplier.id,
+                                                children: supplier.nome
+                                            }, supplier.id, false, {
+                                                fileName: "[project]/src/components/AddPartModal.tsx",
+                                                lineNumber: 228,
+                                                columnNumber: 19
+                                            }, ("TURBOPACK compile-time value", void 0)))
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/src/components/AddPartModal.tsx",
+                                    lineNumber: 219,
+                                    columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/AddPartModal.tsx",
-                            lineNumber: 164,
+                            lineNumber: 210,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1255,7 +1316,7 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
                                     children: "Cancelar"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/AddPartModal.tsx",
-                                    lineNumber: 179,
+                                    lineNumber: 237,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1264,34 +1325,34 @@ const AddPartModal = ({ isOpen, onClose, onAddPart })=>{
                                     children: "Adicionar Peça"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/AddPartModal.tsx",
-                                    lineNumber: 186,
+                                    lineNumber: 244,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/AddPartModal.tsx",
-                            lineNumber: 178,
+                            lineNumber: 236,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/AddPartModal.tsx",
-                    lineNumber: 64,
+                    lineNumber: 110,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0))
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/AddPartModal.tsx",
-            lineNumber: 61,
+            lineNumber: 107,
             columnNumber: 7
         }, ("TURBOPACK compile-time value", void 0))
     }, void 0, false, {
         fileName: "[project]/src/components/AddPartModal.tsx",
-        lineNumber: 60,
+        lineNumber: 106,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };
-_s(AddPartModal, "yE4gRnSSqBoOR9LNRTD4gyEZnME=");
+_s(AddPartModal, "Lor/teiy1vrF+IQjnj0UnDttufw=");
 _c = AddPartModal;
 const __TURBOPACK__default__export__ = AddPartModal;
 var _c;
@@ -1383,13 +1444,12 @@ function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, initialSelected
     };
     const handleCopyText = ()=>{
         navigator.clipboard.writeText(orderText);
-    // You could add a toast notification here
     };
     const handleSendWhatsApp = ()=>{
         const text = encodeURIComponent(orderText);
         window.open(`https://wa.me/?text=${text}`, '_blank');
     };
-    const filteredItems = orderItems.filter((item)=>item.part.name.toLowerCase().includes(searchTerm.toLowerCase()) || item.part.reference.toLowerCase().includes(searchTerm.toLowerCase()) || item.part.supplier.toLowerCase().includes(searchTerm.toLowerCase()));
+    const filteredItems = orderItems.filter((item)=>item.part.name.toLowerCase().includes(searchTerm.toLowerCase()) || item.part.reference.toLowerCase().includes(searchTerm.toLowerCase()) || (item.part.supplier || item.part.supplierName || '').toLowerCase().includes(searchTerm.toLowerCase()));
     const handleAddNewPart = ()=>{
         if (newPart.name && newPart.supplier) {
             const customPart = {
@@ -1438,7 +1498,7 @@ function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, initialSelected
                     children: "Encomendar Peças"
                 }, void 0, false, {
                     fileName: "[project]/src/components/OrderPartsModal.tsx",
-                    lineNumber: 143,
+                    lineNumber: 144,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1729,7 +1789,7 @@ function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, initialSelected
                                                                     "Ref: ",
                                                                     item.part.reference,
                                                                     " | Fornecedor: ",
-                                                                    item.part.supplier
+                                                                    item.part.supplierName || item.part.supplier
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/OrderPartsModal.tsx",
@@ -1814,7 +1874,7 @@ function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, initialSelected
                                     children: "Resumo da Encomenda"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                    lineNumber: 221,
+                                    lineNumber: 220,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1833,7 +1893,7 @@ function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, initialSelected
                                                                         children: item.part.name
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                                                        lineNumber: 227,
+                                                                        lineNumber: 226,
                                                                         columnNumber: 23
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1844,13 +1904,13 @@ function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, initialSelected
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                                                        lineNumber: 228,
+                                                                        lineNumber: 227,
                                                                         columnNumber: 23
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                                                lineNumber: 226,
+                                                                lineNumber: 225,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1866,23 +1926,23 @@ function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, initialSelected
                                                                         clipRule: "evenodd"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                                                        lineNumber: 231,
+                                                                        lineNumber: 230,
                                                                         columnNumber: 88
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                                                    lineNumber: 231,
+                                                                    lineNumber: 230,
                                                                     columnNumber: 23
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                                                lineNumber: 230,
+                                                                lineNumber: 229,
                                                                 columnNumber: 21
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                                        lineNumber: 225,
+                                                        lineNumber: 224,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1893,7 +1953,7 @@ function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, initialSelected
                                                                 children: "Qtd:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                                                lineNumber: 235,
+                                                                lineNumber: 234,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1904,19 +1964,19 @@ function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, initialSelected
                                                                 className: "w-20 bg-gray-800 border border-gray-500 text-white text-sm px-2 py-1 rounded-none focus:ring-1 focus:ring-brand-yellow outline-none"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                                                lineNumber: 236,
+                                                                lineNumber: 235,
                                                                 columnNumber: 21
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                                        lineNumber: 234,
+                                                        lineNumber: 233,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, item.part.id, true, {
                                                 fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                                lineNumber: 224,
+                                                lineNumber: 223,
                                                 columnNumber: 17
                                             }, this)),
                                         orderItems.filter((item)=>item.selected).length === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1936,12 +1996,12 @@ function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, initialSelected
                                                             d: "M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                                            lineNumber: 243,
+                                                            lineNumber: 242,
                                                             columnNumber: 124
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                                        lineNumber: 243,
+                                                        lineNumber: 242,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1949,24 +2009,24 @@ function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, initialSelected
                                                         children: "Adicione peças da lista à esquerda."
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                                        lineNumber: 244,
+                                                        lineNumber: 243,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                                lineNumber: 242,
+                                                lineNumber: 241,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                            lineNumber: 241,
+                                            lineNumber: 240,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                    lineNumber: 222,
+                                    lineNumber: 221,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1977,7 +2037,7 @@ function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, initialSelected
                                             children: "Texto para Envio"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                            lineNumber: 250,
+                                            lineNumber: 249,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -1987,7 +2047,7 @@ function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, initialSelected
                                             className: "w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none font-mono text-sm"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                            lineNumber: 251,
+                                            lineNumber: 250,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2010,19 +2070,19 @@ function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, initialSelected
                                                                 d: "M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                                                lineNumber: 254,
+                                                                lineNumber: 253,
                                                                 columnNumber: 103
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                                            lineNumber: 254,
+                                                            lineNumber: 253,
                                                             columnNumber: 19
                                                         }, this),
                                                         "Copiar"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                                    lineNumber: 253,
+                                                    lineNumber: 252,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2038,43 +2098,43 @@ function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, initialSelected
                                                                 d: "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.008-.57-.008-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.536 0 1.52 1.115 2.988 1.264 3.186.149.198 2.19 3.349 5.302 4.695.742.32 1.321.51 1.771.653.742.236 1.418.203 1.95.124.595-.086 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                                                lineNumber: 258,
+                                                                lineNumber: 257,
                                                                 columnNumber: 89
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                                            lineNumber: 258,
+                                                            lineNumber: 257,
                                                             columnNumber: 19
                                                         }, this),
                                                         "WhatsApp"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                                    lineNumber: 257,
+                                                    lineNumber: 256,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                            lineNumber: 252,
+                                            lineNumber: 251,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/OrderPartsModal.tsx",
-                                    lineNumber: 249,
+                                    lineNumber: 248,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/OrderPartsModal.tsx",
-                            lineNumber: 220,
+                            lineNumber: 219,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/OrderPartsModal.tsx",
-                    lineNumber: 145,
+                    lineNumber: 146,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2087,7 +2147,7 @@ function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, initialSelected
                             children: "Fechar"
                         }, void 0, false, {
                             fileName: "[project]/src/components/OrderPartsModal.tsx",
-                            lineNumber: 267,
+                            lineNumber: 266,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2098,24 +2158,24 @@ function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, initialSelected
                             children: "Criar Encomenda"
                         }, void 0, false, {
                             fileName: "[project]/src/components/OrderPartsModal.tsx",
-                            lineNumber: 274,
+                            lineNumber: 273,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/OrderPartsModal.tsx",
-                    lineNumber: 266,
+                    lineNumber: 265,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/OrderPartsModal.tsx",
-            lineNumber: 142,
+            lineNumber: 143,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/OrderPartsModal.tsx",
-        lineNumber: 141,
+        lineNumber: 142,
         columnNumber: 5
     }, this);
 }
@@ -2211,19 +2271,14 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
     };
     const filteredOrders = orders.filter((order)=>(order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) || order.supplier.toLowerCase().includes(searchTerm.toLowerCase())) && (statusFilter === 'todos' || order.status === statusFilter));
     const handleAddToInventory = (orderId, partId, quantity)=>{
-        // In a real app, this would update the inventory
         console.log(`Adding ${quantity} units of part ${partId} from order ${orderId} to inventory`);
-    // Here you would typically call an API to update the inventory
     };
     const handleStatusChange = (orderId, newStatus)=>{
-        // In a real app, this would update the order status via API
         console.log(`Changing status of order ${orderId} to ${newStatus}`);
-        // Update the local state to reflect the change immediately
         setOrders((prevOrders)=>prevOrders.map((order)=>order.id === orderId ? {
                     ...order,
                     status: newStatus
                 } : order));
-    // Here you would typically call an API to update the order status
     };
     const getStatusColor = (status)=>{
         switch(status){
@@ -2272,7 +2327,7 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                     children: "Encomendas de Peças"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/OrdersModal.tsx",
-                                    lineNumber: 137,
+                                    lineNumber: 134,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2290,23 +2345,23 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                             d: "M6 18L18 6M6 6l12 12"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/OrdersModal.tsx",
-                                            lineNumber: 143,
+                                            lineNumber: 140,
                                             columnNumber: 17
                                         }, ("TURBOPACK compile-time value", void 0))
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/OrdersModal.tsx",
-                                        lineNumber: 142,
+                                        lineNumber: 139,
                                         columnNumber: 15
                                     }, ("TURBOPACK compile-time value", void 0))
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/OrdersModal.tsx",
-                                    lineNumber: 138,
+                                    lineNumber: 135,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/OrdersModal.tsx",
-                            lineNumber: 136,
+                            lineNumber: 133,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2329,17 +2384,17 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                                     d: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/OrdersModal.tsx",
-                                                    lineNumber: 153,
+                                                    lineNumber: 149,
                                                     columnNumber: 19
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/OrdersModal.tsx",
-                                                lineNumber: 152,
+                                                lineNumber: 148,
                                                 columnNumber: 17
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/OrdersModal.tsx",
-                                            lineNumber: 151,
+                                            lineNumber: 147,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2350,13 +2405,13 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                             className: "w-full pl-10 pr-4 py-2 bg-gray-900 border border-gray-600 text-white rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow placeholder-gray-500"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/OrdersModal.tsx",
-                                            lineNumber: 156,
+                                            lineNumber: 152,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/OrdersModal.tsx",
-                                    lineNumber: 150,
+                                    lineNumber: 146,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2373,24 +2428,24 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                             children: getStatusText(status).charAt(0).toUpperCase() + getStatusText(status).slice(1)
                                         }, status, false, {
                                             fileName: "[project]/src/components/OrdersModal.tsx",
-                                            lineNumber: 166,
+                                            lineNumber: 162,
                                             columnNumber: 17
                                         }, ("TURBOPACK compile-time value", void 0)))
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/OrdersModal.tsx",
-                                    lineNumber: 164,
+                                    lineNumber: 160,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/OrdersModal.tsx",
-                            lineNumber: 149,
+                            lineNumber: 145,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/OrdersModal.tsx",
-                    lineNumber: 135,
+                    lineNumber: 132,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2416,12 +2471,37 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                                                     children: order.orderNumber
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/OrdersModal.tsx",
-                                                                    lineNumber: 185,
+                                                                    lineNumber: 181,
                                                                     columnNumber: 23
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                                     className: "text-sm text-gray-400",
                                                                     children: order.supplier
+                                                                }, void 0, false, {
+                                                                    fileName: "[project]/src/components/OrdersModal.tsx",
+                                                                    lineNumber: 182,
+                                                                    columnNumber: 23
+                                                                }, ("TURBOPACK compile-time value", void 0))
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "[project]/src/components/OrdersModal.tsx",
+                                                            lineNumber: 180,
+                                                            columnNumber: 21
+                                                        }, ("TURBOPACK compile-time value", void 0)),
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                            className: "text-sm",
+                                                            children: [
+                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                                    className: "text-gray-400",
+                                                                    children: "Encomendado:"
+                                                                }, void 0, false, {
+                                                                    fileName: "[project]/src/components/OrdersModal.tsx",
+                                                                    lineNumber: 185,
+                                                                    columnNumber: 23
+                                                                }, ("TURBOPACK compile-time value", void 0)),
+                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                                    className: "text-gray-200 font-medium",
+                                                                    children: new Date(order.orderDate).toLocaleDateString('pt-PT')
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/OrdersModal.tsx",
                                                                     lineNumber: 186,
@@ -2438,7 +2518,7 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                                             children: [
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                                     className: "text-gray-400",
-                                                                    children: "Encomendado:"
+                                                                    children: "Previsto:"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/OrdersModal.tsx",
                                                                     lineNumber: 189,
@@ -2446,7 +2526,7 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                                     className: "text-gray-200 font-medium",
-                                                                    children: new Date(order.orderDate).toLocaleDateString('pt-PT')
+                                                                    children: new Date(order.expectedDate).toLocaleDateString('pt-PT')
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/OrdersModal.tsx",
                                                                     lineNumber: 190,
@@ -2456,31 +2536,6 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/OrdersModal.tsx",
                                                             lineNumber: 188,
-                                                            columnNumber: 21
-                                                        }, ("TURBOPACK compile-time value", void 0)),
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            className: "text-sm",
-                                                            children: [
-                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                                    className: "text-gray-400",
-                                                                    children: "Previsto:"
-                                                                }, void 0, false, {
-                                                                    fileName: "[project]/src/components/OrdersModal.tsx",
-                                                                    lineNumber: 193,
-                                                                    columnNumber: 23
-                                                                }, ("TURBOPACK compile-time value", void 0)),
-                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                                    className: "text-gray-200 font-medium",
-                                                                    children: new Date(order.expectedDate).toLocaleDateString('pt-PT')
-                                                                }, void 0, false, {
-                                                                    fileName: "[project]/src/components/OrdersModal.tsx",
-                                                                    lineNumber: 194,
-                                                                    columnNumber: 23
-                                                                }, ("TURBOPACK compile-time value", void 0))
-                                                            ]
-                                                        }, void 0, true, {
-                                                            fileName: "[project]/src/components/OrdersModal.tsx",
-                                                            lineNumber: 192,
                                                             columnNumber: 21
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2497,7 +2552,7 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                                                         children: "Pendente"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/OrdersModal.tsx",
-                                                                        lineNumber: 203,
+                                                                        lineNumber: 199,
                                                                         columnNumber: 25
                                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2506,7 +2561,7 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                                                         children: "Em Trânsito"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/OrdersModal.tsx",
-                                                                        lineNumber: 204,
+                                                                        lineNumber: 200,
                                                                         columnNumber: 25
                                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2515,7 +2570,7 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                                                         children: "Recebido"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/OrdersModal.tsx",
-                                                                        lineNumber: 205,
+                                                                        lineNumber: 201,
                                                                         columnNumber: 25
                                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2524,24 +2579,24 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                                                         children: "Cancelado"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/OrdersModal.tsx",
-                                                                        lineNumber: 206,
+                                                                        lineNumber: 202,
                                                                         columnNumber: 25
                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/OrdersModal.tsx",
-                                                                lineNumber: 197,
+                                                                lineNumber: 193,
                                                                 columnNumber: 23
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/OrdersModal.tsx",
-                                                            lineNumber: 196,
+                                                            lineNumber: 192,
                                                             columnNumber: 21
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/OrdersModal.tsx",
-                                                    lineNumber: 183,
+                                                    lineNumber: 179,
                                                     columnNumber: 19
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2558,23 +2613,23 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                                             d: "M19 9l-7 7-7-7"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/OrdersModal.tsx",
-                                                            lineNumber: 212,
+                                                            lineNumber: 208,
                                                             columnNumber: 25
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/OrdersModal.tsx",
-                                                        lineNumber: 211,
+                                                        lineNumber: 207,
                                                         columnNumber: 22
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/OrdersModal.tsx",
-                                                    lineNumber: 210,
+                                                    lineNumber: 206,
                                                     columnNumber: 19
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/OrdersModal.tsx",
-                                            lineNumber: 182,
+                                            lineNumber: 178,
                                             columnNumber: 17
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         expandedOrders.includes(order.id) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2593,7 +2648,7 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                                                             children: item.part.name
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/OrdersModal.tsx",
-                                                                            lineNumber: 223,
+                                                                            lineNumber: 219,
                                                                             columnNumber: 29
                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2604,13 +2659,13 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/OrdersModal.tsx",
-                                                                            lineNumber: 224,
+                                                                            lineNumber: 220,
                                                                             columnNumber: 29
                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/OrdersModal.tsx",
-                                                                    lineNumber: 222,
+                                                                    lineNumber: 218,
                                                                     columnNumber: 27
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2624,7 +2679,7 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/OrdersModal.tsx",
-                                                                            lineNumber: 227,
+                                                                            lineNumber: 223,
                                                                             columnNumber: 29
                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2635,13 +2690,13 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/OrdersModal.tsx",
-                                                                            lineNumber: 228,
+                                                                            lineNumber: 224,
                                                                             columnNumber: 29
                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/OrdersModal.tsx",
-                                                                    lineNumber: 226,
+                                                                    lineNumber: 222,
                                                                     columnNumber: 27
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 order.status === 'recebido' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2660,30 +2715,30 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                                                                 d: "M12 4v16m8-8H4"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/OrdersModal.tsx",
-                                                                                lineNumber: 235,
+                                                                                lineNumber: 231,
                                                                                 columnNumber: 117
                                                                             }, ("TURBOPACK compile-time value", void 0))
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/OrdersModal.tsx",
-                                                                            lineNumber: 235,
+                                                                            lineNumber: 231,
                                                                             columnNumber: 31
                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                         "Stock"
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/OrdersModal.tsx",
-                                                                    lineNumber: 231,
+                                                                    lineNumber: 227,
                                                                     columnNumber: 29
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             ]
                                                         }, index, true, {
                                                             fileName: "[project]/src/components/OrdersModal.tsx",
-                                                            lineNumber: 221,
+                                                            lineNumber: 217,
                                                             columnNumber: 25
                                                         }, ("TURBOPACK compile-time value", void 0)))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/OrdersModal.tsx",
-                                                    lineNumber: 219,
+                                                    lineNumber: 215,
                                                     columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2694,7 +2749,7 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                                             children: "Total da Encomenda:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/OrdersModal.tsx",
-                                                            lineNumber: 244,
+                                                            lineNumber: 240,
                                                             columnNumber: 23
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2708,7 +2763,7 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/OrdersModal.tsx",
-                                                                    lineNumber: 246,
+                                                                    lineNumber: 242,
                                                                     columnNumber: 25
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 onReorder && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2727,43 +2782,43 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                                                                 d: "M4 4v5h5M20 19v-5h-5M4 19h16M4 5h16"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/OrdersModal.tsx",
-                                                                                lineNumber: 252,
+                                                                                lineNumber: 248,
                                                                                 columnNumber: 113
                                                                             }, ("TURBOPACK compile-time value", void 0))
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/OrdersModal.tsx",
-                                                                            lineNumber: 252,
+                                                                            lineNumber: 248,
                                                                             columnNumber: 29
                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                         "Reencomendar"
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/OrdersModal.tsx",
-                                                                    lineNumber: 248,
+                                                                    lineNumber: 244,
                                                                     columnNumber: 27
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/OrdersModal.tsx",
-                                                            lineNumber: 245,
+                                                            lineNumber: 241,
                                                             columnNumber: 23
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/OrdersModal.tsx",
-                                                    lineNumber: 243,
+                                                    lineNumber: 239,
                                                     columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/OrdersModal.tsx",
-                                            lineNumber: 218,
+                                            lineNumber: 214,
                                             columnNumber: 19
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, order.id, true, {
                                     fileName: "[project]/src/components/OrdersModal.tsx",
-                                    lineNumber: 181,
+                                    lineNumber: 177,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0))),
                             filteredOrders.length === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2783,12 +2838,12 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                             d: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/OrdersModal.tsx",
-                                            lineNumber: 266,
+                                            lineNumber: 262,
                                             columnNumber: 19
                                         }, ("TURBOPACK compile-time value", void 0))
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/OrdersModal.tsx",
-                                        lineNumber: 265,
+                                        lineNumber: 261,
                                         columnNumber: 17
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -2796,7 +2851,7 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                         children: "Nenhuma encomenda encontrada"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/OrdersModal.tsx",
-                                        lineNumber: 268,
+                                        lineNumber: 264,
                                         columnNumber: 17
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2804,35 +2859,35 @@ const OrdersModal = ({ isOpen, onClose, parts, onReorder })=>{
                                         children: "Tente ajustar a sua pesquisa ou filtros."
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/OrdersModal.tsx",
-                                        lineNumber: 269,
+                                        lineNumber: 265,
                                         columnNumber: 17
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/OrdersModal.tsx",
-                                lineNumber: 264,
+                                lineNumber: 260,
                                 columnNumber: 15
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/OrdersModal.tsx",
-                        lineNumber: 179,
+                        lineNumber: 175,
                         columnNumber: 11
                     }, ("TURBOPACK compile-time value", void 0))
                 }, void 0, false, {
                     fileName: "[project]/src/components/OrdersModal.tsx",
-                    lineNumber: 178,
+                    lineNumber: 174,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0))
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/OrdersModal.tsx",
-            lineNumber: 134,
+            lineNumber: 131,
             columnNumber: 7
         }, ("TURBOPACK compile-time value", void 0))
     }, void 0, false, {
         fileName: "[project]/src/components/OrdersModal.tsx",
-        lineNumber: 133,
+        lineNumber: 130,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };
@@ -2868,61 +2923,9 @@ var _s = __turbopack_context__.k.signature();
 ;
 ;
 ;
-const mockParts = [
-    {
-        id: "1",
-        reference: "BOS-0986452058",
-        name: "Filtro de Óleo Bosch",
-        category: "filtros",
-        supplier: "Bosch Portugal",
-        stock: 45,
-        price: 12.50,
-        stockStatus: "em_stock"
-    },
-    {
-        id: "2",
-        reference: "BRE-P85020",
-        name: "Pastilhas Travão Brembo (Frente)",
-        category: "travoes",
-        supplier: "AutoParts SA",
-        stock: 4,
-        price: 45.90,
-        stockStatus: "baixo_stock"
-    },
-    {
-        id: "3",
-        reference: "CAS-EDGE-5W30",
-        name: "Óleo Castrol Edge 5W30 (5L)",
-        category: "motor",
-        supplier: "LubriNorte",
-        stock: 12,
-        price: 55.00,
-        stockStatus: "em_stock"
-    },
-    {
-        id: "4",
-        reference: "NGK-96588",
-        name: "Vela de Ignição NGK Laser Iridium",
-        category: "motor",
-        supplier: "NGK Spark Plugs",
-        stock: 0,
-        price: 18.20,
-        stockStatus: "esgotado"
-    },
-    {
-        id: "5",
-        reference: "VAL-574623",
-        name: "Escovas Limpa-Vidros Valeo Silencio",
-        category: "acessorios",
-        supplier: "Valeo Service",
-        stock: 20,
-        price: 28.50,
-        stockStatus: "em_stock"
-    }
-];
 function PartsPage() {
     _s();
-    const [parts] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(mockParts);
+    const [parts, setParts] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])([]);
     const [searchTerm, setSearchTerm] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])("");
     const [categoryFilter, setCategoryFilter] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])("");
     const [stockFilter, setStockFilter] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])("");
@@ -2930,15 +2933,91 @@ function PartsPage() {
     const [isOrderModalOpen, setIsOrderModalOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const [isOrdersModalOpen, setIsOrdersModalOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const [reorderSelectedParts, setReorderSelectedParts] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(undefined);
+    const [isLoading, setIsLoading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(true);
+    // Fetch parts from database on mount
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "PartsPage.useEffect": ()=>{
+            fetchParts();
+        }
+    }["PartsPage.useEffect"], []);
+    const fetchParts = async ()=>{
+        try {
+            const response = await fetch('/api/pecas');
+            if (response.ok) {
+                const data = await response.json();
+                // Map the database format to the component's Part interface
+                const mappedParts = data.map((peca)=>({
+                        id: peca.id,
+                        reference: peca.referencia,
+                        name: peca.nome,
+                        category: peca.categoria,
+                        supplier: peca.fornecedor_nome || '',
+                        supplierId: peca.fornecedor_id ? String(peca.fornecedor_id) : '',
+                        supplierName: peca.fornecedor_nome || '',
+                        stock: peca.quantidade_stock || 0,
+                        price: parseFloat(peca.preco_venda) || 0,
+                        stockStatus: peca.ativo === false ? 'esgotado' : (peca.quantidade_stock || 0) === 0 ? 'esgotado' : (peca.quantidade_stock || 0) <= (peca.nivel_stock_minimo || 0) ? 'baixo_stock' : 'em_stock'
+                    }));
+                setParts(mappedParts);
+            }
+        } catch (error) {
+            console.error('Error fetching parts:', error);
+        } finally{
+            setIsLoading(false);
+        }
+    };
     const filteredParts = parts.filter((part)=>{
         const matchesSearch = searchTerm === "" || part.name.toLowerCase().includes(searchTerm.toLowerCase()) || part.reference.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = categoryFilter === "" || part.category === categoryFilter;
         const matchesStock = stockFilter === "" || part.stockStatus === stockFilter;
         return matchesSearch && matchesCategory && matchesStock;
     });
-    const handleAddPart = (newPart)=>{
-        // In a real app, this would make an API call
-        console.log("Adding new part:", newPart);
+    const handleAddPart = async (newPart)=>{
+        try {
+            const response = await fetch('/api/pecas', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nome: newPart.name,
+                    referencia: newPart.reference,
+                    categoria: newPart.category,
+                    stock: newPart.stock,
+                    minStock: 0,
+                    price: newPart.price,
+                    fornecedor_id: newPart.supplierId ? parseInt(newPart.supplierId) : null,
+                    supplierName: newPart.supplierName
+                })
+            });
+            if (response.ok) {
+                const savedPart = await response.json();
+                const partToAdd = {
+                    id: savedPart.id,
+                    reference: savedPart.referencia,
+                    name: savedPart.nome,
+                    category: savedPart.categoria,
+                    supplier: savedPart.supplierName || '',
+                    supplierId: savedPart.fornecedor_id ? String(savedPart.fornecedor_id) : '',
+                    supplierName: savedPart.supplierName || '',
+                    stock: savedPart.stock,
+                    price: parseFloat(savedPart.price),
+                    stockStatus: savedPart.stockStatus
+                };
+                setParts((prevParts)=>[
+                        ...prevParts,
+                        partToAdd
+                    ]);
+            } else {
+                const error = await response.json();
+                alert(error.error || 'Erro ao adicionar peça');
+                return;
+            }
+        } catch (error) {
+            console.error('Error adding part:', error);
+            alert('Erro ao adicionar peça');
+            return;
+        }
         setIsAddModalOpen(false);
     };
     const handleOrderParts = (selectedParts)=>{
@@ -2959,7 +3038,7 @@ function PartsPage() {
                 activePage: "pecas"
             }, void 0, false, {
                 fileName: "[project]/src/app/pecas/page.tsx",
-                lineNumber: 116,
+                lineNumber: 141,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
@@ -2975,7 +3054,7 @@ function PartsPage() {
                                         children: "Catálogo de Peças"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/pecas/page.tsx",
-                                        lineNumber: 121,
+                                        lineNumber: 146,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2983,13 +3062,13 @@ function PartsPage() {
                                         children: "Gerencie o inventário e preços"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/pecas/page.tsx",
-                                        lineNumber: 122,
+                                        lineNumber: 147,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                lineNumber: 120,
+                                lineNumber: 145,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3011,19 +3090,19 @@ function PartsPage() {
                                                     d: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/pecas/page.tsx",
-                                                    lineNumber: 130,
+                                                    lineNumber: 155,
                                                     columnNumber: 17
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                                lineNumber: 129,
+                                                lineNumber: 154,
                                                 columnNumber: 15
                                             }, this),
                                             "Ver Encomendas"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/pecas/page.tsx",
-                                        lineNumber: 125,
+                                        lineNumber: 150,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3042,19 +3121,19 @@ function PartsPage() {
                                                     d: "M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/pecas/page.tsx",
-                                                    lineNumber: 139,
+                                                    lineNumber: 164,
                                                     columnNumber: 17
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                                lineNumber: 138,
+                                                lineNumber: 163,
                                                 columnNumber: 15
                                             }, this),
                                             "Encomendar Peças"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/pecas/page.tsx",
-                                        lineNumber: 134,
+                                        lineNumber: 159,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3073,31 +3152,31 @@ function PartsPage() {
                                                     d: "M12 4v16m8-8H4"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/pecas/page.tsx",
-                                                    lineNumber: 148,
+                                                    lineNumber: 173,
                                                     columnNumber: 17
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                                lineNumber: 147,
+                                                lineNumber: 172,
                                                 columnNumber: 15
                                             }, this),
                                             "Adicionar Peça"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/pecas/page.tsx",
-                                        lineNumber: 143,
+                                        lineNumber: 168,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                lineNumber: 124,
+                                lineNumber: 149,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/pecas/page.tsx",
-                        lineNumber: 119,
+                        lineNumber: 144,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3120,17 +3199,17 @@ function PartsPage() {
                                                 d: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                                lineNumber: 160,
+                                                lineNumber: 185,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/pecas/page.tsx",
-                                            lineNumber: 159,
+                                            lineNumber: 184,
                                             columnNumber: 15
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/pecas/page.tsx",
-                                        lineNumber: 158,
+                                        lineNumber: 183,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -3141,13 +3220,13 @@ function PartsPage() {
                                         className: "w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-600 text-white rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow placeholder-gray-500"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/pecas/page.tsx",
-                                        lineNumber: 163,
+                                        lineNumber: 188,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                lineNumber: 157,
+                                lineNumber: 182,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3163,7 +3242,7 @@ function PartsPage() {
                                                 children: "Todas as Categorias"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                                lineNumber: 177,
+                                                lineNumber: 202,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3171,7 +3250,7 @@ function PartsPage() {
                                                 children: "Motor"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                                lineNumber: 178,
+                                                lineNumber: 203,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3179,7 +3258,7 @@ function PartsPage() {
                                                 children: "Travões"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                                lineNumber: 179,
+                                                lineNumber: 204,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3187,7 +3266,7 @@ function PartsPage() {
                                                 children: "Suspensão"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                                lineNumber: 180,
+                                                lineNumber: 205,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3195,7 +3274,7 @@ function PartsPage() {
                                                 children: "Transmissão"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                                lineNumber: 181,
+                                                lineNumber: 206,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3203,7 +3282,7 @@ function PartsPage() {
                                                 children: "Sistema Elétrico"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                                lineNumber: 182,
+                                                lineNumber: 207,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3211,7 +3290,7 @@ function PartsPage() {
                                                 children: "Sistema de Arrefecimento"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                                lineNumber: 183,
+                                                lineNumber: 208,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3219,7 +3298,7 @@ function PartsPage() {
                                                 children: "Filtros"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                                lineNumber: 184,
+                                                lineNumber: 209,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3227,7 +3306,7 @@ function PartsPage() {
                                                 children: "Acessórios"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                                lineNumber: 185,
+                                                lineNumber: 210,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3235,7 +3314,7 @@ function PartsPage() {
                                                 children: "Carroçaria"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                                lineNumber: 186,
+                                                lineNumber: 211,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3243,7 +3322,7 @@ function PartsPage() {
                                                 children: "Vidros"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                                lineNumber: 187,
+                                                lineNumber: 212,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3251,7 +3330,7 @@ function PartsPage() {
                                                 children: "Pneus e Rodas"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                                lineNumber: 188,
+                                                lineNumber: 213,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3259,7 +3338,7 @@ function PartsPage() {
                                                 children: "Lubrificantes"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                                lineNumber: 189,
+                                                lineNumber: 214,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3267,7 +3346,7 @@ function PartsPage() {
                                                 children: "Exaustão"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                                lineNumber: 190,
+                                                lineNumber: 215,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3275,7 +3354,7 @@ function PartsPage() {
                                                 children: "Direção"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                                lineNumber: 191,
+                                                lineNumber: 216,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3283,13 +3362,13 @@ function PartsPage() {
                                                 children: "Ar Condicionado"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                                lineNumber: 192,
+                                                lineNumber: 217,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/pecas/page.tsx",
-                                        lineNumber: 172,
+                                        lineNumber: 197,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -3302,7 +3381,7 @@ function PartsPage() {
                                                 children: "Status de Stock"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                                lineNumber: 199,
+                                                lineNumber: 224,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3310,7 +3389,7 @@ function PartsPage() {
                                                 children: "Em Stock"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                                lineNumber: 200,
+                                                lineNumber: 225,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3318,7 +3397,7 @@ function PartsPage() {
                                                 children: "Baixo Stock"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                                lineNumber: 201,
+                                                lineNumber: 226,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3326,38 +3405,52 @@ function PartsPage() {
                                                 children: "Esgotado"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                                lineNumber: 202,
+                                                lineNumber: 227,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/pecas/page.tsx",
-                                        lineNumber: 194,
+                                        lineNumber: 219,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/pecas/page.tsx",
-                                lineNumber: 171,
+                                lineNumber: 196,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/pecas/page.tsx",
-                        lineNumber: 156,
+                        lineNumber: 181,
                         columnNumber: 9
                     }, this),
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$PartsTable$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                    isLoading ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: "flex items-center justify-center h-64",
+                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "text-gray-400",
+                            children: "A carregar peças..."
+                        }, void 0, false, {
+                            fileName: "[project]/src/app/pecas/page.tsx",
+                            lineNumber: 235,
+                            columnNumber: 13
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "[project]/src/app/pecas/page.tsx",
+                        lineNumber: 234,
+                        columnNumber: 11
+                    }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$PartsTable$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                         parts: filteredParts
                     }, void 0, false, {
                         fileName: "[project]/src/app/pecas/page.tsx",
-                        lineNumber: 208,
-                        columnNumber: 9
+                        lineNumber: 238,
+                        columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/app/pecas/page.tsx",
-                lineNumber: 117,
+                lineNumber: 142,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$AddPartModal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -3366,7 +3459,7 @@ function PartsPage() {
                 onAddPart: handleAddPart
             }, void 0, false, {
                 fileName: "[project]/src/app/pecas/page.tsx",
-                lineNumber: 212,
+                lineNumber: 243,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$OrderPartsModal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -3377,7 +3470,7 @@ function PartsPage() {
                 initialSelectedParts: reorderSelectedParts ?? []
             }, void 0, false, {
                 fileName: "[project]/src/app/pecas/page.tsx",
-                lineNumber: 218,
+                lineNumber: 249,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$OrdersModal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -3387,17 +3480,17 @@ function PartsPage() {
                 onReorder: handleReorder
             }, void 0, false, {
                 fileName: "[project]/src/app/pecas/page.tsx",
-                lineNumber: 226,
+                lineNumber: 257,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/app/pecas/page.tsx",
-        lineNumber: 115,
+        lineNumber: 140,
         columnNumber: 5
     }, this);
 }
-_s(PartsPage, "5cMCV9ItHz2xlX91bokeG3AHgd4=");
+_s(PartsPage, "u3rSJnIgoF+DN6UQQLFMFS+Jd3g=");
 _c = PartsPage;
 var _c;
 __turbopack_context__.k.register(_c, "PartsPage");

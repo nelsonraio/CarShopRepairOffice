@@ -51,12 +51,16 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage = 'dashboard' }) => {
           Ordens de Trabalho
         </Link>
         
+        
+        
         <Link href="/kanban" className={`flex items-center px-6 py-3 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-brand-yellow-light transition-colors duration-150 ${activePage === 'kanban' ? 'text-white bg-gray-800 font-semibold' : ''}`}>
           <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path>
           </svg>
           Quadro da Oficina
         </Link>
+
+
         <Link href="/pecas" className={`flex items-center px-6 py-3 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-brand-yellow-light transition-colors duration-150 ${activePage === 'pecas' ? 'text-white bg-gray-800 font-semibold' : ''}`}>
           <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>

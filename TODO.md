@@ -1,26 +1,26 @@
-# TODO List
+# TODO - Add Print Functionality to Work Orders Grid
 
-## Task: Add Work Order Print Icon to Budgets Grid
+## Task
+Add print functionality to the work orders grid (ordens de trabalho) similar to what exists in orçamentos.
 
-### Understanding:
-- When a budget is approved ("Aprovado"), a work order is automatically created via the API
-- Currently only budget print icon exists
-- Need to add a second print icon for work orders that appears only for approved budgets
-- The two icons should be visually distinguished
+## Steps
 
-### Implementation Steps:
+- [x] 1. Add `handlePrintWorkOrder` function to `src/app/ordens-trabalho/page.tsx`
+  - Create a printable HTML page with work order details
+  - Include company header, client info, vehicle info, mechanic, dates
+  - Include problem description
+  - Include signature sections
+  
+- [x] 2. Add print button to the Actions column in the work orders table
+  - Add a printer icon button similar to orçamentos page
+  - Position it before the edit and delete buttons
 
-1. [ ] Modify `src/app/orcamentos/page.tsx`
-   - [ ] Add a second print button that appears only when budget.estado === 'Aprovado'
-   - [ ] Use a different color (green) for the work order print icon
-   - [ ] Add a different tooltip: "Imprimir Ordem de Trabalho"
-   - [ ] Add `handlePrintWorkOrder` function that:
-     - Generates work order reference from budget reference
-     - Opens print window with work order details
-   - [ ] Ensure the icons are visually distinct:
-     - Budget print: Blue (existing)
-     - Work order print: Green (new)
+- [x] 3. Add status change functionality to Work Orders grid
+  - Add status change button
+  - Add modal for status selection
+  - Handle "Aguardando Peças" with parts selection
+  - Add validation for empty parts list
+  - Add "Select All" button for parts
 
-### Follow-up Steps:
-- [ ] Test the changes in the browser
-- [ ] Verify both print functions work correctly
+## Files to Modify
+- `src/app/ordens-trabalho/page.tsx`

@@ -12,29 +12,120 @@ export async function GET() {
       where: {
         ativo: true
       },
-      select: {
-        id: true,
-        nome: true,
-        preco_venda: true
-      },
       orderBy: { nome: 'asc' }
     });
 
-    // Remove duplicates by nome to ensure unique parts in the combo box
-    const uniquePecas = pecas.filter((peca, index, self) =>
-      index === self.findIndex(p => p.nome === peca.nome)
-    );
+    // Get all supplier IDs that are used in the parts
+    const fornecedorIds = [...new Set(pecas.map(p => p.fornecedor_id).filter(Boolean))];
+    
+    // Fetch suppliers if there are any
+    const fornecedoresMap = new Map();
+    if (fornecedorIds.length > 0) {
+      const fornecedores = await prisma.fornecedores.findMany({
+        where: {
+          id: { in: fornecedorIds as number[] }
+        },
+        select: {
+          id: true,
+          nome: true
+        }
+      });
+      fornecedores.forEach(f => fornecedoresMap.set(f.id, f.nome));
+    }
 
     // Convert BigInt id to string for JSON serialization
-    const serializedPecas = uniquePecas.map(peca => ({
+    const serializedPecas = pecas.map(peca => ({
       id: String(peca.id),
+      referencia: peca.referencia,
       nome: peca.nome,
-      preco_venda: peca.preco_venda
+      categoria: peca.categoria,
+      quantidade_stock: peca.quantidade_stock,
+      nivel_stock_minimo: peca.nivel_stock_minimo,
+      preco_venda: peca.preco_venda,
+      ativo: peca.ativo,
+      fornecedor_id: peca.fornecedor_id,
+      fornecedor_nome: peca.fornecedor_id ? fornecedoresMap.get(peca.fornecedor_id) || null : null
     }));
 
     return NextResponse.json(serializedPecas);
   } catch (error) {
     console.error('Error fetching pecas:', error);
     return NextResponse.json({ error: 'Failed to fetch pecas' }, { status: 500 });
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    
+    const {
+      nome,
+      referencia,
+      categoria,
+      stock,
+      minStock,
+      price,
+      fornecedor_id,
+      supplierName,
+      descricao
+    } = body;
+
+    // Check if reference already exists
+    const existingPeca = await prisma.pecas.findUnique({
+      where: { referencia }
+    });
+
+    if (existingPeca) {
+      return NextResponse.json(
+        { error: 'Já existe uma peça com esta referência' },
+        { status: 400 }
+      );
+    }
+
+    const newPeca = await prisma.pecas.create({
+      data: {
+        nome,
+        referencia,
+        categoria,
+        quantidade_stock: stock,
+        nivel_stock_minimo: minStock,
+        preco_venda: price,
+        custo_unitario: 0, // Default to 0, can be updated later
+        descricao: descricao || null,
+        ativo: true,
+        fornecedor_id: fornecedor_id || null
+      }
+    });
+
+    // Get the supplier name if fornecedor_id was provided
+    let fornecedorNome = null;
+    if (fornecedor_id) {
+      const fornecedor = await prisma.fornecedores.findUnique({
+        where: { id: fornecedor_id },
+        select: { nome: true }
+      });
+      fornecedorNome = fornecedor?.nome || null;
+    }
+
+    return NextResponse.json({
+      id: String(newPeca.id),
+      nome: newPeca.nome,
+      referencia: newPeca.referencia,
+      categoria: newPeca.categoria,
+      stock: newPeca.quantidade_stock,
+      minStock: newPeca.nivel_stock_minimo,
+      price: newPeca.preco_venda,
+      fornecedor_id: newPeca.fornecedor_id,
+      fornecedor_nome: fornecedorNome,
+      supplierName: fornecedorNome,
+      stockStatus: (newPeca.quantidade_stock ?? 0) === 0 ? 'esgotado' : 
+                   (newPeca.quantidade_stock ?? 0) <= (newPeca.nivel_stock_minimo ?? 0) ? 'baixo_stock' : 'em_stock'
+    }, { status: 201 });
+  } catch (error) {
+    console.error('Error creating peca:', error);
+    return NextResponse.json(
+      { error: 'Falha ao criar peça' },
+      { status: 500 }
+    );
   }
 }

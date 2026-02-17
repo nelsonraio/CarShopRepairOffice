@@ -123,7 +123,7 @@ const BudgetsPage = () => {
   };
 
   const updateBudgetStatus = (budgetId: number, newStatus: string, mechanicName?: string) => {
-    setBudgets(prevBudgets =>
+    setBudgets(prevBudgets => 
       prevBudgets.map(budget =>
         budget.id === budgetId 
           ? { 

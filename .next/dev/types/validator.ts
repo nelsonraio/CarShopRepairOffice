@@ -146,10 +146,10 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
-// Validate ../../../src/app/ordens-trabalho/novo/page.tsx
+// Validate ../../../src/app/ordens-trabalho/[id]/edit/page.tsx
 {
-  type __IsExpected<Specific extends AppPageConfig<"/ordens-trabalho/novo">> = Specific
-  const handler = {} as typeof import("../../../src/app/ordens-trabalho/novo/page.js")
+  type __IsExpected<Specific extends AppPageConfig<"/ordens-trabalho/[id]/edit">> = Specific
+  const handler = {} as typeof import("../../../src/app/ordens-trabalho/[id]/edit/page.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check
@@ -272,6 +272,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../../src/app/api/fornecedores/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/fornecedores">> = Specific
+  const handler = {} as typeof import("../../../src/app/api/fornecedores/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../../src/app/api/marcas/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/marcas">> = Specific
@@ -348,6 +357,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/ordens-trab orders.alho">> = Specific
   const handler = {} as typeof import("../../../src/app/api/ordens-trab orders.alho/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../src/app/api/ordens-trabalho method./route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/ordens-trabalho method.">> = Specific
+  const handler = {} as typeof import("../../../src/app/api/ordens-trabalho method./route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check

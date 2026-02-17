@@ -1,4 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
+interface Supplier {
+  id: string;
+  nome: string;
+}
 
 interface Part {
   id: string;
@@ -9,6 +14,8 @@ interface Part {
   minStock: number;
   price: number;
   supplier: string;
+  supplierId: string;
+  supplierName: string;
   stockStatus: 'em_stock' | 'baixo_stock' | 'esgotado';
 }
 
@@ -19,6 +26,9 @@ interface AddPartModalProps {
 }
 
 const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart }) => {
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [isLoadingSuppliers, setIsLoadingSuppliers] = useState(true);
+  
   const [formData, setFormData] = useState({
     name: '',
     reference: '',
@@ -27,12 +37,46 @@ const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart 
     minStock: 0,
     price: 0,
     supplier: '',
+    supplierId: '',
+    supplierName: '',
     stockStatus: 'em_stock' as 'em_stock' | 'baixo_stock' | 'esgotado'
   });
 
+  // Fetch suppliers on mount
+  useEffect(() => {
+    if (isOpen) {
+      fetchSuppliers();
+    }
+  }, [isOpen]);
+
+  const fetchSuppliers = async () => {
+    try {
+      const response = await fetch('/api/fornecedores');
+      if (response.ok) {
+        const data = await response.json();
+        setSuppliers(data);
+      }
+    } catch (error) {
+      console.error('Error fetching suppliers:', error);
+    } finally {
+      setIsLoadingSuppliers(false);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onAddPart(formData);
+    
+    // Get supplier name from selected supplier ID
+    const selectedSupplier = suppliers.find(s => s.id === formData.supplierId);
+    const supplierName = selectedSupplier ? selectedSupplier.nome : '';
+    
+    onAddPart({
+      ...formData,
+      supplier: supplierName,
+      supplierId: formData.supplierId,
+      supplierName: supplierName
+    });
+    
     setFormData({
       name: '',
       reference: '',
@@ -41,6 +85,8 @@ const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart 
       minStock: 0,
       price: 0,
       supplier: '',
+      supplierId: '',
+      supplierName: '',
       stockStatus: 'em_stock'
     });
     onClose();
@@ -165,14 +211,26 @@ const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart 
             <label className="block text-sm font-medium text-gray-300 mb-1">
               Fornecedor
             </label>
-            <input
-              type="text"
-              name="supplier"
-              value={formData.supplier}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-brand-yellow"
-            />
+            {isLoadingSuppliers ? (
+              <div className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-400">
+                A carregar fornecedores...
+              </div>
+            ) : (
+              <select
+                name="supplierId"
+                value={formData.supplierId}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+              >
+                <option value="">Selecionar fornecedor</option>
+                {suppliers.map(supplier => (
+                  <option key={supplier.id} value={supplier.id}>
+                    {supplier.nome}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">

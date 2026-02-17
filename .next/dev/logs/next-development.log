@@ -1,3 +1,25 @@
-[00:00:01.886] Server  LOG     ✓ Ready in 1417ms
-[00:00:54.568] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:01:04.885] Browser LOG     Printing work order for budget: {"aprovado_por":null,"atualizado_em":"2026-02-16T14:35:42.000Z","cliente":{"ativo":true,"atualizado_em":"2026-02-12T08:36:47.000Z","criado_em":"2026-02-12T08:36:47.000Z","data_registo":"2026-02-12T00:00:00.000Z","desconto":null,"email":"","endereco":"","id":34,"nif":"","nome":"Cliente Genérico TVDE Interno","notas":null,"perfil":"TVDE_Interno","telefone":"97123123","total_gasto":"0","visitas":0},"cliente_id":34,"criado_em":"2026-02-16T14:35:42.000Z","data_aprovacao":"2026-02-16T00:00:00.000Z","data_emissao":"2026-02-16T00:00:00.000Z","data_expiracao":null,"estado":"Aprovado","id":38,"itens_orcamento":[{"criado_em":"2026-02-16T14:35:42.000Z","descricao":"Reparação de Motor","id":36,"notas":null,"orcamento_id":38,"peca_id":null,"percentual_desconto":"0","percentual_imposto":"23","preco_unitario":0,"quantidade":1,"servico_id":18,"tipo_item":"servico","valor_desconto":"0","valor_imposto":"0","valor_total":0},{"criado_em":"2026-02-16T14:35:42.000Z","descricao":"Filtro de Ar Peugeot 308","id":37,"notas":null,"orcamento_id":38,"peca_id":9,"percentual_desconto":"0","percentual_imposto":"23","preco_unitario":23.25,"quantidade":1,"servico_id":null,"tipo_item":"peca","valor_desconto":"0","valor_imposto":"0","valor_total":23.25}],"mecanico_nome":"Joaquim F.","notas":"","preparado_por":null,"ref_orcamento":"OR-2026-TVDE0001","total_desconto":0,"total_geral":23.25,"total_imposto":0,"total_mao_obra":0,"total_pecas":23.25,"veiculo":{"ano":1976,"apolice_seguro":null,"atualizado_em":"2026-02-12T17:30:36.000Z","cliente_id":34,"companhia_seguros":null,"criado_em":"2026-02-12T17:30:36.000Z","estado":"disponivel","id":55,"marca":"Renault","matricula":"99-UU-UU","modelo":"Clio","notas":null,"numero_chassis":null,"proxima_revisao":null,"tipo_combustivel":null,"tipo_motor":null,"ultima_intervencao":null,"validade_seguro":null},"veiculo_id":55}
+[00:00:00.992] Server  LOG     ✓ Ready in 748ms
+[00:00:41.403] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:09:47.127] Server  LOG     ✓ Compiled in 521ms
+[00:15:02.412] Server  LOG     ✓ Compiled in 97ms
+[00:17:45.018] Browser LOG     Mecânico selecionado: 3 - Nome: Joaquim F.
+[00:17:45.602] Server  LOG     Created 1 work order items for OR-2026-TVDE0001
+[00:17:45.602] Server  LOG     Work order created: OR-2026-TVDE0001 from budget OR-2026-TVDE0001
+[00:28:05.097] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:34:04.729] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:38:24.039] Server  LOG     ✓ Compiled in 116ms
+[00:41:25.191] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:58:14.502] Server  LOG     ✓ Compiled in 208ms
+[01:01:13.955] Browser LOG     Adding new part: {"category":"Óleos","minStock":1,"name":"Teste de Peça","price":10,"reference":"XPTO","stock":10,"stockStatus":"em_stock","supplier":"XPTO"}
+[01:08:07.241] Server  LOG     ✓ Compiled in 127ms
+[01:15:42.482] Server  WARN    ⚠ Duplicate page detected. src\app\api\pecas\route..ts and src\app\api\pecas\route.ts resolve to /api/pecas
+[01:16:27.174] Server  LOG     ✓ Compiled in 70ms
+[01:17:47.538] Server  LOG     ✓ Compiled in 79ms
+[01:20:57.343] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[01:21:00.441] Server  LOG     ✓ Compiled in 69ms
+[01:22:20.075] Server  LOG     ✓ Compiled in 82ms
+[01:23:18.263] Server  LOG     ✓ Compiled in 63ms
+[01:25:23.370] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[01:26:11.374] Server  LOG     ✓ Compiled in 77ms
+[01:27:07.215] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[01:27:28.265] Server  LOG     ✓ Compiled in 67ms

@@ -265,19 +265,19 @@ const Sidebar = ({ activePage = 'dashboard' })=>{
                                     d: "M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Sidebar.tsx",
-                                    lineNumber: 56,
+                                    lineNumber: 58,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Sidebar.tsx",
-                                lineNumber: 55,
+                                lineNumber: 57,
                                 columnNumber: 11
                             }, ("TURBOPACK compile-time value", void 0)),
                             "Quadro da Oficina"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Sidebar.tsx",
-                        lineNumber: 54,
+                        lineNumber: 56,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
@@ -297,19 +297,19 @@ const Sidebar = ({ activePage = 'dashboard' })=>{
                                     d: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Sidebar.tsx",
-                                    lineNumber: 62,
+                                    lineNumber: 66,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Sidebar.tsx",
-                                lineNumber: 61,
+                                lineNumber: 65,
                                 columnNumber: 11
                             }, ("TURBOPACK compile-time value", void 0)),
                             "Peças"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Sidebar.tsx",
-                        lineNumber: 60,
+                        lineNumber: 64,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
@@ -329,19 +329,19 @@ const Sidebar = ({ activePage = 'dashboard' })=>{
                                     d: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Sidebar.tsx",
-                                    lineNumber: 68,
+                                    lineNumber: 72,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Sidebar.tsx",
-                                lineNumber: 67,
+                                lineNumber: 71,
                                 columnNumber: 11
                             }, ("TURBOPACK compile-time value", void 0)),
                             "Faturação"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Sidebar.tsx",
-                        lineNumber: 66,
+                        lineNumber: 70,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
@@ -361,19 +361,19 @@ const Sidebar = ({ activePage = 'dashboard' })=>{
                                     d: "M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Sidebar.tsx",
-                                    lineNumber: 74,
+                                    lineNumber: 78,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Sidebar.tsx",
-                                lineNumber: 73,
+                                lineNumber: 77,
                                 columnNumber: 11
                             }, ("TURBOPACK compile-time value", void 0)),
                             "Balanço"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Sidebar.tsx",
-                        lineNumber: 72,
+                        lineNumber: 76,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
@@ -394,7 +394,7 @@ const Sidebar = ({ activePage = 'dashboard' })=>{
                                         d: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/Sidebar.tsx",
-                                        lineNumber: 80,
+                                        lineNumber: 84,
                                         columnNumber: 13
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
@@ -404,20 +404,20 @@ const Sidebar = ({ activePage = 'dashboard' })=>{
                                         d: "M15 12a3 3 0 11-6 0 3 3 0 016 0z"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/Sidebar.tsx",
-                                        lineNumber: 81,
+                                        lineNumber: 85,
                                         columnNumber: 13
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/Sidebar.tsx",
-                                lineNumber: 79,
+                                lineNumber: 83,
                                 columnNumber: 11
                             }, ("TURBOPACK compile-time value", void 0)),
                             "Tabelas"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Sidebar.tsx",
-                        lineNumber: 78,
+                        lineNumber: 82,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
@@ -460,6 +460,15 @@ const WorkOrdersPage = ()=>{
     const [loading, setLoading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(true);
     const [error, setError] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
     const [deletingId, setDeletingId] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    // Status Modal State
+    const [showStatusModal, setShowStatusModal] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [selectedWorkOrder, setSelectedWorkOrder] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [newStatus, setNewStatus] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('');
+    const [completionDate, setCompletionDate] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('');
+    const [waitingParts, setWaitingParts] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('');
+    const [workOrderItems, setWorkOrderItems] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])([]);
+    const [selectedParts, setSelectedParts] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(new Set());
+    const [loadingItems, setLoadingItems] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
     const handleDelete = async (id)=>{
         if (!confirm('Tem a certeza que deseja eliminar esta ordem de trabalho?')) {
             return;
@@ -516,12 +525,14 @@ const WorkOrdersPage = ()=>{
     ]);
     const getStatusColor = (status)=>{
         switch(status){
-            case 'Aberta':
+            case 'Pendente':
                 return 'text-blue-400 bg-blue-900/30 border border-blue-900';
             case 'Em Andamento':
                 return 'text-yellow-400 bg-yellow-900/30 border border-yellow-900';
             case 'Concluída':
                 return 'text-green-400 bg-green-900/30 border border-green-900';
+            case 'Faturado':
+                return 'text-emerald-400 bg-emerald-900/30 border border-emerald-900';
             case 'Cancelada':
                 return 'text-red-400 bg-red-900/30 border border-red-900';
             default:
@@ -542,6 +553,221 @@ const WorkOrdersPage = ()=>{
                 return 'text-gray-400 bg-gray-800 border border-gray-700';
         }
     };
+    const handlePrintWorkOrder = (workOrder)=>{
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) return;
+        printWindow.document.write(`
+      <html>
+        <head>
+          <title>Ordem de Trabalho - ${workOrder.id}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 40px; color: #000; }
+            
+            /* Cabeçalho */
+            .header-container { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+            .logo-section { display: flex; align-items: center; }
+            .logo-section img { width: 70px; margin-right: 15px; }
+            .company-name h1 { margin: 0; font-size: 20px; font-weight: bold; }
+            .company-name p { margin: 0; font-size: 14px; }
+            .contacts-section { text-align: right; font-size: 12px; line-height: 1.4; }
+
+            /* Dados da Ordem de Trabalho */
+            .doc-info { margin-top: 10px; margin-bottom: 20px; line-height: 1.6; }
+            .doc-title { font-weight: bold; font-size: 16px; margin-bottom: 5px; }
+            .client-details { font-size: 14px; }
+
+            /* Tabela */
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th { background-color: #666; color: #fff; border: 1px solid #000; padding: 10px; text-transform: uppercase; font-size: 13px; }
+            td { border: 1px solid #000; padding: 10px; text-align: center; font-size: 13px; }
+            td:first-child { text-align: left; width: 60%; }
+
+            /* Descrição do Problema */
+            .problem-section { 
+              margin-top: 30px; 
+              border: 2px solid #000; 
+              background-color: #f5f5f5; 
+              padding: 15px; 
+              font-size: 14px;
+            }
+            .problem-label { font-weight: bold; margin-bottom: 10px; }
+
+            /* Mecânico */
+            .mechanic-section { 
+              margin-top: 30px; 
+              border: 2px solid #000; 
+              background-color: #f5f5f5; 
+              padding: 15px; 
+              font-size: 14px;
+            }
+            .mechanic-label { font-weight: bold; margin-bottom: 5px; }
+            .mechanic-name { font-size: 16px; color: #333; }
+
+            /* Assinaturas */
+            .signatures-section { margin-top: 50px; }
+            .sig-block { margin-bottom: 40px; font-size: 12px; }
+            .sig-line { border-bottom: 1px solid #000; width: 250px; margin-top: 35px; }
+            
+            @media print {
+              body { margin: 20mm; }
+              th { -webkit-print-color-adjust: exact; }
+              img { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header-container">
+            <div class="logo-section">
+              <div style="background: white; padding: 5px; border-radius: 4px; display: inline-block; margin-right: 15px;">
+                <img src="/logoblack.jpg" alt="MQAuto Logo" style="width: 50px; height: 50px; object-fit: contain; display: block;" />
+              </div>
+              <div class="company-name">
+                <h1>MQ Auto</h1>
+                <p>Oficina Automóvel</p>
+              </div>
+            </div>
+            <div class="contacts-section">
+              <p>(+351) 935 205 354</p>
+              <p>montesquaresmalda@outlook.com</p>
+            </div>
+          </div>
+
+          <div class="doc-info">
+            <div class="doc-title">Ordem de Trabalho: ${workOrder.id}</div>
+            <div class="client-details">
+              <p>Cliente: ${workOrder.client || ''}</p>
+              <p>Veículo: ${workOrder.vehicle || ''}</p>
+              <p>Data de Abertura: ${workOrder.openDate || ''}</p>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>DESCRIÇÃO / SERVIÇO</th>
+                <th>QUANTIDADE</th>
+                <th>CONCLUÍDO</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>${workOrder.problem || 'Nenhuma descrição fornecida.'}</td>
+                <td>1</td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="mechanic-section">
+            <div class="mechanic-label">Mecânico Responsável:</div>
+            <div class="mechanic-name">${workOrder.mechanic || '_____________________________'}</div>
+          </div>
+
+          <div class="signatures-section">
+            <div class="sig-block">
+              <p>Assinatura do Mecânico:</p>
+              <div class="sig-line"></div>
+            </div>
+            <div class="sig-block">
+              <p>Assinatura do Supervisor:</p>
+              <div class="sig-line"></div>
+            </div>
+            <div class="sig-block">
+              <p>Data de Conclusão:</p>
+              <div class="sig-line"></div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `);
+        printWindow.document.close();
+        // Pequeno delay para garantir que o estilo é aplicado antes da impressão
+        setTimeout(()=>{
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+        }, 250);
+    };
+    const handleStatusClick = async (workOrder)=>{
+        setSelectedWorkOrder(workOrder);
+        setNewStatus(workOrder.status);
+        const defaultDate = new Date().toISOString().split('T')[0];
+        setCompletionDate(workOrder.closeDate || defaultDate);
+        setWaitingParts(workOrder.waitingParts || '');
+        setSelectedParts(new Set());
+        setWorkOrderItems([]);
+        setLoadingItems(true);
+        setShowStatusModal(true);
+        // Fetch work order items from API
+        try {
+            const response = await fetch(`/api/ordens-trabalho?id=${encodeURIComponent(workOrder.id)}`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.itens_ordem_trabalho && Array.isArray(data.itens_ordem_trabalho)) {
+                    setWorkOrderItems(data.itens_ordem_trabalho);
+                    // Pre-select parts that are already marked as awaiting
+                    const waitingPartsSet = new Set();
+                    const waitingPartsList = [];
+                    data.itens_ordem_trabalho.forEach((item)=>{
+                        if (item.tipo_item === 'peca' && item.aguarda_peca === true) {
+                            waitingPartsSet.add(String(item.id));
+                            waitingPartsList.push(item.descricao);
+                        }
+                    });
+                    setSelectedParts(waitingPartsSet);
+                    if (waitingPartsList.length > 0) {
+                        setWaitingParts(waitingPartsList.join('\n'));
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('Error fetching work order items:', err);
+        } finally{
+            setLoadingItems(false);
+        }
+    };
+    const handleSaveStatus = async ()=>{
+        if (!selectedWorkOrder) return;
+        // Get selected part IDs from workOrderItems
+        const selectedPartIds = workOrderItems.filter((item)=>item.tipo_item === 'peca' && waitingParts.split('\n').map((p)=>p.trim()).includes(item.descricao)).map((item)=>String(item.id));
+        if (newStatus === 'Aguardando Peças' && selectedPartIds.length === 0) {
+            alert('Por favor, selecione pelo menos uma peça em espera.');
+            return;
+        }
+        // Create updated work order object
+        const updatedOrder = {
+            ...selectedWorkOrder,
+            status: newStatus,
+            closeDate: newStatus === 'Pronto' ? completionDate : selectedWorkOrder.closeDate || '',
+            waitingParts: newStatus === 'Aguardando Peças' ? waitingParts || '' : selectedWorkOrder.waitingParts || ''
+        };
+        try {
+            // Call API to persist changes
+            const response = await fetch('/api/ordens-trabalho', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id: selectedWorkOrder.id,
+                    estado: newStatus,
+                    data_conclusao: newStatus === 'Pronto' ? completionDate : null,
+                    waitingParts: newStatus === 'Aguardando Peças' ? waitingParts : null,
+                    selectedPartIds: newStatus === 'Aguardando Peças' ? selectedPartIds : []
+                })
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to update work order');
+            }
+            // Update local state after successful API call
+            setWorkOrders((prev)=>prev.map((wo)=>wo.id === updatedOrder.id ? updatedOrder : wo));
+            setFilteredWorkOrders((prev)=>prev.map((wo)=>wo.id === updatedOrder.id ? updatedOrder : wo));
+            setShowStatusModal(false);
+        } catch (err) {
+            alert(err instanceof Error ? err.message : 'Erro ao atualizar estado da ordem de trabalho');
+        }
+    };
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "flex h-screen bg-gray-800",
         children: [
@@ -549,7 +775,7 @@ const WorkOrdersPage = ()=>{
                 activePage: "ordens-trabalho"
             }, void 0, false, {
                 fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                lineNumber: 116,
+                lineNumber: 370,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
@@ -557,73 +783,33 @@ const WorkOrdersPage = ()=>{
                 children: [
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4",
-                        children: [
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                children: [
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
-                                        className: "text-3xl font-bold text-gray-100 leading-tight",
-                                        children: "Ordens de Trabalho"
-                                    }, void 0, false, {
-                                        fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                        lineNumber: 121,
-                                        columnNumber: 13
-                                    }, ("TURBOPACK compile-time value", void 0)),
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                        className: "mt-1 text-gray-400",
-                                        children: "Gerencie as ordens de trabalho ativas"
-                                    }, void 0, false, {
-                                        fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                        lineNumber: 122,
-                                        columnNumber: 13
-                                    }, ("TURBOPACK compile-time value", void 0))
-                                ]
-                            }, void 0, true, {
-                                fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                lineNumber: 120,
-                                columnNumber: 11
-                            }, ("TURBOPACK compile-time value", void 0)),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "flex gap-3",
-                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
-                                    href: "/ordens-trabalho/novo",
-                                    className: "px-4 py-2 bg-brand-yellow-dark text-white font-bold hover:bg-yellow-600 transition-colors rounded-none flex items-center shadow-md",
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
-                                            className: "w-5 h-5 mr-2",
-                                            fill: "none",
-                                            stroke: "currentColor",
-                                            viewBox: "0 0 24 24",
-                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
-                                                strokeLinecap: "round",
-                                                strokeLinejoin: "round",
-                                                strokeWidth: "2",
-                                                d: "M12 4v16m8-8H4"
-                                            }, void 0, false, {
-                                                fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                lineNumber: 127,
-                                                columnNumber: 17
-                                            }, ("TURBOPACK compile-time value", void 0))
-                                        }, void 0, false, {
-                                            fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                            lineNumber: 126,
-                                            columnNumber: 15
-                                        }, ("TURBOPACK compile-time value", void 0)),
-                                        "Nova OT"
-                                    ]
-                                }, void 0, true, {
+                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+                                    className: "text-3xl font-bold text-gray-100 leading-tight",
+                                    children: "Ordens de Trabalho"
+                                }, void 0, false, {
                                     fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                    lineNumber: 125,
+                                    lineNumber: 375,
+                                    columnNumber: 13
+                                }, ("TURBOPACK compile-time value", void 0)),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                    className: "mt-1 text-gray-400",
+                                    children: "Gerencie as ordens de trabalho ativas"
+                                }, void 0, false, {
+                                    fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                    lineNumber: 376,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
-                            }, void 0, false, {
-                                fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                lineNumber: 124,
-                                columnNumber: 11
-                            }, ("TURBOPACK compile-time value", void 0))
-                        ]
-                    }, void 0, true, {
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                            lineNumber: 374,
+                            columnNumber: 11
+                        }, ("TURBOPACK compile-time value", void 0))
+                    }, void 0, false, {
                         fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                        lineNumber: 119,
+                        lineNumber: 373,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -650,12 +836,12 @@ const WorkOrdersPage = ()=>{
                                                         d: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                        lineNumber: 140,
+                                                        lineNumber: 387,
                                                         columnNumber: 19
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                    lineNumber: 139,
+                                                    lineNumber: 386,
                                                     columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -666,13 +852,13 @@ const WorkOrdersPage = ()=>{
                                                     onChange: (e)=>setSearchTerm(e.target.value)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                    lineNumber: 142,
+                                                    lineNumber: 389,
                                                     columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                            lineNumber: 138,
+                                            lineNumber: 385,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -687,15 +873,15 @@ const WorkOrdersPage = ()=>{
                                                         children: "Todos os Estados"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                        lineNumber: 156,
+                                                        lineNumber: 403,
                                                         columnNumber: 19
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
-                                                        value: "Aberta",
-                                                        children: "Aberta"
+                                                        value: "Pendente",
+                                                        children: "Pendente"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                        lineNumber: 157,
+                                                        lineNumber: 404,
                                                         columnNumber: 19
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -703,7 +889,7 @@ const WorkOrdersPage = ()=>{
                                                         children: "Em Andamento"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                        lineNumber: 158,
+                                                        lineNumber: 405,
                                                         columnNumber: 19
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -711,7 +897,15 @@ const WorkOrdersPage = ()=>{
                                                         children: "Concluída"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                        lineNumber: 159,
+                                                        lineNumber: 406,
+                                                        columnNumber: 19
+                                                    }, ("TURBOPACK compile-time value", void 0)),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                                        value: "Faturado",
+                                                        children: "Faturado"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                                        lineNumber: 407,
                                                         columnNumber: 19
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -719,18 +913,18 @@ const WorkOrdersPage = ()=>{
                                                         children: "Cancelada"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                        lineNumber: 160,
+                                                        lineNumber: 408,
                                                         columnNumber: 19
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                lineNumber: 151,
+                                                lineNumber: 398,
                                                 columnNumber: 17
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                            lineNumber: 150,
+                                            lineNumber: 397,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -745,7 +939,7 @@ const WorkOrdersPage = ()=>{
                                                         children: "Todas as Prioridades"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                        lineNumber: 169,
+                                                        lineNumber: 417,
                                                         columnNumber: 19
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -753,7 +947,7 @@ const WorkOrdersPage = ()=>{
                                                         children: "Baixa"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                        lineNumber: 170,
+                                                        lineNumber: 418,
                                                         columnNumber: 19
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -761,7 +955,7 @@ const WorkOrdersPage = ()=>{
                                                         children: "Normal"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                        lineNumber: 171,
+                                                        lineNumber: 419,
                                                         columnNumber: 19
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -769,7 +963,7 @@ const WorkOrdersPage = ()=>{
                                                         children: "Alta"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                        lineNumber: 172,
+                                                        lineNumber: 420,
                                                         columnNumber: 19
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -777,24 +971,24 @@ const WorkOrdersPage = ()=>{
                                                         children: "Urgente"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                        lineNumber: 173,
+                                                        lineNumber: 421,
                                                         columnNumber: 19
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                lineNumber: 164,
+                                                lineNumber: 412,
                                                 columnNumber: 17
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                            lineNumber: 163,
+                                            lineNumber: 411,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                    lineNumber: 137,
+                                    lineNumber: 384,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 loading ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -804,12 +998,12 @@ const WorkOrdersPage = ()=>{
                                         children: "Carregando ordens de trabalho..."
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                        lineNumber: 181,
+                                        lineNumber: 429,
                                         columnNumber: 17
                                     }, ("TURBOPACK compile-time value", void 0))
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                    lineNumber: 180,
+                                    lineNumber: 428,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0)) : error ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "bg-red-900 border border-red-700 text-red-200 p-4 rounded-none",
@@ -819,7 +1013,7 @@ const WorkOrdersPage = ()=>{
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                    lineNumber: 184,
+                                    lineNumber: 432,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "overflow-x-auto rounded-none border border-gray-600",
@@ -836,7 +1030,7 @@ const WorkOrdersPage = ()=>{
                                                             children: "Nº OT"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                            lineNumber: 192,
+                                                            lineNumber: 440,
                                                             columnNumber: 23
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -845,7 +1039,7 @@ const WorkOrdersPage = ()=>{
                                                             children: "Veículo"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                            lineNumber: 193,
+                                                            lineNumber: 441,
                                                             columnNumber: 23
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -854,7 +1048,7 @@ const WorkOrdersPage = ()=>{
                                                             children: "Cliente"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                            lineNumber: 194,
+                                                            lineNumber: 442,
                                                             columnNumber: 23
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -863,7 +1057,7 @@ const WorkOrdersPage = ()=>{
                                                             children: "Mecânico"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                            lineNumber: 195,
+                                                            lineNumber: 443,
                                                             columnNumber: 23
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -872,16 +1066,16 @@ const WorkOrdersPage = ()=>{
                                                             children: "Data Abertura"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                            lineNumber: 196,
+                                                            lineNumber: 444,
                                                             columnNumber: 23
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                             scope: "col",
                                                             className: "px-6 py-3",
-                                                            children: "Data Fechamento"
+                                                            children: "Data de Fecho"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                            lineNumber: 197,
+                                                            lineNumber: 445,
                                                             columnNumber: 23
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -890,7 +1084,7 @@ const WorkOrdersPage = ()=>{
                                                             children: "Prioridade"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                            lineNumber: 198,
+                                                            lineNumber: 446,
                                                             columnNumber: 23
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -899,7 +1093,7 @@ const WorkOrdersPage = ()=>{
                                                             children: "Estado"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                            lineNumber: 199,
+                                                            lineNumber: 447,
                                                             columnNumber: 23
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -908,18 +1102,18 @@ const WorkOrdersPage = ()=>{
                                                             children: "Ações"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                            lineNumber: 200,
+                                                            lineNumber: 448,
                                                             columnNumber: 23
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                    lineNumber: 191,
+                                                    lineNumber: 439,
                                                     columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                lineNumber: 190,
+                                                lineNumber: 438,
                                                 columnNumber: 19
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -931,12 +1125,12 @@ const WorkOrdersPage = ()=>{
                                                         children: "Nenhuma ordem de trabalho encontrada."
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                        lineNumber: 206,
+                                                        lineNumber: 454,
                                                         columnNumber: 25
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                    lineNumber: 205,
+                                                    lineNumber: 453,
                                                     columnNumber: 23
                                                 }, ("TURBOPACK compile-time value", void 0)) : filteredWorkOrders.map((workOrder)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
                                                         className: "bg-gray-800 hover:bg-gray-700 transition-colors",
@@ -946,7 +1140,7 @@ const WorkOrdersPage = ()=>{
                                                                 children: workOrder.id
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                                lineNumber: 213,
+                                                                lineNumber: 461,
                                                                 columnNumber: 27
                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -954,7 +1148,7 @@ const WorkOrdersPage = ()=>{
                                                                 children: workOrder.vehicle
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                                lineNumber: 215,
+                                                                lineNumber: 463,
                                                                 columnNumber: 27
                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -962,7 +1156,7 @@ const WorkOrdersPage = ()=>{
                                                                 children: workOrder.client
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                                lineNumber: 216,
+                                                                lineNumber: 464,
                                                                 columnNumber: 27
                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -970,7 +1164,7 @@ const WorkOrdersPage = ()=>{
                                                                 children: workOrder.mechanic
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                                lineNumber: 217,
+                                                                lineNumber: 465,
                                                                 columnNumber: 27
                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -978,7 +1172,7 @@ const WorkOrdersPage = ()=>{
                                                                 children: workOrder.openDate
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                                lineNumber: 218,
+                                                                lineNumber: 466,
                                                                 columnNumber: 27
                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -986,7 +1180,7 @@ const WorkOrdersPage = ()=>{
                                                                 children: workOrder.closeDate || '-'
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                                lineNumber: 219,
+                                                                lineNumber: 467,
                                                                 columnNumber: 27
                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -996,12 +1190,12 @@ const WorkOrdersPage = ()=>{
                                                                     children: workOrder.priority
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                                    lineNumber: 221,
+                                                                    lineNumber: 469,
                                                                     columnNumber: 29
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                                lineNumber: 220,
+                                                                lineNumber: 468,
                                                                 columnNumber: 27
                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1011,12 +1205,12 @@ const WorkOrdersPage = ()=>{
                                                                     children: workOrder.status
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                                    lineNumber: 226,
+                                                                    lineNumber: 474,
                                                                     columnNumber: 29
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                                lineNumber: 225,
+                                                                lineNumber: 473,
                                                                 columnNumber: 27
                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1025,6 +1219,65 @@ const WorkOrdersPage = ()=>{
                                                                     className: "flex justify-center space-x-2",
                                                                     children: [
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                                            className: "text-purple-400 hover:text-purple-300 transition-colors",
+                                                                            title: "Alterar Estado",
+                                                                            onClick: ()=>handleStatusClick(workOrder),
+                                                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
+                                                                                className: "w-4 h-4",
+                                                                                fill: "none",
+                                                                                stroke: "currentColor",
+                                                                                viewBox: "0 0 24 24",
+                                                                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
+                                                                                    strokeLinecap: "round",
+                                                                                    strokeLinejoin: "round",
+                                                                                    strokeWidth: "2",
+                                                                                    d: "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                                                                }, void 0, false, {
+                                                                                    fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                                                                    lineNumber: 486,
+                                                                                    columnNumber: 35
+                                                                                }, ("TURBOPACK compile-time value", void 0))
+                                                                            }, void 0, false, {
+                                                                                fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                                                                lineNumber: 485,
+                                                                                columnNumber: 33
+                                                                            }, ("TURBOPACK compile-time value", void 0))
+                                                                        }, void 0, false, {
+                                                                            fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                                                            lineNumber: 480,
+                                                                            columnNumber: 31
+                                                                        }, ("TURBOPACK compile-time value", void 0)),
+                                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                                            className: "text-orange-400 hover:text-orange-300 transition-colors",
+                                                                            title: "Imprimir Ordem de Trabalho",
+                                                                            onClick: ()=>handlePrintWorkOrder(workOrder),
+                                                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
+                                                                                className: "w-4 h-4",
+                                                                                fill: "none",
+                                                                                stroke: "currentColor",
+                                                                                viewBox: "0 0 24 24",
+                                                                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
+                                                                                    strokeLinecap: "round",
+                                                                                    strokeLinejoin: "round",
+                                                                                    strokeWidth: "2",
+                                                                                    d: "M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                                                                                }, void 0, false, {
+                                                                                    fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                                                                    lineNumber: 495,
+                                                                                    columnNumber: 35
+                                                                                }, ("TURBOPACK compile-time value", void 0))
+                                                                            }, void 0, false, {
+                                                                                fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                                                                lineNumber: 494,
+                                                                                columnNumber: 33
+                                                                            }, ("TURBOPACK compile-time value", void 0))
+                                                                        }, void 0, false, {
+                                                                            fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                                                            lineNumber: 489,
+                                                                            columnNumber: 31
+                                                                        }, ("TURBOPACK compile-time value", void 0)),
+                                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
+                                                                            href: `/ordens-trabalho/${workOrder.id}/edit`,
                                                                             className: "text-blue-400 hover:text-blue-300 transition-colors",
                                                                             title: "Editar",
                                                                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
@@ -1039,17 +1292,17 @@ const WorkOrdersPage = ()=>{
                                                                                     d: "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                                                    lineNumber: 237,
+                                                                                    lineNumber: 504,
                                                                                     columnNumber: 35
                                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                                                lineNumber: 236,
+                                                                                lineNumber: 503,
                                                                                 columnNumber: 33
                                                                             }, ("TURBOPACK compile-time value", void 0))
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                                            lineNumber: 232,
+                                                                            lineNumber: 498,
                                                                             columnNumber: 31
                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1069,12 +1322,12 @@ const WorkOrdersPage = ()=>{
                                                                                     d: "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                                                    lineNumber: 248,
+                                                                                    lineNumber: 515,
                                                                                     columnNumber: 37
                                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                                                lineNumber: 247,
+                                                                                lineNumber: 514,
                                                                                 columnNumber: 35
                                                                             }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
                                                                                 className: "w-4 h-4",
@@ -1088,73 +1341,363 @@ const WorkOrdersPage = ()=>{
                                                                                     d: "M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                                                    lineNumber: 252,
+                                                                                    lineNumber: 519,
                                                                                     columnNumber: 37
                                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                                                lineNumber: 251,
+                                                                                lineNumber: 518,
                                                                                 columnNumber: 35
                                                                             }, ("TURBOPACK compile-time value", void 0))
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                                            lineNumber: 240,
+                                                                            lineNumber: 507,
                                                                             columnNumber: 31
                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                                    lineNumber: 231,
+                                                                    lineNumber: 479,
                                                                     columnNumber: 29
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                                lineNumber: 230,
+                                                                lineNumber: 478,
                                                                 columnNumber: 27
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         ]
                                                     }, workOrder.id, true, {
                                                         fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                        lineNumber: 212,
+                                                        lineNumber: 460,
                                                         columnNumber: 25
                                                     }, ("TURBOPACK compile-time value", void 0)))
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                                lineNumber: 203,
+                                                lineNumber: 451,
                                                 columnNumber: 19
                                             }, ("TURBOPACK compile-time value", void 0))
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                        lineNumber: 189,
+                                        lineNumber: 437,
                                         columnNumber: 17
                                     }, ("TURBOPACK compile-time value", void 0))
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                                    lineNumber: 188,
+                                    lineNumber: 436,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                            lineNumber: 135,
+                            lineNumber: 382,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false, {
                         fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                        lineNumber: 134,
+                        lineNumber: 381,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-                lineNumber: 117,
+                lineNumber: 371,
                 columnNumber: 7
+            }, ("TURBOPACK compile-time value", void 0)),
+            showStatusModal && selectedWorkOrder && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm",
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "bg-gray-800 border border-gray-600 rounded-none p-6 w-96 max-w-full mx-4 shadow-2xl",
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                            className: "text-xl font-bold text-white mb-4",
+                            children: [
+                                "Alterar Estado - ",
+                                selectedWorkOrder.id
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                            lineNumber: 540,
+                            columnNumber: 13
+                        }, ("TURBOPACK compile-time value", void 0)),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "mb-4",
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                    className: "block text-gray-400 mb-2 text-sm",
+                                    children: "Novo Estado"
+                                }, void 0, false, {
+                                    fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                    lineNumber: 543,
+                                    columnNumber: 15
+                                }, ("TURBOPACK compile-time value", void 0)),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
+                                    className: "w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-none focus:ring-2 focus:ring-brand-yellow focus:border-brand-yellow outline-none",
+                                    value: newStatus,
+                                    onChange: (e)=>setNewStatus(e.target.value),
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                            value: "Aprovado",
+                                            children: "Aprovado"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                            lineNumber: 549,
+                                            columnNumber: 17
+                                        }, ("TURBOPACK compile-time value", void 0)),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                            value: "Em Andamento",
+                                            children: "Em Andamento"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                            lineNumber: 550,
+                                            columnNumber: 17
+                                        }, ("TURBOPACK compile-time value", void 0)),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                            value: "Aguardando Peças",
+                                            children: "Aguardando Peças"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                            lineNumber: 551,
+                                            columnNumber: 17
+                                        }, ("TURBOPACK compile-time value", void 0)),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                            value: "Concluído",
+                                            children: "Concluída"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                            lineNumber: 552,
+                                            columnNumber: 17
+                                        }, ("TURBOPACK compile-time value", void 0)),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                            value: "Cancelado",
+                                            children: "Cancelada"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                            lineNumber: 553,
+                                            columnNumber: 17
+                                        }, ("TURBOPACK compile-time value", void 0))
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                    lineNumber: 544,
+                                    columnNumber: 15
+                                }, ("TURBOPACK compile-time value", void 0))
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                            lineNumber: 542,
+                            columnNumber: 13
+                        }, ("TURBOPACK compile-time value", void 0)),
+                        newStatus === 'Concluído' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "mb-4",
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                    className: "block text-gray-400 mb-2 text-sm",
+                                    children: "Data de Conclusão"
+                                }, void 0, false, {
+                                    fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                    lineNumber: 559,
+                                    columnNumber: 17
+                                }, ("TURBOPACK compile-time value", void 0)),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                    type: "date",
+                                    className: "w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-none focus:ring-2 focus:ring-brand-yellow focus:border-brand-yellow outline-none",
+                                    value: completionDate,
+                                    onChange: (e)=>setCompletionDate(e.target.value)
+                                }, void 0, false, {
+                                    fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                    lineNumber: 560,
+                                    columnNumber: 17
+                                }, ("TURBOPACK compile-time value", void 0))
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                            lineNumber: 558,
+                            columnNumber: 15
+                        }, ("TURBOPACK compile-time value", void 0)),
+                        newStatus === 'Aguardando Peças' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "mb-4",
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                    className: "block text-gray-400 mb-2 text-sm",
+                                    children: "Peças em Espera"
+                                }, void 0, false, {
+                                    fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                    lineNumber: 571,
+                                    columnNumber: 17
+                                }, ("TURBOPACK compile-time value", void 0)),
+                                loadingItems ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "text-gray-500 text-sm mb-2",
+                                    children: "Carregando peças..."
+                                }, void 0, false, {
+                                    fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                    lineNumber: 574,
+                                    columnNumber: 19
+                                }, ("TURBOPACK compile-time value", void 0)) : workOrderItems.filter((item)=>item.tipo_item === 'peca').length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "mb-3 bg-gray-700 p-2 border border-gray-600 max-h-40 overflow-y-auto",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            className: "flex justify-between items-center mb-2",
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                    className: "text-xs text-gray-400",
+                                                    children: "Selecione as peças em falta:"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                                    lineNumber: 578,
+                                                    columnNumber: 23
+                                                }, ("TURBOPACK compile-time value", void 0)),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                    type: "button",
+                                                    className: "text-xs text-brand-yellow hover:text-white transition-colors",
+                                                    onClick: ()=>{
+                                                        // Select all part IDs
+                                                        const allPartIds = new Set(workOrderItems.filter((item)=>item.tipo_item === 'peca').map((item)=>String(item.id)));
+                                                        setSelectedParts(allPartIds);
+                                                        // Also update the text
+                                                        const allParts = workOrderItems.filter((item)=>item.tipo_item === 'peca').map((item)=>item.descricao).join('\n');
+                                                        setWaitingParts(allParts);
+                                                    },
+                                                    children: "Selecionar Todas"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                                    lineNumber: 579,
+                                                    columnNumber: 23
+                                                }, ("TURBOPACK compile-time value", void 0))
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                            lineNumber: 577,
+                                            columnNumber: 21
+                                        }, ("TURBOPACK compile-time value", void 0)),
+                                        workOrderItems.filter((item)=>item.tipo_item === 'peca').map((item)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                className: "flex items-center mb-1",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                                        type: "checkbox",
+                                                        id: `part-${item.id}`,
+                                                        className: "mr-2",
+                                                        checked: selectedParts.has(String(item.id)),
+                                                        onChange: (e)=>{
+                                                            const itemId = String(item.id);
+                                                            const newSelectedParts = new Set(selectedParts);
+                                                            if (e.target.checked) {
+                                                                newSelectedParts.add(itemId);
+                                                            } else {
+                                                                newSelectedParts.delete(itemId);
+                                                            }
+                                                            setSelectedParts(newSelectedParts);
+                                                            // Update waitingParts text based on selection
+                                                            const selectedItems = workOrderItems.filter((i)=>i.tipo_item === 'peca' && newSelectedParts.has(String(i.id)));
+                                                            setWaitingParts(selectedItems.map((i)=>i.descricao).join('\n'));
+                                                        }
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                                        lineNumber: 604,
+                                                        columnNumber: 25
+                                                    }, ("TURBOPACK compile-time value", void 0)),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                                        htmlFor: `part-${item.id}`,
+                                                        className: "text-sm text-gray-300 cursor-pointer select-none",
+                                                        children: [
+                                                            item.descricao || '',
+                                                            " ",
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                className: "text-gray-500 text-xs",
+                                                                children: [
+                                                                    "(",
+                                                                    item.quantidade,
+                                                                    ")"
+                                                                ]
+                                                            }, void 0, true, {
+                                                                fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                                                lineNumber: 627,
+                                                                columnNumber: 50
+                                                            }, ("TURBOPACK compile-time value", void 0))
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                                        lineNumber: 626,
+                                                        columnNumber: 25
+                                                    }, ("TURBOPACK compile-time value", void 0))
+                                                ]
+                                            }, item.id, true, {
+                                                fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                                lineNumber: 603,
+                                                columnNumber: 23
+                                            }, ("TURBOPACK compile-time value", void 0)))
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                    lineNumber: 576,
+                                    columnNumber: 19
+                                }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "text-gray-500 text-xs italic mb-2",
+                                    children: "Nenhuma peça encontrada nesta ordem de trabalho."
+                                }, void 0, false, {
+                                    fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                    lineNumber: 633,
+                                    columnNumber: 19
+                                }, ("TURBOPACK compile-time value", void 0)),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
+                                    className: "w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-none focus:ring-2 focus:ring-brand-yellow focus:border-brand-yellow outline-none",
+                                    rows: 3,
+                                    placeholder: "Liste as peças necessárias...",
+                                    value: waitingParts || '',
+                                    onChange: (e)=>setWaitingParts(e.target.value)
+                                }, void 0, false, {
+                                    fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                    lineNumber: 636,
+                                    columnNumber: 17
+                                }, ("TURBOPACK compile-time value", void 0))
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                            lineNumber: 570,
+                            columnNumber: 15
+                        }, ("TURBOPACK compile-time value", void 0)),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-700",
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                    onClick: ()=>setShowStatusModal(false),
+                                    className: "px-4 py-2 bg-gray-700 text-white hover:bg-gray-600 transition-colors rounded-none border border-gray-600",
+                                    children: "Cancelar"
+                                }, void 0, false, {
+                                    fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                    lineNumber: 647,
+                                    columnNumber: 15
+                                }, ("TURBOPACK compile-time value", void 0)),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                    onClick: handleSaveStatus,
+                                    className: "px-4 py-2 bg-brand-yellow-dark text-white font-bold hover:bg-yellow-600 transition-colors rounded-none shadow-md",
+                                    children: "Guardar"
+                                }, void 0, false, {
+                                    fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                                    lineNumber: 653,
+                                    columnNumber: 15
+                                }, ("TURBOPACK compile-time value", void 0))
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                            lineNumber: 646,
+                            columnNumber: 13
+                        }, ("TURBOPACK compile-time value", void 0))
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                    lineNumber: 539,
+                    columnNumber: 11
+                }, ("TURBOPACK compile-time value", void 0))
+            }, void 0, false, {
+                fileName: "[project]/src/app/ordens-trabalho/page.tsx",
+                lineNumber: 538,
+                columnNumber: 9
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/src/app/ordens-trabalho/page.tsx",
-        lineNumber: 115,
+        lineNumber: 369,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };

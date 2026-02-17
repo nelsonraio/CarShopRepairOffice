@@ -6,6 +6,8 @@ interface Part {
   name: string;
   category: string;
   supplier: string;
+  supplierId?: string;
+  supplierName?: string;
   stock: number;
   price: number;
   stockStatus: 'em_stock' | 'baixo_stock' | 'esgotado';
@@ -75,7 +77,7 @@ export default function PartsTable({ parts }: PartsTableProps) {
                     {getCategoryLabel(part.category)}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-gray-300">{part.supplier}</td>
+                <td className="px-6 py-4 text-gray-300">{part.supplierName || part.supplier || '-'}</td>
                 <td className="px-6 py-4 font-bold" style={{ color: getStockColor(part.stockStatus, part.stock).split(' ')[1] }}>
                   {part.stock} un.
                 </td>

@@ -11,9 +11,18 @@ interface WorkOrder {
   mechanic: string;
   openDate: string;
   closeDate: string;
-  status: 'Aberta' | 'Em Andamento' | 'Concluída' | 'Cancelada';
+  status: 'Pendente' | 'Em Andamento' | 'Concluída' | 'Cancelada' | 'Faturado';
   priority: 'Baixa' | 'Normal' | 'Alta' | 'Urgente';
   problem: string;
+  waitingParts: string;
+}
+
+interface WorkOrderItem {
+  id: string | number;
+  tipo_item: string;
+  descricao: string;
+  quantidade: number | string;
+  [key: string]: any;
 }
 
 
@@ -27,6 +36,16 @@ const WorkOrdersPage = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Status Modal State
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null);
+  const [newStatus, setNewStatus] = useState<string>('');
+  const [completionDate, setCompletionDate] = useState('');
+  const [waitingParts, setWaitingParts] = useState('');
+  const [workOrderItems, setWorkOrderItems] = useState<WorkOrderItem[]>([]);
+  const [selectedParts, setSelectedParts] = useState<Set<string>>(new Set());
+  const [loadingItems, setLoadingItems] = useState(false);
 
   const handleDelete = async (id: string) => {
     if (!confirm('Tem a certeza que deseja eliminar esta ordem de trabalho?')) {
@@ -93,9 +112,10 @@ const WorkOrdersPage = () => {
 
   const getStatusColor = (status: string) => {
     switch(status) {
-      case 'Aberta': return 'text-blue-400 bg-blue-900/30 border border-blue-900';
+      case 'Pendente': return 'text-blue-400 bg-blue-900/30 border border-blue-900';
       case 'Em Andamento': return 'text-yellow-400 bg-yellow-900/30 border border-yellow-900';
       case 'Concluída': return 'text-green-400 bg-green-900/30 border border-green-900';
+      case 'Faturado': return 'text-emerald-400 bg-emerald-900/30 border border-emerald-900';
       case 'Cancelada': return 'text-red-400 bg-red-900/30 border border-red-900';
       default: return 'text-gray-400 bg-gray-800 border border-gray-700';
     }
@@ -111,6 +131,240 @@ const WorkOrdersPage = () => {
     }
   };
 
+  const handlePrintWorkOrder = (workOrder: WorkOrder) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Ordem de Trabalho - ${workOrder.id}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 40px; color: #000; }
+            
+            /* Cabeçalho */
+            .header-container { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+            .logo-section { display: flex; align-items: center; }
+            .logo-section img { width: 70px; margin-right: 15px; }
+            .company-name h1 { margin: 0; font-size: 20px; font-weight: bold; }
+            .company-name p { margin: 0; font-size: 14px; }
+            .contacts-section { text-align: right; font-size: 12px; line-height: 1.4; }
+
+            /* Dados da Ordem de Trabalho */
+            .doc-info { margin-top: 10px; margin-bottom: 20px; line-height: 1.6; }
+            .doc-title { font-weight: bold; font-size: 16px; margin-bottom: 5px; }
+            .client-details { font-size: 14px; }
+
+            /* Tabela */
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th { background-color: #666; color: #fff; border: 1px solid #000; padding: 10px; text-transform: uppercase; font-size: 13px; }
+            td { border: 1px solid #000; padding: 10px; text-align: center; font-size: 13px; }
+            td:first-child { text-align: left; width: 60%; }
+
+            /* Descrição do Problema */
+            .problem-section { 
+              margin-top: 30px; 
+              border: 2px solid #000; 
+              background-color: #f5f5f5; 
+              padding: 15px; 
+              font-size: 14px;
+            }
+            .problem-label { font-weight: bold; margin-bottom: 10px; }
+
+            /* Mecânico */
+            .mechanic-section { 
+              margin-top: 30px; 
+              border: 2px solid #000; 
+              background-color: #f5f5f5; 
+              padding: 15px; 
+              font-size: 14px;
+            }
+            .mechanic-label { font-weight: bold; margin-bottom: 5px; }
+            .mechanic-name { font-size: 16px; color: #333; }
+
+            /* Assinaturas */
+            .signatures-section { margin-top: 50px; }
+            .sig-block { margin-bottom: 40px; font-size: 12px; }
+            .sig-line { border-bottom: 1px solid #000; width: 250px; margin-top: 35px; }
+            
+            @media print {
+              body { margin: 20mm; }
+              th { -webkit-print-color-adjust: exact; }
+              img { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header-container">
+            <div class="logo-section">
+              <div style="background: white; padding: 5px; border-radius: 4px; display: inline-block; margin-right: 15px;">
+                <img src="/logoblack.jpg" alt="MQAuto Logo" style="width: 50px; height: 50px; object-fit: contain; display: block;" />
+              </div>
+              <div class="company-name">
+                <h1>MQ Auto</h1>
+                <p>Oficina Automóvel</p>
+              </div>
+            </div>
+            <div class="contacts-section">
+              <p>(+351) 935 205 354</p>
+              <p>montesquaresmalda@outlook.com</p>
+            </div>
+          </div>
+
+          <div class="doc-info">
+            <div class="doc-title">Ordem de Trabalho: ${workOrder.id}</div>
+            <div class="client-details">
+              <p>Cliente: ${workOrder.client || ''}</p>
+              <p>Veículo: ${workOrder.vehicle || ''}</p>
+              <p>Data de Abertura: ${workOrder.openDate || ''}</p>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>DESCRIÇÃO / SERVIÇO</th>
+                <th>QUANTIDADE</th>
+                <th>CONCLUÍDO</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>${workOrder.problem || 'Nenhuma descrição fornecida.'}</td>
+                <td>1</td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="mechanic-section">
+            <div class="mechanic-label">Mecânico Responsável:</div>
+            <div class="mechanic-name">${workOrder.mechanic || '_____________________________'}</div>
+          </div>
+
+          <div class="signatures-section">
+            <div class="sig-block">
+              <p>Assinatura do Mecânico:</p>
+              <div class="sig-line"></div>
+            </div>
+            <div class="sig-block">
+              <p>Assinatura do Supervisor:</p>
+              <div class="sig-line"></div>
+            </div>
+            <div class="sig-block">
+              <p>Data de Conclusão:</p>
+              <div class="sig-line"></div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+
+    // Pequeno delay para garantir que o estilo é aplicado antes da impressão
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    }, 250);
+  };
+
+  const handleStatusClick = async (workOrder: WorkOrder) => {
+    setSelectedWorkOrder(workOrder);
+    setNewStatus(workOrder.status);
+    const defaultDate = new Date().toISOString().split('T')[0];
+    setCompletionDate(workOrder.closeDate || defaultDate);
+    setWaitingParts(workOrder.waitingParts || '');
+    setSelectedParts(new Set());
+    setWorkOrderItems([]);
+    setLoadingItems(true);
+    setShowStatusModal(true);
+
+    // Fetch work order items from API
+    try {
+      const response = await fetch(`/api/ordens-trabalho?id=${encodeURIComponent(workOrder.id)}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.itens_ordem_trabalho && Array.isArray(data.itens_ordem_trabalho)) {
+          setWorkOrderItems(data.itens_ordem_trabalho);
+          
+          // Pre-select parts that are already marked as awaiting
+          const waitingPartsSet = new Set<string>();
+          const waitingPartsList: string[] = [];
+          
+          data.itens_ordem_trabalho.forEach((item: any) => {
+            if (item.tipo_item === 'peca' && item.aguarda_peca === true) {
+              waitingPartsSet.add(String(item.id));
+              waitingPartsList.push(item.descricao);
+            }
+          });
+          
+          setSelectedParts(waitingPartsSet);
+          if (waitingPartsList.length > 0) {
+            setWaitingParts(waitingPartsList.join('\n'));
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching work order items:', err);
+    } finally {
+      setLoadingItems(false);
+    }
+  };
+
+  const handleSaveStatus = async () => {
+    if (!selectedWorkOrder) return;
+
+    // Get selected part IDs from workOrderItems
+    const selectedPartIds = workOrderItems
+      .filter(item => item.tipo_item === 'peca' && waitingParts.split('\n').map(p => p.trim()).includes(item.descricao))
+      .map(item => String(item.id));
+
+    if (newStatus === 'Aguardando Peças' && selectedPartIds.length === 0) {
+      alert('Por favor, selecione pelo menos uma peça em espera.');
+      return;
+    }
+
+    // Create updated work order object
+    const updatedOrder: WorkOrder = {
+      ...selectedWorkOrder,
+      status: newStatus as WorkOrder['status'],
+      closeDate: newStatus === 'Pronto' ? completionDate : (selectedWorkOrder.closeDate || ''),
+      waitingParts: newStatus === 'Aguardando Peças' ? (waitingParts || '') : (selectedWorkOrder.waitingParts || '')
+    };
+
+    try {
+      // Call API to persist changes
+      const response = await fetch('/api/ordens-trabalho', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: selectedWorkOrder.id,
+          estado: newStatus,
+          data_conclusao: newStatus === 'Pronto' ? completionDate : null,
+          waitingParts: newStatus === 'Aguardando Peças' ? waitingParts : null,
+          selectedPartIds: newStatus === 'Aguardando Peças' ? selectedPartIds : []
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update work order');
+      }
+
+      // Update local state after successful API call
+      setWorkOrders(prev => prev.map(wo => wo.id === updatedOrder.id ? updatedOrder : wo));
+      setFilteredWorkOrders(prev => prev.map(wo => wo.id === updatedOrder.id ? updatedOrder : wo));
+      
+      setShowStatusModal(false);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erro ao atualizar estado da ordem de trabalho');
+    }
+  };
+
   return (
     <div className="flex h-screen bg-gray-800">
       <Sidebar activePage="ordens-trabalho" />
@@ -121,14 +375,7 @@ const WorkOrdersPage = () => {
             <h2 className="text-3xl font-bold text-gray-100 leading-tight">Ordens de Trabalho</h2>
             <p className="mt-1 text-gray-400">Gerencie as ordens de trabalho ativas</p>
           </div>
-          <div className="flex gap-3">
-            <Link href="/ordens-trabalho/novo" className="px-4 py-2 bg-brand-yellow-dark text-white font-bold hover:bg-yellow-600 transition-colors rounded-none flex items-center shadow-md">
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
-              </svg>
-              Nova OT
-            </Link>
-          </div>
+         
         </div>
 
         <div className="max-w-7xl mx-auto bg-gray-700 rounded-none shadow-lg border border-gray-600">
@@ -154,9 +401,10 @@ const WorkOrdersPage = () => {
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
                   <option value="">Todos os Estados</option>
-                  <option value="Aberta">Aberta</option>
+                  <option value="Pendente">Pendente</option>
                   <option value="Em Andamento">Em Andamento</option>
                   <option value="Concluída">Concluída</option>
+                  <option value="Faturado">Faturado</option>
                   <option value="Cancelada">Cancelada</option>
                 </select>
               </div>
@@ -194,7 +442,7 @@ const WorkOrdersPage = () => {
                       <th scope="col" className="px-6 py-3">Cliente</th>
                       <th scope="col" className="px-6 py-3">Mecânico</th>
                       <th scope="col" className="px-6 py-3">Data Abertura</th>
-                      <th scope="col" className="px-6 py-3">Data Fechamento</th>
+                      <th scope="col" className="px-6 py-3">Data de Fecho</th>
                       <th scope="col" className="px-6 py-3 text-center">Prioridade</th>
                       <th scope="col" className="px-6 py-3 text-center">Estado</th>
                       <th scope="col" className="px-6 py-3 text-center">Ações</th>
@@ -230,13 +478,32 @@ const WorkOrdersPage = () => {
                           <td className="px-6 py-4 text-center">
                             <div className="flex justify-center space-x-2">
                               <button
+                                className="text-purple-400 hover:text-purple-300 transition-colors"
+                                title="Alterar Estado"
+                                onClick={() => handleStatusClick(workOrder)}
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                              </button>
+                              <button
+                                className="text-orange-400 hover:text-orange-300 transition-colors"
+                                title="Imprimir Ordem de Trabalho"
+                                onClick={() => handlePrintWorkOrder(workOrder)}
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                                </svg>
+                              </button>
+                              <Link
+                                href={`/ordens-trabalho/${workOrder.id}/edit`}
                                 className="text-blue-400 hover:text-blue-300 transition-colors"
                                 title="Editar"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                 </svg>
-                              </button>
+                              </Link>
                               <button
                                 className="text-red-400 hover:text-red-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 title="Eliminar"
@@ -265,6 +532,134 @@ const WorkOrdersPage = () => {
           </div>
         </div>
       </main>
+
+      {/* Status Change Modal */}
+      {showStatusModal && selectedWorkOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-gray-800 border border-gray-600 rounded-none p-6 w-96 max-w-full mx-4 shadow-2xl">
+            <h3 className="text-xl font-bold text-white mb-4">Alterar Estado - {selectedWorkOrder.id}</h3>
+            
+            <div className="mb-4">
+              <label className="block text-gray-400 mb-2 text-sm">Novo Estado</label>
+              <select 
+                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-none focus:ring-2 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
+                value={newStatus}
+                onChange={(e) => setNewStatus(e.target.value)}
+              >
+                <option value="Aprovado">Aprovado</option>
+                <option value="Em Andamento">Em Andamento</option>
+                <option value="Aguardando Peças">Aguardando Peças</option>
+                <option value="Concluído">Concluída</option>
+                <option value="Cancelado">Cancelada</option>
+              </select>
+            </div>
+
+            {newStatus === 'Concluído' && (
+              <div className="mb-4">
+                <label className="block text-gray-400 mb-2 text-sm">Data de Conclusão</label>
+                <input 
+                  type="date" 
+                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-none focus:ring-2 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
+                  value={completionDate}
+                  onChange={(e) => setCompletionDate(e.target.value)}
+                />
+              </div>
+            )}
+
+            {newStatus === 'Aguardando Peças' && (
+              <div className="mb-4">
+                <label className="block text-gray-400 mb-2 text-sm">Peças em Espera</label>
+                
+                {loadingItems ? (
+                  <div className="text-gray-500 text-sm mb-2">Carregando peças...</div>
+                ) : workOrderItems.filter(item => item.tipo_item === 'peca').length > 0 ? (
+                  <div className="mb-3 bg-gray-700 p-2 border border-gray-600 max-h-40 overflow-y-auto">
+                    <div className="flex justify-between items-center mb-2">
+                      <p className="text-xs text-gray-400">Selecione as peças em falta:</p>
+                      <button 
+                        type="button"
+                        className="text-xs text-brand-yellow hover:text-white transition-colors"
+                        onClick={() => {
+                          // Select all part IDs
+                          const allPartIds = new Set(
+                            workOrderItems
+                              .filter(item => item.tipo_item === 'peca')
+                              .map(item => String(item.id))
+                          );
+                          setSelectedParts(allPartIds);
+                          
+                          // Also update the text
+                          const allParts = workOrderItems
+                            .filter(item => item.tipo_item === 'peca')
+                            .map(item => item.descricao)
+                            .join('\n');
+                          setWaitingParts(allParts);
+                        }}
+                      >
+                        Selecionar Todas
+                      </button>
+                    </div>
+                    {workOrderItems.filter(item => item.tipo_item === 'peca').map(item => (
+                      <div key={item.id} className="flex items-center mb-1">
+                        <input 
+                          type="checkbox" 
+                          id={`part-${item.id}`}
+                          className="mr-2"
+                          checked={selectedParts.has(String(item.id))}
+                          onChange={(e) => {
+                            const itemId = String(item.id);
+                            const newSelectedParts = new Set(selectedParts);
+                            if (e.target.checked) {
+                              newSelectedParts.add(itemId);
+                            } else {
+                              newSelectedParts.delete(itemId);
+                            }
+                            setSelectedParts(newSelectedParts);
+                            
+                            // Update waitingParts text based on selection
+                            const selectedItems = workOrderItems.filter(i => 
+                              i.tipo_item === 'peca' && newSelectedParts.has(String(i.id))
+                            );
+                            setWaitingParts(selectedItems.map(i => i.descricao).join('\n'));
+                          }}
+                        />
+                        <label htmlFor={`part-${item.id}`} className="text-sm text-gray-300 cursor-pointer select-none">
+                          {item.descricao || ''} <span className="text-gray-500 text-xs">({item.quantidade})</span>
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-gray-500 text-xs italic mb-2">Nenhuma peça encontrada nesta ordem de trabalho.</div>
+                )}
+
+                <textarea 
+                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-none focus:ring-2 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
+                  rows={3}
+                  placeholder="Liste as peças necessárias..."
+                  value={waitingParts || ''}
+                  onChange={(e) => setWaitingParts(e.target.value)}
+                />
+              </div>
+            )}
+
+            <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-700">
+              <button
+                onClick={() => setShowStatusModal(false)}
+                className="px-4 py-2 bg-gray-700 text-white hover:bg-gray-600 transition-colors rounded-none border border-gray-600"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveStatus}
+                className="px-4 py-2 bg-brand-yellow-dark text-white font-bold hover:bg-yellow-600 transition-colors rounded-none shadow-md"
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

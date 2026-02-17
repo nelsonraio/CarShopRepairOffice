@@ -8,6 +8,8 @@ interface Part {
   name: string;
   category: string;
   supplier: string;
+  supplierId?: string;
+  supplierName?: string;
   stock: number;
   price: number;
   stockStatus: 'em_stock' | 'baixo_stock' | 'esgotado';
@@ -88,7 +90,6 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
 
   const handleCopyText = () => {
     navigator.clipboard.writeText(orderText);
-    // You could add a toast notification here
   };
 
   const handleSendWhatsApp = () => {
@@ -99,7 +100,7 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
   const filteredItems = orderItems.filter(item =>
     item.part.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.part.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.part.supplier.toLowerCase().includes(searchTerm.toLowerCase())
+    (item.part.supplier || item.part.supplierName || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleAddNewPart = () => {
@@ -143,7 +144,6 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
         <h3 className="text-xl font-bold text-gray-100 mb-6 border-b border-gray-700 pb-4">Encomendar Peças</h3>
 
         <div className="flex-1 flex mt-2 overflow-hidden gap-6">
-          {/* --- LEFT COLUMN: AVAILABLE PARTS --- */}
           <div className="w-7/12 flex flex-col">
             <div className="flex gap-4 mb-4">
               <div className="flex-1 relative">
@@ -200,7 +200,7 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
                 <div key={item.part.id} className="flex items-center justify-between bg-gray-700 p-3 border border-gray-600">
                   <div>
                     <p className="text-sm font-medium text-gray-200">{item.part.name}</p>
-                    <p className="text-xs text-gray-400">Ref: {item.part.reference} | Fornecedor: {item.part.supplier}</p>
+                    <p className="text-xs text-gray-400">Ref: {item.part.reference} | Fornecedor: {item.part.supplierName || item.part.supplier}</p>
                   </div>
                   <button onClick={() => handleItemToggle(item.part.id)} className="px-3 py-1 bg-green-600 text-white text-xs font-bold hover:bg-green-700 transition-colors rounded-none flex items-center">
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
@@ -216,7 +216,6 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
             </div>
           </div>
 
-          {/* --- RIGHT COLUMN: ORDER SUMMARY --- */}
           <div className="w-5/12 flex flex-col pl-6 border-l border-gray-700">
             <h4 className="text-lg font-semibold text-white mb-4">Resumo da Encomenda</h4>
             <div className="flex-1 overflow-y-auto pr-2 space-y-3">
