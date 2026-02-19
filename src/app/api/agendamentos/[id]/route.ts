@@ -40,7 +40,7 @@ export async function GET(
       time: agendamento.hora_inicio.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }),
       mechanic: mecanico?.nome || '',
       tipoServico: agendamento.titulo.includes(' - ') ? agendamento.titulo.split(' - ')[0] : agendamento.titulo,
-      status: agendamento.estado === 'em_andamento' ? 'em_andamento' : 'agendado',
+      status: agendamento.estado || 'agendado',
       notas: agendamento.descricao ?? ''
     };
 
@@ -86,24 +86,40 @@ export async function PUT(
     const titulo = body.tipoServico + (body.marca ? ` - ${body.marca}` : '') + (body.modelo ? ` ${body.modelo}` : '') + (body.matricula ? ` (${body.matricula})` : '');
 
     // Update the appointment
+    const updateData: any = {
+      titulo: titulo,
+      data_agendamento: dataAgendamento,
+      hora_inicio: dataAgendamento,
+      marca: body.marca || null,
+      modelo: body.modelo || null,
+      ano: body.ano ? parseInt(body.ano) : null,
+      matricula: body.matricula || null,
+      descricao: body.notas || null,
+      estado: 'agendado'
+    };
+
+    // Only add cliente_id if it's not null
+    if (clienteId !== null) {
+      updateData.cliente_id = clienteId;
+    }
+
+    // Only add mecanico_id if it's not null
+    if (mecanicoId !== null) {
+      updateData.mecanico_id = mecanicoId;
+    }
+
     const updatedAgendamento = await prisma.agendamentos.update({
       where: { id: parseInt(id) },
-      data: {
-        cliente_id: clienteId,
-        mecanico_id: mecanicoId,
-        titulo: titulo,
-        data_agendamento: dataAgendamento,
-        hora_inicio: dataAgendamento,
-        marca: body.marca || null,
-        modelo: body.modelo || null,
-        ano: body.ano ? parseInt(body.ano) : null,
-        matricula: body.matricula || null,
-        notas: body.notas || null,
-        estado: 'agendado'
-      }
+      data: updateData
     });
 
-    return NextResponse.json({ success: true, agendamento: updatedAgendamento });
+    // Convert BigInt to string for JSON serialization
+    const response = {
+      ...updatedAgendamento,
+      id: updatedAgendamento.id.toString()
+    };
+
+    return NextResponse.json({ success: true, agendamento: response });
   } catch (error) {
     console.error('Error updating agendamento:', error);
     return NextResponse.json({ error: 'Failed to update agendamento' }, { status: 500 });

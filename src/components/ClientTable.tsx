@@ -1,11 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import type { Cliente } from "../data/mockData";
+
+export interface ClienteRecord {
+  id: string;
+  nome: string;
+  email: string;
+  telefone: string;
+  nif: string;
+  endereco?: string;
+  perfil?: "Normal" | "TVDE Interno" | "TVDE Externo" | "Empresa";
+  veiculos: number;
+  dataRegistro?: string;
+  totalGasto?: number;
+  visitas?: number;
+}
 
 interface ClientTableProps {
-  clients: Cliente[];
-  onEdit?: (client: Cliente) => void;
+  clients: ClienteRecord[];
+  onEdit?: (client: ClienteRecord) => void;
   onDelete?: (id: string) => void;
 }
 

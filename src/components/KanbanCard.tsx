@@ -1,46 +1,40 @@
 "use client";
 
-import { useState } from "react";
-
 interface KanbanCardData {
   id: string;
   proc: string;
-  plate: string;
-  model: string;
-  mechanic: string;
-  avatar: string;
+  plate?: string;
+  model?: string;
+  mechanic?: string;
+  avatar?: string;
+  [key: string]: any;
 }
 
 interface KanbanCardProps {
   card: KanbanCardData;
-  onDragStart: () => void;
-  onDragEnd: () => void;
+  columnId: string;
   isDragging: boolean;
   onClick?: () => void;
+  isReadOnly?: boolean;
 }
 
-export default function KanbanCard({ card, onDragStart, onDragEnd, isDragging, onClick }: KanbanCardProps) {
-  const [isBeingDragged, setIsBeingDragged] = useState(false);
-
-  const handleDragStart = (e: React.DragEvent) => {
-    e.dataTransfer.setData('text/plain', card.id);
-    setIsBeingDragged(true);
-    onDragStart();
-  };
-
-  const handleDragEnd = () => {
-    setIsBeingDragged(false);
-    onDragEnd();
+export default function KanbanCard({ card, columnId, onClick, isReadOnly = false }: KanbanCardProps) {
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData(
+      "application/json",
+      JSON.stringify({ card, fromColumnId: columnId })
+    );
   };
 
   return (
     <div
-      className={`bg-gray-800 rounded-lg shadow-md p-4 kanban-card cursor-grab ${
-        isBeingDragged ? 'dragging-card' : ''
-      }`}
-      draggable
+      draggable={!isReadOnly}
       onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
+      className={`bg-gray-800 rounded-lg shadow-md p-4 kanban-card ${
+        isReadOnly ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'
+      } hover:bg-gray-750 transition-colors`}
       onClick={onClick}
     >
       <div className="flex justify-between items-start">
@@ -49,11 +43,9 @@ export default function KanbanCard({ card, onDragStart, onDragEnd, isDragging, o
           <p className="font-bold text-base text-white">{card.plate}</p>
           <p className="text-sm text-gray-400">{card.model}</p>
         </div>
-        <img
-          src={card.avatar}
-          alt="Avatar Mecânico"
-          className="w-10 h-10 rounded-full border-2 border-gray-600 object-cover"
-        />
+        <span className="bg-brand-yellow text-gray-900 text-xs font-semibold px-2 py-1 rounded whitespace-nowrap ml-2">
+          {card.mechanic || 'N/A'}
+        </span>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 
 interface BalanceProcess {
@@ -14,95 +14,33 @@ interface BalanceProcess {
   lucro: number;
 }
 
-const mockBalanceData: BalanceProcess[] = [
-  {
-    id: 'C2045',
-    matricula: '45-GH-23',
-    cliente: 'João Silva',
-    dataConclusao: '2024-10-15',
-    valorEntrada: 450.00,
-    gastoPecas: 180.50,
-    maoObra: 120.00,
-    lucro: 149.50
-  },
-  {
-    id: 'C1980',
-    matricula: '12-AB-34',
-    cliente: 'Maria Santos',
-    dataConclusao: '2024-10-16',
-    valorEntrada: 320.00,
-    gastoPecas: 95.75,
-    maoObra: 85.00,
-    lucro: 139.25
-  },
-  {
-    id: 'TVDE055',
-    matricula: '98-XY-12',
-    cliente: 'Pedro Costa',
-    dataConclusao: '2024-10-18',
-    valorEntrada: 680.00,
-    gastoPecas: 245.30,
-    maoObra: 180.00,
-    lucro: 254.70
-  },
-  {
-    id: 'C2046',
-    matricula: '33-ZZ-44',
-    cliente: 'Ana Oliveira',
-    dataConclusao: '2024-10-20',
-    valorEntrada: 275.00,
-    gastoPecas: 67.90,
-    maoObra: 95.00,
-    lucro: 112.10
-  },
-  {
-    id: 'TVDE056',
-    matricula: '77-MM-88',
-    cliente: 'Carlos Ferreira',
-    dataConclusao: '2024-10-22',
-    valorEntrada: 520.00,
-    gastoPecas: 198.45,
-    maoObra: 140.00,
-    lucro: 181.55
-  },
-  {
-    id: 'C2047',
-    matricula: '55-PP-66',
-    cliente: 'Sofia Martins',
-    dataConclusao: '2024-10-25',
-    valorEntrada: 395.00,
-    gastoPecas: 125.80,
-    maoObra: 110.00,
-    lucro: 159.20
-  },
-  {
-    id: 'C2048',
-    matricula: '22-KK-99',
-    cliente: 'Rui Alves',
-    dataConclusao: '2024-10-28',
-    valorEntrada: 750.00,
-    gastoPecas: 320.25,
-    maoObra: 195.00,
-    lucro: 234.75
-  },
-  {
-    id: 'TVDE057',
-    matricula: '11-LL-00',
-    cliente: 'Teresa Gomes',
-    dataConclusao: '2024-10-30',
-    valorEntrada: 290.00,
-    gastoPecas: 78.60,
-    maoObra: 85.00,
-    lucro: 126.40
-  }
-];
-
 export default function BalancoPage() {
-  const [processes] = useState<BalanceProcess[]>(mockBalanceData);
+  const [processes, setProcesses] = useState<BalanceProcess[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState("todos");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+
+  useEffect(() => {
+    const fetchBalanceData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/balanco?page=1&limit=100');
+        const data = await response.json();
+        
+        if (data.balances) {
+          setProcesses(data.balances);
+        }
+      } catch (error) {
+        console.error('Error fetching balance data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBalanceData();
+  }, []);
 
   const filteredProcesses = processes.filter(process => {
     const matchesSearch = searchTerm === "" ||
@@ -115,7 +53,9 @@ export default function BalancoPage() {
 
       if (dateFilter === "todos") return true;
 
-      if (dateFilter === "ultimo_mes") {
+      if (dateFilter === "hoje") {
+        return processDate.toDateString() === now.toDateString();
+      } else if (dateFilter === "ultimo_mes") {
         const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         return processDate >= lastMonth;
       } else if (dateFilter === "ultimos_3_meses") {
@@ -139,13 +79,13 @@ export default function BalancoPage() {
 
   const calculateTotals = (data: BalanceProcess[]) => {
     const totalEntradas = data.reduce((sum, item) => sum + item.valorEntrada, 0);
-    const totalSaidas = data.reduce((sum, item) => sum + item.gastoPecas + item.maoObra, 0);
-    const saldoLiquido = totalEntradas - totalSaidas;
+    const totalSaidas = data.reduce((sum, item) => sum + item.gastoPecas, 0);
+    const lucro = totalEntradas - totalSaidas;
 
     return {
       totalEntradas,
       totalSaidas,
-      saldoLiquido
+      lucro
     };
   };
 
@@ -175,6 +115,7 @@ export default function BalancoPage() {
                 className="bg-gray-800 border border-gray-600 text-gray-300 rounded-none focus:ring-brand-yellow focus:border-brand-yellow px-4 py-2"
               >
                 <option value="todos">Todos</option>
+                <option value="hoje">Hoje</option>
                 <option value="ultimo_mes">Último mês</option>
                 <option value="ultimos_3_meses">Últimos 3 meses</option>
                 <option value="ultimos_6_meses">Últimos 6 meses</option>
@@ -214,19 +155,19 @@ export default function BalancoPage() {
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-gray-700 border border-gray-600 p-6 rounded-none">
-            <h3 className="text-sm font-medium text-gray-400 uppercase">Entradas Totais</h3>
+            <h3 className="text-sm font-medium text-gray-400 uppercase">Receita Total</h3>
             <p className="mt-2 text-3xl font-bold text-green-400">€{totals.totalEntradas.toFixed(2)}</p>
-            <p className="text-xs text-gray-400 mt-1">Receitas dos serviços</p>
+            <p className="text-xs text-gray-400 mt-1">Receitas dos serviços concluídos</p>
           </div>
           <div className="bg-gray-700 border border-gray-600 p-6 rounded-none">
-            <h3 className="text-sm font-medium text-gray-400 uppercase">Saídas Totais</h3>
+            <h3 className="text-sm font-medium text-gray-400 uppercase">Gasto com Peças</h3>
             <p className="mt-2 text-3xl font-bold text-red-400">€{totals.totalSaidas.toFixed(2)}</p>
-            <p className="text-xs text-gray-400 mt-1">Custos com peças e mão de obra</p>
+            <p className="text-xs text-gray-400 mt-1">Custo real das peças</p>
           </div>
           <div className="bg-gray-700 border border-gray-600 p-6 rounded-none">
-            <h3 className="text-sm font-medium text-gray-400 uppercase">Saldo Líquido</h3>
-            <p className={`mt-2 text-3xl font-bold ${totals.saldoLiquido >= 0 ? 'text-brand-yellow' : 'text-red-400'}`}>
-              €{totals.saldoLiquido.toFixed(2)}
+            <h3 className="text-sm font-medium text-gray-400 uppercase">Lucro</h3>
+            <p className={`mt-2 text-3xl font-bold ${totals.lucro >= 0 ? 'text-brand-yellow' : 'text-red-400'}`}>
+              €{totals.lucro.toFixed(2)}
             </p>
             <p className="text-xs text-gray-400 mt-1">Lucro total do período</p>
           </div>
@@ -251,78 +192,94 @@ export default function BalancoPage() {
         </div>
 
         {/* Balance Table */}
-        <div className="bg-gray-700 border border-gray-600 rounded-none overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left text-gray-400">
-              <thead className="text-xs text-gray-300 uppercase bg-gray-800 border-b border-gray-600">
-                <tr>
-                  <th scope="col" className="px-6 py-3">ID Processo</th>
-                  <th scope="col" className="px-6 py-3">Matrícula</th>
-                  <th scope="col" className="px-6 py-3">Cliente</th>
-                  <th scope="col" className="px-6 py-3">Data Conclusão</th>
-                  <th scope="col" className="px-6 py-3 text-right">Valor Entrada</th>
-                  <th scope="col" className="px-6 py-3 text-right">Entrada com Mão de Obra</th>
-                  <th scope="col" className="px-6 py-3 text-right">Gasto Peças</th>
-                  <th scope="col" className="px-6 py-3 text-right">Lucro</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-600">
-                {filteredProcesses.length === 0 ? (
+        {loading ? (
+          <div className="bg-gray-700 border border-gray-600 rounded-none p-8 flex items-center justify-center">
+            <div className="text-center">
+              <svg className="animate-spin h-8 w-8 text-brand-yellow mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <p className="text-gray-400">A carregar dados de balanço...</p>
+            </div>
+          </div>
+        ) : processes.length === 0 ? (
+          <div className="bg-gray-700 border border-gray-600 rounded-none p-8 text-center">
+            <p className="text-gray-400">Nenhuma ordem de trabalho concluída encontrada.</p>
+          </div>
+        ) : (
+          <div className="bg-gray-700 border border-gray-600 rounded-none overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left text-gray-400">
+                <thead className="text-xs text-gray-300 uppercase bg-gray-800 border-b border-gray-600">
                   <tr>
-                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
-                      Nenhum processo encontrado.
-                    </td>
+                    <th scope="col" className="px-6 py-3">ID Processo</th>
+                    <th scope="col" className="px-6 py-3">Matrícula</th>
+                    <th scope="col" className="px-6 py-3">Cliente</th>
+                    <th scope="col" className="px-6 py-3">Data Conclusão</th>
+                    <th scope="col" className="px-6 py-3 text-right">Valor Entrada</th>
+                    <th scope="col" className="px-6 py-3 text-right">Entrada com Mão de Obra</th>
+                    <th scope="col" className="px-6 py-3 text-right">Gasto Peças</th>
+                    <th scope="col" className="px-6 py-3 text-right">Lucro</th>
                   </tr>
-                ) : (
-                  filteredProcesses.map((process) => (
-                    <tr key={process.id} className="bg-gray-800 hover:bg-gray-700 transition-colors">
-                      <td className="px-6 py-4 font-medium text-gray-200 font-mono">{process.id}</td>
-                      <td className="px-6 py-4 font-medium text-gray-200">{process.matricula}</td>
-                      <td className="px-6 py-4 text-gray-100">{process.cliente}</td>
-                      <td className="px-6 py-4 text-gray-400">{process.dataConclusao}</td>
-                      <td className="px-6 py-4 text-right font-medium text-green-400">€{process.valorEntrada.toFixed(2)}</td>
-                      <td className="px-6 py-4 text-right font-medium text-green-400">€{process.maoObra.toFixed(2)}</td>
-                      <td className="px-6 py-4 text-right font-medium text-red-400">€{process.gastoPecas.toFixed(2)}</td>
-                      <td className={`px-6 py-4 text-right font-medium ${process.lucro >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        €{process.lucro.toFixed(2)}
+                </thead>
+                <tbody className="divide-y divide-gray-600">
+                  {filteredProcesses.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                        Nenhum processo encontrado.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ) : (
+                    filteredProcesses.map((process) => (
+                      <tr key={process.id} className="bg-gray-800 hover:bg-gray-700 transition-colors">
+                        <td className="px-6 py-4 font-medium text-gray-200 font-mono">{process.id}</td>
+                        <td className="px-6 py-4 font-medium text-gray-200">{process.matricula}</td>
+                        <td className="px-6 py-4 text-gray-100">{process.cliente}</td>
+                        <td className="px-6 py-4 text-gray-400">{process.dataConclusao}</td>
+                        <td className="px-6 py-4 text-right font-medium text-green-400">€{process.valorEntrada.toFixed(2)}</td>
+                        <td className="px-6 py-4 text-right font-medium text-green-400">€{process.maoObra.toFixed(2)}</td>
+                        <td className="px-6 py-4 text-right font-medium text-red-400">€{process.gastoPecas.toFixed(2)}</td>
+                        <td className={`px-6 py-4 text-right font-medium ${process.lucro >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          €{process.lucro.toFixed(2)}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-          {/* Pagination */}
-          <div className="bg-gray-800 px-4 py-3 border-t border-gray-600 flex items-center justify-between sm:px-6">
-            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-gray-400">
-                  A mostrar <span className="font-medium text-gray-200">1</span> a <span className="font-medium text-gray-200">{filteredProcesses.length}</span> de <span className="font-medium text-gray-200">{processes.length}</span> processos
-                </p>
-              </div>
-              <div>
-                <nav className="relative z-0 inline-flex shadow-sm -space-x-px" aria-label="Pagination">
-                  <button className="relative inline-flex items-center px-2 py-2 border border-gray-600 bg-gray-800 text-sm font-medium text-gray-400 hover:bg-gray-700">
-                    <span className="sr-only">Anterior</span>
-                    <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                  <button aria-current="page" className="z-10 bg-brand-yellow border-brand-yellow text-gray-900 relative inline-flex items-center px-4 py-2 border text-sm font-bold">1</button>
-                  <button className="bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700 relative inline-flex items-center px-4 py-2 border text-sm font-medium">2</button>
-                  <button className="bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700 relative inline-flex items-center px-4 py-2 border text-sm font-medium">3</button>
-                  <button className="relative inline-flex items-center px-2 py-2 border border-gray-600 bg-gray-800 text-sm font-medium text-gray-400 hover:bg-gray-700">
-                    <span className="sr-only">Seguinte</span>
-                    <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </nav>
+            {/* Pagination */}
+            <div className="bg-gray-800 px-4 py-3 border-t border-gray-600 flex items-center justify-between sm:px-6">
+              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">
+                    A mostrar <span className="font-medium text-gray-200">1</span> a <span className="font-medium text-gray-200">{filteredProcesses.length}</span> de <span className="font-medium text-gray-200">{processes.length}</span> processos
+                  </p>
+                </div>
+                <div>
+                  <nav className="relative z-0 inline-flex shadow-sm -space-x-px" aria-label="Pagination">
+                    <button className="relative inline-flex items-center px-2 py-2 border border-gray-600 bg-gray-800 text-sm font-medium text-gray-400 hover:bg-gray-700">
+                      <span className="sr-only">Anterior</span>
+                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    <button aria-current="page" className="z-10 bg-brand-yellow border-brand-yellow text-gray-900 relative inline-flex items-center px-4 py-2 border text-sm font-bold">1</button>
+                    <button className="bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700 relative inline-flex items-center px-4 py-2 border text-sm font-medium">2</button>
+                    <button className="bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700 relative inline-flex items-center px-4 py-2 border text-sm font-medium">3</button>
+                    <button className="relative inline-flex items-center px-2 py-2 border border-gray-600 bg-gray-800 text-sm font-medium text-gray-400 hover:bg-gray-700">
+                      <span className="sr-only">Seguinte</span>
+                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </nav>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </main>
     </div>
   );

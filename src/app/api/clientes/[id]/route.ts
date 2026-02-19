@@ -38,7 +38,7 @@ export async function GET(
       orderBy: { criado_em: 'desc' }
     });
 
-    const veiculoIds = Array.from(new Set(ordensTrabalho.map(o => o.veiculo_id).filter((v): v is number => v != null)));
+    const veiculoIds = Array.from(new Set(ordensTrabalho.map(o => o.veiculo_id).filter((v): v is bigint => v != null)));
     const mecanicoIds = Array.from(new Set(ordensTrabalho.map(o => o.mecanico_id).filter((v): v is number => v != null)));
 
     const [veiculosMapList, mecanicosMapList] = await Promise.all([
@@ -67,7 +67,7 @@ export async function GET(
     // Transform vehicles data
     const transformedVehicles = veiculos.map((veiculo) => ({
       id: veiculo.id.toString(),
-      clientId: veiculo.cliente_id.toString(),
+      clientId: veiculo.cliente_id?.toString() || '',
       make: veiculo.marca,
       model: veiculo.modelo,
       licensePlate: veiculo.matricula,
@@ -81,7 +81,7 @@ export async function GET(
     const transformedServiceHistory = ordensTrabalho.map((ordem, index) => ({
       id: ordem.id.toString(),
       vehicleId: ordem.veiculo_id.toString(),
-      vehicle: `${(veiculoMap.get(ordem.veiculo_id) as any)?.marca || ''} ${(veiculoMap.get(ordem.veiculo_id) as any)?.modelo || ''}`,
+      vehicle: `${(veiculoMap.get(Number(ordem.veiculo_id)) as any)?.marca || ''} ${(veiculoMap.get(Number(ordem.veiculo_id)) as any)?.modelo || ''}`,
       date: ordem.criado_em ? ordem.criado_em.toLocaleDateString('pt-PT') : '',
       service: ordem.descricao_problema || 'Serviço realizado',
       description: ordem.trabalho_realizado || '',

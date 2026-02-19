@@ -1,15 +1,23 @@
 "use client";
 
-
+import { useState } from "react";
 import KanbanCard from "./KanbanCard";
 
 interface KanbanCardData {
   id: string;
   proc: string;
-  plate: string;
-  model: string;
-  mechanic: string;
-  avatar: string;
+  plate?: string;
+  model?: string;
+  mechanic?: string;
+  avatar?: string;
+  estado?: string;
+  cliente_nome?: string;
+  data_conclusao?: string;
+  prioridade?: string;
+  total_geral?: number;
+  veiculo_matricula?: string;
+  veiculo_modelo?: string;
+  [key: string]: any;
 }
 
 interface KanbanColumnData {
@@ -21,33 +29,38 @@ interface KanbanColumnData {
 
 interface KanbanColumnProps {
   column: KanbanColumnData;
-  onMoveCard: (cardId: string, fromColumnId: string, toColumnId: string) => void;
-  columnId: string;
-  allColumns: KanbanColumnData[];
   onCardClick?: (card: KanbanCardData, columnTitle: string) => void;
+  onCardDrop?: (card: KanbanCardData, fromColumnId: string, toColumnId: string) => void;
+  isReadOnly?: boolean;
 }
 
-export default function KanbanColumn({ column, onMoveCard, allColumns, onCardClick }: KanbanColumnProps) {
-  const handleDragStart = (cardId: string) => {
-    // Card drag start is handled in KanbanCard component
-  };
+export default function KanbanColumn({ column, onCardClick, onCardDrop, isReadOnly = false }: KanbanColumnProps) {
+  const [isDragOver, setIsDragOver] = useState(false);
 
-  const handleDragEnd = () => {
-    // Card drag end is handled in KanbanCard component
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    const cardId = e.dataTransfer.getData('text/plain');
-    if (cardId) {
-      // Find the original column of the dragged card
-      const originalColumn = allColumns.find(col => col.cards.some(card => card.id === cardId));
-      if (originalColumn && originalColumn.id !== column.id) {
-        onMoveCard(cardId, originalColumn.id, column.id);
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    const dragData = e.dataTransfer.getData("application/json");
+    if (dragData && onCardDrop) {
+      try {
+        const { card, fromColumnId } = JSON.parse(dragData);
+        onCardDrop(card, fromColumnId, column.id);
+      } catch (error) {
+        console.error("Error parsing drag data:", error);
       }
     }
   };
@@ -69,19 +82,22 @@ export default function KanbanColumn({ column, onMoveCard, allColumns, onCardCli
         </span>
       </div>
       <div
-        className="kanban-column-content space-y-3"
+        className={`kanban-column-content space-y-3 transition-all ${
+          isDragOver ? 'bg-gray-700/50 rounded-lg p-2 ring-2 ring-brand-yellow' : ''
+        }`}
         data-column={column.title}
         onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
         {column.cards.map(card => (
           <KanbanCard
             key={card.id}
             card={card}
-            onDragStart={() => handleDragStart(card.id)}
-            onDragEnd={handleDragEnd}
+            columnId={column.id}
             isDragging={false}
             onClick={() => onCardClick?.(card, column.title)}
+            isReadOnly={isReadOnly}
           />
         ))}
       </div>

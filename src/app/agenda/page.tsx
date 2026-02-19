@@ -4,12 +4,15 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Sidebar from '../../components/Sidebar';
 
+const ITEMS_PER_PAGE = 20;
+
 export default function AgendaPage() {
 
   const [appointments, setAppointments] = useState<any[]>([]);
   const [filteredAppointments, setFilteredAppointments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -23,6 +26,7 @@ export default function AgendaPage() {
 
   useEffect(() => {
     filterAppointments();
+    setCurrentPage(1);
   }, [appointments, searchTerm, dateFrom, dateTo]);
 
   const fetchAppointments = async () => {
@@ -76,6 +80,11 @@ export default function AgendaPage() {
 
     setFilteredAppointments(filtered);
   };
+
+  const totalPages = Math.ceil(filteredAppointments.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedAppointments = filteredAppointments.slice(startIndex, endIndex);
 
   const setQuickFilter = (filter: string) => {
     const today = new Date();
@@ -224,19 +233,17 @@ export default function AgendaPage() {
                 <th className="px-6 py-3">Cliente</th>
                 <th className="px-6 py-3">Detalhes do Veículo</th>
                 <th className="px-6 py-3">Mecânico</th>
-                <th className="px-6 py-3">Tipo de Serviço</th>
                 <th className="px-6 py-3 text-center">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-600">
-              {filteredAppointments.map((appointment) => (
+              {paginatedAppointments.map((appointment) => (
                 <tr key={appointment.id} className="bg-gray-700 hover:bg-gray-600 transition-colors">
                   <td className="px-6 py-4 font-mono text-brand-yellow">{appointment.date}</td>
                   <td className="px-6 py-4 font-mono">{appointment.time}</td>
                   <td className="px-6 py-4 text-gray-100 font-bold">{appointment.client}</td>
                   <td className="px-6 py-4 font-mono text-gray-100">{appointment.marca && appointment.modelo ? `${appointment.marca} ${appointment.modelo}${appointment.ano ? ` ${appointment.ano}` : ''}${appointment.matricula ? ` - ${appointment.matricula}` : ''}` : appointment.matricula || 'N/A'}</td>
                   <td className="px-6 py-4 text-gray-100">{appointment.mechanic}</td>
-                  <td className="px-6 py-4 text-gray-100">{appointment.tipoServico || 'Revisão Geral'}</td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex justify-center space-x-2">
                       <Link
@@ -270,6 +277,37 @@ export default function AgendaPage() {
             </div>
           )}
         </div>
+
+        {filteredAppointments.length > 0 && (
+          <div className="mt-4 bg-gray-800 px-4 py-3 border border-gray-600 flex items-center justify-between rounded-lg">
+            <div className="flex-1 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400">
+                  A mostrar <span className="font-medium text-gray-200">{startIndex + 1}</span> a <span className="font-medium text-gray-200">{Math.min(endIndex, filteredAppointments.length)}</span> de <span className="font-medium text-gray-200">{filteredAppointments.length}</span> agendamentos
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-600 text-gray-300 rounded border border-gray-600 transition-colors"
+                >
+                  Anterior
+                </button>
+                <span className="text-sm text-gray-400 px-3">
+                  Página <span className="font-medium text-gray-200">{currentPage}</span> de <span className="font-medium text-gray-200">{totalPages}</span>
+                </span>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-600 text-gray-300 rounded border border-gray-600 transition-colors"
+                >
+                  Próxima
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
 
 

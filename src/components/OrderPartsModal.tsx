@@ -21,19 +21,32 @@ interface OrderItem {
   selected: boolean;
 }
 
+interface Fornecedor {
+  id: string;
+  nome: string;
+  email?: string;
+  telefone?: string;
+}
+
 interface OrderPartsModalProps {
   isOpen: boolean;
   onClose: () => void;
   parts: Part[];
   onOrderParts: (selectedParts: Array<{part: Part, quantity: number}>) => void;
   initialSelectedParts?: Array<{part: Part, quantity: number}>;
+  fornecedores?: Fornecedor[];
 }
 
-export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, initialSelectedParts }: OrderPartsModalProps) {
+export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, initialSelectedParts, fornecedores = [] }: OrderPartsModalProps) {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [orderText, setOrderText] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [showNewPartForm, setShowNewPartForm] = useState(false);
+  const [fornecedorId, setFornecedorId] = useState("");
+  const [dataEntrega, setDataEntrega] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
   const [newPart, setNewPart] = useState({
     name: "",
     reference: "",
@@ -128,12 +141,76 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
     }
   };
 
-  const handleOrder = () => {
-    const selectedParts = orderItems
-      .filter(item => item.selected)
-      .map(item => ({ part: item.part, quantity: item.quantity }));
+  const handleOrder = async () => {
+    setErrorMsg("");
+    setSuccessMsg("");
 
-    onOrderParts(selectedParts);
+    const selectedParts = orderItems.filter(item => item.selected);
+
+    if (selectedParts.length === 0) {
+      setErrorMsg("Selecione pelo menos uma peça");
+      return;
+    }
+
+    // Check if fornecedor is selected
+    if (!fornecedorId) {
+      setErrorMsg("Selecione um fornecedor para gravar a encomenda");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      console.log("📨 Enviando envelope para API...");
+
+      const itens = selectedParts.map(item => ({
+        peca_id: item.part.id,
+        quantidade_encomendada: item.quantity,
+        preco_unitario: item.part.price || 0
+      }));
+
+      const payload = {
+        fornecedor_id: fornecedorId,
+        data_entrega_estimada: dataEntrega || null,
+        itens: itens
+      };
+
+      console.log("📤 Payload enviado:", JSON.stringify(payload, null, 2));
+
+      const response = await fetch('/api/encomendas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.error || `Erro HTTP ${response.status}`);
+      }
+
+      console.log("✅ Encomenda criada:", data);
+      setSuccessMsg(`✅ Encomenda ${data.numero_encomenda} criada com sucesso na BD!`);
+      
+      // Reset form after 2 seconds
+      setTimeout(() => {
+        setOrderItems([]);
+        setFornecedorId("");
+        setDataEntrega("");
+        setSuccessMsg("");
+        onClose();
+      }, 2000);
+
+      // Call the callback for backward compatibility
+      onOrderParts(selectedParts.map(item => ({ part: item.part, quantity: item.quantity })));
+
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      console.error("🚨 Erro:", errorMsg);
+      setErrorMsg(`Erro ao criar encomenda: ${errorMsg}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -142,6 +219,52 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
     <div className="fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm">
       <div className="bg-gray-800 border border-gray-600 w-full max-w-7xl p-6 shadow-2xl relative flex flex-col max-h-[90vh]">
         <h3 className="text-xl font-bold text-gray-100 mb-6 border-b border-gray-700 pb-4">Encomendar Peças</h3>
+
+        {errorMsg && (
+          <div className="mb-4 p-3 bg-red-900/50 border border-red-700 text-red-400 rounded-lg text-sm font-medium">
+            ❌ {errorMsg}
+          </div>
+        )}
+
+        {successMsg && (
+          <div className="mb-4 p-3 bg-green-900/50 border border-green-700 text-green-300 rounded-lg text-sm font-medium">
+            {successMsg}
+          </div>
+        )}
+
+        {!successMsg && (
+          <>
+            {/* Form Section for Supplier & Delivery Date */}
+            <div className="mb-4 p-4 bg-gray-700 border border-gray-600 rounded-lg grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Fornecedor para Encomenda BD *
+                </label>
+                <select
+                  value={fornecedorId}
+                  onChange={(e) => setFornecedorId(e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-900 border border-gray-600 text-white rounded focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow"
+                >
+                  <option value="">Selecione um fornecedor...</option>
+                  {fornecedores.map(f => (
+                    <option key={f.id} value={f.id}>
+                      {f.nome}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Data de Entrega Estimada
+                </label>
+                <input
+                  type="date"
+                  value={dataEntrega}
+                  onChange={(e) => setDataEntrega(e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-900 border border-gray-600 text-white rounded focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow"
+                />
+              </div>
+            </div>
 
         <div className="flex-1 flex mt-2 overflow-hidden gap-6">
           <div className="w-7/12 flex flex-col">
@@ -261,22 +384,25 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
             </div>
           </div>
         </div>
+          </>
+        )}
 
         <div className="flex justify-end space-x-3 pt-4 mt-6 border-t border-gray-700">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors rounded-none border border-gray-600"
+            disabled={loading}
+            className="px-4 py-2 bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors rounded-none border border-gray-600 disabled:opacity-50"
           >
             Fechar
           </button>
           <button
             type="button"
             onClick={handleOrder}
-            disabled={orderItems.filter(item => item.selected).length === 0}
+            disabled={orderItems.filter(item => item.selected).length === 0 || loading || !fornecedorId}
             className="px-6 py-2 bg-brand-yellow text-gray-900 font-bold hover:bg-brand-yellow-dark transition-colors rounded-none disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed"
           >
-            Criar Encomenda
+            {loading ? '⏳ Criando...' : 'Criar Encomenda'}
           </button>
         </div>
       </div>

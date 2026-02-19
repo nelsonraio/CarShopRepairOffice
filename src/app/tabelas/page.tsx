@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 
 interface SystemTable {
@@ -20,9 +21,9 @@ const systemTables: SystemTable[] = [
     icon: "users"
   },
   {
-    id: "categorias-pecas",
-    name: "Categorias de Peças",
-    description: "Definir categorias para organização do inventário.",
+    id: "categorias-servico",
+    name: "Categorias de Serviço",
+    description: "Definir categorias para organização de serviços.",
     recordCount: 5,
     icon: "tag"
   },
@@ -39,13 +40,6 @@ const systemTables: SystemTable[] = [
     description: "Gerir lista de marcas de veículos suportadas.",
     recordCount: 12,
     icon: "zap"
-  },
-  {
-    id: "taxas-iva",
-    name: "Taxas de IVA",
-    description: "Configurar taxas de imposto aplicáveis.",
-    recordCount: 3,
-    icon: "calculator"
   },
   {
     id: "perfis-clientes",
@@ -118,6 +112,7 @@ const getIcon = (iconName: string) => {
 };
 
 export default function TabelasPage() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredTables = systemTables.filter(table =>
@@ -126,8 +121,7 @@ export default function TabelasPage() {
   );
 
   const handleManageTable = (tableId: string) => {
-    // In a real app, this would navigate to the specific table management page
-    console.log(`Managing table: ${tableId}`);
+    router.push(`/tabelas/${tableId}`);
   };
 
   return (

@@ -27,7 +27,9 @@ interface AddPartModalProps {
 
 const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart }) => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [isLoadingSuppliers, setIsLoadingSuppliers] = useState(true);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -42,10 +44,11 @@ const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart 
     stockStatus: 'em_stock' as 'em_stock' | 'baixo_stock' | 'esgotado'
   });
 
-  // Fetch suppliers on mount
+  // Fetch suppliers and categories on mount
   useEffect(() => {
     if (isOpen) {
       fetchSuppliers();
+      fetchCategories();
     }
   }, [isOpen]);
 
@@ -60,6 +63,20 @@ const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart 
       console.error('Error fetching suppliers:', error);
     } finally {
       setIsLoadingSuppliers(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/categorias-pecas');
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(data);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    } finally {
+      setIsLoadingCategories(false);
     }
   };
 
@@ -148,14 +165,9 @@ const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart 
               className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-brand-yellow"
             >
               <option value="">Selecionar categoria</option>
-              <option value="Filtros">Filtros</option>
-              <option value="Óleos">Óleos</option>
-              <option value="Pastilhas">Pastilhas</option>
-              <option value="Discos">Discos</option>
-              <option value="Velas">Velas</option>
-              <option value="Baterias">Baterias</option>
-              <option value="Correias">Correias</option>
-              <option value="Outros">Outros</option>
+              {categories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
             </select>
           </div>
 

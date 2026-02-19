@@ -4,7 +4,9 @@ import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import PartsTable from "@/components/PartsTable";
 import AddPartModal from "@/components/AddPartModal";
+import EditPartModal from "@/components/EditPartModal";
 import OrderPartsModal from "@/components/OrderPartsModal";
+import EncomendaModal from "@/components/EncomendaModal";
 import OrdersModal from "@/components/OrdersModal";
 
 interface Part {
@@ -16,25 +18,39 @@ interface Part {
   supplierId?: string;
   supplierName?: string;
   stock: number;
+  minStock?: number;
   price: number;
   stockStatus: 'em_stock' | 'baixo_stock' | 'esgotado';
 }
 
+const ITEMS_PER_PAGE = 20;
+
 export default function PartsPage() {
   const [parts, setParts] = useState<Part[]>([]);
+  const [fornecedores, setFornecedores] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [stockFilter, setStockFilter] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingPart, setEditingPart] = useState<Part | null>(null);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [isEncomendaModalOpen, setIsEncomendaModalOpen] = useState(false);
   const [isOrdersModalOpen, setIsOrdersModalOpen] = useState(false);
   const [reorderSelectedParts, setReorderSelectedParts] = useState<Array<{part: Part, quantity: number}> | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch parts from database on mount
   useEffect(() => {
     fetchParts();
+    fetchFornecedores();
   }, []);
+
+  // Reset pagination on filter change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, categoryFilter, stockFilter]);
 
   const fetchParts = async () => {
     try {
@@ -65,6 +81,18 @@ export default function PartsPage() {
     }
   };
 
+  const fetchFornecedores = async () => {
+    try {
+      const response = await fetch('/api/fornecedores');
+      if (response.ok) {
+        const data = await response.json();
+        setFornecedores(Array.isArray(data) ? data : []);
+      }
+    } catch (error) {
+      console.error('Error fetching suppliers:', error);
+    }
+  };
+
   const filteredParts = parts.filter(part => {
     const matchesSearch = searchTerm === "" ||
       part.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -75,6 +103,12 @@ export default function PartsPage() {
 
     return matchesSearch && matchesCategory && matchesStock;
   });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredParts.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedParts = filteredParts.slice(startIndex, endIndex);
 
   const handleAddPart = async (newPart: Omit<Part, 'id'>) => {
     try {
@@ -123,6 +157,68 @@ export default function PartsPage() {
     setIsAddModalOpen(false);
   };
 
+  const handleEditPart = async (updatedPart: Part) => {
+    try {
+      const response = await fetch('/api/pecas', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: updatedPart.id,
+          nome: updatedPart.name,
+          referencia: updatedPart.reference,
+          categoria: updatedPart.category,
+          stock: updatedPart.stock,
+          minStock: updatedPart.minStock || 0,
+          price: updatedPart.price,
+          fornecedor_id: updatedPart.supplierId ? parseInt(updatedPart.supplierId) : null,
+          supplierName: updatedPart.supplierName,
+        }),
+      });
+
+      if (response.ok) {
+        const savedPart = await response.json();
+        // Update the parts state with the edited part
+        setParts(prevParts => prevParts.map(part => {
+          if (part.id === updatedPart.id) {
+            const updatedPartData: Part = {
+              ...part,
+              name: savedPart.nome || updatedPart.name,
+              reference: savedPart.referencia || updatedPart.reference,
+              category: savedPart.categoria || updatedPart.category,
+              stock: savedPart.quantidade_stock ?? updatedPart.stock,
+              minStock: savedPart.nivel_stock_minimo ?? updatedPart.minStock,
+              price: parseFloat(savedPart.preco_venda) ?? updatedPart.price,
+              supplier: savedPart.supplierName || updatedPart.supplierName,
+              supplierName: savedPart.supplierName || updatedPart.supplierName,
+              stockStatus: savedPart.stockStatus || updatedPart.stockStatus
+            };
+            
+            if (savedPart.fornecedor_id) {
+              updatedPartData.supplierId = String(savedPart.fornecedor_id);
+            } else if (updatedPart.supplierId) {
+              updatedPartData.supplierId = updatedPart.supplierId;
+            }
+            
+            return updatedPartData;
+          }
+          return part;
+        }));
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Erro ao atualizar peça');
+        return;
+      }
+    } catch (error) {
+      console.error('Error updating part:', error);
+      alert('Erro ao atualizar peça');
+      return;
+    }
+    setIsEditModalOpen(false);
+    setEditingPart(null);
+  };
+
   const handleOrderParts = (selectedParts: Array<{part: Part, quantity: number}>) => {
     // In a real app, this would process the order
     console.log("Ordering parts:", selectedParts);
@@ -163,7 +259,7 @@ export default function PartsPage() {
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
               </svg>
-              Encomendar Peças
+              Gerar Encomenda
             </button>
             <button
               onClick={() => setIsAddModalOpen(true)}
@@ -235,7 +331,45 @@ export default function PartsPage() {
             <div className="text-gray-400">A carregar peças...</div>
           </div>
         ) : (
-          <PartsTable parts={filteredParts} />
+          <PartsTable 
+            parts={paginatedParts} 
+            onEdit={(part) => {
+              setEditingPart(part);
+              setIsEditModalOpen(true);
+            }}
+          />
+        )}
+
+        {/* Pagination */}
+        {!isLoading && filteredParts.length > 0 && (
+          <div className="mt-4 bg-gray-800 px-4 py-3 border border-gray-600 flex items-center justify-between rounded-lg">
+            <div className="flex-1 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400">
+                  A mostrar <span className="font-medium text-gray-200">{startIndex + 1}</span> a <span className="font-medium text-gray-200">{Math.min(endIndex, filteredParts.length)}</span> de <span className="font-medium text-gray-200">{filteredParts.length}</span> peças
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-600 text-gray-300 rounded border border-gray-600 transition-colors"
+                >
+                  Anterior
+                </button>
+                <span className="text-sm text-gray-400 px-3">
+                  Página <span className="font-medium text-gray-200">{currentPage}</span> de <span className="font-medium text-gray-200">{totalPages}</span>
+                </span>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-600 text-gray-300 rounded border border-gray-600 transition-colors"
+                >
+                  Próxima
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </main>
 
@@ -246,12 +380,40 @@ export default function PartsPage() {
         onAddPart={handleAddPart}
       />
 
+      <EditPartModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingPart(null);
+        }}
+        onEdit={handleEditPart}
+        part={editingPart}
+      />
+
       <OrderPartsModal
         isOpen={isOrderModalOpen}
         onClose={() => setIsOrderModalOpen(false)}
         parts={parts}
         onOrderParts={handleOrderParts}
         initialSelectedParts={reorderSelectedParts ?? []}
+        fornecedores={fornecedores}
+      />
+
+      <EncomendaModal
+        isOpen={isEncomendaModalOpen}
+        onClose={() => setIsEncomendaModalOpen(false)}
+        onSuccess={() => {
+          fetchParts();
+        }}
+        fornecedores={fornecedores}
+        pecas={parts.map(p => ({
+          id: p.id,
+          reference: p.reference,
+          nome: p.name,
+          preco: p.price,
+          quantidade_stock: p.stock,
+          nivel_stock_minimo: 5
+        }))}
       />
 
       <OrdersModal

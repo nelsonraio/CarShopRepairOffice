@@ -66,6 +66,12 @@ const NewBudgetPage = () => {
     quantity: 1,
     unitPrice: 0
   });
+  const [alternateContact, setAlternateContact] = useState({
+    nome: '',
+    telefone: '',
+    email: ''
+  });
+  const [quilometragem, setQuilometragem] = useState<number | ''>('');
   const [formData, setFormData] = useState({
     matricula: '',
     marca: '',
@@ -82,6 +88,30 @@ const NewBudgetPage = () => {
   useEffect(() => {
     fetchServices();
     fetchParts();
+  }, []);
+
+  // Detectar query parameters ao carregar a página
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const matricula = params.get('matricula');
+    const cliente = params.get('cliente');
+
+    if (matricula) {
+      console.log('Found matricula in URL:', matricula);
+      setFormData(prev => ({ ...prev, matricula }));
+      searchVehicleByLicensePlate(matricula);
+    }
+
+    if (cliente) {
+      console.log('Found cliente in URL:', cliente);
+      setClientSearch(cliente);
+      // Buscar e selecionar cliente automaticamente
+      searchClients(cliente).then(clients => {
+        if (clients && clients.length > 0) {
+          selectClient(clients[0]);
+        }
+      });
+    }
   }, []);
 
   const fetchServices = async () => {
@@ -219,17 +249,19 @@ const NewBudgetPage = () => {
     }
   };
 
-  const searchClients = async (query: string) => {
+  const searchClients = async (query: string): Promise<Client[]> => {
     try {
       const response = await fetch(`/api/clientes/search?q=${encodeURIComponent(query)}`);
       if (response.ok) {
         const data = await response.json();
         setClientSuggestions(data);
         setShowClientSuggestions(true);
+        return data;
       }
     } catch (error) {
       console.error('Failed to search clients:', error);
     }
+    return [];
   };
 
   const fetchClientVehicles = async (clientId: string) => {
@@ -251,6 +283,40 @@ const NewBudgetPage = () => {
     setShowClientSuggestions(false);
     fetchClientVehicles(client.id.toString());
     generateNextBudgetId();
+    setAlternateContact({ nome: '', telefone: '', email: '' });
+  };
+
+  const isGenericTvdeClient = (client: Client | null) => {
+    if (!client) return false;
+    const perfil = (client.perfil || '').toLowerCase();
+    const nome = (client.nome || '').toLowerCase();
+    const isTvde = perfil.includes('tvde');
+    const isGenerico = nome.includes('generico') || nome.includes('genérico');
+    return isTvde && isGenerico;
+  };
+
+  const validateAlternateContact = () => {
+    if (!isGenericTvdeClient(selectedClient)) return true;
+
+    const altPhone = alternateContact.telefone.trim();
+    const altEmail = alternateContact.email.trim();
+    const clientPhone = selectedClient?.telefone?.trim() || '';
+    const clientEmail = selectedClient?.email?.trim() || '';
+
+    if (!altPhone && !altEmail) {
+      alert('Para clientes TVDE genéricos, indique um contacto alternativo (telefone ou email).');
+      return false;
+    }
+
+    const phoneDifferent = altPhone && altPhone !== clientPhone;
+    const emailDifferent = altEmail && altEmail !== clientEmail;
+
+    if (!phoneDifferent && !emailDifferent) {
+      alert('O contacto alternativo deve ser diferente do contacto do cliente.');
+      return false;
+    }
+
+    return true;
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -291,6 +357,7 @@ const NewBudgetPage = () => {
             modelo: vehicle.modelo || '',
             ano: vehicle.ano || ''
           }));
+          setQuilometragem(vehicle.quilometragem ? vehicle.quilometragem : '');
           setIsVehicleAutoFilled(true);
           setSelectedVehicle(vehicle.id);
           // Select client associated with the vehicle
@@ -303,6 +370,7 @@ const NewBudgetPage = () => {
             modelo: '',
             ano: ''
           }));
+          setQuilometragem('');
           setIsVehicleAutoFilled(false);
           setSelectedVehicle('');
           setSelectedClient(null);
@@ -337,6 +405,15 @@ const NewBudgetPage = () => {
       return;
     }
 
+    if (!quilometragem) {
+      alert('Introduza os quilómetros da viatura.');
+      return;
+    }
+
+    if (!validateAlternateContact()) {
+      return;
+    }
+
     try {
       // Generate budget ID if not set
       let ref_orcamento = budgetId;
@@ -366,6 +443,10 @@ const NewBudgetPage = () => {
         data_emissao: new Date().toISOString().split('T')[0],
         data_expiracao: null,
         estado: 'pendente',
+        kms: parseInt(quilometragem.toString()),
+        contacto_nome: alternateContact.nome.trim() || null,
+        contacto_telefone: alternateContact.telefone.trim() || null,
+        contacto_email: alternateContact.email.trim() || null,
         total_pecas: totalPecas,
         total_mao_obra: totalMaoObra,
         total_desconto: 0,
@@ -400,6 +481,7 @@ const NewBudgetPage = () => {
         setSelectedClient(null);
         setClientSearch('');
         setBudgetId('');
+        setAlternateContact({ nome: '', telefone: '', email: '' });
       } else {
         const error = await response.json();
         alert(`Erro ao criar orçamento: ${error.error || 'Erro desconhecido'}`);
@@ -413,6 +495,10 @@ const NewBudgetPage = () => {
   const approveBudget = () => {
     if (budgetItems.length === 0) {
       alert('Adicione pelo menos um item ao orçamento antes de aprovar.');
+      return;
+    }
+
+    if (!validateAlternateContact()) {
       return;
     }
 
@@ -520,6 +606,17 @@ const NewBudgetPage = () => {
                     readOnly={isVehicleAutoFilled}
                     className={`w-full ${isVehicleAutoFilled ? 'bg-gray-800 text-gray-400 cursor-not-allowed' : 'bg-gray-900'} border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600`}
                     placeholder="Ano do veículo"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Quilómetros *</label>
+                  <input
+                    type="number"
+                    value={quilometragem}
+                    onChange={(e) => setQuilometragem(e.target.value ? parseInt(e.target.value) : '')}
+                    className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                    placeholder="Quilómetros"
+                    required
                   />
                 </div>
               </div>
@@ -632,6 +729,43 @@ const NewBudgetPage = () => {
                 </div>
               </div>
             )}
+
+            <div className="bg-gray-800 p-4 border border-gray-600 rounded-none mb-8">
+              <h4 className="text-lg font-semibold text-gray-200 mb-4">Contacto Alternativo</h4>
+              <p className="text-xs text-gray-400 mb-4">Use este contacto quando o cliente for genérico ou não tiver dados completos.</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Nome</label>
+                  <input
+                    type="text"
+                    value={alternateContact.nome}
+                    onChange={(e) => setAlternateContact(prev => ({ ...prev, nome: e.target.value }))}
+                    className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                    placeholder="Nome do contacto"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Telefone</label>
+                  <input
+                    type="text"
+                    value={alternateContact.telefone}
+                    onChange={(e) => setAlternateContact(prev => ({ ...prev, telefone: e.target.value }))}
+                    className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                    placeholder="Telefone alternativo"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={alternateContact.email}
+                    onChange={(e) => setAlternateContact(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                    placeholder="Email alternativo"
+                  />
+                </div>
+              </div>
+            </div>
 
             <hr className="border-gray-600 mb-6" />
 

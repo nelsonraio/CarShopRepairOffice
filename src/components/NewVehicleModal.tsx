@@ -684,7 +684,7 @@ export default function NewVehicleModal({ isOpen, onClose, onSuccess, vehicle }:
                 </select>
               </div>
               <div>
-                <label htmlFor="clientPhone" className="block text-sm font-medium text-gray-300">Telefone *</label>
+                <label htmlFor="clientPhone" className="block text-sm font-medium text-gray-300">Telefone</label>
                 <input
                   type="tel"
                   id="clientPhone"
@@ -694,7 +694,6 @@ export default function NewVehicleModal({ isOpen, onClose, onSuccess, vehicle }:
                   disabled={!clientFieldsEditable}
                   className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-none shadow-sm focus:ring-brand-yellow focus:border-brand-yellow disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="+351 912 345 678"
-                  required
                 />
               </div>
               <div>

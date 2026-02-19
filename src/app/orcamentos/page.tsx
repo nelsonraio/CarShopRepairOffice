@@ -37,6 +37,7 @@ interface Budget {
   mecanico_nome?: string;
 }
 
+const ITEMS_PER_PAGE = 20;
 
 const BudgetsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -45,6 +46,7 @@ const BudgetsPage = () => {
   const [filteredBudgets, setFilteredBudgets] = useState<Budget[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   
   // Estados para o modal de seleção de mecânico
   const [showMechanicModal, setShowMechanicModal] = useState(false);
@@ -75,12 +77,13 @@ const BudgetsPage = () => {
     });
 
     setFilteredBudgets(filtered);
+    setCurrentPage(1); // Reset pagination on filter change
   }, [searchTerm, statusFilter, budgets]);
 
   const fetchBudgets = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/orcamentos');
+      const response = await fetch('/api/orcamentos?page=1&limit=1000');
       if (!response.ok) {
         throw new Error('Failed to fetch budgets');
       }
@@ -115,10 +118,20 @@ const BudgetsPage = () => {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Aprovado': return 'text-green-400 bg-green-900/30 border border-green-900';
-      case 'Pendente': return 'text-yellow-400 bg-yellow-900/30 border border-yellow-900';
+    const normalizedStatus = status.toLowerCase();
+    switch (normalizedStatus) {
+      case 'aprovado': return 'text-green-400 bg-green-900/30 border border-green-900';
+      case 'pendente': return 'text-indigo-400 bg-indigo-900/30 border border-indigo-900';
       default: return 'text-gray-400 bg-gray-800 border border-gray-700';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    const normalizedStatus = status.toLowerCase();
+    switch (normalizedStatus) {
+      case 'pendente': return 'Em Aprovação';
+      case 'aprovado': return 'Aprovado';
+      default: return status;
     }
   };
 
@@ -128,10 +141,8 @@ const BudgetsPage = () => {
         budget.id === budgetId 
           ? { 
               ...budget, 
-              estado: newStatus, 
-              // Only update mechanic name if explicitly provided, otherwise keep existing
-              // When reverting to Pendente, we should clear the mechanic name
-              mecanico_nome: mechanicName !== undefined ? mechanicName : (newStatus === 'Pendente' ? undefined : budget.mecanico_nome)
+              estado: newStatus,
+              ...(mechanicName !== undefined ? { mecanico_nome: mechanicName } : newStatus === 'Pendente' ? {} : { mecanico_nome: budget.mecanico_nome })
             } 
           : budget
       )
@@ -153,7 +164,8 @@ const BudgetsPage = () => {
   };
 
   const handleApproveBudget = async (budgetId: number, currentStatus: string) => {
-    const newStatus = currentStatus === 'Aprovado' ? 'Pendente' : 'Aprovado';
+    const isApproved = currentStatus.toLowerCase() === 'aprovado';
+    const newStatus = isApproved ? 'Pendente' : 'Aprovado';
     
     // Se estiver aprovar (não reverter), mostrar modal de seleção de mecânico
     if (newStatus === 'Aprovado') {
@@ -168,7 +180,7 @@ const BudgetsPage = () => {
 
 
     // Se for reverter para Pendente, confirmar diretamente
-    if (!confirm('Tem certeza que deseja reverter este orçamento para Pendente?')) {
+    if (!confirm('Tem certeza que deseja reverter este orçamento para Em Aprovação?')) {
       return;
     }
 
@@ -511,6 +523,11 @@ const BudgetsPage = () => {
     }
   };
 
+  // Pagination
+  const totalPages = Math.ceil(filteredBudgets.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedBudgets = filteredBudgets.slice(startIndex, endIndex);
 
   return (
     <div className="flex h-screen bg-gray-800">
@@ -554,7 +571,7 @@ const BudgetsPage = () => {
                 onChange={(e) => setStatusFilter(e.target.value)}
               >
                 <option value="">Todos os Estados</option>
-                <option value="Pendente">Pendente</option>
+                <option value="Pendente">Em Aprovação</option>
                 <option value="Aprovado">Aprovado</option>
               </select>
             </div>
@@ -583,7 +600,7 @@ const BudgetsPage = () => {
                       </td>
                     </tr>
                   ) : (
-                    filteredBudgets.map(budget => (
+                    paginatedBudgets.map(budget => (
                       <tr key={budget.id} className="hover:bg-gray-600 transition-colors">
                         <td className="px-6 py-4 font-medium text-gray-200 whitespace-nowrap">{budget.ref_orcamento}</td>
                         <td className="px-6 py-4 text-gray-400">{budget.veiculo ? `${budget.veiculo.marca} ${budget.veiculo.modelo} | ${budget.veiculo.matricula}` : 'Veículo não informado'}</td>
@@ -593,7 +610,7 @@ const BudgetsPage = () => {
                         <td className="px-6 py-4 text-right font-medium text-gray-200">€{budget.total_geral.toFixed(2)}</td>
                         <td className="px-6 py-4 text-center">
                           <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(budget.estado)}`}>
-                            {budget.estado}
+                            {getStatusLabel(budget.estado)}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-center">
@@ -601,13 +618,13 @@ const BudgetsPage = () => {
                             <button
                               onClick={() => handleApproveBudget(budget.id, budget.estado)}
                               className="text-green-400 hover:text-green-300 transition-colors"
-                              title={budget.estado === 'Aprovado' ? 'Reverter para Pendente' : 'Aprovar'}
+                              title={budget.estado.toLowerCase() === 'aprovado' ? 'Reverter para Em Aprovação' : 'Aprovar'}
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                               </svg>
                             </button>
-                            {budget.estado === 'Aprovado' && (
+                            {budget.estado.toLowerCase() === 'aprovado' && (
                               <button
                                 onClick={() => handlePrintWorkOrder(budget, budget.mecanico_nome)}
                                 className="text-orange-400 hover:text-orange-300 transition-colors"
@@ -630,14 +647,15 @@ const BudgetsPage = () => {
                               </svg>
                             </button>
 
-                            <button
+                            <Link
+                              href={`/orcamentos/${budget.id}/edit`}
                               className="text-blue-400 hover:text-blue-300 transition-colors"
                               title="Editar"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                               </svg>
-                            </button>
+                            </Link>
                             <button
                               onClick={() => handleDeleteBudget(budget.id)}
                               className="text-red-400 hover:text-red-300 transition-colors"
@@ -655,6 +673,38 @@ const BudgetsPage = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination */}
+            {filteredBudgets.length > 0 && (
+              <div className="bg-gray-800 px-4 py-3 border-t border-gray-600 flex items-center justify-between rounded-b">
+                <div className="flex-1 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-400">
+                      A mostrar <span className="font-medium text-gray-200">{startIndex + 1}</span> a <span className="font-medium text-gray-200">{Math.min(endIndex, filteredBudgets.length)}</span> de <span className="font-medium text-gray-200">{filteredBudgets.length}</span> orçamentos
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-600 text-gray-300 rounded border border-gray-600 transition-colors"
+                    >
+                      Anterior
+                    </button>
+                    <span className="text-sm text-gray-400 px-3">
+                      Página <span className="font-medium text-gray-200">{currentPage}</span> de <span className="font-medium text-gray-200">{totalPages}</span>
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-600 text-gray-300 rounded border border-gray-600 transition-colors"
+                    >
+                      Próxima
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>

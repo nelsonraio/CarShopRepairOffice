@@ -187,20 +187,31 @@ const EditWorkOrderPage = () => {
 
       // Load items
       if (data.itens_ordem_trabalho && data.itens_ordem_trabalho.length > 0) {
-        const items: WorkOrderItem[] = data.itens_ordem_trabalho.map((item: any) => ({
-          id: item.id || String(item.servico_id || item.peca_id),
-          name: item.descricao || '',
-          quantity: Number(item.quantidade) || 1,
-          unitPrice: Number(item.preco_unitario) || 0,
-          unit: item.tipo_item === 'peca' ? 'un' : 'h',
-          total: Number(item.valor_total) || 0,
-          type: item.tipo_item === 'peca' ? 'part' : 'service',
-          servico_id: item.servico_id ? String(item.servico_id) : undefined,
-          peca_id: item.peca_id ? String(item.peca_id) : undefined,
-          descricao: item.descricao || '',
-          tipo_item: item.tipo_item,
-          aguarda_peca: item.aguarda_peca
-        }));
+        const items: WorkOrderItem[] = data.itens_ordem_trabalho.map((item: any) => {
+          const itemObj: WorkOrderItem = {
+            id: item.id || String(item.servico_id || item.peca_id),
+            name: item.descricao || '',
+            quantity: Number(item.quantidade) || 1,
+            unitPrice: Number(item.preco_unitario) || 0,
+            unit: item.tipo_item === 'peca' ? 'un' : 'h',
+            total: Number(item.valor_total) || 0,
+            type: item.tipo_item === 'peca' ? 'part' : 'service',
+            descricao: item.descricao || '',
+            tipo_item: item.tipo_item,
+          };
+          
+          if (item.servico_id) {
+            itemObj.servico_id = String(item.servico_id);
+          }
+          if (item.peca_id) {
+            itemObj.peca_id = String(item.peca_id);
+          }
+          if (item.aguarda_peca !== undefined) {
+            itemObj.aguarda_peca = item.aguarda_peca;
+          }
+          
+          return itemObj;
+        });
         setWorkOrderItems(items);
       }
     } catch (err) {
@@ -305,11 +316,16 @@ const EditWorkOrderPage = () => {
       unit: item.unit,
       total: markupPrice,
       type: item.type,
-      servico_id: item.type === 'service' ? item.id : undefined,
-      peca_id: item.type === 'part' ? item.id : undefined,
       descricao: item.name,
       tipo_item: item.type === 'service' ? 'servico' : 'peca'
     };
+    
+    if (item.type === 'service') {
+      newItem.servico_id = item.id;
+    } else if (item.type === 'part') {
+      newItem.peca_id = item.id;
+    }
+    
     setWorkOrderItems([...workOrderItems, newItem]);
     setSearchTerm('');
     setShowSearchResults(false);
@@ -465,8 +481,7 @@ const EditWorkOrderPage = () => {
           descricao: item.name,
           quantidade: item.quantity,
           preco_unitario: item.unitPrice,
-          valor_total: item.total,
-          quantidade: item.quantity
+          valor_total: item.total
         }))
       };
 

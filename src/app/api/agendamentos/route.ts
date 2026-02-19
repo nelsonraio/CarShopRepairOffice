@@ -30,6 +30,8 @@ export async function GET(request: Request) {
         id: agendamento.id.toString(),
         clientId: agendamento.cliente_id?.toString() || '',
         client: cliente?.nome || '',
+        clientPhone: cliente?.telefone || '',
+        clientEmail: cliente?.email || '',
         marca: agendamento.marca || '',
         modelo: agendamento.modelo || '',
         ano: agendamento.ano?.toString() || '',
@@ -39,7 +41,7 @@ export async function GET(request: Request) {
         time: agendamento.hora_inicio.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }),
         mechanic: mecanico?.nome || '',
         tipoServico: agendamento.titulo.includes(' - ') ? agendamento.titulo.split(' - ')[0] : agendamento.titulo,
-        status: agendamento.estado === 'em_andamento' ? 'em_andamento' : 'agendado',
+        status: agendamento.estado || 'agendado',
         descricao: agendamento.descricao ?? ''
       };
 
@@ -49,14 +51,35 @@ export async function GET(request: Request) {
       const agendamentos = await prisma.agendamentos.findMany({
         where: {
           estado: {
-            in: ['agendado', 'em_andamento']
+            in: ['agendado', 'em_aprovacao', 'em_andamento']
           }
         },
         orderBy: { data_agendamento: 'asc' }
       });
 
-      const clienteIds = Array.from(new Set(agendamentos.map(a => a.cliente_id).filter((v): v is number => v != null)));
-      const mecanicoIds = Array.from(new Set(agendamentos.map(a => a.mecanico_id).filter((v): v is number => v != null)));
+      const orcamentos = await prisma.orcamentos.findMany({
+        select: {
+          data_emissao: true,
+          cliente_id: true,
+          veiculo_id: true
+        }
+      });
+
+      const budgetMatriculasByDate = new Set<string>();
+      // Original logic was broken; removed veiculo relation dependency
+
+      const filteredAgendamentos = agendamentos.filter(agendamento => {
+        if (agendamento.matricula) {
+          const dateKey = agendamento.data_agendamento.toISOString().slice(0, 10);
+          if (budgetMatriculasByDate.has(`${agendamento.matricula}|${dateKey}`)) {
+            return false;
+          }
+        }
+        return true;
+      });
+
+      const clienteIds = Array.from(new Set(filteredAgendamentos.map(a => a.cliente_id).filter((v): v is number => v != null)));
+      const mecanicoIds = Array.from(new Set(filteredAgendamentos.map(a => a.mecanico_id).filter((v): v is number => v != null)));
 
       const [clientes, mecanicos] = await Promise.all([
         clienteIds.length ? prisma.clientes.findMany({ where: { id: { in: clienteIds } } }) : Promise.resolve([]),
@@ -70,10 +93,12 @@ export async function GET(request: Request) {
       type Agendamento = any;
       type TransformedAgendamento = any;
 
-      const transformedAgendamentos: TransformedAgendamento[] = agendamentos.map((agendamento: Agendamento) => ({
+      const transformedAgendamentos: TransformedAgendamento[] = filteredAgendamentos.map((agendamento: Agendamento) => ({
         id: agendamento.id.toString(),
         clientId: agendamento.cliente_id?.toString() || '',
         client: (clienteMap.get(agendamento.cliente_id as number) as any)?.nome || '',
+        clientPhone: (clienteMap.get(agendamento.cliente_id as number) as any)?.telefone || '',
+        clientEmail: (clienteMap.get(agendamento.cliente_id as number) as any)?.email || '',
         marca: agendamento.marca || '',
         modelo: agendamento.modelo || '',
         ano: agendamento.ano?.toString() || '',
@@ -83,7 +108,7 @@ export async function GET(request: Request) {
         time: agendamento.hora_inicio.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }),
         mechanic: agendamento.mecanico_id != null ? (mecanicoMap.get(agendamento.mecanico_id) as any)?.nome || '' : '',
         tipoServico: agendamento.titulo.includes(' - ') ? agendamento.titulo.split(' - ')[0] : agendamento.titulo,
-        status: agendamento.estado === 'em_andamento' ? 'em_andamento' : 'agendado',
+        status: agendamento.estado || 'agendado',
         descricao: agendamento.descricao ?? ''
       }));
 

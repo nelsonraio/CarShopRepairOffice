@@ -5,10 +5,51 @@ import React from 'react';
 interface KanbanCardData {
   id: string;
   proc: string;
-  plate: string;
-  model: string;
-  mechanic: string;
-  avatar: string;
+  plate?: string;
+  model?: string;
+  mechanic?: string;
+  avatar?: string;
+  estado?: string;
+  cliente_nome?: string;
+  contacto_nome?: string | null;
+  contacto_telefone?: string | null;
+  contacto_email?: string | null;
+  data_conclusao?: string;
+  prioridade?: string;
+  total_geral?: number;
+  titulo?: string;
+  descricao?: string;
+  hora_agendamento?: string;
+  data_emissao?: string;
+  itens_count?: number;
+  itens_orcamento?: Array<{
+    id: number;
+    descricao: string;
+    quantidade: number;
+    valor_total: number;
+  }>;
+  waiting_parts?: Array<{
+    id: number;
+    descricao: string;
+    quantidade: number;
+    valor_total: number;
+  }>;
+  work_order_items?: Array<{
+    id: number;
+    tipo_item: string;
+    descricao: string;
+    quantidade: number;
+    preco_unitario: number;
+    valor_total: number;
+  }>;
+  work_order_ref?: string;
+  work_order_mechanic?: string;
+  work_order_total?: number;
+  work_order_data_inicio?: string;
+  work_order_data_conclusao?: string;
+  work_order_prioridade?: string;
+  work_order_estado?: string;
+  data_inicio?: string;
 }
 
 interface KanbanCardDetailsModalProps {
@@ -16,118 +57,65 @@ interface KanbanCardDetailsModalProps {
   onClose: () => void;
   card: KanbanCardData | null;
   columnTitle: string;
+  isReadOnly?: boolean;
 }
 
-export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTitle }: KanbanCardDetailsModalProps) {
+export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTitle, isReadOnly = false }: KanbanCardDetailsModalProps) {
   if (!isOpen || !card) return null;
 
-  const getStageContent = (columnName: string) => {
-    switch(columnName) {
-      case 'A Chegar':
-        return (
-          <div className="space-y-2">
-            <p className="text-sm text-gray-300"><span className="font-semibold text-gray-400">Motivo:</span> Revisão Programada</p>
-            <div className="mt-2 p-2 bg-blue-900/30 border border-blue-800 rounded">
-              <p className="text-xs text-blue-200">⚠️ Verificar histórico de travões.</p>
-            </div>
-          </div>
-        );
-      case 'Diagnóstico':
-        return (
-          <div className="space-y-2">
-            <p className="text-sm text-gray-400 mb-2">Checklist de Entrada:</p>
-            <label className="flex items-center space-x-2">
-              <input type="checkbox" className="form-checkbox text-brand-yellow bg-gray-800 border-gray-600 rounded-none" />
-              <span className="text-sm text-gray-300">Leitura OBD</span>
-            </label>
-            <label className="flex items-center space-x-2">
-              <input type="checkbox" className="form-checkbox text-brand-yellow bg-gray-800 border-gray-600 rounded-none" />
-              <span className="text-sm text-gray-300">Teste de Estrada</span>
-            </label>
-          </div>
-        );
-      case 'Aprovação':
-        return (
-          <div className="space-y-2">
-            <p className="text-sm text-gray-300"><span className="font-semibold text-gray-400">Orçamento:</span> #4501</p>
-            <p className="text-sm text-gray-300"><span className="font-semibold text-gray-400">Valor:</span> €115.00</p>
-            <button
-              onClick={() => window.location.href = '/orcamentos'}
-              className="w-full mt-2 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-none transition-colors"
-            >
-              Ver Orçamento
-            </button>
-          </div>
-        );
-      case 'Aguarda Peças':
-        return (
-          <table className="w-full text-sm text-left text-gray-400">
-            <thead className="text-xs text-gray-500 uppercase bg-gray-800">
-              <tr>
-                <th className="px-2 py-1">Peça</th>
-                <th className="px-2 py-1">Estado</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-700">
-              <tr>
-                <td className="px-2 py-2">Kit Distribuição</td>
-                <td className="px-2 py-2 text-yellow-400">Encomendado</td>
-              </tr>
-              <tr>
-                <td className="px-2 py-2">Bomba de Água</td>
-                <td className="px-2 py-2 text-green-400">Em Stock</td>
-              </tr>
-            </tbody>
-          </table>
-        );
-      case 'Em Reparação':
-        return (
-          <div className="space-y-3">
-            <div>
-              <div className="flex justify-between text-xs text-gray-400 mb-1">
-                <span>Progresso</span>
-                <span>65%</span>
-              </div>
-              <div className="w-full bg-gray-800 rounded-full h-2">
-                <div className="bg-blue-500 h-2 rounded-full" style={{width: '65%'}}></div>
-              </div>
-            </div>
-            <p className="text-sm text-gray-300"><span className="font-semibold text-gray-400">Previsão Fim:</span> 16:00</p>
-          </div>
-        );
-      case 'Pronto':
-        return (
-          <div className="text-center p-2">
-            <p className="text-lg font-bold text-green-400">Veículo Pronto</p>
-            <button className="mt-2 px-4 py-1 bg-brand-yellow text-gray-900 text-sm font-bold rounded-none">
-              Emitir Fatura
-            </button>
-          </div>
-        );
-      default:
-        return <p className="text-sm text-gray-500 italic">Sem informação adicional.</p>;
+  const getStatusLabel = (estado?: string) => {
+    switch(estado) {
+      case 'em_recepcao': return 'Em Recepção';
+      case 'em_andamento': return 'Em Andamento';
+      case 'aguarda_peca': return 'Aguarda Peças';
+      case 'concluido': return 'Concluído';
+      case 'entregue': return 'Entregue';
+      case 'cancelado': return 'Cancelado';
+      default: return estado || 'Desconhecido';
     }
   };
 
-  const getStatusColor = (columnName: string) => {
-    switch(columnName) {
-      case 'A Chegar': return 'bg-gray-700 text-gray-300 border-gray-600';
-      case 'Diagnóstico': return 'bg-yellow-400/20 text-yellow-300 border-yellow-400/50';
-      case 'Aprovação': return 'bg-purple-400/20 text-purple-300 border-purple-400/50';
-      case 'Aguarda Peças': return 'bg-orange-400/20 text-orange-300 border-orange-400/50';
-      case 'Em Reparação': return 'bg-blue-400/20 text-blue-300 border-blue-400/50';
-      case 'Pronto': return 'bg-green-400/20 text-green-300 border-green-400/50';
+  const getStatusColor = (estado?: string) => {
+    switch(estado) {
+      case 'em_recepcao': return 'bg-purple-400/20 text-purple-300 border-purple-400/50';
+      case 'em_andamento': return 'bg-blue-400/20 text-blue-300 border-blue-400/50';
+      case 'aguarda_peca': return 'bg-orange-400/20 text-orange-300 border-orange-400/50';
+      case 'concluido': return 'bg-yellow-400/20 text-yellow-300 border-yellow-400/50';
+      case 'entregue': return 'bg-green-400/20 text-green-300 border-green-400/50';
+      case 'cancelado': return 'bg-red-400/20 text-red-300 border-red-400/50';
       default: return 'bg-gray-700 text-gray-300 border-gray-600';
     }
   };
 
+  const getPriorityColor = (prioridade?: string) => {
+    switch(prioridade?.toLowerCase()) {
+      case 'urgente': return 'text-red-400';
+      case 'alta': return 'text-orange-400';
+      case 'normal': return 'text-gray-300';
+      case 'baixa': return 'text-green-400';
+      default: return 'text-gray-400';
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm">
-      <div className="bg-gray-800 border border-gray-600 w-full max-w-2xl p-6 shadow-2xl relative">
+    <div className="fixed inset-0 bg-gray-900 bg-opacity-80 flex items-start justify-center z-50 backdrop-blur-sm overflow-y-auto py-6">
+      <div className="bg-gray-800 border border-gray-600 w-full max-w-2xl p-6 shadow-2xl relative max-h-[calc(100vh-3rem)] overflow-y-auto">
         <div className="flex justify-between items-start mb-6 border-b border-gray-700 pb-2">
           <div>
-            <h3 className="text-xl font-bold text-gray-100">Detalhes do Veículo</h3>
-            <p className="text-sm text-brand-yellow font-mono mt-1">N. Proc: {card.proc}</p>
+            <h3 className="text-xl font-bold text-gray-100">
+              {card.estado === 'em_recepcao'
+                ? 'Detalhes do Agendamento'
+                : card.estado === 'em_aprovacao'
+                  ? 'Detalhes do Orçamento'
+                  : 'Detalhes da Ordem de Trabalho'}
+            </h3>
+            <p className="text-sm text-brand-yellow font-mono mt-1">
+              {card.estado === 'em_recepcao'
+                ? 'AGD: '
+                : card.estado === 'em_aprovacao'
+                  ? 'ORC: '
+                  : 'OT: '}{card.proc}
+            </p>
           </div>
           <button
             onClick={onClose}
@@ -151,42 +139,224 @@ export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTi
               <p className="text-lg font-medium text-white">{card.model}</p>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 uppercase">Estado Atual</label>
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-1 border ${getStatusColor(columnTitle)}`}>
-                {columnTitle}
-              </span>
+              <label className="block text-xs font-medium text-gray-500 uppercase">Cliente</label>
+              <p className="text-sm text-gray-300">{card.cliente_nome || 'N/A'}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase">Contacto</label>
+              <p className="text-sm text-gray-300">{card.contacto_nome || card.cliente_nome || 'N/A'}</p>
+              <p className="text-xs text-gray-400">{card.contacto_telefone || 'Sem telefone'}</p>
+              <p className="text-xs text-gray-400">{card.contacto_email || 'Sem email'}</p>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-500 uppercase">Mecânico</label>
-              <div className="flex items-center mt-1">
-                <img src={card.avatar} className="w-6 h-6 rounded-full mr-2 border border-gray-600" />
-                <span className="text-gray-300">{card.mechanic}</span>
+              <span className="bg-brand-yellow text-gray-900 text-xs font-semibold px-3 py-1 rounded inline-block mt-1">
+                {card.mechanic || 'N/A'}
+              </span>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase">Estado Atual</label>
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-1 border ${getStatusColor(card.estado)}`}>
+                {getStatusLabel(card.estado)}
+              </span>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase">Prioridade</label>
+              <p className={`text-sm font-medium capitalize ${getPriorityColor(card.prioridade)} mt-1`}>
+                {card.prioridade || 'N/A'}
+              </p>
+            </div>
+          </div>
+
+          {/* Work Order Details */}
+          {card.estado !== 'em_recepcao' && card.estado !== 'em_aprovacao' && (
+            <div className="bg-gray-700/50 p-4 rounded border border-gray-600">
+              <h4 className="text-sm font-bold text-gray-200 mb-3">Detalhes da Ordem de Trabalho</h4>
+              <div className="grid grid-cols-2 gap-4">
+                {card.estado !== 'em_andamento' && (
+                  <div>
+                    <label className="block text-xs text-gray-500 uppercase">Total</label>
+                    <p className="text-lg font-bold text-brand-yellow">€{card.total_geral?.toFixed(2) || '0.00'}</p>
+                  </div>
+                )}
+                {card.data_inicio && (
+                  <div>
+                    <label className="block text-xs text-gray-500 uppercase">Data de Início</label>
+                    <p className="text-sm text-gray-300 mt-1">
+                      {new Date(card.data_inicio).toLocaleDateString('pt-PT')}
+                    </p>
+                  </div>
+                )}
+                {card.data_conclusao && (
+                  <div>
+                    <label className="block text-xs text-gray-500 uppercase">Data de Conclusão</label>
+                    <p className="text-sm text-gray-300 mt-1">
+                      {new Date(card.data_conclusao).toLocaleDateString('pt-PT')}
+                    </p>
+                  </div>
+                )}
+                {card.prioridade && (
+                  <div>
+                    <label className="block text-xs text-gray-500 uppercase">Prioridade</label>
+                    <p className={`text-sm font-medium capitalize ${getPriorityColor(card.prioridade)} mt-1`}>
+                      {card.prioridade}
+                    </p>
+                  </div>
+                )}
+              </div>
+              {card.estado === 'aguarda_peca' && card.waiting_parts && card.waiting_parts.length > 0 && (
+                <div className="mt-4 border-t border-gray-600 pt-3">
+                  <h5 className="text-xs font-semibold text-gray-200 uppercase mb-2">Peças em Falta</h5>
+                  <div className="space-y-2">
+                    {card.waiting_parts.map(item => (
+                      <div key={item.id} className="flex items-center justify-between text-sm text-gray-300">
+                        <span className="truncate pr-3">{item.descricao}</span>
+                        <span className="text-gray-400">x{item.quantidade}</span>
+                        <span className="font-mono text-brand-yellow">€{Number(item.valor_total).toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {card.estado === 'em_andamento' && card.work_order_items && card.work_order_items.length > 0 && (
+                <div className="mt-4 border-t border-gray-600 pt-3">
+                  <h5 className="text-xs font-semibold text-gray-200 uppercase mb-2">Itens da Ordem de Trabalho</h5>
+                  <div className="space-y-2">
+                    {card.work_order_items.map(item => (
+                      <div key={item.id} className="flex items-center justify-between text-sm text-gray-300">
+                        <span className="truncate pr-3">{item.descricao}</span>
+                        <span className="text-gray-400">x{item.quantidade}</span>
+                        <span className="text-gray-400">{item.tipo_item === 'servico' ? 'Serviço' : 'Peça'}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Budget Details */}
+          {card.estado === 'em_aprovacao' && (
+            <div className="bg-indigo-900/30 border border-indigo-800 p-4 rounded">
+              <h4 className="text-sm font-bold text-indigo-200 mb-4">Detalhes do Orçamento</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 uppercase mb-1">Total</label>
+                  <p className="text-lg font-bold text-brand-yellow">€{card.total_geral?.toFixed(2) || '0.00'}</p>
+                </div>
+                {card.data_emissao && (
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 uppercase mb-1">Data de Emissão</label>
+                    <p className="text-sm text-gray-300">
+                      {new Date(card.data_emissao).toLocaleDateString('pt-PT')}
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 uppercase mb-1">Itens</label>
+                  <p className="text-sm text-gray-300">{card.itens_count ?? 0}</p>
+                </div>
+              </div>
+              {card.work_order_ref && (
+                <div className="mt-4 border-t border-indigo-700 pt-3">
+                  <h5 className="text-xs font-semibold text-indigo-200 uppercase mb-2">Ordem de Trabalho Associada</h5>
+                  <div className="grid grid-cols-2 gap-3 text-sm text-gray-300">
+                    <div>
+                      <span className="block text-xs uppercase text-gray-400">Referencia</span>
+                      <span className="font-mono text-brand-yellow">{card.work_order_ref}</span>
+                    </div>
+                    <div>
+                      <span className="block text-xs uppercase text-gray-400">Mecanico</span>
+                      <span>{card.work_order_mechanic || 'N/A'}</span>
+                    </div>
+                    {card.work_order_estado && (
+                      <div>
+                        <span className="block text-xs uppercase text-gray-400">Estado</span>
+                        <span className="capitalize">{card.work_order_estado.replace('_', ' ')}</span>
+                      </div>
+                    )}
+                    {card.work_order_prioridade && (
+                      <div>
+                        <span className="block text-xs uppercase text-gray-400">Prioridade</span>
+                        <span className="capitalize">{card.work_order_prioridade}</span>
+                      </div>
+                    )}
+                    {card.work_order_data_inicio && (
+                      <div>
+                        <span className="block text-xs uppercase text-gray-400">Inicio</span>
+                        <span>{new Date(card.work_order_data_inicio).toLocaleDateString('pt-PT')}</span>
+                      </div>
+                    )}
+                    {card.work_order_data_conclusao && (
+                      <div>
+                        <span className="block text-xs uppercase text-gray-400">Conclusao</span>
+                        <span>{new Date(card.work_order_data_conclusao).toLocaleDateString('pt-PT')}</span>
+                      </div>
+                    )}
+                    {card.work_order_total !== undefined && (
+                      <div>
+                        <span className="block text-xs uppercase text-gray-400">Total OT</span>
+                        <span className="font-mono text-brand-yellow">€{Number(card.work_order_total).toFixed(2)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              {card.itens_orcamento && card.itens_orcamento.length > 0 && (
+                <div className="mt-4 border-t border-indigo-700 pt-3">
+                  <h5 className="text-xs font-semibold text-indigo-200 uppercase mb-2">Itens do Orçamento</h5>
+                  <div className="space-y-2">
+                    {card.itens_orcamento.map(item => (
+                      <div key={item.id} className="flex items-center justify-between text-sm text-gray-300">
+                        <span className="truncate pr-3">{item.descricao}</span>
+                        <span className="text-gray-400">x{item.quantidade}</span>
+                        <span className="font-mono text-brand-yellow">€{Number(item.valor_total).toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <p className="text-sm text-indigo-300 italic pt-3 border-t border-indigo-700 mt-3">
+                ⏳ Aguardando aprovação do cliente
+              </p>
+            </div>
+          )}
+
+          {/* Appointment Details */}
+          {card.estado === 'em_recepcao' && (
+            <div className="bg-purple-900/30 border border-purple-800 p-4 rounded">
+              <h4 className="text-sm font-bold text-purple-200 mb-4">Detalhes do Agendamento</h4>
+              <div className="space-y-3">
+                {card.hora_agendamento && (
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 uppercase mb-1">Hora Agendada</label>
+                    <p className="text-sm text-gray-300">{card.hora_agendamento}</p>
+                  </div>
+                )}
+                {card.descricao && (
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 uppercase mb-1">Descrição</label>
+                    <p className="text-sm text-gray-300 italic">{card.descricao}</p>
+                  </div>
+                )}
+                <p className="text-sm text-purple-300 italic pt-2 border-t border-purple-700">
+                  ✓ Pendente de entrada em oficina
+                </p>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Contextual Info Area */}
-          <div className="bg-gray-700/50 p-4 rounded border border-gray-600">
-            <h4 className="text-sm font-bold text-gray-200 mb-3 flex items-center">
-              <svg className="w-4 h-4 mr-2 text-brand-yellow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-              Informação do Estágio
-            </h4>
-            <div>
-              {getStageContent(columnTitle)}
+          {/* Read-Only Notice */}
+          {isReadOnly && (
+            <div className="bg-blue-900/30 border border-blue-800 p-3 rounded">
+              <p className="text-xs text-blue-200 flex items-center">
+                <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M13.477 14.89A6 6 0 11.5 9a.75.75 0 00-1.5 0 7.5 7.5 0 1115.384 2.11a.75.75 0 00-1.472.224 6 6 0 01-11.834 1.755z"/>
+                </svg>
+                <strong>Modo Visualização:</strong> Esta informação é apenas para leitura. Os estados sincronizam automaticamente com as mudanças na ordem de trabalho.
+              </p>
             </div>
-          </div>
-
-          {/* Notes */}
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">Notas / Observações</label>
-            <textarea
-              className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600 text-sm"
-              rows={3}
-              placeholder="Adicionar notas..."
-            ></textarea>
-          </div>
+          )}
         </div>
 
         <div className="flex justify-end space-x-3 mt-8 pt-4 border-t border-gray-700">
@@ -195,9 +365,6 @@ export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTi
             className="px-4 py-2 bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors rounded-none border border-gray-600"
           >
             Fechar
-          </button>
-          <button className="px-4 py-2 bg-brand-yellow text-gray-900 font-bold hover:bg-brand-yellow-dark transition-colors rounded-none">
-            Guardar
           </button>
         </div>
       </div>

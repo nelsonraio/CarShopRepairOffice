@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import Sidebar from '../../components/Sidebar';
 
 interface WorkOrder {
@@ -11,10 +10,10 @@ interface WorkOrder {
   mechanic: string;
   openDate: string;
   closeDate: string;
-  status: 'Pendente' | 'Em Andamento' | 'Concluída' | 'Cancelada' | 'Faturado';
+  status: 'Em Andamento' | 'Aguarda Peças' | 'Concluído' | 'Entregue' | 'Cancelado';
   priority: 'Baixa' | 'Normal' | 'Alta' | 'Urgente';
   problem: string;
-  waitingParts: string;
+  waitingParts: string | Array<{ descricao?: string }>;
 }
 
 interface WorkOrderItem {
@@ -27,6 +26,8 @@ interface WorkOrderItem {
 
 
 
+const ITEMS_PER_PAGE = 20;
+
 const WorkOrdersPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -36,6 +37,7 @@ const WorkOrdersPage = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Status Modal State
   const [showStatusModal, setShowStatusModal] = useState(false);
@@ -46,6 +48,13 @@ const WorkOrdersPage = () => {
   const [workOrderItems, setWorkOrderItems] = useState<WorkOrderItem[]>([]);
   const [selectedParts, setSelectedParts] = useState<Set<string>>(new Set());
   const [loadingItems, setLoadingItems] = useState(false);
+
+  const normalizeWaitingPartsText = (value: WorkOrder['waitingParts']) => {
+    if (Array.isArray(value)) {
+      return value.map(part => part.descricao ?? '').filter(Boolean).join('\n');
+    }
+    return typeof value === 'string' ? value : '';
+  };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Tem a certeza que deseja eliminar esta ordem de trabalho?')) {
@@ -108,15 +117,16 @@ const WorkOrdersPage = () => {
     });
 
     setFilteredWorkOrders(filtered);
+    setCurrentPage(1); // Reset pagination on filter change
   }, [searchTerm, statusFilter, priorityFilter, workOrders]);
 
   const getStatusColor = (status: string) => {
     switch(status) {
-      case 'Pendente': return 'text-blue-400 bg-blue-900/30 border border-blue-900';
       case 'Em Andamento': return 'text-yellow-400 bg-yellow-900/30 border border-yellow-900';
-      case 'Concluída': return 'text-green-400 bg-green-900/30 border border-green-900';
-      case 'Faturado': return 'text-emerald-400 bg-emerald-900/30 border border-emerald-900';
-      case 'Cancelada': return 'text-red-400 bg-red-900/30 border border-red-900';
+      case 'Aguarda Peças': return 'text-orange-400 bg-orange-900/30 border border-orange-900';
+      case 'Concluído': return 'text-green-400 bg-green-900/30 border border-green-900';
+      case 'Entregue': return 'text-emerald-400 bg-emerald-900/30 border border-emerald-900';
+      case 'Cancelado': return 'text-red-400 bg-red-900/30 border border-red-900';
       default: return 'text-gray-400 bg-gray-800 border border-gray-700';
     }
   };
@@ -274,8 +284,8 @@ const WorkOrdersPage = () => {
     setSelectedWorkOrder(workOrder);
     setNewStatus(workOrder.status);
     const defaultDate = new Date().toISOString().split('T')[0];
-    setCompletionDate(workOrder.closeDate || defaultDate);
-    setWaitingParts(workOrder.waitingParts || '');
+    setCompletionDate(workOrder.closeDate ?? defaultDate);
+    setWaitingParts(normalizeWaitingPartsText(workOrder.waitingParts));
     setSelectedParts(new Set());
     setWorkOrderItems([]);
     setLoadingItems(true);
@@ -317,11 +327,13 @@ const WorkOrdersPage = () => {
     if (!selectedWorkOrder) return;
 
     // Get selected part IDs from workOrderItems
-    const selectedPartIds = workOrderItems
-      .filter(item => item.tipo_item === 'peca' && waitingParts.split('\n').map(p => p.trim()).includes(item.descricao))
-      .map(item => String(item.id));
+    const selectedPartIds = selectedParts.size > 0
+      ? Array.from(selectedParts)
+      : workOrderItems
+          .filter(item => item.tipo_item === 'peca' && waitingParts.split('\n').map(p => p.trim()).includes(item.descricao))
+          .map(item => String(item.id));
 
-    if (newStatus === 'Aguardando Peças' && selectedPartIds.length === 0) {
+    if (newStatus === 'Aguarda Peças' && selectedPartIds.length === 0) {
       alert('Por favor, selecione pelo menos uma peça em espera.');
       return;
     }
@@ -330,8 +342,10 @@ const WorkOrdersPage = () => {
     const updatedOrder: WorkOrder = {
       ...selectedWorkOrder,
       status: newStatus as WorkOrder['status'],
-      closeDate: newStatus === 'Pronto' ? completionDate : (selectedWorkOrder.closeDate || ''),
-      waitingParts: newStatus === 'Aguardando Peças' ? (waitingParts || '') : (selectedWorkOrder.waitingParts || '')
+      closeDate: newStatus === 'Entregue' ? completionDate : (selectedWorkOrder.closeDate || ''),
+      waitingParts: newStatus === 'Aguarda Peças'
+        ? (waitingParts || '')
+        : normalizeWaitingPartsText(selectedWorkOrder.waitingParts)
     };
 
     try {
@@ -344,9 +358,9 @@ const WorkOrdersPage = () => {
         body: JSON.stringify({
           id: selectedWorkOrder.id,
           estado: newStatus,
-          data_conclusao: newStatus === 'Pronto' ? completionDate : null,
-          waitingParts: newStatus === 'Aguardando Peças' ? waitingParts : null,
-          selectedPartIds: newStatus === 'Aguardando Peças' ? selectedPartIds : []
+          data_conclusao: newStatus === 'Concluído' && completionDate?.trim() ? completionDate : null,
+          waitingParts: newStatus === 'Aguarda Peças' ? waitingParts : null,
+          selectedPartIds: newStatus === 'Aguarda Peças' ? selectedPartIds : []
         })
       });
 
@@ -355,15 +369,25 @@ const WorkOrdersPage = () => {
         throw new Error(errorData.error || 'Failed to update work order');
       }
 
-      // Update local state after successful API call
-      setWorkOrders(prev => prev.map(wo => wo.id === updatedOrder.id ? updatedOrder : wo));
-      setFilteredWorkOrders(prev => prev.map(wo => wo.id === updatedOrder.id ? updatedOrder : wo));
+      // Reload work orders to reflect the updated closeDate
+      const reloadResponse = await fetch('/api/ordens-trabalho');
+      if (reloadResponse.ok) {
+        const reloadedData = await reloadResponse.json();
+        setWorkOrders(reloadedData);
+        setFilteredWorkOrders(reloadedData);
+      }
       
       setShowStatusModal(false);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Erro ao atualizar estado da ordem de trabalho');
     }
   };
+
+  // Pagination
+  const totalPages = Math.ceil(filteredWorkOrders.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedWorkOrders = filteredWorkOrders.slice(startIndex, endIndex);
 
   return (
     <div className="flex h-screen bg-gray-800">
@@ -401,11 +425,11 @@ const WorkOrdersPage = () => {
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
                   <option value="">Todos os Estados</option>
-                  <option value="Pendente">Pendente</option>
                   <option value="Em Andamento">Em Andamento</option>
-                  <option value="Concluída">Concluída</option>
-                  <option value="Faturado">Faturado</option>
-                  <option value="Cancelada">Cancelada</option>
+                  <option value="Aguarda Peças">Aguarda Peças</option>
+                  <option value="Concluído">Concluído</option>
+                  <option value="Entregue">Entregue</option>
+                  <option value="Cancelado">Cancelado</option>
                 </select>
               </div>
               <div className="w-full lg:w-48">
@@ -433,6 +457,7 @@ const WorkOrdersPage = () => {
                 Erro ao carregar ordens de trabalho: {error}
               </div>
             ) : (
+              <>
               <div className="overflow-x-auto rounded-none border border-gray-600">
                 <table className="w-full text-sm text-left text-gray-400">
                   <thead className="text-xs text-gray-300 uppercase bg-gray-800 border-b border-gray-600">
@@ -442,7 +467,7 @@ const WorkOrdersPage = () => {
                       <th scope="col" className="px-6 py-3">Cliente</th>
                       <th scope="col" className="px-6 py-3">Mecânico</th>
                       <th scope="col" className="px-6 py-3">Data Abertura</th>
-                      <th scope="col" className="px-6 py-3">Data de Fecho</th>
+                      <th scope="col" className="px-6 py-3">Data de Conclusão</th>
                       <th scope="col" className="px-6 py-3 text-center">Prioridade</th>
                       <th scope="col" className="px-6 py-3 text-center">Estado</th>
                       <th scope="col" className="px-6 py-3 text-center">Ações</th>
@@ -456,7 +481,7 @@ const WorkOrdersPage = () => {
                         </td>
                       </tr>
                     ) : (
-                      filteredWorkOrders.map(workOrder => (
+                      paginatedWorkOrders.map(workOrder => (
                         <tr key={workOrder.id} className="bg-gray-800 hover:bg-gray-700 transition-colors">
                           <td className="px-6 py-4 font-medium text-gray-200 whitespace-nowrap">{workOrder.id}</td>
                           
@@ -495,15 +520,6 @@ const WorkOrdersPage = () => {
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
                                 </svg>
                               </button>
-                              <Link
-                                href={`/ordens-trabalho/${workOrder.id}/edit`}
-                                className="text-blue-400 hover:text-blue-300 transition-colors"
-                                title="Editar"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                </svg>
-                              </Link>
                               <button
                                 className="text-red-400 hover:text-red-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 title="Eliminar"
@@ -528,6 +544,39 @@ const WorkOrdersPage = () => {
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination */}
+              {filteredWorkOrders.length > 0 && (
+                <div className="bg-gray-800 px-4 py-3 border-t border-gray-600 flex items-center justify-between rounded-b">
+                  <div className="flex-1 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-400">
+                        A mostrar <span className="font-medium text-gray-200">{startIndex + 1}</span> a <span className="font-medium text-gray-200">{Math.min(endIndex, filteredWorkOrders.length)}</span> de <span className="font-medium text-gray-200">{filteredWorkOrders.length}</span> ordens de trabalho
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-600 text-gray-300 rounded border border-gray-600 transition-colors"
+                      >
+                        Anterior
+                      </button>
+                      <span className="text-sm text-gray-400 px-3">
+                        Página <span className="font-medium text-gray-200">{currentPage}</span> de <span className="font-medium text-gray-200">{totalPages}</span>
+                      </span>
+                      <button
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-600 text-gray-300 rounded border border-gray-600 transition-colors"
+                      >
+                        Próxima
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              </>
             )}
           </div>
         </div>
@@ -544,29 +593,38 @@ const WorkOrdersPage = () => {
               <select 
                 className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-none focus:ring-2 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
                 value={newStatus}
-                onChange={(e) => setNewStatus(e.target.value)}
+                onChange={(e) => {
+                  const newVal = e.target.value;
+                  setNewStatus(newVal);
+                  // Clear completion date when reverting to pre-conclusion states
+                  if (newVal === 'Em Andamento' || newVal === 'Aguarda Peças') {
+                    setCompletionDate('');
+                  }
+                }}
               >
-                <option value="Aprovado">Aprovado</option>
                 <option value="Em Andamento">Em Andamento</option>
-                <option value="Aguardando Peças">Aguardando Peças</option>
-                <option value="Concluído">Concluída</option>
-                <option value="Cancelado">Cancelada</option>
+                <option value="Aguarda Peças">Aguarda Peças</option>
+                <option value="Concluído">Concluído</option>
+                <option value="Entregue">Entregue</option>
+                <option value="Cancelado">Cancelado</option>
               </select>
             </div>
 
             {newStatus === 'Concluído' && (
               <div className="mb-4">
-                <label className="block text-gray-400 mb-2 text-sm">Data de Conclusão</label>
+                <label className="block text-gray-400 mb-2 text-sm">Data de Conclusão (opcional - será preenchida automaticamente)</label>
                 <input 
                   type="date" 
                   className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-none focus:ring-2 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
+                  placeholder="Deixe em branco para usar data atual"
                   value={completionDate}
                   onChange={(e) => setCompletionDate(e.target.value)}
                 />
+                <p className="text-gray-500 text-xs mt-1">Se deixar em branco, será usada a data e hora atual</p>
               </div>
             )}
 
-            {newStatus === 'Aguardando Peças' && (
+            {newStatus === 'Aguarda Peças' && (
               <div className="mb-4">
                 <label className="block text-gray-400 mb-2 text-sm">Peças em Espera</label>
                 

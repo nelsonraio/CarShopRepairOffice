@@ -768,7 +768,7 @@ CREATE TABLE IF NOT EXISTS `ordens_trabalho` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`),
   UNIQUE KEY `numero_ordem_trabalho` (`ref_ordem_trabalho`) USING BTREE,
-  CONSTRAINT `ordens_trabalho_chk_1` CHECK ((`estado` in (_utf8mb4'pendente',_utf8mb4'em_andamento',_utf8mb4'concluido',_utf8mb4'cancelado',_utf8mb4'faturado')))
+  CONSTRAINT `ordens_trabalho_chk_1` CHECK ((`estado` in (_utf8mb4'em_andamento',_utf8mb4'aguarda_peca',_utf8mb4'concluido',_utf8mb4'entregue',_utf8mb4'cancelado')))
 ) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- A despejar dados para tabela carrepairshopgest.ordens_trabalho: ~0 rows (aproximadamente)

@@ -542,22 +542,6 @@ const EditAppointmentPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Tipo de Serviço</label>
-                <select
-                  name="tipoServico"
-                  value={formData.tipoServico}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
-                >
-                  {services.map((service) => (
-                    <option key={service.id} value={service.nome}>
-                      {service.nome}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
                 <label className="block text-sm font-medium text-gray-400 mb-1">Adicionar Serviços à Descrição</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -623,14 +607,13 @@ const EditAppointmentPage = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-1">
-                  Descrição {formData.tipoServico === 'Outro' && <span className="text-red-500">*</span>}
+                  Descrição
                 </label>
                 <textarea
                   name="notas"
                   value={formData.notas}
                   onChange={handleInputChange}
                   rows={2}
-                  required={formData.tipoServico === 'Outro'}
                   className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
                 />
               </div>

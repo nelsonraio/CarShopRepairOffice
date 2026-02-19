@@ -129,3 +129,91 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export async function PUT(request: Request) {
+  try {
+    const body = await request.json();
+    
+    const {
+      id,
+      nome,
+      referencia,
+      categoria,
+      stock,
+      minStock,
+      price,
+      fornecedor_id,
+      supplierName
+    } = body;
+
+    // Check if the part exists
+    const existingPeca = await prisma.pecas.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!existingPeca) {
+      return NextResponse.json(
+        { error: 'Peça não encontrada' },
+        { status: 404 }
+      );
+    }
+
+    // Check if reference already exists for another part
+    if (referencia !== existingPeca.referencia) {
+      const duplicatePeca = await prisma.pecas.findUnique({
+        where: { referencia }
+      });
+
+      if (duplicatePeca) {
+        return NextResponse.json(
+          { error: 'Já existe uma peça com esta referência' },
+          { status: 400 }
+        );
+      }
+    }
+
+    const updatedPeca = await prisma.pecas.update({
+      where: { id: parseInt(id) },
+      data: {
+        nome,
+        referencia,
+        categoria,
+        quantidade_stock: stock,
+        nivel_stock_minimo: minStock,
+        preco_venda: price,
+        fornecedor_id: fornecedor_id || null
+      }
+    });
+
+    // Get the supplier name if fornecedor_id was provided
+    let fornecedorNome = null;
+    if (fornecedor_id) {
+      const fornecedor = await prisma.fornecedores.findUnique({
+        where: { id: fornecedor_id },
+        select: { nome: true }
+      });
+      fornecedorNome = fornecedor?.nome || supplierName || null;
+    }
+
+    return NextResponse.json({
+      id: String(updatedPeca.id),
+      nome: updatedPeca.nome,
+      referencia: updatedPeca.referencia,
+      categoria: updatedPeca.categoria,
+      quantidade_stock: updatedPeca.quantidade_stock,
+      nivel_stock_minimo: updatedPeca.nivel_stock_minimo,
+      preco_venda: updatedPeca.preco_venda,
+      fornecedor_id: updatedPeca.fornecedor_id,
+      fornecedor_nome: fornecedorNome,
+      supplierName: fornecedorNome,
+      stockStatus: (updatedPeca.quantidade_stock ?? 0) === 0 ? 'esgotado' : 
+                   (updatedPeca.quantidade_stock ?? 0) <= (updatedPeca.nivel_stock_minimo ?? 0) ? 'baixo_stock' : 'em_stock'
+    });
+  } catch (error) {
+    console.error('Error updating peca:', error);
+    return NextResponse.json(
+      { error: 'Falha ao atualizar peça' },
+      { status: 500 }
+    );
+  }
+}

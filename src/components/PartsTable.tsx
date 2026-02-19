@@ -9,12 +9,14 @@ interface Part {
   supplierId?: string;
   supplierName?: string;
   stock: number;
+  minStock?: number;
   price: number;
   stockStatus: 'em_stock' | 'baixo_stock' | 'esgotado';
 }
 
 interface PartsTableProps {
   parts: Part[];
+  onEdit?: (part: Part) => void;
 }
 
 const getCategoryLabel = (category: string) => {
@@ -51,7 +53,7 @@ const getStockColor = (stockStatus: string, stock: number) => {
   }
 };
 
-export default function PartsTable({ parts }: PartsTableProps) {
+export default function PartsTable({ parts, onEdit }: PartsTableProps) {
   return (
     <div className="bg-gray-700 border border-gray-600 rounded-none overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
@@ -85,7 +87,10 @@ export default function PartsTable({ parts }: PartsTableProps) {
                   €{part.price.toFixed(2)}
                 </td>
                 <td className="px-6 py-4 text-center">
-                  <button className="text-gray-400 hover:text-brand-yellow transition-colors">
+                  <button 
+                    onClick={() => onEdit && onEdit(part)}
+                    className="text-gray-400 hover:text-brand-yellow transition-colors"
+                  >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
                     </svg>
@@ -104,35 +109,6 @@ export default function PartsTable({ parts }: PartsTableProps) {
         </table>
       </div>
 
-      {/* Pagination */}
-      <div className="bg-gray-800 px-4 py-3 border-t border-gray-600 flex items-center justify-between sm:px-6">
-        <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm text-gray-400">
-              A mostrar <span className="font-medium text-gray-200">1</span> a <span className="font-medium text-gray-200">{parts.length}</span> de <span className="font-medium text-gray-200">{parts.length}</span> resultados
-            </p>
-          </div>
-          <div>
-            <nav className="relative z-0 inline-flex shadow-sm -space-x-px" aria-label="Pagination">
-              <a href="#" className="relative inline-flex items-center px-2 py-2 border border-gray-600 bg-gray-800 text-sm font-medium text-gray-400 hover:bg-gray-700">
-                <span className="sr-only">Anterior</span>
-                <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </a>
-              <a href="#" aria-current="page" className="z-10 bg-brand-yellow border-brand-yellow text-gray-900 relative inline-flex items-center px-4 py-2 border text-sm font-bold">1</a>
-              <a href="#" className="bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700 relative inline-flex items-center px-4 py-2 border text-sm font-medium">2</a>
-              <a href="#" className="bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700 relative inline-flex items-center px-4 py-2 border text-sm font-medium">3</a>
-              <a href="#" className="relative inline-flex items-center px-2 py-2 border border-gray-600 bg-gray-800 text-sm font-medium text-gray-400 hover:bg-gray-700">
-                <span className="sr-only">Seguinte</span>
-                <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                </svg>
-              </a>
-            </nav>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

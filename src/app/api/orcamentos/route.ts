@@ -3,6 +3,8 @@ import { PrismaClient } from '@prisma/client';
 
 // @ts-ignore
 const prisma = new PrismaClient();
+const prismaAny = prisma as any;
+
 
 export async function POST(request: Request) {
   try {
@@ -15,6 +17,10 @@ export async function POST(request: Request) {
       data_emissao,
       data_expiracao,
       estado,
+      kms,
+      contacto_nome,
+      contacto_telefone,
+      contacto_email,
       total_pecas,
       total_mao_obra,
       total_desconto,
@@ -25,7 +31,7 @@ export async function POST(request: Request) {
     } = body;
 
     // Create the budget
-    const orcamento = await prisma.orcamentos.create({
+    const orcamento = await prismaAny.orcamentos.create({
       data: {
         ref_orcamento,
         cliente_id: parseInt(cliente_id),
@@ -34,6 +40,10 @@ export async function POST(request: Request) {
         data_emissao: data_emissao ? new Date(data_emissao) : new Date(),
         data_expiracao: data_expiracao ? new Date(data_expiracao) : null,
         estado: estado || 'pendente',
+        kms: kms ? parseInt(kms) : null,
+        contacto_nome: contacto_nome || null,
+        contacto_telefone: contacto_telefone || null,
+        contacto_email: contacto_email || null,
         total_pecas: parseFloat(total_pecas) || 0,
         total_mao_obra: parseFloat(total_mao_obra) || 0,
         total_desconto: parseFloat(total_desconto) || 0,
@@ -42,6 +52,7 @@ export async function POST(request: Request) {
         notas
       }
     });
+
 
     // Create budget items
     if (items && items.length > 0) {
@@ -79,6 +90,59 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    if (id) {
+      const orcamento = await prismaAny.orcamentos.findUnique({
+        where: { id: BigInt(id) },
+        include: {
+          cliente: true,
+          itens_orcamento: true
+        }
+      });
+
+      if (!orcamento) {
+        return NextResponse.json({ error: 'Budget not found' }, { status: 404 });
+      }
+
+      // Fetch vehicle separately if needed
+      let veiculo = null;
+      if (orcamento.veiculo_id) {
+        veiculo = await prisma.veiculos.findUnique({
+          where: { id: orcamento.veiculo_id }
+        });
+      }
+
+      const serialized = {
+        ...orcamento,
+        id: Number(orcamento.id),
+        veiculo_id: orcamento.veiculo_id ? Number(orcamento.veiculo_id) : null,
+        total_pecas: Number(orcamento.total_pecas),
+        total_mao_obra: Number(orcamento.total_mao_obra),
+        total_desconto: Number(orcamento.total_desconto),
+        total_imposto: Number(orcamento.total_imposto),
+        total_geral: Number(orcamento.total_geral),
+        cliente: orcamento.cliente ? {
+          ...orcamento.cliente,
+          id: Number(orcamento.cliente.id)
+        } : null,
+        veiculo: veiculo ? {
+          ...veiculo,
+          id: Number(veiculo.id)
+        } : null,
+        itens_orcamento: orcamento.itens_orcamento.map((item: any) => ({
+          ...item,
+          id: Number(item.id),
+          orcamento_id: Number(item.orcamento_id),
+          servico_id: item.servico_id ? Number(item.servico_id) : null,
+          peca_id: item.peca_id ? Number(item.peca_id) : null,
+          quantidade: Number(item.quantidade),
+          preco_unitario: Number(item.preco_unitario),
+          valor_total: Number(item.valor_total)
+        }))
+      };
+
+      return NextResponse.json({ orcamento: serialized });
+    }
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const offset = (page - 1) * limit;
@@ -108,8 +172,7 @@ export async function GET(request: Request) {
       total_geral: Number(orcamento.total_geral),
       cliente: orcamento.cliente ? {
         ...orcamento.cliente,
-        id: Number(orcamento.cliente.id),
-        desconto: Number(orcamento.cliente.desconto)
+        id: Number(orcamento.cliente.id)
       } : null,
       veiculo: orcamento.veiculo ? {
         ...orcamento.veiculo,
@@ -129,7 +192,7 @@ export async function GET(request: Request) {
 
     // Fetch work orders and their mechanics for approved budgets
     const orcamentoIds = orcamentos.map((o: any) => o.id);
-    const workOrders = await prisma.ordens_trabalho.findMany({
+    const workOrders = await prismaAny.ordens_trabalho.findMany({
       where: {
         orcamento_id: {
           in: orcamentoIds
@@ -183,15 +246,10 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { estado, mecanico_id } = body;
-
-    if (!estado) {
-      return NextResponse.json({ error: 'Status is required' }, { status: 400 });
-    }
-
+    const { estado, mecanico_id, items } = body;
 
     // First, get the current budget to check its current state
-    const currentOrcamento = await prisma.orcamentos.findUnique({
+    const currentOrcamento = await prismaAny.orcamentos.findUnique({
       where: { id: BigInt(id) },
       include: {
         itens_orcamento: true,
@@ -204,6 +262,65 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Budget not found' }, { status: 404 });
     }
 
+    // Edit mode (full update)
+    if (Array.isArray(items)) {
+      const updateData: any = {
+        ref_orcamento: body.ref_orcamento ?? currentOrcamento.ref_orcamento,
+        cliente_id: body.cliente_id ? parseInt(body.cliente_id) : currentOrcamento.cliente_id,
+        veiculo_id: body.veiculo_id ? BigInt(body.veiculo_id) : currentOrcamento.veiculo_id,
+        data_emissao: body.data_emissao ? new Date(body.data_emissao) : currentOrcamento.data_emissao,
+        data_expiracao: body.data_expiracao ? new Date(body.data_expiracao) : currentOrcamento.data_expiracao,
+        estado: body.estado ?? currentOrcamento.estado,
+        kms: body.kms ? parseInt(body.kms) : currentOrcamento.kms,
+        contacto_nome: body.contacto_nome ?? currentOrcamento.contacto_nome,
+        contacto_telefone: body.contacto_telefone ?? currentOrcamento.contacto_telefone,
+        contacto_email: body.contacto_email ?? currentOrcamento.contacto_email,
+        total_pecas: Number(body.total_pecas ?? currentOrcamento.total_pecas),
+        total_mao_obra: Number(body.total_mao_obra ?? currentOrcamento.total_mao_obra),
+        total_desconto: Number(body.total_desconto ?? currentOrcamento.total_desconto),
+        total_imposto: Number(body.total_imposto ?? currentOrcamento.total_imposto),
+        total_geral: Number(body.total_geral ?? currentOrcamento.total_geral),
+        notas: body.notas ?? currentOrcamento.notas
+      };
+
+      await prismaAny.orcamentos.update({
+        where: { id: BigInt(id) },
+        data: updateData
+      });
+
+      await prisma.itens_orcamento.deleteMany({
+        where: { orcamento_id: BigInt(id) }
+      });
+
+      const budgetItems = items.map((item: any) => {
+        const parsedId = parseInt(item.id, 10);
+        const hasNumericId = Number.isFinite(parsedId);
+
+        return {
+          orcamento_id: BigInt(id),
+          tipo_item: item.type === 'service' ? 'servico' : 'peca',
+          servico_id: item.type === 'service' && hasNumericId ? parsedId : null,
+          peca_id: item.type === 'part' && hasNumericId ? parsedId : null,
+          descricao: item.name,
+          quantidade: parseFloat(item.quantity),
+          preco_unitario: parseFloat(item.unitPrice),
+          valor_total: parseFloat(item.total)
+        };
+      });
+
+      if (budgetItems.length > 0) {
+        await prisma.itens_orcamento.createMany({
+          data: budgetItems
+        });
+      }
+
+      return NextResponse.json({ success: true });
+    }
+
+    if (!estado) {
+      return NextResponse.json({ error: 'Status is required' }, { status: 400 });
+    }
+
     // Update the budget status
     const updateData: any = { estado };
     
@@ -212,15 +329,48 @@ export async function PUT(request: Request) {
       updateData.data_aprovacao = new Date();
     }
 
-    const updatedOrcamento = await prisma.orcamentos.update({
+    const updatedOrcamento = await prismaAny.orcamentos.update({
       where: { id: BigInt(id) },
       data: updateData
     });
 
     // If the budget is being approved, create or update a work order
     if (estado === 'Aprovado') {
-      // Generate work order reference from budget reference (replace ORC with OT)
-      const workOrderRef = currentOrcamento.ref_orcamento.replace(/^ORC/, 'OT');
+      // Generate work order reference from budget reference (OT- + resto igual ao orçamento)
+      const workOrderRef = currentOrcamento.ref_orcamento
+        .replace(/^ORC-?/i, 'OT-')
+        .replace(/^OR-?/i, 'OT-');
+
+      // Update related appointment to "em_aprovacao" status
+      if (currentOrcamento.cliente_id || currentOrcamento.veiculo_id) {
+        let matricula: string | null = null;
+        if (currentOrcamento.veiculo_id) {
+          const veiculo = await prisma.veiculos.findUnique({
+            where: { id: currentOrcamento.veiculo_id },
+            select: { matricula: true }
+          });
+          matricula = veiculo?.matricula ?? null;
+        }
+
+        const where: any = {
+          estado: 'agendado'
+        };
+
+        if (currentOrcamento.cliente_id) {
+          where.cliente_id = currentOrcamento.cliente_id;
+        }
+
+        if (matricula) {
+          where.matricula = matricula;
+        }
+
+        await prisma.agendamentos.updateMany({
+          where,
+          data: {
+            estado: 'em_aprovacao'
+          }
+        });
+      }
 
       // Check if a work order already exists for this budget
       const existingWorkOrder = await prisma.ordens_trabalho.findFirst({
@@ -229,18 +379,24 @@ export async function PUT(request: Request) {
 
       if (existingWorkOrder) {
         // Update existing work order with the new mechanic (if provided)
+        const workOrderUpdateData: any = {
+          contacto_nome: currentOrcamento.contacto_nome ?? null,
+          contacto_telefone: currentOrcamento.contacto_telefone ?? null,
+          contacto_email: currentOrcamento.contacto_email ?? null
+        };
+
         if (mecanico_id) {
-          await prisma.ordens_trabalho.update({
-            where: { id: existingWorkOrder.id },
-            data: {
-              mecanico_id: parseInt(mecanico_id)
-            }
-          });
-          console.log(`Work order ${workOrderRef} updated with mechanic ID: ${mecanico_id}`);
+          workOrderUpdateData.mecanico_id = parseInt(mecanico_id);
         }
+
+        await prismaAny.ordens_trabalho.update({
+          where: { id: existingWorkOrder.id },
+          data: workOrderUpdateData
+        });
+        console.log(`Work order ${workOrderRef} updated`);
       } else {
         // Create a new work order
-        const ordemTrabalho = await prisma.ordens_trabalho.create({
+        const ordemTrabalho = await prismaAny.ordens_trabalho.create({
           data: {
             ref_ordem_trabalho: workOrderRef,
             cliente_id: currentOrcamento.cliente_id || 0,
@@ -249,6 +405,10 @@ export async function PUT(request: Request) {
             mecanico_id: mecanico_id ? parseInt(mecanico_id) : null,
             data_inicio: new Date(),
             estado: 'em_andamento',
+            kms: currentOrcamento.kms || null,
+            contacto_nome: currentOrcamento.contacto_nome ?? null,
+            contacto_telefone: currentOrcamento.contacto_telefone ?? null,
+            contacto_email: currentOrcamento.contacto_email ?? null,
             total_pecas: currentOrcamento.total_pecas || 0,
             total_mao_obra: currentOrcamento.total_mao_obra || 0,
             total_desconto: currentOrcamento.total_desconto || 0,

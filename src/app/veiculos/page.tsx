@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Sidebar from '../../components/Sidebar';
-import VehiclesTable from '../../components/VehiclesTable';
+import VehiclesTable, { type VehicleData } from '../../components/VehiclesTable';
 import VehicleHistoryModal from '../../components/VehicleHistoryModal';
-import { getClientById } from '../../data/mockData';
 
 interface Vehicle {
   id: string;
@@ -22,6 +21,9 @@ export default function VeiculosPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const ITEMS_PER_PAGE = 20;
 
 
   const fetchVehicles = async () => {
@@ -46,14 +48,25 @@ export default function VeiculosPage() {
     fetchVehicles();
   }, []);
 
+  // Reset pagination on data load
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [vehicles]);
+
   const filteredVehicles = vehicles;
 
-  const handleViewHistory = (vehicle: any) => {
+  // Pagination
+  const totalPages = Math.ceil(filteredVehicles.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedVehicles = filteredVehicles.slice(startIndex, endIndex);
+
+  const handleViewHistory = (vehicle: VehicleData) => {
     const vehicleForModal: Vehicle = {
       id: vehicle.id,
       plate: vehicle.licensePlate,
       makeModel: `${vehicle.make} ${vehicle.model}`,
-      client: getClientById(vehicle.clientId)?.nome || 'Cliente não encontrado',
+      client: vehicle.clientName || 'Cliente não encontrado',
       year: vehicle.year,
       lastIntervention: vehicle.lastIntervention,
     };
@@ -108,11 +121,45 @@ export default function VeiculosPage() {
             Erro ao carregar veículos: {error}
           </div>
         ) : (
-          <VehiclesTable
-            vehicles={filteredVehicles}
-            onViewHistory={handleViewHistory}
-            onDelete={handleDelete}
-          />
+          <>
+            <VehiclesTable
+              vehicles={paginatedVehicles}
+              onViewHistory={handleViewHistory}
+              onDelete={handleDelete}
+            />
+
+            {/* Pagination */}
+            {filteredVehicles.length > 0 && (
+              <div className="mt-4 bg-gray-700 px-4 py-3 border border-gray-600 flex items-center justify-between rounded">
+                <div className="flex-1 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-400">
+                      A mostrar <span className="font-medium text-gray-200">{startIndex + 1}</span> a <span className="font-medium text-gray-200">{Math.min(endIndex, filteredVehicles.length)}</span> de <span className="font-medium text-gray-200">{filteredVehicles.length}</span> veículos
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 text-sm bg-gray-600 hover:bg-gray-500 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:text-gray-500 text-gray-300 rounded border border-gray-500 transition-colors"
+                    >
+                      Anterior
+                    </button>
+                    <span className="text-sm text-gray-400 px-3">
+                      Página <span className="font-medium text-gray-200">{currentPage}</span> de <span className="font-medium text-gray-200">{totalPages}</span>
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 text-sm bg-gray-600 hover:bg-gray-500 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:text-gray-500 text-gray-300 rounded border border-gray-500 transition-colors"
+                    >
+                      Próxima
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
       </main>

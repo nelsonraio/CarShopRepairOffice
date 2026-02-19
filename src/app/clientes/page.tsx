@@ -3,16 +3,18 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Sidebar from "../../components/Sidebar";
-import ClientTable from "../../components/ClientTable";
+import ClientTable, { type ClienteRecord } from "../../components/ClientTable";
 import ClientModal from "../../components/ClientModal";
-import type { Cliente } from "../../data/mockData";
+
+const ITEMS_PER_PAGE = 20;
 
 export default function ClientesPage() {
-  const [clients, setClients] = useState<Cliente[]>([]);
+  const [clients, setClients] = useState<ClienteRecord[]>([]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
 
   useEffect(() => {
@@ -34,7 +36,12 @@ export default function ClientesPage() {
     fetchClients();
   }, []);
 
-  const handleAddClient = async (newClient: Omit<Cliente, 'id' | 'dataRegistro' | 'totalGasto' | 'visitas'>) => {
+  // Reset pagination on search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  const handleAddClient = async (newClient: Omit<ClienteRecord, 'id' | 'dataRegistro' | 'totalGasto' | 'visitas'>) => {
     try {
       const response = await fetch('/api/clientes', {
         method: 'POST',
@@ -71,6 +78,12 @@ export default function ClientesPage() {
     client.nif.includes(searchTerm) ||
     client.telefone.includes(searchTerm)
   );
+
+  // Pagination
+  const totalPages = Math.ceil(filteredClients.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedClients = filteredClients.slice(startIndex, endIndex);
 
   return (
     <div className="flex h-screen bg-gray-800">
@@ -122,10 +135,44 @@ export default function ClientesPage() {
             Erro ao carregar clientes: {error}
           </div>
         ) : (
-          <ClientTable
-            clients={filteredClients}
-            onDelete={handleDelete}
-          />
+          <>
+            <ClientTable
+              clients={paginatedClients}
+              onDelete={handleDelete}
+            />
+
+            {/* Pagination */}
+            {filteredClients.length > 0 && (
+              <div className="mt-4 bg-gray-700 px-4 py-3 border border-gray-600 flex items-center justify-between rounded">
+                <div className="flex-1 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-400">
+                      A mostrar <span className="font-medium text-gray-200">{startIndex + 1}</span> a <span className="font-medium text-gray-200">{Math.min(endIndex, filteredClients.length)}</span> de <span className="font-medium text-gray-200">{filteredClients.length}</span> clientes
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 text-sm bg-gray-600 hover:bg-gray-500 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:text-gray-500 text-gray-300 rounded border border-gray-500 transition-colors"
+                    >
+                      Anterior
+                    </button>
+                    <span className="text-sm text-gray-400 px-3">
+                      Página <span className="font-medium text-gray-200">{currentPage}</span> de <span className="font-medium text-gray-200">{totalPages}</span>
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 text-sm bg-gray-600 hover:bg-gray-500 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:text-gray-500 text-gray-300 rounded border border-gray-500 transition-colors"
+                    >
+                      Próxima
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
 
         )}
       </main>

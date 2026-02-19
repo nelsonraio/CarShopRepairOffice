@@ -349,6 +349,11 @@ const NewVehiclePage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const form = e.currentTarget as HTMLFormElement;
+    if (!form.reportValidity()) {
+      return;
+    }
+
     if (licensePlateExists) {
       alert('Não é possível criar o veículo porque a matrícula já existe na tabela de veículos.');
       return;
@@ -412,7 +417,8 @@ const NewVehiclePage = () => {
                   Voltar
                 </Link>
                 <button
-                  onClick={handleSubmit}
+                  type="submit"
+                  form="new-vehicle-form"
                   className="px-4 py-2 bg-brand-yellow-dark text-white font-bold hover:bg-yellow-600 transition-colors rounded-none flex items-center shadow-md"
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -425,7 +431,7 @@ const NewVehiclePage = () => {
           </header>
 
           <div className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form id="new-vehicle-form" onSubmit={handleSubmit} className="space-y-6">
 
               {/* Vehicle Information */}
 
@@ -557,7 +563,7 @@ const NewVehiclePage = () => {
                     )}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1">Telefone {isNewClient && <span className="text-brand-yellow">*</span>}</label>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Telefone</label>
                     <input
                       type="tel"
                       name="clientPhone"
@@ -566,7 +572,6 @@ const NewVehiclePage = () => {
                       disabled={!!selectedClient && !isNewClient}
                       className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder={isNewClient ? "+351 912 345 678" : "Selecione um cliente existente ou digite um novo"}
-                      required={isNewClient}
                     />
                   </div>
                   <div>
@@ -576,7 +581,7 @@ const NewVehiclePage = () => {
                       name="clientEmail"
                       value={formData.clientEmail}
                       onChange={handleInputChange}
-                      disabled={selectedClient && !isNewClient}
+                      disabled={!!(selectedClient && !isNewClient)}
                       className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder={isNewClient ? "joao.silva@email.com" : "Selecione um cliente existente ou digite um novo"}
                     />
@@ -588,7 +593,7 @@ const NewVehiclePage = () => {
                       name="clientNif"
                       value={formData.clientNif}
                       onChange={handleInputChange}
-                      disabled={selectedClient && !isNewClient}
+                      disabled={!!(selectedClient && !isNewClient)}
                       className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder={isNewClient ? "123 456 789" : "Selecione um cliente existente ou digite um novo"}
                     />

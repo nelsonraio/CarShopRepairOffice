@@ -56,7 +56,7 @@ export async function POST(request: Request) {
         data: {
           nome: body.clientName,
           email: body.clientEmail || null,
-          telefone: body.clientPhone,
+          telefone: body.clientPhone || '',
           nif: body.clientNif || null,
           endereco: body.clientAddress || null,
           perfil: perfilMap[body.clientProfile as string] || body.clientProfile,

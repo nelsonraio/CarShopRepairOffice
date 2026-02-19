@@ -2,8 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import type { Vehicle as VehicleData } from "../data/mockData";
-import { getClientById } from "../data/mockData";
+
+export interface VehicleData {
+  id: string;
+  clientId?: string;
+  clientName?: string;
+  make: string;
+  model: string;
+  licensePlate: string;
+  year: number;
+  lastIntervention: string;
+}
 
 
 
@@ -19,11 +28,11 @@ export default function VehiclesTable({ vehicles, onViewHistory, onEdit, onDelet
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredVehicles = vehicles.filter(vehicle => {
-    const client = getClientById(vehicle.clientId);
+    const clientName = vehicle.clientName || '';
     const searchLower = searchTerm.toLowerCase();
     return (
       vehicle.licensePlate.toLowerCase().includes(searchLower) ||
-      (client?.nome || '').toLowerCase().includes(searchLower) ||
+      clientName.toLowerCase().includes(searchLower) ||
       vehicle.make.toLowerCase().includes(searchLower) ||
       vehicle.model.toLowerCase().includes(searchLower)
     );
@@ -65,8 +74,7 @@ export default function VehiclesTable({ vehicles, onViewHistory, onEdit, onDelet
             </thead>
             <tbody className="divide-y divide-gray-600">
               {filteredVehicles.map((vehicle) => {
-                // Use clientName from API data if available, otherwise fall back to mock data lookup
-                const clientName = (vehicle as any).clientName || getClientById(vehicle.clientId)?.nome || 'Cliente não encontrado';
+                const clientName = vehicle.clientName || 'Cliente não encontrado';
                 return (
                   <tr key={vehicle.id} className="hover:bg-gray-600 transition-colors">
                     <td className="px-6 py-4 font-medium text-gray-100 font-mono">{vehicle.licensePlate}</td>

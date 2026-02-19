@@ -1,74 +1,159 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
+import CriarFaturaModal from "@/components/CriarFaturaModal";
 
 interface Invoice {
-  id: string;
-  number: string;
-  processNumber: string;
-  licensePlate: string;
-  client: string;
-  nif: string;
-  issueDate: string;
-  dueDate: string;
-  total: number;
-  status: 'pago' | 'pendente' | 'anulado';
+  id: number;
+  numero_fatura: string;
+  cliente_id: number;
+  ordem_trabalho_ref?: string;
+  cliente_nome?: string;
+  cliente_nif?: string;
+  veiculo_marca?: string;
+  veiculo_modelo?: string;
+  veiculo_matricula?: string;
+  data_emissao: string;
+  data_vencimento: string;
+  valor_total: number;
+  estado: 'pendente' | 'parcial' | 'paga' | 'vencida' | 'cancelada';
+  notas?: string;
 }
 
-const mockInvoices: Invoice[] = [
-  {
-    id: "1",
-    number: "FT 2024/00123",
-    processNumber: "C1234",
-    licensePlate: "AA-11-BB",
-    client: "João Silva",
-    nif: "234567890",
-    issueDate: "28/10/2024",
-    dueDate: "28/11/2024",
-    total: 153.75,
-    status: "pago"
-  },
-  {
-    id: "2",
-    number: "FT 2024/00124",
-    processNumber: "C1235",
-    licensePlate: "CC-22-DD",
-    client: "Ana Costa",
-    nif: "198765432",
-    issueDate: "29/10/2024",
-    dueDate: "29/11/2024",
-    total: 450.00,
-    status: "pendente"
-  }
-];
+
+const mockInvoices: Invoice[] = [];
+
+const ITEMS_PER_PAGE = 20;
 
 export default function FaturacaoPage() {
-  const [invoices] = useState<Invoice[]>(mockInvoices);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("todos");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Carregar faturas da API
+  useEffect(() => {
+    carregarFaturas();
+  }, []);
+
+  const carregarFaturas = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/faturas');
+      const data = await response.json();
+      if (data.success) {
+        setInvoices(data.data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar faturas:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fazer download de PDF
+  const handleDownloadPDF = async (faturalId: number, numeroFatura: string) => {
+    try {
+      const response = await fetch(`/api/faturas/${faturalId}/pdf`);
+      if (!response.ok) throw new Error('Erro ao gerar PDF');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${numeroFatura}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      alert('Erro ao fazer download da fatura');
+      console.error(error);
+    }
+  };
+
+  // Marcar fatura como paga
+  const handleMarcarPaga = async (faturalId: number) => {
+    try {
+      const response = await fetch(`/api/faturas/${faturalId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ marcar_paga: true })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('[Marcar Paga] Resposta:', data);
+        
+        // Atualizar a grelha imediatamente
+        setInvoices(prev => 
+          prev.map(inv => 
+            inv.id === faturalId 
+              ? { ...inv, estado: 'paga' } 
+              : inv
+          )
+        );
+        
+        // Depois recarregar para garantir sincronização
+        setTimeout(() => carregarFaturas(), 500);
+        alert('Fatura marcada como paga com sucesso!');
+      } else {
+        const errorData = await response.json();
+        alert(`Erro: ${errorData.error || 'Falha ao marcar como paga'}`);
+        console.error('[Marcar Paga] Erro:', errorData);
+      }
+    } catch (error) {
+      alert('Erro ao marcar fatura como paga');
+      console.error('[Marcar Paga] Exception:', error);
+    }
+  };
+
+  // Anular fatura
+  const handleAnularFatura = async (faturalId: number, numeroFatura: string) => {
+    if (confirm(`Tem a certeza que deseja anular a fatura ${numeroFatura}?`)) {
+      try {
+        const response = await fetch(`/api/faturas/${faturalId}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          carregarFaturas();
+          alert('Fatura anulada com sucesso!');
+        }
+      } catch (error) {
+        alert('Erro ao anular fatura');
+        console.error(error);
+      }
+    }
+  }
 
   const filteredInvoices = invoices.filter(invoice => {
     const matchesSearch = searchTerm === "" ||
-      invoice.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.nif.includes(searchTerm) ||
-      invoice.number.toLowerCase().includes(searchTerm.toLowerCase());
+      (invoice.cliente_nome?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (invoice.cliente_nif?.includes(searchTerm)) ||
+      (invoice.numero_fatura.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (invoice.ordem_trabalho_ref?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (invoice.veiculo_matricula?.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    const matchesStatus = statusFilter === "" || invoice.status === statusFilter;
+    const matchesStatus = statusFilter === "" || invoice.estado === statusFilter;
 
     const matchesDate = (() => {
       if (dateFilter === "todos") return true;
 
-      // Parse date from DD/MM/YYYY format
-      const parts = invoice.issueDate.split('/').map(Number);
-      const day = parts[0] || 1;
-      const month = parts[1] || 1;
-      const year = parts[2] || new Date().getFullYear();
-      const invoiceDate = new Date(year, month - 1, day);
+      // Parse date from ISO format or DD/MM/YYYY format
+      let invoiceDate: Date;
+      if (invoice.data_emissao) {
+        invoiceDate = new Date(invoice.data_emissao);
+      } else {
+        return true;
+      }
+
       const now = new Date();
 
       if (dateFilter === "ultimo_mes") {
@@ -93,14 +178,80 @@ export default function FaturacaoPage() {
     return matchesSearch && matchesStatus && matchesDate;
   });
 
+  // Calcular totais para os stats
+  // Total faturado: todas as faturas (independente do status) com os filtros de pesquisa e data
+  const invoicesForStats = invoices.filter(invoice => {
+    const matchesSearch = searchTerm === "" ||
+      (invoice.cliente_nome?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (invoice.cliente_nif?.includes(searchTerm)) ||
+      (invoice.numero_fatura.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (invoice.ordem_trabalho_ref?.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    const matchesDate = (() => {
+      if (dateFilter === "todos") return true;
+
+      let invoiceDate: Date;
+      if (invoice.data_emissao) {
+        invoiceDate = new Date(invoice.data_emissao);
+      } else {
+        return true;
+      }
+
+      const now = new Date();
+
+      if (dateFilter === "ultimo_mes") {
+        const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        return invoiceDate >= lastMonth;
+      } else if (dateFilter === "ultimos_3_meses") {
+        const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+        return invoiceDate >= threeMonthsAgo;
+      } else if (dateFilter === "ultimos_6_meses") {
+        const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+        return invoiceDate >= sixMonthsAgo;
+      } else if (dateFilter === "intervalo_personalizado") {
+        if (!startDate || !endDate) return true;
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        return invoiceDate >= start && invoiceDate <= end;
+      }
+
+      return true;
+    })();
+
+    return matchesSearch && matchesDate;
+  });
+
+  const totalFaturado = invoicesForStats
+    .filter(inv => inv.estado === 'paga')
+    .reduce((sum, inv) => sum + inv.valor_total, 0);
+  const totalPendente = invoicesForStats
+    .filter(inv => inv.estado === 'pendente')
+    .reduce((sum, inv) => sum + inv.valor_total, 0);
+  const countPendente = invoicesForStats.filter(inv => inv.estado === 'pendente').length;
+
+  // Paginação
+  const totalPages = Math.ceil(filteredInvoices.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedInvoices = filteredInvoices.slice(startIndex, endIndex);
+
+  // Reset página quando filtros mudam
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, dateFilter, startDate, endDate]);
+
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pago':
+      case 'paga':
         return 'bg-green-900 text-green-200 border-green-700';
       case 'pendente':
         return 'bg-yellow-900 text-yellow-200 border-yellow-700';
-      case 'anulado':
+      case 'parcial':
+        return 'bg-orange-900 text-orange-200 border-orange-700';
+      case 'vencida':
         return 'bg-red-900 text-red-200 border-red-700';
+      case 'cancelada':
+        return 'bg-gray-800 text-gray-300 border-gray-700';
       default:
         return 'bg-gray-900 text-gray-200 border-gray-700';
     }
@@ -108,12 +259,16 @@ export default function FaturacaoPage() {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'pago':
-        return 'PAGO';
+      case 'paga':
+        return 'PAGA';
       case 'pendente':
         return 'PENDENTE';
-      case 'anulado':
-        return 'ANULADO';
+      case 'parcial':
+        return 'PARCIAL';
+      case 'vencida':
+        return 'VENCIDA';
+      case 'cancelada':
+        return 'CANCELADA';
       default:
         return status.toUpperCase();
     }
@@ -144,19 +299,14 @@ export default function FaturacaoPage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div className="bg-gray-700 border border-gray-600 p-6 rounded-none">
-            <h3 className="text-sm font-medium text-gray-400 uppercase">Faturado (Mês)</h3>
-            <p className="mt-2 text-3xl font-bold text-gray-100">€12,450.00</p>
-            <p className="text-xs text-green-400 mt-1 flex items-center">
-              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
-              </svg>
-              +12% vs mês anterior
-            </p>
+            <h3 className="text-sm font-medium text-gray-400 uppercase">Faturado</h3>
+            <p className="mt-2 text-3xl font-bold text-gray-100">€{totalFaturado.toFixed(2)}</p>
+            <p className="text-xs text-gray-400 mt-1">{filteredInvoices.length} faturas</p>
           </div>
           <div className="bg-gray-700 border border-gray-600 p-6 rounded-none">
             <h3 className="text-sm font-medium text-gray-400 uppercase">Pendente</h3>
-            <p className="mt-2 text-3xl font-bold text-brand-yellow">€3,200.00</p>
-            <p className="text-xs text-gray-400 mt-1">5 faturas em aberto</p>
+            <p className="mt-2 text-3xl font-bold text-brand-yellow">€{totalPendente.toFixed(2)}</p>
+            <p className="text-xs text-gray-400 mt-1">{countPendente} {countPendente === 1 ? 'fatura' : 'faturas'} em aberto</p>
           </div>
         </div>
 
@@ -170,7 +320,7 @@ export default function FaturacaoPage() {
             </div>
             <input
               type="text"
-              placeholder="Pesquisar por cliente, NIF ou nº fatura..."
+              placeholder="Pesquisar por cliente, NIF, matrícula, nº fatura ou ordem trabalho..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-600 text-white rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow placeholder-gray-500"
@@ -183,9 +333,11 @@ export default function FaturacaoPage() {
               className="bg-gray-800 border border-gray-600 text-gray-300 rounded-none focus:ring-brand-yellow focus:border-brand-yellow px-4 py-2"
             >
               <option value="">Todos os Status</option>
-              <option value="pago">Pago</option>
+              <option value="paga">Paga</option>
               <option value="pendente">Pendente</option>
-              <option value="anulado">Anulado</option>
+              <option value="parcial">Parcial</option>
+              <option value="vencida">Vencida</option>
+              <option value="cancelada">Cancelada</option>
             </select>
             <div className="flex gap-2">
               <select
@@ -223,155 +375,139 @@ export default function FaturacaoPage() {
 
         {/* Table */}
         <div className="bg-gray-700 border border-gray-600 rounded-none overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left text-gray-400">
-              <thead className="text-xs text-gray-300 uppercase bg-gray-800 border-b border-gray-600">
-                <tr>
-                  <th scope="col" className="px-6 py-3">Fatura Nº</th>
-                  <th scope="col" className="px-6 py-3">N. Proc.</th>
-                  <th scope="col" className="px-6 py-3">Matrícula</th>
-                  <th scope="col" className="px-6 py-3">Cliente</th>
-                  <th scope="col" className="px-6 py-3">Data Emissão</th>
-                  <th scope="col" className="px-6 py-3">Vencimento</th>
-                  <th scope="col" className="px-6 py-3 text-right">Valor Total</th>
-                  <th scope="col" className="px-6 py-3 text-center">Status</th>
-                  <th scope="col" className="px-6 py-3 text-center">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-600">
-                {filteredInvoices.map((invoice) => (
-                  <tr key={invoice.id} className="hover:bg-gray-600 transition-colors">
-                    <td className="px-6 py-4 font-medium text-gray-200 font-mono">{invoice.number}</td>
-                    <td className="px-6 py-4 font-mono text-brand-yellow">{invoice.processNumber}</td>
-                    <td className="px-6 py-4 font-mono">{invoice.licensePlate}</td>
-                    <td className="px-6 py-4 text-gray-100">
-                      <div>{invoice.client}</div>
-                      <div className="text-xs text-gray-500">NIF: {invoice.nif}</div>
-                    </td>
-                    <td className="px-6 py-4">{invoice.issueDate}</td>
-                    <td className="px-6 py-4">{invoice.dueDate}</td>
-                    <td className="px-6 py-4 text-right font-medium text-gray-200">€{invoice.total.toFixed(2)}</td>
-                    <td className="px-6 py-4 text-center">
-                      <span className={`px-2 py-1 text-xs font-bold border ${getStatusColor(invoice.status)}`}>
-                        {getStatusText(invoice.status)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <button className="text-gray-400 hover:text-brand-yellow transition-colors mx-1" title="Ver">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                        </svg>
-                      </button>
-                      <button className="text-gray-400 hover:text-brand-yellow transition-colors mx-1" title="Download PDF">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                        </svg>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          <div className="bg-gray-800 px-4 py-3 border-t border-gray-600 flex items-center justify-between sm:px-6">
-            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-gray-400">
-                  A mostrar <span className="font-medium text-gray-200">1</span> a <span className="font-medium text-gray-200">{filteredInvoices.length}</span> de <span className="font-medium text-gray-200">{invoices.length}</span> resultados
-                </p>
-              </div>
-              <div>
-                <nav className="relative z-0 inline-flex shadow-sm -space-x-px" aria-label="Pagination">
-                  <button className="relative inline-flex items-center px-2 py-2 border border-gray-600 bg-gray-800 text-sm font-medium text-gray-400 hover:bg-gray-700">
-                    <span className="sr-only">Anterior</span>
-                    <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                  <button aria-current="page" className="z-10 bg-brand-yellow border-brand-yellow text-gray-900 relative inline-flex items-center px-4 py-2 border text-sm font-bold">1</button>
-                  <button className="bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700 relative inline-flex items-center px-4 py-2 border text-sm font-medium">2</button>
-                  <button className="bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700 relative inline-flex items-center px-4 py-2 border text-sm font-medium">3</button>
-                  <button className="relative inline-flex items-center px-2 py-2 border border-gray-600 bg-gray-800 text-sm font-medium text-gray-400 hover:bg-gray-700">
-                    <span className="sr-only">Seguinte</span>
-                    <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </nav>
-              </div>
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-yellow"></div>
             </div>
-          </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left text-gray-400">
+                  <thead className="text-xs text-gray-300 uppercase bg-gray-800 border-b border-gray-600">
+                    <tr>
+                      <th scope="col" className="px-6 py-3">Fatura Nº</th>
+                      <th scope="col" className="px-6 py-3">Ordem Trabalho</th>
+                      <th scope="col" className="px-6 py-3">Veículo</th>
+                      <th scope="col" className="px-6 py-3">Cliente</th>
+                      <th scope="col" className="px-6 py-3">Data Emissão</th>
+                      <th scope="col" className="px-6 py-3">Vencimento</th>
+                      <th scope="col" className="px-6 py-3 text-right">Valor Total</th>
+                      <th scope="col" className="px-6 py-3 text-center">Status</th>
+                      <th scope="col" className="px-6 py-3 text-center">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-600">
+                    {filteredInvoices.length === 0 ? (
+                      <tr>
+                        <td colSpan={9} className="px-6 py-12 text-center text-gray-400">
+                          {invoices.length === 0 ? 'Nenhuma fatura encontrada' : 'Nenhuma fatura corresponde aos filtros'}
+                        </td>
+                      </tr>
+                    ) : (
+                      paginatedInvoices.map((invoice) => (
+                        <tr key={invoice.id} className="hover:bg-gray-600 transition-colors">
+                          <td className="px-6 py-4 font-medium text-gray-200 font-mono">{invoice.numero_fatura}</td>
+                          <td className="px-6 py-4 text-gray-200 font-mono">{invoice.ordem_trabalho_ref || '-'}</td>
+                          <td className="px-6 py-4 text-gray-200 font-mono">
+                            {invoice.veiculo_marca || invoice.veiculo_modelo || invoice.veiculo_matricula ? (
+                              <div>
+                                <div className="flex gap-2">
+                                  {invoice.veiculo_marca && <span className="font-bold">{invoice.veiculo_marca}</span>}
+                                  {invoice.veiculo_modelo && <span>{invoice.veiculo_modelo}</span>}
+                                </div>
+                                {invoice.veiculo_matricula && <div className="text-xs text-gray-500">{invoice.veiculo_matricula}</div>}
+                              </div>
+                            ) : (
+                              <span className="text-gray-500">-</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-gray-100">
+                            <div>{invoice.cliente_nome}</div>
+                            <div className="text-xs text-gray-500">NIF: {invoice.cliente_nif}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            {invoice.data_emissao ? new Date(invoice.data_emissao).toLocaleDateString('pt-PT') : 'N/A'}
+                          </td>
+                          <td className="px-6 py-4">
+                            {invoice.data_vencimento ? new Date(invoice.data_vencimento).toLocaleDateString('pt-PT') : 'N/A'}
+                          </td>
+                          <td className="px-6 py-4 text-right font-medium text-gray-200">€{invoice.valor_total.toFixed(2)}</td>
+                          <td className="px-6 py-4 text-center">
+                            <span className={`px-2 py-1 text-xs font-bold border ${getStatusColor(invoice.estado)}`}>
+                              {getStatusText(invoice.estado)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-center flex justify-center gap-2">
+                            <button 
+                              onClick={() => handleDownloadPDF(invoice.id, invoice.numero_fatura)}
+                              className="text-gray-400 hover:text-brand-yellow transition-colors" 
+                              title="Download PDF"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                              </svg>
+                            </button>
+                            {invoice.estado === 'pendente' && (
+                              <button 
+                                onClick={() => handleMarcarPaga(invoice.id)}
+                                className="text-gray-400 hover:text-green-400 transition-colors" 
+                                title="Marcar como paga"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {filteredInvoices.length > 0 && (
+                <div className="bg-gray-800 px-4 py-3 border-t border-gray-600 flex items-center justify-between sm:px-6">
+                  <div className="flex-1 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-400">
+                        A mostrar <span className="font-medium text-gray-200">{startIndex + 1}</span> a <span className="font-medium text-gray-200">{Math.min(endIndex, filteredInvoices.length)}</span> de <span className="font-medium text-gray-200">{filteredInvoices.length}</span> faturas
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-600 text-gray-300 rounded border border-gray-600 transition-colors"
+                      >
+                        Anterior
+                      </button>
+                      <span className="text-sm text-gray-400 px-3">
+                        Página <span className="font-medium text-gray-200">{currentPage}</span> de <span className="font-medium text-gray-200">{totalPages}</span>
+                      </span>
+                      <button
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-600 text-gray-300 rounded border border-gray-600 transition-colors"
+                      >
+                        Próxima
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </main>
 
       {/* Modal Nova Fatura */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-gray-800 border border-gray-600 w-full max-w-2xl p-6 shadow-2xl relative">
-            <h3 className="text-xl font-bold text-gray-100 mb-6 border-b border-gray-700 pb-2">Nova Fatura</h3>
-            <form className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Cliente</label>
-                  <select className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none">
-                    <option>Selecione um cliente...</option>
-                    <option>João Silva</option>
-                    <option>Ana Costa</option>
-                    <option>Empresa Transportes Lda</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Status</label>
-                  <select className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none">
-                    <option value="pendente">Pendente</option>
-                    <option value="pago">Pago</option>
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">N. Processo</label>
-                  <input type="text" className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600" placeholder="Ex: C1234" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Matrícula</label>
-                  <input type="text" className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600" placeholder="AA-00-BB" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Data Emissão</label>
-                  <input type="date" className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Vencimento</label>
-                  <input type="date" className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600" />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Itens / Serviços</label>
-                <textarea rows={3} className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600" placeholder="Descrição dos serviços ou peças..."></textarea>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Valor Total (€)</label>
-                  <input type="number" step="0.01" className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600" placeholder="0.00" />
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-3 mt-8 pt-4 border-t border-gray-700">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors rounded-none border border-gray-600">Cancelar</button>
-                <button type="submit" className="px-4 py-2 bg-brand-yellow text-gray-900 font-bold hover:bg-brand-yellow-dark transition-colors rounded-none">Criar Fatura</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <CriarFaturaModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={() => carregarFaturas()}
+      />
     </div>
   );
 }

@@ -41,9 +41,11 @@ body {
 .kanban-board {
   flex-grow: 1;
   display: flex;
-  gap: 1rem;
-  overflow-x: auto;
+  gap: 0.5rem;
+  overflow-x: hidden;
   padding-bottom: 1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
   min-height: 0;
   scrollbar-width: thin;
   scrollbar-color: #4b5563 #1f2937;
@@ -67,9 +69,10 @@ body {
   flex-direction: column;
   background-color: #1f2937; /* gray-800 */
   border-radius: 0.75rem; /* 12px */
-  padding: 1rem;
+  padding: 0.75rem;
   height: 100%;
   max-height: 100%;
+  flex: 1 1 auto;
 }
 .kanban-column-content {
   flex-grow: 1;

@@ -1,0 +1,14 @@
+CREATE TABLE IF NOT EXISTS keystart (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  chave VARCHAR(255) NOT NULL,
+  ativo TINYINT(1) NOT NULL DEFAULT 1,
+  atualizado_em DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+INSERT INTO keystart (chave, ativo)
+VALUES ('ADMIN2026$', 1)
+ON DUPLICATE KEY UPDATE
+  chave = VALUES(chave),
+  ativo = VALUES(ativo);
+
+SELECT id, chave, ativo, atualizado_em FROM keystart;

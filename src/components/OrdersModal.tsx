@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface Part {
   id: string;
@@ -15,16 +15,21 @@ interface Part {
 
 interface Order {
   id: string;
-  orderNumber: string;
-  supplier: string;
-  parts: Array<{
-    part: Part;
-    quantity: number;
-  }>;
-  orderDate: string;
-  expectedDate: string;
-  status: 'pendente' | 'em_transito' | 'recebido' | 'cancelado';
-  totalValue: number;
+  numero_encomenda: string;
+  fornecedor_nome: string;
+  itens: ItemEncomenda[];
+  data_encomenda: string;
+  data_entrega_estimada: string | null;
+  estado: 'pendente' | 'em_transito' | 'recebido' | 'cancelado';
+  custo_total: number;
+  dias_atraso?: number;
+}
+
+interface ItemEncomenda {
+  peca_id: string;
+  quantidade_encomendada: number;
+  quantidade_recebida: number;
+  preco_unitario: number;
 }
 
 interface OrdersModalProps {
@@ -38,45 +43,29 @@ const OrdersModal: React.FC<OrdersModalProps> = ({ isOpen, onClose, parts, onReo
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>('todos');
   const [expandedOrders, setExpandedOrders] = useState<string[]>([]);
-  const [orders, setOrders] = useState<Order[]>([
-    {
-      id: "1",
-      orderNumber: "ENC-2024-001",
-      supplier: "Bosch Portugal",
-      parts: [
-        { part: parts.find(p => p.id === "1")!, quantity: 20 },
-        { part: parts.find(p => p.id === "4")!, quantity: 10 }
-      ],
-      orderDate: "2024-01-15",
-      expectedDate: "2024-01-25",
-      status: "recebido",
-      totalValue: 320.00
-    },
-    {
-      id: "2",
-      orderNumber: "ENC-2024-002",
-      supplier: "AutoParts SA",
-      parts: [
-        { part: parts.find(p => p.id === "2")!, quantity: 15 }
-      ],
-      orderDate: "2024-01-18",
-      expectedDate: "2024-01-28",
-      status: "em_transito",
-      totalValue: 688.50
-    },
-    {
-      id: "3",
-      orderNumber: "ENC-2024-003",
-      supplier: "LubriNorte",
-      parts: [
-        { part: parts.find(p => p.id === "3")!, quantity: 8 }
-      ],
-      orderDate: "2024-01-20",
-      expectedDate: "2024-01-30",
-      status: "pendente",
-      totalValue: 440.00
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadOrders();
     }
-  ]);
+  }, [isOpen]);
+
+  const loadOrders = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/encomendas');
+      if (!response.ok) throw new Error('Failed to load orders');
+      const data = await response.json();
+      setOrders(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error loading orders:', error);
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggleOrderExpansion = (orderId: string) => {
     setExpandedOrders(prev =>
@@ -85,22 +74,25 @@ const OrdersModal: React.FC<OrdersModalProps> = ({ isOpen, onClose, parts, onReo
   };
 
   const filteredOrders = orders.filter(order =>
-    (order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.supplier.toLowerCase().includes(searchTerm.toLowerCase())) &&
-    (statusFilter === 'todos' || order.status === statusFilter)
+    (order.numero_encomenda.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.fornecedor_nome.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (statusFilter === 'todos' || order.estado === statusFilter)
   );
 
-  const handleAddToInventory = (orderId: string, partId: string, quantity: number) => {
-    console.log(`Adding ${quantity} units of part ${partId} from order ${orderId} to inventory`);
-  };
+  const handleStatusChange = async (orderId: string, newStatus: string) => {
+    try {
+      const response = await fetch(`/api/encomendas/${orderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: newStatus }),
+      });
 
-  const handleStatusChange = (orderId: string, newStatus: Order['status']) => {
-    console.log(`Changing status of order ${orderId} to ${newStatus}`);
-    setOrders(prevOrders =>
-      prevOrders.map(order =>
-        order.id === orderId ? { ...order, status: newStatus } : order
-      )
-    );
+      if (response.ok) {
+        setOrders(orders.map(o => o.id === orderId ? { ...o, estado: newStatus as any } : o));
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -122,6 +114,11 @@ const OrdersModal: React.FC<OrdersModalProps> = ({ isOpen, onClose, parts, onReo
       case 'cancelado': return 'Cancelado';
       default: return status;
     }
+  };
+
+  const formatDate = (date: string | null) => {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('pt-PT');
   };
 
   if (!isOpen) return null;
@@ -178,22 +175,25 @@ const OrdersModal: React.FC<OrdersModalProps> = ({ isOpen, onClose, parts, onReo
                 <div className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-600/50" onClick={() => toggleOrderExpansion(order.id)}>
                   <div className="flex-1 grid grid-cols-5 gap-4 items-center">
                     <div className="col-span-2">
-                      <h3 className="text-lg font-semibold text-white">{order.orderNumber}</h3>
-                      <p className="text-sm text-gray-400">{order.supplier}</p>
+                      <h3 className="text-lg font-semibold text-white">{order.numero_encomenda}</h3>
+                      <p className="text-sm text-gray-400">{order.fornecedor_nome}</p>
                     </div>
                     <div className="text-sm">
                       <p className="text-gray-400">Encomendado:</p>
-                      <p className="text-gray-200 font-medium">{new Date(order.orderDate).toLocaleDateString('pt-PT')}</p>
+                      <p className="text-gray-200 font-medium">{formatDate(order.data_encomenda)}</p>
                     </div>
                     <div className="text-sm">
                       <p className="text-gray-400">Previsto:</p>
-                      <p className="text-gray-200 font-medium">{new Date(order.expectedDate).toLocaleDateString('pt-PT')}</p>
+                      <p className={order.dias_atraso && order.dias_atraso > 0 ? 'text-red-400 font-semibold' : 'text-gray-200 font-medium'}>
+                        {formatDate(order.data_entrega_estimada)}
+                        {order.dias_atraso && order.dias_atraso > 0 && <span className="text-xs"> ({order.dias_atraso}d)</span>}
+                      </p>
                     </div>
                     <div className="text-center">
                       <select
-                        value={order.status}
-                        onChange={(e) => handleStatusChange(order.id, e.target.value as Order['status'])}
-                        className={`px-3 py-1 text-xs font-bold rounded-full border-0 bg-transparent cursor-pointer focus:ring-1 focus:ring-brand-yellow ${getStatusColor(order.status)}`}
+                        value={order.estado}
+                        onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                        className={`px-3 py-1 text-xs font-bold rounded-full border-0 bg-transparent cursor-pointer focus:ring-1 focus:ring-brand-yellow ${getStatusColor(order.estado)}`}
                         onClick={(e) => e.stopPropagation()}
                       >
                         <option value="pendente" className="bg-gray-800 text-yellow-400">Pendente</option>
@@ -213,43 +213,33 @@ const OrdersModal: React.FC<OrdersModalProps> = ({ isOpen, onClose, parts, onReo
                 {expandedOrders.includes(order.id) && (
                   <div className="border-t border-gray-600 bg-gray-900/30">
                     <div className="p-4 space-y-3">
-                      {order.parts.map((item, index) => (
-                        <div key={index} className="flex justify-between items-center bg-gray-800 p-3 border border-gray-700">
-                          <div className="flex-1">
-                            <p className="text-white font-medium">{item.part.name}</p>
-                            <p className="text-gray-400 text-sm">Ref: {item.part.reference}</p>
-                          </div>
-                          <div className="text-right mr-6">
-                            <p className="text-white">{item.quantity} un.</p>
-                            <p className="text-gray-400 text-sm">€{(item.part.price * item.quantity).toFixed(2)}</p>
-                          </div>
-                          {order.status === 'recebido' && (
-                            <button
-                              onClick={() => handleAddToInventory(order.id, item.part.id, item.quantity)}
-                              className="px-3 py-1 bg-green-600 text-white text-sm hover:bg-green-700 transition-colors rounded-none flex items-center"
-                            >
-                              <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-                              Stock
-                            </button>
-                          )}
-                        </div>
-                      ))}
+                      {order.itens && order.itens.length > 0 ? (
+                        order.itens.map((item, index) => {
+                          const part = parts.find(p => p.id === item.peca_id);
+                          return (
+                            <div key={index} className="flex justify-between items-center bg-gray-800 p-3 border border-gray-700">
+                              <div className="flex-1">
+                                <p className="text-white font-medium">{part?.name || `Peça ID: ${item.peca_id}`}</p>
+                                {part && <p className="text-gray-400 text-sm">Ref: {part.reference}</p>}
+                              </div>
+                              <div className="text-right mr-6">
+                                <p className="text-white">{item.quantidade_encomendada} un. × €{item.preco_unitario.toFixed(2)}</p>
+                                <p className="text-gray-400 text-sm font-semibold">€{(item.quantidade_encomendada * item.preco_unitario).toFixed(2)}</p>
+                                {item.quantidade_recebida > 0 && (
+                                  <p className="text-xs text-green-400">{item.quantidade_recebida} recebidas</p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <p className="text-gray-400 text-center py-4">Sem peças nesta encomenda</p>
+                      )}
                     </div>
 
                     <div className="p-4 border-t border-gray-700 flex justify-between items-center">
                       <span className="text-gray-400 font-medium">Total da Encomenda:</span>
-                      <div className="flex items-center gap-4">
-                        <span className="text-white font-bold text-lg">€{order.totalValue.toFixed(2)}</span>
-                        {onReorder && (
-                          <button
-                            onClick={() => onReorder(order.parts)}
-                            className="px-4 py-2 bg-orange-600 text-white font-bold text-sm hover:bg-orange-700 transition-colors rounded-none flex items-center"
-                          >
-                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h5M20 19v-5h-5M4 19h16M4 5h16"></path></svg>
-                            Reencomendar
-                          </button>
-                        )}
-                      </div>
+                      <span className="text-white font-bold text-lg">€{order.custo_total.toFixed(2)}</span>
                     </div>
                   </div>
                 )}
