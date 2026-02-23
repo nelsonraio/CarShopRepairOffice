@@ -38,6 +38,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       }
     });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Erro ao obter fatura:', error);
     return NextResponse.json(
       { success: false, error: 'Erro ao obter fatura' },
@@ -80,6 +91,17 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       }
     });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Erro ao atualizar fatura:', error);
     return NextResponse.json(
       { success: false, error: 'Erro ao atualizar fatura' },
@@ -124,6 +146,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       }
     });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Erro ao atualizar status da fatura:', error);
     return NextResponse.json(
       { success: false, error: 'Erro ao atualizar fatura' },
@@ -155,6 +188,17 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       }
     });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Erro ao anular fatura:', error);
     return NextResponse.json(
       { success: false, error: 'Erro ao anular fatura' },
@@ -162,3 +206,5 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     );
   }
 }
+
+

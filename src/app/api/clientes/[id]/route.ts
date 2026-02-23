@@ -38,16 +38,16 @@ export async function GET(
       orderBy: { criado_em: 'desc' }
     });
 
-    const veiculoIds = Array.from(new Set(ordensTrabalho.map(o => o.veiculo_id).filter((v): v is bigint => v != null)));
-    const mecanicoIds = Array.from(new Set(ordensTrabalho.map(o => o.mecanico_id).filter((v): v is number => v != null)));
+    const veiculoIds = Array.from(new Set(ordensTrabalho.map((o: typeof ordensTrabalho[number]) => o.veiculo_id).filter((v: bigint | null | undefined): v is bigint => v != null)));
+    const mecanicoIds = Array.from(new Set(ordensTrabalho.map((o: typeof ordensTrabalho[number]) => o.mecanico_id).filter((v: number | null | undefined): v is number => v != null)));
 
     const [veiculosMapList, mecanicosMapList] = await Promise.all([
       veiculoIds.length ? prisma.veiculos.findMany({ where: { id: { in: veiculoIds } } }) : Promise.resolve([]),
       mecanicoIds.length ? prisma.mecanicos.findMany({ where: { id: { in: mecanicoIds } } }) : Promise.resolve([]),
     ]);
 
-    const veiculoMap = new Map(veiculosMapList.map(v => [Number((v.id as any)), v]));
-    const mecanicoMap = new Map(mecanicosMapList.map(m => [m.id, m]));
+    const veiculoMap = new Map(veiculosMapList.map((v: typeof veiculosMapList[number]) => [Number((v.id as any)), v]));
+    const mecanicoMap = new Map(mecanicosMapList.map((m: typeof mecanicosMapList[number]) => [m.id, m]));
 
     // Transform client data
     const transformedClient = {
@@ -65,7 +65,7 @@ export async function GET(
     };
 
     // Transform vehicles data
-    const transformedVehicles = veiculos.map((veiculo) => ({
+    const transformedVehicles = veiculos.map((veiculo: typeof veiculos[number]) => ({
       id: veiculo.id.toString(),
       clientId: veiculo.cliente_id?.toString() || '',
       make: veiculo.marca,
@@ -78,7 +78,7 @@ export async function GET(
     }));
 
     // Transform service history from work orders
-    const transformedServiceHistory = ordensTrabalho.map((ordem, index) => ({
+    const transformedServiceHistory = ordensTrabalho.map((ordem: typeof ordensTrabalho[number], index: number) => ({
       id: ordem.id.toString(),
       vehicleId: ordem.veiculo_id.toString(),
       vehicle: `${(veiculoMap.get(Number(ordem.veiculo_id)) as any)?.marca || ''} ${(veiculoMap.get(Number(ordem.veiculo_id)) as any)?.modelo || ''}`,
@@ -108,6 +108,17 @@ export async function GET(
     });
 
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error fetching client details:', error);
     return NextResponse.json({ error: 'Failed to fetch client details' }, { status: 500 });
   }
@@ -157,6 +168,17 @@ export async function DELETE(
     return NextResponse.json({ success: true, message: 'Client deleted successfully' });
 
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error deleting client:', error);
     return NextResponse.json({ error: 'Failed to delete client' }, { status: 500 });
   }
@@ -212,7 +234,20 @@ export async function PUT(
     return NextResponse.json(transformedClient);
 
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error updating client:', error);
     return NextResponse.json({ error: 'Failed to update client' }, { status: 500 });
   }
 }
+
+

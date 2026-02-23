@@ -47,8 +47,12 @@ const EditAppointmentPage = () => {
     hora: '',
     tipoServico: 'Revisão Geral',
     mecanico: '',
-    notas: ''
+    notas: '',
+    contacto_nome: '',
+    contacto_telefone: '',
+    contacto_email: ''
   });
+  const [vehicleFound, setVehicleFound] = useState<boolean>(true);
 
   const [clients, setClients] = useState<Client[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -189,8 +193,20 @@ const EditAppointmentPage = () => {
           hora: data.time || '',
           tipoServico: data.tipoServico || 'Revisão Geral',
           mecanico: data.mechanic || '',
-          notas: data.notas || ''
+          notas: data.notas || '',
+          contacto_nome: data.contacto_nome || '',
+          contacto_telefone: data.contacto_telefone || '',
+          contacto_email: data.contacto_email || ''
         });
+
+        // Check if vehicle exists
+        if (data.matricula) {
+          const vehicleResponse = await fetch(`/api/veiculos/search?matricula=${encodeURIComponent(data.matricula)}`);
+          if (vehicleResponse.ok) {
+            const vehicleData = await vehicleResponse.json();
+            setVehicleFound(vehicleData.found);
+          }
+        }
       }
     } catch (error) {
       console.error('Failed to fetch appointment:', error);
@@ -205,6 +221,7 @@ const EditAppointmentPage = () => {
       if (response.ok) {
         const data = await response.json();
         if (data.found) {
+          setVehicleFound(true);
           setFormData(prev => ({
             ...prev,
             marca: data.vehicle.marca,
@@ -212,10 +229,13 @@ const EditAppointmentPage = () => {
             ano: data.vehicle.ano ? data.vehicle.ano.toString() : '',
             cliente: data.client.nome
           }));
+        } else {
+          setVehicleFound(false);
         }
       }
     } catch (error) {
       console.error('Failed to search vehicle:', error);
+      setVehicleFound(false);
     }
   };
 
@@ -350,9 +370,27 @@ const EditAppointmentPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validate contact name is required
+    if (!formData.contacto_nome.trim()) {
+      alert('O nome de contacto é obrigatório.');
+      return;
+    }
+
+    // Validate contact phone is required
+    if (!formData.contacto_telefone.trim()) {
+      alert('O telefone de contacto é obrigatório.');
+      return;
+    }
+
     // Validate that notes are required when "Outro" is selected
     if (formData.tipoServico === 'Outro' && !formData.notas.trim()) {
       alert('As notas são obrigatórias quando o tipo de serviço é "Outro".');
+      return;
+    }
+
+    // Validate that phone is required when vehicle is not found
+    if (!vehicleFound && !formData.contacto_telefone.trim()) {
+      alert('O telefone de contacto é obrigatório quando o veículo não está registado.');
       return;
     }
 
@@ -603,6 +641,52 @@ const EditAppointmentPage = () => {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* Contacto Section */}
+              <div className="border-t border-gray-600 pt-4">
+                <h3 className="text-sm font-semibold text-gray-300 mb-3">Informações de Contacto</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Nome de Contacto</label>
+                    <input
+                      type="text"
+                      name="contacto_nome"
+                      value={formData.contacto_nome}
+                      onChange={handleInputChange}
+                      className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                      placeholder="Nome do contacto *"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">
+                      Telefone {!vehicleFound && <span className="text-red-500">*</span>}
+                    </label>
+                    <input
+                      type="tel"
+                      name="contacto_telefone"
+                      value={formData.contacto_telefone}
+                      onChange={handleInputChange}
+                      className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                      placeholder="Telefone de contacto *"
+                      required={!vehicleFound}
+                    />
+                    {!vehicleFound && (
+                      <p className="text-xs text-orange-400 mt-1">⚠ Obrigatório - Veículo não registado</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Email</label>
+                    <input
+                      type="email"
+                      name="contacto_email"
+                      value={formData.contacto_email}
+                      onChange={handleInputChange}
+                      className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                      placeholder="Email de contacto"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div>

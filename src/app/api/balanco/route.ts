@@ -100,7 +100,22 @@ export async function GET(request: Request) {
       }
     });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("Can't reach database server") ||
+      errorMessage.includes('ECONNREFUSED');
+
     console.error('Error fetching balance data:', error);
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        {
+          error: 'Database unavailable. Please start the database server and try again.'
+        },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'Failed to fetch balance data' },
       { status: 500 }

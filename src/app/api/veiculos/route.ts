@@ -14,8 +14,7 @@ export async function GET() {
     });
 
     // Transform to match Vehicle interface
-    const transformedVeiculos = veiculos.map((veiculo) => ({
-      id: veiculo.id.toString(),
+    const transformedVeiculos = veiculos.map((veiculo: typeof veiculos[number]) => ({
       clientId: veiculo.cliente_id ? veiculo.cliente_id.toString() : '',
       clientName: veiculo.cliente ? veiculo.cliente.nome : 'Cliente não encontrado',
       clientProfile: veiculo.cliente ? (veiculo.cliente.perfil === 'TVDE_Interno' ? 'TVDE Interno' : veiculo.cliente.perfil === 'TVDE_Externo' ? 'TVDE Externo' : (veiculo.cliente.perfil || 'Normal')) : 'Normal',
@@ -31,6 +30,17 @@ export async function GET() {
 
     return NextResponse.json(transformedVeiculos);
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("Can't reach database server") ||
+      errorMessage.includes('ECONNREFUSED');
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: 'Database unavailable. Please start the database server and try again.' },
+        { status: 503 }
+      );
+    }
     console.error('Error fetching veiculos:', error);
     return NextResponse.json({ error: 'Failed to fetch veiculos' }, { status: 500 });
   }
@@ -100,6 +110,17 @@ export async function POST(request: Request) {
     return NextResponse.json(transformedVehicle, { status: 201 });
 
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("Can't reach database server") ||
+      errorMessage.includes('ECONNREFUSED');
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: 'Database unavailable. Please start the database server and try again.' },
+        { status: 503 }
+      );
+    }
     console.error('Error creating vehicle:', error);
     return NextResponse.json({ error: 'Failed to create vehicle' }, { status: 500 });
   }

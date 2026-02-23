@@ -75,6 +75,7 @@
     --color-red-500: #fb2c36;
     --color-red-600: #e40014;
     --color-red-700: #bf000f;
+    --color-red-800: #9f0712;
     --color-red-900: #82181a;
     --color-orange-200: #ffd7a8;
     --color-orange-300: #ffb96d;
@@ -183,6 +184,7 @@
       --color-red-500: lab(55.4814% 75.0732 48.8528);
       --color-red-600: lab(48.4493% 77.4328 61.5452);
       --color-red-700: lab(40.4273% 67.2623 53.7441);
+      --color-red-800: lab(33.7174% 55.8993 41.0293);
       --color-red-900: lab(28.5139% 44.5539 29.0463);
       --color-orange-200: lab(88.4871% 9.94918 28.8378);
       --color-orange-300: lab(80.8059% 21.7313 50.4455);
@@ -391,6 +393,16 @@
   }
 
   @supports (not ((-webkit-appearance: -apple-pay-button))) or (contain-intrinsic-size: 1px) {
+    ::-moz-placeholder {
+      color: currentColor;
+    }
+
+    @supports (color: color-mix(in lab, red, red)) {
+      ::-moz-placeholder {
+        color: color-mix(in oklab, currentcolor 50%, transparent);
+      }
+    }
+
     ::placeholder {
       color: currentColor;
     }
@@ -677,6 +689,10 @@
     margin-right: calc(var(--spacing) * 6);
   }
 
+  .mb-0 {
+    margin-bottom: calc(var(--spacing) * 0);
+  }
+
   .mb-1 {
     margin-bottom: calc(var(--spacing) * 1);
   }
@@ -727,10 +743,6 @@
 
   .hidden {
     display: none;
-  }
-
-  .inline {
-    display: inline;
   }
 
   .inline-block {
@@ -881,6 +893,10 @@
     width: calc(var(--spacing) * 96);
   }
 
+  .w-\[520px\] {
+    width: 520px;
+  }
+
   .w-full {
     width: 100%;
   }
@@ -923,6 +939,10 @@
 
   .max-w-sm {
     max-width: var(--container-sm);
+  }
+
+  .min-w-full {
+    min-width: 100%;
   }
 
   .flex-1 {
@@ -1312,6 +1332,16 @@
     border-color: var(--color-orange-900);
   }
 
+  .border-purple-400\/30 {
+    border-color: #c07eff4d;
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .border-purple-400\/30 {
+      border-color: color-mix(in oklab, var(--color-purple-400) 30%, transparent);
+    }
+  }
+
   .border-purple-400\/50 {
     border-color: #c07eff80;
   }
@@ -1512,6 +1542,10 @@
     background-color: var(--color-green-600);
   }
 
+  .bg-green-700 {
+    background-color: var(--color-green-700);
+  }
+
   .bg-green-800\/50 {
     background-color: #01663080;
   }
@@ -1584,6 +1618,16 @@
     }
   }
 
+  .bg-purple-400\/10 {
+    background-color: #c07eff1a;
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .bg-purple-400\/10 {
+      background-color: color-mix(in oklab, var(--color-purple-400) 10%, transparent);
+    }
+  }
+
   .bg-purple-400\/20 {
     background-color: #c07eff33;
   }
@@ -1626,6 +1670,10 @@
     background-color: var(--color-red-600);
   }
 
+  .bg-red-700 {
+    background-color: var(--color-red-700);
+  }
+
   .bg-red-900 {
     background-color: var(--color-red-900);
   }
@@ -1666,6 +1714,10 @@
 
   .bg-yellow-500 {
     background-color: var(--color-yellow-500);
+  }
+
+  .bg-yellow-700 {
+    background-color: var(--color-yellow-700);
   }
 
   .bg-yellow-800\/50 {
@@ -1820,6 +1872,7 @@
   }
 
   .object-contain {
+    -o-object-fit: contain;
     object-fit: contain;
   }
 
@@ -1905,6 +1958,10 @@
 
   .py-16 {
     padding-block: calc(var(--spacing) * 16);
+  }
+
+  .py-20 {
+    padding-block: calc(var(--spacing) * 20);
   }
 
   .pt-2 {
@@ -2411,6 +2468,12 @@
   }
 
   @media (hover: hover) {
+    .hover\:bg-blue-800:hover {
+      background-color: var(--color-blue-800);
+    }
+  }
+
+  @media (hover: hover) {
     .hover\:bg-brand-yellow:hover {
       background-color: #facc15;
     }
@@ -2483,8 +2546,20 @@
   }
 
   @media (hover: hover) {
+    .hover\:bg-green-800:hover {
+      background-color: var(--color-green-800);
+    }
+  }
+
+  @media (hover: hover) {
     .hover\:bg-purple-700:hover {
       background-color: var(--color-purple-700);
+    }
+  }
+
+  @media (hover: hover) {
+    .hover\:bg-red-800:hover {
+      background-color: var(--color-red-800);
     }
   }
 
@@ -2515,6 +2590,12 @@
   @media (hover: hover) {
     .hover\:bg-yellow-600:hover {
       background-color: var(--color-yellow-600);
+    }
+  }
+
+  @media (hover: hover) {
+    .hover\:bg-yellow-800:hover {
+      background-color: var(--color-yellow-800);
     }
   }
 
@@ -2844,9 +2925,7 @@ body {
   flex-grow: 1;
   gap: .5rem;
   min-height: 0;
-  padding-bottom: 1rem;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  padding: 2rem;
   display: flex;
   overflow-x: hidden;
 }

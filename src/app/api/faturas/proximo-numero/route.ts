@@ -39,6 +39,17 @@ export async function GET(req: NextRequest) {
       }
     });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Erro ao obter número de fatura:', error);
     return NextResponse.json(
       { success: false, error: 'Erro ao obter número de fatura' },
@@ -46,3 +57,5 @@ export async function GET(req: NextRequest) {
     );
   }
 }
+
+

@@ -42,7 +42,11 @@ export async function GET(request: Request) {
         mechanic: mecanico?.nome || '',
         tipoServico: agendamento.titulo.includes(' - ') ? agendamento.titulo.split(' - ')[0] : agendamento.titulo,
         status: agendamento.estado || 'agendado',
-        descricao: agendamento.descricao ?? ''
+        descricao: agendamento.descricao ?? '',
+        contacto_nome: agendamento.contacto_nome || '',
+        contacto_telefone: agendamento.contacto_telefone || '',
+        contacto_email: agendamento.contacto_email || '',
+        notas: agendamento.descricao ?? ''
       };
 
       return NextResponse.json(transformedAgendamento);
@@ -68,7 +72,7 @@ export async function GET(request: Request) {
       const budgetMatriculasByDate = new Set<string>();
       // Original logic was broken; removed veiculo relation dependency
 
-      const filteredAgendamentos = agendamentos.filter(agendamento => {
+      const filteredAgendamentos = agendamentos.filter((agendamento: typeof agendamentos[number]) => {
         if (agendamento.matricula) {
           const dateKey = agendamento.data_agendamento.toISOString().slice(0, 10);
           if (budgetMatriculasByDate.has(`${agendamento.matricula}|${dateKey}`)) {
@@ -78,16 +82,16 @@ export async function GET(request: Request) {
         return true;
       });
 
-      const clienteIds = Array.from(new Set(filteredAgendamentos.map(a => a.cliente_id).filter((v): v is number => v != null)));
-      const mecanicoIds = Array.from(new Set(filteredAgendamentos.map(a => a.mecanico_id).filter((v): v is number => v != null)));
+      const clienteIds = Array.from(new Set(filteredAgendamentos.map((a: typeof filteredAgendamentos[number]) => a.cliente_id).filter((v: number | null | undefined): v is number => v != null)));
+      const mecanicoIds = Array.from(new Set(filteredAgendamentos.map((a: typeof filteredAgendamentos[number]) => a.mecanico_id).filter((v: number | null | undefined): v is number => v != null)));
 
       const [clientes, mecanicos] = await Promise.all([
         clienteIds.length ? prisma.clientes.findMany({ where: { id: { in: clienteIds } } }) : Promise.resolve([]),
         mecanicoIds.length ? prisma.mecanicos.findMany({ where: { id: { in: mecanicoIds } } }) : Promise.resolve([]),
       ]);
 
-      const clienteMap = new Map(clientes.map(c => [c.id, c]));
-      const mecanicoMap = new Map(mecanicos.map(m => [m.id, m]));
+      const clienteMap = new Map(clientes.map((c: typeof clientes[number]) => [c.id, c]));
+      const mecanicoMap = new Map(mecanicos.map((m: typeof mecanicos[number]) => [m.id, m]));
 
       // Transform to match Appointment interface
       type Agendamento = any;
@@ -115,6 +119,17 @@ export async function GET(request: Request) {
       return NextResponse.json(transformedAgendamentos);
     }
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error fetching agendamentos:', error);
     return NextResponse.json({ error: 'Failed to fetch agendamentos' }, { status: 500 });
   }
@@ -123,7 +138,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { cliente, marca, modelo, ano, matricula, data, hora, tipoServico, mecanico, descricao } = body;
+    const { cliente, marca, modelo, ano, matricula, data, hora, tipoServico, mecanico, descricao, notas, contacto_nome, contacto_telefone, contacto_email } = body;
 
     // find or create cliente by nome
     let clienteRec = null;
@@ -164,18 +179,32 @@ export async function POST(request: Request) {
       cliente_id: clienteRec.id,
       mecanico_id: mecanicoRec ? mecanicoRec.id : null,
       titulo: cliente ? `${tipoServico || 'Agendamento'} - ${cliente}` : (tipoServico || 'Agendamento'),
-      descricao: tipoServico || '',
+      descricao: notas || descricao || '',
       data_agendamento: dateObj,
       hora_inicio: horaInicio || new Date(dateObj.setHours(9,0,0,0)),
       estado: 'agendado',
       marca: marca || null,
       modelo: modelo || null,
       ano: ano ? parseInt(ano) : null,
-      matricula: matricula || null
+      matricula: matricula || null,
+      contacto_nome: contacto_nome || null,
+      contacto_telefone: contacto_telefone || null,
+      contacto_email: contacto_email || null
     }});
 
     return NextResponse.json({ success: true, id: String(created.id) });
   } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error creating agendamento:', err);
     return NextResponse.json({ error: 'Failed to create agendamento' }, { status: 500 });
   }
@@ -184,7 +213,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { id, cliente, marca, modelo, ano, matricula, data, hora, tipoServico, mecanico, descricao } = body;
+    const { id, cliente, marca, modelo, ano, matricula, data, hora, tipoServico, mecanico, descricao, notas, contacto_nome, contacto_telefone, contacto_email } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'ID is required' }, { status: 400 });
@@ -220,13 +249,16 @@ export async function PUT(request: Request) {
 
     const updateData: any = {
       titulo: cliente ? `${tipoServico || 'Agendamento'} - ${cliente}` : (tipoServico || 'Agendamento'),
-      descricao: descricao || '',
+      descricao: notas || descricao || '',
       data_agendamento: dateObj,
       hora_inicio: horaInicio || new Date(dateObj.setHours(9,0,0,0)),
       marca: marca || null,
       modelo: modelo || null,
       ano: ano ? parseInt(ano) : null,
-      matricula: matricula || null
+      matricula: matricula || null,
+      contacto_nome: contacto_nome || null,
+      contacto_telefone: contacto_telefone || null,
+      contacto_email: contacto_email || null
     };
 
     if (clienteRec) {
@@ -241,6 +273,17 @@ export async function PUT(request: Request) {
 
     return NextResponse.json({ success: true, id: String(updated.id) });
   } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error updating agendamento:', err);
     return NextResponse.json({ error: 'Failed to update agendamento' }, { status: 500 });
   }
@@ -261,7 +304,20 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error deleting agendamento:', err);
     return NextResponse.json({ error: 'Failed to delete agendamento' }, { status: 500 });
   }
 }
+
+

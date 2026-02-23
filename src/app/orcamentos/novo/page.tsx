@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Sidebar from '../../../components/Sidebar';
 import Link from 'next/link';
 
@@ -44,6 +45,10 @@ interface BudgetItem {
 }
 
 const NewBudgetPage = () => {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const hasLoadedAppointment = useRef(false);
+  
   const [clientType, setClientType] = useState('C');
   const [budgetId, setBudgetId] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -55,6 +60,7 @@ const NewBudgetPage = () => {
   const [showClientSuggestions, setShowClientSuggestions] = useState(false);
   const [clientVehicles, setClientVehicles] = useState<Vehicle[]>([]);
   const [selectedVehicle, setSelectedVehicle] = useState<string>('');
+  const [backUrl, setBackUrl] = useState('/orcamentos');
 
   const [services, setServices] = useState<CatalogItem[]>([]);
   const [parts, setParts] = useState<CatalogItem[]>([]);
@@ -72,6 +78,7 @@ const NewBudgetPage = () => {
     email: ''
   });
   const [quilometragem, setQuilometragem] = useState<number | ''>('');
+  const [agendamento_id, setAgendamento_id] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     matricula: '',
     marca: '',
@@ -90,13 +97,67 @@ const NewBudgetPage = () => {
     fetchParts();
   }, []);
 
+  // Buscar agendamento e preencher dados automaticamente
+  const searchAppointmentAndFill = async (appointmentId: string) => {
+    try {
+      const response = await fetch(`/api/agendamentos/${appointmentId}`);
+      if (response.ok) {
+        const appointment = await response.json();
+        console.log('Found appointment:', appointment);
+        console.log('Contacto Nome:', appointment.contacto_nome);
+        console.log('Contacto Telefone:', appointment.contacto_telefone);
+        console.log('Contacto Email:', appointment.contacto_email);
+        // Preencher contactos alternativos do agendamento PRIMEIRO
+        if (appointment.contacto_nome || appointment.contacto_telefone || appointment.contacto_email) {
+          console.log('Setting alternate contact...');
+          setAlternateContact({
+            nome: appointment.contacto_nome || '',
+            telefone: appointment.contacto_telefone || '',
+            email: appointment.contacto_email || ''
+          });
+        } else {
+          console.log('No contact data found in appointment');
+        }
+        // Preencher matrícula do agendamento
+        if (appointment.veiculo_matricula) {
+          console.log('Setting license plate:', appointment.veiculo_matricula);
+          setFormData(prev => ({ ...prev, matricula: appointment.veiculo_matricula }));
+          // Passar true para skipContactReset para não resetar os contactos que acabamos de preencher
+          searchVehicleByLicensePlate(appointment.veiculo_matricula, true);
+        }
+      } else if (response.status === 404) {
+        console.warn('Agendamento não encontrado ou já removido:', appointmentId);
+        alert('O agendamento já não existe ou foi removido. Pode continuar a criar o orçamento manualmente.');
+      } else {
+        console.error('Failed to fetch appointment:', response.status);
+      }
+    } catch (error) {
+      console.error('Failed to fetch appointment:', error);
+    }
+  };
+
   // Detectar query parameters ao carregar a página
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const matricula = params.get('matricula');
     const cliente = params.get('cliente');
+    const agendamento = params.get('agendamento_id');
+    const from = params.get('from');
 
-    if (matricula) {
+    // Definir URL de voltar baseado na origem
+    if (from === 'kanban') {
+      setBackUrl('/kanban');
+    } else {
+      setBackUrl('/orcamentos');
+    }
+
+    // Se houver agendamento_id, buscar e preencher dados
+    if (agendamento && !hasLoadedAppointment.current) {
+      hasLoadedAppointment.current = true;
+      console.log('Found agendamento_id in URL:', agendamento);
+      setAgendamento_id(agendamento);
+      searchAppointmentAndFill(agendamento);
+    } else if (matricula && !agendamento) {
       console.log('Found matricula in URL:', matricula);
       setFormData(prev => ({ ...prev, matricula }));
       searchVehicleByLicensePlate(matricula);
@@ -106,11 +167,14 @@ const NewBudgetPage = () => {
       console.log('Found cliente in URL:', cliente);
       setClientSearch(cliente);
       // Buscar e selecionar cliente automaticamente
-      searchClients(cliente).then(clients => {
+      const loadClient = async () => {
+        const clients = await searchClients(cliente);
         if (clients && clients.length > 0) {
-          selectClient(clients[0]);
+          const client = clients[0] as Client;
+          selectClient(client, !agendamento);
         }
-      });
+      };
+      loadClient();
     }
   }, []);
 
@@ -276,14 +340,17 @@ const NewBudgetPage = () => {
     }
   };
 
-  const selectClient = (client: Client) => {
+  const selectClient = (client: Client, resetContact: boolean = true) => {
     setSelectedClient(client);
     setClientSearch(client.nome);
     setClientSuggestions([]);
     setShowClientSuggestions(false);
     fetchClientVehicles(client.id.toString());
     generateNextBudgetId();
-    setAlternateContact({ nome: '', telefone: '', email: '' });
+    // Apenas resetar contacto alternativo se for indicado
+    if (resetContact) {
+      setAlternateContact({ nome: '', telefone: '', email: '' });
+    }
   };
 
   const isGenericTvdeClient = (client: Client | null) => {
@@ -343,7 +410,43 @@ const NewBudgetPage = () => {
     }
   };
 
-  const searchVehicleByLicensePlate = async (licensePlate: string) => {
+  const applyAlternateContactFromAppointment = (appointment: any) => {
+    if (!appointment?.found || appointment.estado !== 'em_aprovacao') {
+      return;
+    }
+
+    const nome = appointment.contacto_nome || '';
+    const telefone = appointment.contacto_telefone || '';
+    const email = appointment.contacto_email || '';
+
+    if (!nome && !telefone && !email) {
+      return;
+    }
+
+    setAlternateContact(prev => {
+      if (prev.nome || prev.telefone || prev.email) {
+        return prev;
+      }
+
+      return { nome, telefone, email };
+    });
+  };
+
+  const fetchAppointmentContactByMatricula = async (licensePlate: string) => {
+    try {
+      const response = await fetch(`/api/agendamentos/search?matricula=${encodeURIComponent(licensePlate)}`);
+      if (!response.ok) {
+        return;
+      }
+
+      const data = await response.json();
+      applyAlternateContactFromAppointment(data);
+    } catch (error) {
+      console.error('Failed to fetch appointment contact:', error);
+    }
+  };
+
+  const searchVehicleByLicensePlate = async (licensePlate: string, skipContactReset: boolean = false) => {
     try {
       const response = await fetch(`/api/veiculos/search?matricula=${encodeURIComponent(licensePlate)}`);
       if (response.ok) {
@@ -360,10 +463,13 @@ const NewBudgetPage = () => {
           setQuilometragem(vehicle.quilometragem ? vehicle.quilometragem : '');
           setIsVehicleAutoFilled(true);
           setSelectedVehicle(vehicle.id);
-          // Select client associated with the vehicle
-          selectClient(client);
+          // Select client associated with the vehicle - skip contact reset if coming from appointment
+          selectClient(client, !skipContactReset);
+          if (!skipContactReset) {
+            fetchAppointmentContactByMatricula(licensePlate);
+          }
         } else {
-          // Vehicle not found, clear auto-filled data
+          // Vehicle not found, clear auto-filled data but keep contact info if from appointment
           setFormData(prev => ({
             ...prev,
             marca: '',
@@ -373,8 +479,10 @@ const NewBudgetPage = () => {
           setQuilometragem('');
           setIsVehicleAutoFilled(false);
           setSelectedVehicle('');
-          setSelectedClient(null);
-          setClientSearch('');
+          if (!skipContactReset) {
+            setSelectedClient(null);
+            setClientSearch('');
+          }
         }
       }
     } catch (error) {
@@ -405,10 +513,7 @@ const NewBudgetPage = () => {
       return;
     }
 
-    if (!quilometragem) {
-      alert('Introduza os quilómetros da viatura.');
-      return;
-    }
+
 
     if (!validateAlternateContact()) {
       return;
@@ -475,6 +580,16 @@ const NewBudgetPage = () => {
         const result = await response.json();
         alert(`Orçamento ${budgetId} criado com sucesso!\nTotal: €${total.toFixed(2)}\nItens: ${budgetItems.length}`);
 
+        // Se foi criado a partir de um agendamento, apagar o agendamento
+        if (agendamento_id) {
+          try {
+            await fetch(`/api/agendamentos/${agendamento_id}`, { method: 'DELETE' });
+            console.log('Agendamento apagado após criação do orçamento:', agendamento_id);
+          } catch (err) {
+            console.error('Erro ao apagar agendamento após criar orçamento:', err);
+          }
+        }
+
         // Reset form after creation
         setBudgetItems([]);
         setTotal(0);
@@ -534,7 +649,7 @@ const NewBudgetPage = () => {
                 <p className="text-sm text-gray-400 mt-1">ID: <span className="font-mono text-brand-yellow">{budgetId}</span></p>
               </div>
               <div className="flex space-x-3">
-                <Link href="/orcamentos" className="px-4 py-2 bg-gray-600 text-gray-200 font-medium hover:bg-gray-500 transition-colors rounded-none flex items-center">
+                <Link href={backUrl} className="px-4 py-2 bg-gray-600 text-gray-200 font-medium hover:bg-gray-500 transition-colors rounded-none flex items-center">
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                   </svg>
@@ -609,14 +724,13 @@ const NewBudgetPage = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Quilómetros *</label>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Quilómetros</label>
                   <input
                     type="number"
                     value={quilometragem}
                     onChange={(e) => setQuilometragem(e.target.value ? parseInt(e.target.value) : '')}
                     className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
                     placeholder="Quilómetros"
-                    required
                   />
                 </div>
               </div>

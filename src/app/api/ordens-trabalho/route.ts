@@ -95,6 +95,17 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error creating work order:', error);
     return NextResponse.json({ error: 'Failed to create work order' }, { status: 500 });
   }
@@ -112,6 +123,9 @@ export async function GET(request: Request) {
         include: {
           mecanico: true,
           itens_ordem_trabalho: true,
+          orcamento: {
+            include: { itens_orcamento: true }
+          }
         },
       });
 
@@ -130,27 +144,46 @@ export async function GET(request: Request) {
         : null;
 
       // Convert BigInt fields to strings for JSON serialization
-      const responseData = {
-        ...ordemTrabalho,
+      // construct object shape similar to front-end WorkOrder
+      const responseData: any = {
         id: String(ordemTrabalho.id),
-        veiculo_id: ordemTrabalho.veiculo_id ? String(ordemTrabalho.veiculo_id) : null,
-        itens_ordem_trabalho: ordemTrabalho.itens_ordem_trabalho?.map((item: any) => ({
-          ...item,
-          id: String(item.id),
-          ordem_trabalho_id: String(item.ordem_trabalho_id),
-          servico_id: item.servico_id ? String(item.servico_id) : null,
-          peca_id: item.peca_id ? String(item.peca_id) : null,
-        })),
-        cliente_nome: cliente?.nome ?? '',
-        contacto_nome: ordemTrabalho.contacto_nome ?? null,
-        contacto_telefone: ordemTrabalho.contacto_telefone ?? cliente?.telefone ?? null,
-        contacto_email: ordemTrabalho.contacto_email ?? cliente?.email ?? null,
-        veiculo_info: veiculo ? `${veiculo.marca} ${veiculo.modelo} | ${veiculo.matricula}` : '',
-        mecanico: ordemTrabalho.mecanico ? {
-          ...ordemTrabalho.mecanico,
-          id: String(ordemTrabalho.mecanico.id),
-        } : null,
+        client: cliente?.nome ?? '',
+        vehicle: veiculo ? `${veiculo.marca} ${veiculo.modelo} | ${veiculo.matricula}` : '',
+        mechanic: ordemTrabalho.mecanico?.nome ?? '',
+        openDate: ordemTrabalho.data_inicio ? ordemTrabalho.data_inicio.toLocaleDateString('pt-PT') : '',
+        closeDate: ordemTrabalho.data_conclusao ? ordemTrabalho.data_conclusao.toLocaleDateString('pt-PT') : '',
+        status: mapStatus(ordemTrabalho.estado),
+        priority: mapPriority(ordemTrabalho.prioridade ?? null),
+        problem: ordemTrabalho.descricao_problema ?? '',
+        waitingParts: ordemTrabalho.itens_ordem_trabalho
+          ?.filter((item: any) => item.tipo_item === 'peca' && item.aguarda_peca)
+          .map((item: any) => ({ descricao: item.descricao ?? '' })) ?? [],
+        orcamento: ordemTrabalho.orcamento ? {
+          id: String(ordemTrabalho.orcamento.id),
+          ref_orcamento: ordemTrabalho.orcamento.ref_orcamento,
+          itens_orcamento: ordemTrabalho.orcamento.itens_orcamento?.map((item: any) => ({
+            id: String(item.id),
+            descricao: item.descricao ?? '',
+            quantidade: Number(item.quantidade) || 0,
+            valor_total: Number(item.valor_total) || 0,
+          }))
+        } : undefined,
       };
+
+      // include orcamento details if present
+      if (ordemTrabalho.orcamento) {
+        responseData.orcamento = {
+          id: String(ordemTrabalho.orcamento.id),
+          ref_orcamento: ordemTrabalho.orcamento.ref_orcamento,
+          itens_orcamento: ordemTrabalho.orcamento.itens_orcamento?.map((item: any) => ({
+            ...item,
+            id: String(item.id),
+            orcamento_id: String(item.orcamento_id),
+            servico_id: item.servico_id ? String(item.servico_id) : null,
+            peca_id: item.peca_id ? String(item.peca_id) : null,
+          }))
+        };
+      }
 
       // Use JSON.parse/stringify to handle any remaining BigInt values
       const jsonString = JSON.stringify(responseData, (key, value) =>
@@ -193,8 +226,15 @@ export async function GET(request: Request) {
       veiculoIds.length ? prisma.veiculos.findMany({ where: { id: { in: veiculoIds } } }) : Promise.resolve([]),
     ]);
 
-    const clienteMap = new Map(clientes.map(c => [c.id, c]));
-    const veiculoMap = new Map(veiculos.map(v => [v.id, v]));
+    const clienteMap = new Map<number, typeof clientes[number]>(clientes.map((c: typeof clientes[number]) => [c.id, c]));
+    const veiculoMap = new Map<number, typeof veiculos[number]>(veiculos.map((v: typeof veiculos[number]) => [Number(v.id), v]));
+
+    // Buscar todos os mecânicos se necessário
+    const mecanicoIds = Array.from(new Set((ordensTrabalho as any[])
+      .map((o: any) => o.mecanico_id)
+      .filter((v: any): v is number => v != null))) as number[];
+    const mecanicos = mecanicoIds.length ? await prisma.mecanicos.findMany({ where: { id: { in: mecanicoIds } } }) : [];
+    const mecanicoMap = new Map<number, typeof mecanicos[number]>(mecanicos.map((m: typeof mecanicos[number]) => [m.id, m]));
 
     const transformedOrdens = (ordensTrabalho as any[]).map((ordem: any) => ({
       id: ordem.ref_ordem_trabalho,
@@ -202,8 +242,9 @@ export async function GET(request: Request) {
       contacto_nome: ordem.contacto_nome ?? null,
       contacto_telefone: ordem.contacto_telefone ?? clienteMap.get(ordem.cliente_id)?.telefone ?? null,
       contacto_email: ordem.contacto_email ?? clienteMap.get(ordem.cliente_id)?.email ?? null,
-      vehicle: `${veiculoMap.get(ordem.veiculo_id)?.marca ?? ''} ${veiculoMap.get(ordem.veiculo_id)?.modelo ?? ''} | ${veiculoMap.get(ordem.veiculo_id)?.matricula ?? ''}`,
-      mechanic: ordem.mecanico?.nome ?? '', // Directly access the included mechanic's name
+      vehicle: `${veiculoMap.get(Number(ordem.veiculo_id))?.marca ?? ''} ${veiculoMap.get(Number(ordem.veiculo_id))?.modelo ?? ''} | ${veiculoMap.get(Number(ordem.veiculo_id))?.matricula ?? ''}`,
+      mechanic: ordem.mecanico?.nome ?? mecanicoMap.get(ordem.mecanico_id)?.nome ?? '',
+      mecanico_nome: ordem.mecanico?.nome ?? mecanicoMap.get(ordem.mecanico_id)?.nome ?? '',
       openDate: ordem.data_inicio ? ordem.data_inicio.toLocaleDateString('pt-PT') : '',
       closeDate: ordem.data_conclusao ? ordem.data_conclusao.toLocaleDateString('pt-PT') : '',
       total: Number(ordem.total_geral) || 0,
@@ -230,16 +271,28 @@ export async function GET(request: Request) {
 
     return NextResponse.json(transformedOrdens);
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error fetching ordens_trabalho:', error);
     return NextResponse.json({ error: 'Failed to fetch ordens_trabalho' }, { status: 500 });
   }
 }
 
-function mapStatus(status: string | null): 'Em Andamento' | 'Aguarda Peças' | 'Concluído' | 'Entregue' | 'Cancelado' | 'Em Aprovação' {
+function mapStatus(status: string | null): 'Em Andamento' | 'Aguarda Peças' | 'Concluído' | 'Entregue' | 'Cancelado' | 'Em Aprovação' | 'Aprovado' {
   switch (status) {
     case 'em_aprovacao': return 'Em Aprovação';
-    case 'em_andamento': return 'Em Andamento';
+    case 'aprovado': return 'Aprovado';
     case 'aguarda_peca': return 'Aguarda Peças';
+    case 'em_andamento': return 'Em Andamento';
     case 'concluido': return 'Concluído';
     case 'entregue': return 'Entregue';
     case 'cancelado': return 'Cancelado';
@@ -287,6 +340,17 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true });
 
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error deleting work order:', error);
     return NextResponse.json({ error: 'Failed to delete work order' }, { status: 500 });
   }
@@ -305,8 +369,9 @@ export async function PATCH(request: Request) {
     // Database valid values: 'pendente', 'em_andamento', 'concluido', 'cancelado', 'faturado'
     const statusMap: Record<string, string> = {
       'Em Aprovação': 'em_aprovacao',
-      'Em Andamento': 'em_andamento',
+      'Aprovado': 'aprovado',
       'Aguarda Peças': 'aguarda_peca',
+      'Em Andamento': 'em_andamento',
       'Concluído': 'concluido',
       'Entregue': 'entregue',
       'Cancelado': 'cancelado'
@@ -359,6 +424,51 @@ export async function PATCH(request: Request) {
       });
     }
 
+    // If changing to "concluido" (and wasn't already concluido), deduct parts from stock
+    if (dbEstado === 'concluido' && ordemTrabalho.estado !== 'concluido') {
+      const itensOrdem = await prisma.itens_ordem_trabalho.findMany({
+        where: {
+          ordem_trabalho_id: Number(ordemTrabalho.id),
+          tipo_item: 'peca',
+          peca_id: { not: null }
+        },
+        select: {
+          peca_id: true,
+          quantidade: true
+        }
+      });
+
+      // Update stock for each part used
+      for (const item of itensOrdem) {
+        if (item.peca_id && item.quantidade) {
+          try {
+            await prisma.pecas.update({
+              where: { id: BigInt(item.peca_id) },
+              data: {
+                quantidade_stock: {
+                  decrement: Math.floor(Number(item.quantidade))
+                }
+              }
+            });
+          } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
+            console.error(`Failed to update stock for part ${item.peca_id}:`, error);
+            // Continue processing other parts even if one fails
+          }
+        }
+      }
+    }
+
     // If changing to "Aguarda Peças" and selectedPartIds are provided
     if (estado === 'Aguarda Peças' && selectedPartIds && Array.isArray(selectedPartIds)) {
       // First, reset all parts to not waiting
@@ -390,6 +500,17 @@ export async function PATCH(request: Request) {
             });
           }
         } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
           console.error('Error updating parts:', err);
         }
       }
@@ -404,7 +525,20 @@ export async function PATCH(request: Request) {
     });
 
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error updating work order:', error);
     return NextResponse.json({ error: 'Failed to update work order' }, { status: 500 });
   }
 }
+
+

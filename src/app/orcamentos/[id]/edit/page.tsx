@@ -425,10 +425,6 @@ const EditBudgetPage = () => {
       return;
     }
 
-    if (!quilometragem) {
-      alert('Introduza os quilómetros da viatura.');
-      return;
-    }
 
     if (!validateAlternateContact()) {
       return;
@@ -578,14 +574,14 @@ const EditBudgetPage = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Quilómetros *</label>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Quilómetros</label>
                   <input
                     type="number"
                     value={quilometragem}
                     onChange={(e) => setQuilometragem(e.target.value ? parseInt(e.target.value) : '')}
                     className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
                     placeholder="Quilómetros"
-                    required
+  
                   />
                 </div>
               </div>

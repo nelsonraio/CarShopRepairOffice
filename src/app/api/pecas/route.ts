@@ -16,7 +16,7 @@ export async function GET() {
     });
 
     // Get all supplier IDs that are used in the parts
-    const fornecedorIds = [...new Set(pecas.map(p => p.fornecedor_id).filter(Boolean))];
+    const fornecedorIds = [...new Set(pecas.map((p: typeof pecas[number]) => p.fornecedor_id).filter(Boolean))];
     
     // Fetch suppliers if there are any
     const fornecedoresMap = new Map();
@@ -30,11 +30,11 @@ export async function GET() {
           nome: true
         }
       });
-      fornecedores.forEach(f => fornecedoresMap.set(f.id, f.nome));
+      fornecedores.forEach((f: typeof fornecedores[number]) => fornecedoresMap.set(f.id, f.nome));
     }
 
     // Convert BigInt id to string for JSON serialization
-    const serializedPecas = pecas.map(peca => ({
+    const serializedPecas = pecas.map((peca: typeof pecas[number]) => ({
       id: String(peca.id),
       referencia: peca.referencia,
       nome: peca.nome,
@@ -49,6 +49,17 @@ export async function GET() {
 
     return NextResponse.json(serializedPecas);
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error fetching pecas:', error);
     return NextResponse.json({ error: 'Failed to fetch pecas' }, { status: 500 });
   }
@@ -122,6 +133,17 @@ export async function POST(request: Request) {
                    (newPeca.quantidade_stock ?? 0) <= (newPeca.nivel_stock_minimo ?? 0) ? 'baixo_stock' : 'em_stock'
     }, { status: 201 });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error creating peca:', error);
     return NextResponse.json(
       { error: 'Falha ao criar peça' },
@@ -210,6 +232,17 @@ export async function PUT(request: Request) {
                    (updatedPeca.quantidade_stock ?? 0) <= (updatedPeca.nivel_stock_minimo ?? 0) ? 'baixo_stock' : 'em_stock'
     });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error updating peca:', error);
     return NextResponse.json(
       { error: 'Falha ao atualizar peça' },
@@ -217,3 +250,5 @@ export async function PUT(request: Request) {
     );
   }
 }
+
+

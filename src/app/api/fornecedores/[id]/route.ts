@@ -31,6 +31,17 @@ export async function PUT(
 
     return NextResponse.json(fornecedor);
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error updating fornecedor:', error);
     return NextResponse.json({ error: 'Failed to update fornecedor' }, { status: 500 });
   }
@@ -52,6 +63,17 @@ export async function PATCH(
 
     return NextResponse.json(fornecedor);
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error patching fornecedor:', error);
     return NextResponse.json({ error: 'Failed to patch fornecedor' }, { status: 500 });
   }
@@ -71,7 +93,20 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error deleting fornecedor:', error);
     return NextResponse.json({ error: 'Failed to delete fornecedor' }, { status: 500 });
   }
 }
+
+

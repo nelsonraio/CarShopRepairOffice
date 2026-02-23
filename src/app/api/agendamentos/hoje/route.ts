@@ -46,7 +46,7 @@ export async function GET() {
     const filteredAgendamentos = agendamentos;
 
     // Map to UI format
-    const mapped = filteredAgendamentos.map(agendamento => ({
+    const mapped = filteredAgendamentos.map((agendamento: typeof filteredAgendamentos[number]) => ({
       id: agendamento.id.toString(),
       ref_agendamento: `AGD-${agendamento.id}`,
       cliente_nome: agendamento.cliente.nome,
@@ -59,12 +59,28 @@ export async function GET() {
       titulo: agendamento.titulo,
       descricao: agendamento.descricao || '',
       hora_agendamento: agendamento.hora_inicio,
-      mecanico_nome: 'N/A' // Mecânico ainda não atribuído
+      mecanico_nome: 'N/A', // Mecânico ainda não atribuído
+      contacto_nome: agendamento.contacto_nome || agendamento.cliente.nome,
+      contacto_telefone: agendamento.contacto_telefone || agendamento.cliente.telefone || null,
+      contacto_email: agendamento.contacto_email || agendamento.cliente.email || null
     }));
 
     return NextResponse.json(mapped);
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error fetching today appointments:', error);
     return NextResponse.json({ error: 'Failed to fetch appointments' }, { status: 500 });
   }
 }
+
+

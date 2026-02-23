@@ -33,6 +33,17 @@ export async function GET(request: Request) {
 
     return NextResponse.json(modelos);
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error fetching modelos:', error);
     return NextResponse.json({ error: 'Failed to fetch modelos' }, { status: 500 });
   }
@@ -61,7 +72,20 @@ export async function POST(request: Request) {
 
     return NextResponse.json(modelo);
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error creating modelo:', error);
     return NextResponse.json({ error: 'Failed to create modelo' }, { status: 500 });
   }
 }
+
+

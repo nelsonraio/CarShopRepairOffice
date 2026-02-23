@@ -9,25 +9,28 @@ datasource db {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model agendamentos {
-  id               BigInt            @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
-  cliente_id       Int
-  mecanico_id      Int?
-  matricula        String?           @db.VarChar(50)
-  titulo           String            @db.VarChar(255)
-  descricao        String?           @db.Text
-  data_agendamento DateTime          @db.Date
-  hora_inicio      DateTime          @db.Time(0)
-  estado           String?           @default("agendado") @db.VarChar(20)
-  prioridade       String?           @default("normal") @db.VarChar(10)
-  criado_em        DateTime?         @default(now()) @db.Timestamp(0)
-  atualizado_em    DateTime?         @default(now()) @db.Timestamp(0)
-  criado_por       Int?
-  atualizado_por   Int?
-  marca            String?           @db.VarChar(150)
-  modelo           String?           @db.VarChar(150)
-  ano              Int?
-  cliente          clientes          @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
-  ordens_trabalho  ordens_trabalho[]
+  id                BigInt            @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  cliente_id        Int
+  mecanico_id       Int?
+  matricula         String?           @db.VarChar(50)
+  titulo            String            @db.VarChar(255)
+  descricao         String?           @db.Text
+  data_agendamento  DateTime          @db.Date
+  hora_inicio       DateTime          @db.Time(0)
+  estado            String?           @default("agendado") @db.VarChar(20)
+  prioridade        String?           @default("normal") @db.VarChar(10)
+  criado_em         DateTime?         @default(now()) @db.Timestamp(0)
+  atualizado_em     DateTime?         @default(now()) @db.Timestamp(0)
+  criado_por        Int?
+  atualizado_por    Int?
+  marca             String?           @db.VarChar(150)
+  modelo            String?           @db.VarChar(150)
+  ano               Int?
+  contacto_nome     String?           @db.VarChar(100)
+  contacto_telefone String?           @db.VarChar(20)
+  contacto_email    String?           @db.VarChar(255)
+  cliente           clientes          @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
+  ordens_trabalho   ordens_trabalho[]
 
   @@index([cliente_id], map: "agendamentos_cliente_id_fkey")
 }

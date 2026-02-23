@@ -43,9 +43,7 @@ body {
   display: flex;
   gap: 0.5rem;
   overflow-x: hidden;
-  padding-bottom: 1rem;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  padding: 2rem;
   min-height: 0;
   scrollbar-width: thin;
   scrollbar-color: #4b5563 #1f2937;

@@ -82,6 +82,17 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error creating budget:', error);
     return NextResponse.json({ error: 'Failed to create budget' }, { status: 500 });
   }
@@ -231,6 +242,17 @@ export async function GET(request: Request) {
 
 
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error fetching budgets:', error);
     return NextResponse.json({ error: 'Failed to fetch budgets' }, { status: 500 });
   }
@@ -421,7 +443,6 @@ export async function PUT(request: Request) {
         if (currentOrcamento.itens_orcamento && currentOrcamento.itens_orcamento.length > 0) {
           const workOrderItems = currentOrcamento.itens_orcamento.map((item: any) => ({
             ordem_trabalho_id: Number(ordemTrabalho.id),
-            ordens_trabalhoId: ordemTrabalho.id, // Use BigInt directly for the relation
             tipo_item: item.tipo_item,
             servico_id: item.servico_id ? Number(item.servico_id) : null,
             peca_id: item.peca_id ? Number(item.peca_id) : null,
@@ -454,9 +475,25 @@ export async function PUT(request: Request) {
     });
 
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error updating budget:', error);
     return NextResponse.json({ error: 'Failed to update budget' }, { status: 500 });
   }
+}
+
+// PATCH method - same functionality as PUT
+export async function PATCH(request: Request) {
+  return PUT(request);
 }
 
 export async function DELETE(request: Request) {
@@ -481,7 +518,20 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true });
 
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error deleting budget:', error);
     return NextResponse.json({ error: 'Failed to delete budget' }, { status: 500 });
   }
 }
+
+

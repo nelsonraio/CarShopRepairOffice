@@ -15,10 +15,12 @@ interface KanbanCardProps {
   columnId: string;
   isDragging: boolean;
   onClick?: () => void;
+  onDragStart?: (card: KanbanCardData, fromColumnId: string) => void;
   isReadOnly?: boolean;
+  shake?: boolean;
 }
 
-export default function KanbanCard({ card, columnId, onClick, isReadOnly = false }: KanbanCardProps) {
+export default function KanbanCard({ card, columnId, onClick, onDragStart, isReadOnly = false, shake = false }: KanbanCardProps) {
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     e.stopPropagation();
     e.dataTransfer.effectAllowed = "move";
@@ -26,6 +28,7 @@ export default function KanbanCard({ card, columnId, onClick, isReadOnly = false
       "application/json",
       JSON.stringify({ card, fromColumnId: columnId })
     );
+    onDragStart?.(card, columnId);
   };
 
   return (
@@ -34,7 +37,7 @@ export default function KanbanCard({ card, columnId, onClick, isReadOnly = false
       onDragStart={handleDragStart}
       className={`bg-gray-800 rounded-lg shadow-md p-4 kanban-card ${
         isReadOnly ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'
-      } hover:bg-gray-750 transition-colors`}
+      } hover:bg-gray-750 transition-colors${shake ? ' shake' : ''}`}
       onClick={onClick}
     >
       <div className="flex justify-between items-start">

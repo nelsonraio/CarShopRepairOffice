@@ -33,6 +33,17 @@ export async function PUT(
 
     return NextResponse.json(serialized);
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error updating categoria servico:', error);
     return NextResponse.json({ error: 'Failed to update categoria servico' }, { status: 500 });
   }
@@ -60,6 +71,17 @@ export async function PATCH(
 
     return NextResponse.json(serialized);
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error patching categoria servico:', error);
     return NextResponse.json({ error: 'Failed to patch categoria servico' }, { status: 500 });
   }
@@ -79,7 +101,20 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error deleting categoria servico:', error);
     return NextResponse.json({ error: 'Failed to delete categoria servico' }, { status: 500 });
   }
 }
+
+

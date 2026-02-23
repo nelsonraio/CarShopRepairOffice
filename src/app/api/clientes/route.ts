@@ -13,7 +13,7 @@ export async function GET() {
     });
 
     // Transform to match Cliente interface
-    const transformedClientes = clientes.map((cliente) => ({
+    const transformedClientes = clientes.map((cliente: typeof clientes[number]) => ({
       id: cliente.id.toString(),
       nome: cliente.nome,
       email: cliente.email || '',
@@ -29,6 +29,17 @@ export async function GET() {
 
     return NextResponse.json(transformedClientes);
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error fetching clientes:', error);
     return NextResponse.json({ error: 'Failed to fetch clientes' }, { status: 500 });
   }
@@ -77,7 +88,20 @@ export async function POST(request: Request) {
     return NextResponse.json(transformedClient, { status: 201 });
 
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error creating client:', error);
     return NextResponse.json({ error: 'Failed to create client' }, { status: 500 });
   }
 }
+
+

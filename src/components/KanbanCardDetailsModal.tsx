@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 
 interface KanbanCardData {
   id: string;
@@ -61,6 +62,8 @@ interface KanbanCardDetailsModalProps {
 }
 
 export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTitle, isReadOnly = false }: KanbanCardDetailsModalProps) {
+  const router = useRouter();
+
   if (!isOpen || !card) return null;
 
   const getStatusLabel = (estado?: string) => {
@@ -95,6 +98,12 @@ export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTi
       case 'baixa': return 'text-green-400';
       default: return 'text-gray-400';
     }
+  };
+
+  const handleCreateBudget = () => {
+    // Navigate to new budget page with appointment ID
+    router.push(`/orcamentos/novo?agendamento_id=${card.id}`);
+    onClose();
   };
 
   return (
@@ -142,12 +151,24 @@ export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTi
               <label className="block text-xs font-medium text-gray-500 uppercase">Cliente</label>
               <p className="text-sm text-gray-300">{card.cliente_nome || 'N/A'}</p>
             </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-500 uppercase">Contacto</label>
-              <p className="text-sm text-gray-300">{card.contacto_nome || card.cliente_nome || 'N/A'}</p>
-              <p className="text-xs text-gray-400">{card.contacto_telefone || 'Sem telefone'}</p>
-              <p className="text-xs text-gray-400">{card.contacto_email || 'Sem email'}</p>
-            </div>
+            {/* Mostrar contacto destacado para agendamentos em recepção */}
+            {card.estado === 'em_recepcao' && (
+              <div className="bg-purple-400/10 border border-purple-400/30 rounded p-3">
+                <label className="block text-xs font-medium text-purple-300 uppercase mb-2">Contacto</label>
+                <p className="text-sm font-medium text-white">{card.contacto_nome || card.cliente_nome || 'N/A'}</p>
+                <p className="text-sm text-purple-200 font-mono">📞 {card.contacto_telefone || 'Sem telefone'}</p>
+                {card.contacto_email && <p className="text-xs text-purple-300">✉️ {card.contacto_email}</p>}
+              </div>
+            )}
+            {/* Mostrar contacto normal para outros estados */}
+            {card.estado !== 'em_recepcao' && (
+              <div>
+                <label className="block text-xs font-medium text-gray-500 uppercase">Contacto</label>
+                <p className="text-sm text-gray-300">{card.contacto_nome || card.cliente_nome || 'N/A'}</p>
+                <p className="text-xs text-gray-400">{card.contacto_telefone || 'Sem telefone'}</p>
+                {card.contacto_email && <p className="text-xs text-gray-400">{card.contacto_email}</p>}
+              </div>
+            )}
             <div>
               <label className="block text-xs font-medium text-gray-500 uppercase">Mecânico</label>
               <span className="bg-brand-yellow text-gray-900 text-xs font-semibold px-3 py-1 rounded inline-block mt-1">
@@ -218,19 +239,36 @@ export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTi
                   </div>
                 </div>
               )}
-              {card.estado === 'em_andamento' && card.work_order_items && card.work_order_items.length > 0 && (
-                <div className="mt-4 border-t border-gray-600 pt-3">
-                  <h5 className="text-xs font-semibold text-gray-200 uppercase mb-2">Itens da Ordem de Trabalho</h5>
-                  <div className="space-y-2">
-                    {card.work_order_items.map(item => (
-                      <div key={item.id} className="flex items-center justify-between text-sm text-gray-300">
-                        <span className="truncate pr-3">{item.descricao}</span>
-                        <span className="text-gray-400">x{item.quantidade}</span>
-                        <span className="text-gray-400">{item.tipo_item === 'servico' ? 'Serviço' : 'Peça'}</span>
+              {card.estado !== 'em_recepcao' && card.estado !== 'em_aprovacao' && (
+                <>
+                  {card.work_order_items && card.work_order_items.length > 0 ? (
+                    <div className="mt-4 border-t border-gray-600 pt-3">
+                      <h5 className="text-xs font-semibold text-gray-200 uppercase mb-2">Itens da Ordem de Trabalho</h5>
+                      <div className="space-y-2">
+                        {card.work_order_items.map(item => (
+                          <div key={item.id} className="flex items-center justify-between text-sm text-gray-300">
+                            <span className="truncate pr-3">{item.descricao}</span>
+                            <span className="text-gray-400">x{item.quantidade}</span>
+                            <span className="text-gray-400">{item.tipo_item === 'servico' ? 'Serviço' : 'Peça'}</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
+                  ) : card.itens_orcamento && card.itens_orcamento.length > 0 ? (
+                    <div className="mt-4 border-t border-gray-600 pt-3">
+                      <h5 className="text-xs font-semibold text-gray-200 uppercase mb-2">Itens do Orçamento</h5>
+                      <div className="space-y-2">
+                        {card.itens_orcamento.map(item => (
+                          <div key={item.id} className="flex items-center justify-between text-sm text-gray-300">
+                            <span className="truncate pr-3">{item.descricao}</span>
+                            <span className="text-gray-400">x{item.quantidade}</span>
+                            <span className="font-mono text-brand-yellow">€{Number(item.valor_total).toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </>
               )}
             </div>
           )}
@@ -316,6 +354,20 @@ export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTi
                   </div>
                 </div>
               )}
+              {card.work_order_items && card.work_order_items.length > 0 && (
+                <div className="mt-4 border-t border-indigo-700 pt-3">
+                  <h5 className="text-xs font-semibold text-indigo-200 uppercase mb-2">Itens da Ordem de Trabalho</h5>
+                  <div className="space-y-2">
+                    {card.work_order_items.map(item => (
+                      <div key={item.id} className="flex items-center justify-between text-sm text-gray-300">
+                        <span className="truncate pr-3">{item.descricao}</span>
+                        <span className="text-gray-400">x{item.quantidade}</span>
+                        <span className="text-gray-400">{item.tipo_item === 'servico' ? 'Serviço' : 'Peça'}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <p className="text-sm text-indigo-300 italic pt-3 border-t border-indigo-700 mt-3">
                 ⏳ Aguardando aprovação do cliente
               </p>
@@ -360,6 +412,14 @@ export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTi
         </div>
 
         <div className="flex justify-end space-x-3 mt-8 pt-4 border-t border-gray-700">
+          {card.estado === 'em_recepcao' && (
+            <button
+              onClick={handleCreateBudget}
+              className="px-4 py-2 bg-brand-yellow-dark text-white hover:bg-yellow-600 transition-colors rounded-none border border-brand-yellow font-medium"
+            >
+              Criar Orçamento
+            </button>
+          )}
           <button
             onClick={onClose}
             className="px-4 py-2 bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors rounded-none border border-gray-600"

@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
       orderBy: { data_emissao: 'desc' }
     });
 
-    const clienteIds = Array.from(new Set(faturas.map(f => f.cliente_id)));
+    const clienteIds = Array.from(new Set(faturas.map((f: typeof faturas[number]) => f.cliente_id)));
     const clientes = clienteIds.length
       ? await prisma.clientes.findMany({
           where: { id: { in: clienteIds } },
@@ -31,17 +31,17 @@ export async function GET(req: NextRequest) {
         })
       : [];
 
-    const clienteMap = new Map(
-      clientes.map(cliente => [cliente.id, { nome: cliente.nome, nif: cliente.nif }])
+    const clienteMap = new Map<number, { nome: string; nif: string | null }>(
+      clientes.map((cliente: typeof clientes[number]) => [cliente.id, { nome: cliente.nome, nif: cliente.nif }])
     );
 
     const ordemIds = faturas
-      .map(f => f.ordem_trabalho_id)
-      .filter((id): id is number => typeof id === 'number');
+      .map((f: typeof faturas[number]) => f.ordem_trabalho_id)
+      .filter((id: unknown): id is number => typeof id === 'number');
 
     const ordensTrabalho = ordemIds.length
       ? await prisma.ordens_trabalho.findMany({
-          where: { id: { in: ordemIds.map(id => BigInt(id)) } },
+          where: { id: { in: ordemIds.map((id: number) => BigInt(id)) } },
           select: { 
             id: true, 
             ref_ordem_trabalho: true,
@@ -56,8 +56,8 @@ export async function GET(req: NextRequest) {
         })
       : [];
 
-    const ordemMap = new Map(
-      ordensTrabalho.map(ordem => [
+    const ordemMap = new Map<number, { ref_ordem_trabalho?: string | null; veiculo?: { marca?: string | null; modelo?: string | null; matricula?: string | null } }>(
+      ordensTrabalho.map((ordem: typeof ordensTrabalho[number]) => [
         Number(ordem.id), 
         {
           ref_ordem_trabalho: ordem.ref_ordem_trabalho,
@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
     const total = await prisma.faturas.count({ where });
 
     // Converter BigInt para Number para JSON serialization
-    const faturasFormatadas = faturas.map(f => ({
+    const faturasFormatadas = faturas.map((f: typeof faturas[number]) => ({
       id: Number(f.id),
       numero_fatura: f.numero_fatura,
       cliente_id: f.cliente_id,
@@ -108,6 +108,17 @@ export async function GET(req: NextRequest) {
       pages: Math.ceil(total / limit)
     });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Erro ao listar faturas:', error);
     return NextResponse.json(
       { success: false, error: 'Erro ao listar faturas' },
@@ -216,6 +227,17 @@ export async function POST(req: NextRequest) {
     }, { status: 201 });
 
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Erro ao criar fatura:', error);
     return NextResponse.json(
       { success: false, error: 'Erro ao criar fatura' },
@@ -223,3 +245,5 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+

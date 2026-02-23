@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
       take: 100
     });
 
-    const formatadas = ordensTrabalho.map(ot => ({
+    const formatadas = ordensTrabalho.map((ot: typeof ordensTrabalho[number]) => ({
       id: Number(ot.id),
       ref_ordem_trabalho: ot.ref_ordem_trabalho,
       cliente_id: ot.cliente_id,
@@ -62,6 +62,17 @@ export async function GET(req: NextRequest) {
       total: formatadas.length
     });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Erro ao listar ordens de trabalho:', error);
     return NextResponse.json(
       { success: false, error: 'Erro ao listar ordens de trabalho' },
@@ -118,6 +129,17 @@ export async function POST(req: NextRequest) {
       }
     });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Erro ao obter ordem de trabalho:', error);
     return NextResponse.json(
       { success: false, error: 'Erro ao obter ordem de trabalho' },
@@ -125,3 +147,5 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+

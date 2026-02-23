@@ -17,13 +17,24 @@ export async function GET(request: Request) {
     });
 
     // Serialize BigInt fields
-    const serializedServicos = servicos.map(serv => ({
+    const serializedServicos = servicos.map((serv: typeof servicos[number]) => ({
       ...serv,
       id: Number(serv.id)
     }));
 
     return NextResponse.json(serializedServicos);
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error fetching servicos:', error);
     return NextResponse.json({ error: 'Failed to fetch servicos' }, { status: 500 });
   }
@@ -52,7 +63,20 @@ export async function POST(request: Request) {
 
     return NextResponse.json(serialized);
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error creating servico:', error);
     return NextResponse.json({ error: 'Failed to create servico' }, { status: 500 });
   }
 }
+
+

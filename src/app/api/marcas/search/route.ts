@@ -40,7 +40,20 @@ export async function GET(request: Request) {
 
     return NextResponse.json(serializedMarcas);
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error searching marcas:', error);
     return NextResponse.json({ error: 'Failed to search marcas' }, { status: 500 });
   }
 }
+
+

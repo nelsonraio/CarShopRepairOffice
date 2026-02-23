@@ -31,10 +31,12 @@ interface KanbanColumnProps {
   column: KanbanColumnData;
   onCardClick?: (card: KanbanCardData, columnTitle: string) => void;
   onCardDrop?: (card: KanbanCardData, fromColumnId: string, toColumnId: string) => void;
+  onCardDragStart?: (card: KanbanCardData, fromColumnId: string) => void;
   isReadOnly?: boolean;
+  shakeCardId?: string | null;
 }
 
-export default function KanbanColumn({ column, onCardClick, onCardDrop, isReadOnly = false }: KanbanColumnProps) {
+export default function KanbanColumn({ column, onCardClick, onCardDrop, onCardDragStart, isReadOnly = false, shakeCardId }: KanbanColumnProps) {
   const [isDragOver, setIsDragOver] = useState(false);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -97,7 +99,9 @@ export default function KanbanColumn({ column, onCardClick, onCardDrop, isReadOn
             columnId={column.id}
             isDragging={false}
             onClick={() => onCardClick?.(card, column.title)}
+            {...(onCardDragStart && { onDragStart: onCardDragStart })}
             isReadOnly={isReadOnly}
+            shake={shakeCardId === card.id}
           />
         ))}
       </div>

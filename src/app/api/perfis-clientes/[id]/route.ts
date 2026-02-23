@@ -26,6 +26,17 @@ export async function PUT(
 
     return NextResponse.json(perfil);
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error updating perfil:', error);
     return NextResponse.json({ error: 'Failed to update perfil' }, { status: 500 });
   }
@@ -47,6 +58,17 @@ export async function PATCH(
 
     return NextResponse.json(perfil);
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error patching perfil:', error);
     return NextResponse.json({ error: 'Failed to patch perfil' }, { status: 500 });
   }
@@ -66,7 +88,20 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error deleting perfil:', error);
     return NextResponse.json({ error: 'Failed to delete perfil' }, { status: 500 });
   }
 }
+
+

@@ -41,12 +41,17 @@ export async function GET(request: Request) {
     // Return the vehicle and service data
     const result = {
       found: true,
+      id: agendamento.id.toString(),
+      estado: agendamento.estado || 'agendado',
       marca: agendamento.marca || '',
       modelo: agendamento.modelo || '',
       ano: agendamento.ano?.toString() || '',
       tipoServico: agendamento.titulo.includes(' - ') ? agendamento.titulo.split(' - ')[0] : agendamento.titulo,
       notas: agendamento.descricao || '',
       descricao: agendamento.descricao ? agendamento.descricao : (agendamento.titulo.includes(' - ') ? agendamento.titulo.split(' - ')[0] : agendamento.titulo),
+      contacto_nome: agendamento.contacto_nome || null,
+      contacto_telefone: agendamento.contacto_telefone || null,
+      contacto_email: agendamento.contacto_email || null,
       cliente: agendamento.cliente ? {
         id: agendamento.cliente.id.toString(),
         nome: agendamento.cliente.nome,
@@ -60,7 +65,20 @@ export async function GET(request: Request) {
 
     return NextResponse.json(result);
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error searching agendamentos:', error);
     return NextResponse.json({ error: 'Failed to search agendamentos' }, { status: 500 });
   }
 }
+
+

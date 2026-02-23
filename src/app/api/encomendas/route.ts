@@ -51,6 +51,17 @@ export async function GET() {
 
     return NextResponse.json(serialized);
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('Error fetching encomendas:', error);
     return NextResponse.json({ error: 'Failed to fetch encomendas' }, { status: 500 });
   }
@@ -156,12 +167,35 @@ export async function POST(request: Request) {
       console.log('📤 Resposta enviada:', response);
       return NextResponse.json(response, { status: 201 });
     } catch (txError) {
+    const errorMessage = txError instanceof Error ? txError.message : String(txError);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
       console.error('❌ Erro na transação:', txError);
       throw txError;
     }
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbOffline =
+      errorMessage.includes("reach database server") ||
+      errorMessage.includes("ECONNREFUSED");
+
+    if (isDbOffline) {
+      return NextResponse.json(
+        { error: "Database unavailable. Please start the database server and try again." },
+        { status: 503 }
+      );
+    }
     console.error('🚨 Erro ao criar encomenda:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to create encomenda';
     return NextResponse.json({ error: errorMessage, details: String(error) }, { status: 500 });
   }
 }
+
+
