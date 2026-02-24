@@ -170,7 +170,6 @@ const parsePtDateToIso = (value?: string) => {
 const mapStatusLabelToEstado = (status?: string) => {
   switch (status) {
     case 'Em Aprovação': return 'em_aprovacao';
-    case 'Aprovado': return 'aprovado';
     case 'Aguarda Peças': return 'aguarda_peca';
     case 'Em Andamento': return 'em_andamento';
     case 'Concluído': return 'concluido';
@@ -215,13 +214,12 @@ const normalizeWorkOrder = (order: any): WorkOrder => {
 const stateConfig: Record<string, { title: string; color: string }> = {
   'em_recepcao': { title: 'Em Recepção', color: 'text-purple-400' },
   'em_aprovacao': { title: 'Em Aprovação', color: 'text-indigo-400' },
-  'aprovado': { title: 'Aprovado', color: 'text-green-400' },
   'aguarda_peca': { title: 'Aguarda Peças', color: 'text-orange-400' },
   'em_andamento': { title: 'Em Andamento', color: 'text-blue-400' },
   'concluido': { title: 'Concluído', color: 'text-yellow-400' }
 };
 
-const stateOrder = ['em_recepcao', 'em_aprovacao', 'aprovado', 'aguarda_peca', 'em_andamento', 'concluido'];
+const stateOrder = ['em_recepcao', 'em_aprovacao',  'aguarda_peca', 'em_andamento', 'concluido'];
 
 export default function KanbanBoard() {
   const [shakeCardId, setShakeCardId] = useState<string | null>(null);
@@ -247,6 +245,7 @@ export default function KanbanBoard() {
   const [mechanics, setMechanics] = useState<any[]>([]);
   const [selectedMechanic, setSelectedMechanic] = useState<string>('');
   const [pendingBudgetId, setPendingBudgetId] = useState<number | null>(null);
+  const [pendingTargetColumn, setPendingTargetColumn] = useState<string>('');
   const [showWaitingPartsModal, setShowWaitingPartsModal] = useState(false);
   const [workOrderItems, setWorkOrderItems] = useState<any[]>([]);
   const [selectedParts, setSelectedParts] = useState<Set<string>>(new Set());
@@ -281,7 +280,7 @@ export default function KanbanBoard() {
           // ...existing code para agendamento...
           // (mantém igual)
         } else if (fromColumnId === 'em_aprovacao') {
-          // Confirmação para eliminar orçamento
+          // ...existing code para orçamento...
           if (window.confirm('Deseja mesmo eliminar este orçamento? Esta ação não pode ser desfeita.')) {
             try {
               const url = `/api/orcamentos?id=${card.id}`;
@@ -293,43 +292,70 @@ export default function KanbanBoard() {
                 }
               });
 
-              console.log('Response status:', response.status);
-              console.log('Response ok:', response.ok);
-
               if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                console.error('Error response:', errorData);
                 throw new Error(errorData.error || 'Failed to delete budget');
               }
 
-              console.log('✓ Orçamento eliminado com sucesso!');
-
-              // Remover card do UI
               setColumns(prevColumns => {
-                console.log('Removendo card:', card.id, 'de coluna:', fromColumnId);
                 const newColumns = prevColumns.map(col => ({ ...col, cards: [...col.cards] }));
                 const fromColumn = newColumns.find(col => col.id === fromColumnId);
                 if (fromColumn) {
-                  const initialLength = fromColumn.cards.length;
                   fromColumn.cards = fromColumn.cards.filter(c => c.id !== card.id);
-                  console.log(`Removido. Antes: ${initialLength}, Depois: ${fromColumn.cards.length}`);
-                } else {
-                  console.log('Coluna não encontrada!');
                 }
                 return newColumns;
               });
 
               alert('Orçamento eliminado com sucesso!');
             } catch (error) {
-              console.error('Erro ao eliminar orçamento:', error);
               alert('Erro ao eliminar orçamento: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
             }
           }
+        } else if (fromColumnId === 'em_andamento') {
+          // Novo: Cancelar ordem de trabalho se arrastar de "em_andamento" para fora
+          if (window.confirm('Deseja mesmo cancelar esta ordem de trabalho?')) {
+            try {
+              const url = '/api/ordens-trabalho';
+              const response = await fetch(url, {
+                method: 'PATCH',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  id: card.proc,
+                  estado: 'Cancelado'
+                }),
+              });
+
+              if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Falha ao cancelar ordem de trabalho');
+              }
+
+              setColumns(prevColumns => {
+                // Remove da coluna antiga e adiciona na coluna "cancelado"
+                const newColumns = prevColumns.map(col => ({ ...col, cards: [...col.cards] }));
+                const fromColumn = newColumns.find(col => col.id === fromColumnId);
+                if (fromColumn) {
+                  fromColumn.cards = fromColumn.cards.filter(c => c.id !== card.id);
+                }
+                // Adiciona na coluna cancelado
+                const canceladoColumn = newColumns.find(col => col.id === 'cancelado');
+                if (canceladoColumn) {
+                  canceladoColumn.cards.push({ ...card, estado: 'cancelado' });
+                }
+                return newColumns;
+              });
+
+              alert('Ordem de trabalho cancelada com sucesso!');
+            } catch (error) {
+              alert('Erro ao cancelar ordem de trabalho: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
+            }
+          }
         } else if (fromColumnId === 'concluido') {
-          console.log('✓ Entregando ordem...', card);
+          // ...existing code para entregar ordem...
           try {
             const url = '/api/ordens-trabalho';
-            console.log('Fetching:', url);
             const response = await fetch(url, {
               method: 'PATCH',
               headers: {
@@ -341,39 +367,26 @@ export default function KanbanBoard() {
               }),
             });
 
-            console.log('Response status:', response.status);
-            console.log('Response ok:', response.ok);
-
             if (!response.ok) {
               const errorData = await response.json().catch(() => ({}));
-              console.error('Error response:', errorData);
               throw new Error(errorData.error || 'Failed to deliver work order');
             }
 
-            console.log('✓ Ordem entregue com sucesso!');
-
-            // Remover card do UI
             setColumns(prevColumns => {
-              console.log('Removendo card:', card.id, 'de coluna:', fromColumnId);
               const newColumns = prevColumns.map(col => ({ ...col, cards: [...col.cards] }));
               const fromColumn = newColumns.find(col => col.id === fromColumnId);
               if (fromColumn) {
-                const initialLength = fromColumn.cards.length;
                 fromColumn.cards = fromColumn.cards.filter(c => c.id !== card.id);
-                console.log(`Removido. Antes: ${initialLength}, Depois: ${fromColumn.cards.length}`);
-              } else {
-                console.log('Coluna não encontrada!');
               }
               return newColumns;
             });
 
             alert('Ordem de trabalho entregue com sucesso!');
           } catch (error) {
-            console.error('Erro ao entregar ordem de trabalho:', error);
             alert('Erro ao entregar ordem de trabalho: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
           }
         } else {
-          console.log('⚠ Drop fora não faz nada para esta coluna:', fromColumnId);
+          // Drop fora não faz nada para outras colunas
         }
         
         setDraggedCard(null);
@@ -459,13 +472,28 @@ export default function KanbanBoard() {
         budgets
           .filter(budget => budget.estado?.toLowerCase() === 'pendente')
           .forEach(budget => {
-            if (!grouped['em_aprovacao']) {
-              grouped['em_aprovacao'] = [];
+            const isApproved = budget.estado?.toLowerCase() === 'aprovado';
+            const targetColumn = isApproved ? 'aprovado' : 'em_aprovacao';
+            
+            if (!grouped[targetColumn]) {
+              grouped[targetColumn] = [];
             }
             const workOrderRef = budget.ref_orcamento
               .replace(/^ORC/, 'OT')
               .replace(/^OR-/, 'OT-');
             const linkedWorkOrder = workOrders.find(order => order.ref_ordem_trabalho === workOrderRef);
+
+            // Se já existe uma ordem de trabalho associada e está em andamento ou concluída, não mostrar na coluna aprovado
+            if (linkedWorkOrder && 
+                (linkedWorkOrder.estado === 'em_andamento' || 
+                 linkedWorkOrder.estado === 'concluido' || 
+                 linkedWorkOrder.estado === 'entregue' ||
+                 linkedWorkOrder.estado === 'Em Andamento' ||
+                 linkedWorkOrder.estado === 'Concluído' ||
+                 linkedWorkOrder.estado === 'Entregue')) {
+              // Não adicionar - a OT já está em outro estado
+              return;
+            }
 
             const card: KanbanCard = {
               id: String(budget.id),
@@ -473,7 +501,7 @@ export default function KanbanBoard() {
               plate: budget.veiculo?.matricula || 'N/A',
               model: budget.veiculo ? `${budget.veiculo.marca} ${budget.veiculo.modelo}` : 'N/A',
               mechanic: linkedWorkOrder?.mecanico_nome || 'N/A',
-              estado: budget.estado?.toLowerCase() === 'aprovado' ? 'aprovado' : 'em_aprovacao',
+              estado: 'em_aprovacao',
               cliente_nome: budget.cliente?.nome || 'N/A',
               contacto_nome: budget.contacto_nome || budget.cliente?.nome || 'N/A',
               contacto_telefone: budget.contacto_telefone || budget.cliente?.telefone || null,
@@ -512,12 +540,28 @@ export default function KanbanBoard() {
             if (linkedWorkOrder?.items && linkedWorkOrder.items.length > 0) {
               card.work_order_items = linkedWorkOrder.items;
             }
-            grouped['em_aprovacao'].push(card);
+            
+            // Push to targetColumn (either 'aprovado' or 'em_aprovacao')
+            grouped[targetColumn].push(card);
           });
 
         workOrders.forEach(order => {
           const normalized = normalizeWorkOrder(order as any);
-          const estado = normalized.estado || 'em_andamento';
+          let estado = normalized.estado || 'em_andamento';
+          
+          // Map Portuguese status to internal status key
+          if (estado === 'Aguarda Peças') {
+            estado = 'aguarda_peca';
+          } else if (estado === 'Em Andamento') {
+            estado = 'em_andamento';
+          } else if (estado === 'Concluído') {
+            estado = 'concluido';
+          } else if (estado === 'Entregue') {
+            estado = 'entregue';
+          } else if (estado === 'Em Aprovação') {
+            estado = 'em_aprovacao';
+          }
+          
           if (!grouped[estado]) {
             grouped[estado] = [];
           }
@@ -547,8 +591,16 @@ export default function KanbanBoard() {
           if (normalized.data_inicio) {
             card.data_inicio = normalized.data_inicio;
           }
+          console.log('DEBUG - Card data:', {
+            ref: normalized.ref_ordem_trabalho,
+            estado: estado,
+            waitingParts: normalized.waitingParts,
+            hasWaitingParts: !!(normalized.waitingParts && normalized.waitingParts.length > 0)
+          });
+          
           if (normalized.waitingParts && normalized.waitingParts.length > 0) {
             card.waiting_parts = normalized.waitingParts;
+            console.log('DEBUG - Assigned waiting_parts to card:', card.waiting_parts);
           }
           if (normalized.items && normalized.items.length > 0) {
             card.work_order_items = normalized.items;
@@ -572,7 +624,11 @@ export default function KanbanBoard() {
             budgetItems: card.itens_orcamento?.length || 0
           });
           
-          grouped[estado].push(card);
+          // Ensure column exists before pushing - use non-null assertion since we initialized all states above
+          if (!grouped[estado]) {
+            grouped[estado] = [];
+          }
+          (grouped[estado] as KanbanCard[]).push(card);
         });
 
         // Create columns
@@ -610,8 +666,8 @@ export default function KanbanBoard() {
   const handleCardDrop = async (card: KanbanCard, fromColumnId: string, toColumnId: string) => {
     const allowedTransitions: Record<string, string[]> = {
       em_recepcao: ['cancelado', 'em_aprovacao'],
-      em_aprovacao: ['aprovado'],
-      aprovado: ['em_andamento'],
+      em_aprovacao: ['em_andamento', 'aguarda_peca'],
+      aprovado: ['em_andamento', 'aguarda_peca'],
       em_andamento: ['aguarda_peca', 'concluido'],
       aguarda_peca: ['em_andamento'],
       concluido: ['entregue']
@@ -769,8 +825,11 @@ export default function KanbanBoard() {
     }
 
     // Lógica especial: quando move de "em_aprovacao" para "aprovado"
-    if (fromColumnId === 'em_aprovacao' && toColumnId === 'aprovado') {
+    // Deve automaticamente ir para "em_andamento" com OT-xxx
+    if (fromColumnId === 'em_aprovacao' && (toColumnId === 'em_andamento' || toColumnId === 'aguarda_peca')) {
       try {
+        // Guardar o destino pretendido
+        setPendingTargetColumn(toColumnId);
         // Buscar mecânicos e abrir modal de seleção
         await fetchMechanicsForApproval();
         setPendingBudgetId(parseInt(card.id));
@@ -783,26 +842,6 @@ export default function KanbanBoard() {
         alert('Erro ao preparar seleção de mecânico. Por favor, tente novamente.');
       }
       return;
-    }
-
-    // Lógica especial: quando move de "aprovado" para "em_andamento"
-    if (fromColumnId === 'aprovado' && toColumnId === 'em_andamento') {
-      try {
-        // Card ID é o ID do orçamento "aprovado"
-        const budgetId = parseInt(card.id);
-        
-        // Buscar mecânicos
-        await fetchMechanicsForApproval();
-        
-        // Armazenar os dados para usar no modal
-        setPendingBudgetId(budgetId);
-        setPendingCard(card);
-        setSelectedMechanic('');
-        setShowMechanicModal(true);
-        return;
-      } catch (error) {
-        console.error('Erro ao preparar aprovação:', error);
-      }
     }
 
     // Lógica especial: quando move de "em_andamento" para "aguarda_peca"
@@ -858,6 +897,44 @@ export default function KanbanBoard() {
       return;
     }
 
+    // Lógica especial: quando move de "aprovado" para "em_andamento" ou "aguarda_peca"
+    // Buscar a referência OT correta e atualizar o card
+    if (fromColumnId === 'aprovado' && (toColumnId === 'em_andamento' || toColumnId === 'aguarda_peca')) {
+      // Verificar se o card tem work_order_ref
+      const workOrderRef = card.work_order_ref || card.proc.replace(/^ORC/, 'OT').replace(/^OR-/, 'OT-');
+      
+      // Atualizar o card com a referência OT correta
+      const updatedCard = {
+        ...card,
+        proc: workOrderRef,
+        estado: toColumnId
+      };
+      
+      // Atualizar o card na base de dados e no UI
+      try {
+        const response = await fetch('/api/ordens-trabalho', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: workOrderRef,
+            estado: toColumnId === 'em_andamento' ? 'Em Andamento' : 'Aguarda Peças'
+          }),
+        });
+
+        if (!response.ok) {
+          console.error('Failed to update work order status');
+        }
+      } catch (woError) {
+        console.error('Error updating work order:', woError);
+      }
+      
+      // Atualizar o UI
+      updateCardState(updatedCard, toColumnId);
+      return;
+    }
+
     // Para outras transições, apenas atualizar o estado
     updateCardState(card, toColumnId);
   };
@@ -896,14 +973,97 @@ export default function KanbanBoard() {
         throw new Error('Failed to approve budget');
       }
 
+      // Gerar a referência OT a partir do orçamento
+      const workOrderRef = pendingCard?.proc
+        .replace(/^ORC/, 'OT')
+        .replace(/^OR-/, 'OT-') || 'OT-001';
+
+      // Se o destino é "aguarda_peca", abrir o modal de peças com os itens do orçamento
+      if (pendingTargetColumn === 'aguarda_peca' && pendingCard) {
+        // Buscar os itens do orçamento para mostrar no modal
+        const budgetItems = pendingCard.itens_orcamento || [];
+        
+        // Preparar os itens como peças
+        const pecaItems = budgetItems.map((item, index) => ({
+          id: item.id || index + 1000,
+          tipo_item: 'peca',
+          descricao: item.descricao,
+          quantidade: item.quantidade,
+          preco_unitario: item.valor_total / item.quantidade,
+          valor_total: item.valor_total
+        }));
+        
+        // Configurar o estado para o modal de peças
+        setWorkOrderItems(pecaItems);
+        setPendingWorkOrderRef(workOrderRef);
+        setLoadingItems(false);
+        
+        // Atualizar o pendingCard com a referência OT
+        const mechanicName = mechanics.find(m => m.id === parseInt(selectedMechanic))?.nome || 'N/A';
+        setPendingCard({
+          ...pendingCard,
+          proc: workOrderRef,
+          mechanic: mechanicName,
+          work_order_ref: workOrderRef
+        });
+        
+        // Fechar modal de mecânico
+        setShowMechanicModal(false);
+        setSelectedMechanic('');
+        setPendingBudgetId(null);
+        
+        // Abrir o modal de peças
+        setShowWaitingPartsModal(true);
+        setSelectedParts(new Set());
+        setWaitingParts('');
+        
+        return;
+      }
+
+      // Se existir uma ordem de trabalho associada, atualizar o seu estado para "em_andamento"
+      if (pendingCard && pendingCard.work_order_ref) {
+        try {
+          const woResponse = await fetch('/api/ordens-trabalho', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              id: pendingCard.work_order_ref,
+              estado: 'Em Andamento'
+            }),
+          });
+
+          if (!woResponse.ok) {
+            console.error('Failed to update work order status');
+            // Continuar mesmo se falhar a atualização da OT
+          }
+        } catch (woError) {
+          console.error('Error updating work order:', woError);
+          // Continuar mesmo se falhar
+        }
+      }
+
       // Fechar modal e atualizar estado
       setShowMechanicModal(false);
       setSelectedMechanic('');
       setPendingBudgetId(null);
 
-      // Atualizar o card no UI
+      // Atualizar o card no UI - vai diretamente para "em_andamento" com OT
       if (pendingCard) {
-        updateCardState(pendingCard, 'em_andamento');
+        // Gerar a referência OT a partir do orçamento
+        const workOrderRef = pendingCard.proc
+          .replace(/^ORC/, 'OT')
+          .replace(/^OR-/, 'OT-');
+        
+        // Atualizar a referência do card para usar a OT em vez do OR
+        const updatedCard = {
+          ...pendingCard,
+          proc: workOrderRef
+        };
+        
+        // Remover da coluna "em_aprovacao" e adicionar na coluna "em_andamento"
+        updateCardState(updatedCard, pendingTargetColumn || 'em_andamento');
         setPendingCard(null);
       }
     } catch (err) {
@@ -916,9 +1076,9 @@ export default function KanbanBoard() {
       // Aqui você pode adicionar lógica para atualizar o backend
       // Por enquanto, vamos apenas refletir a mudança no UI
       setColumns(prevColumns => {
-        // Find which column the card is currently in
+        // Find which column the card is currently in - check both id and proc
         const fromColumnIndex = prevColumns.findIndex(col =>
-          col.cards.some(c => c.id === card.id)
+          col.cards.some(c => c.id === card.id || c.proc === card.proc)
         );
 
         if (fromColumnIndex === -1 || !prevColumns[fromColumnIndex]) {
@@ -931,8 +1091,8 @@ export default function KanbanBoard() {
 
         if (!fromColumn) return prevColumns;
 
-        // Remove card from current column
-        fromColumn.cards = fromColumn.cards.filter(c => c.id !== card.id);
+        // Remove card from current column - check both id and proc
+        fromColumn.cards = fromColumn.cards.filter(c => c.id !== card.id && c.proc !== card.proc);
 
         // Add card to new column
         const toColumnIndex = newColumns.findIndex(col => col.id === newColumnId);
@@ -1289,3 +1449,4 @@ export default function KanbanBoard() {
     </>
   );
 }
+

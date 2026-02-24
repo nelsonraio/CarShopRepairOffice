@@ -122,7 +122,17 @@ export async function GET(request: Request) {
         where: { ref_ordem_trabalho: id },
         include: {
           mecanico: true,
-          itens_ordem_trabalho: true,
+          itens_ordem_trabalho: {
+            select: {
+              id: true,
+              tipo_item: true,
+              descricao: true,
+              quantidade: true,
+              preco_unitario: true,
+              valor_total: true,
+              aguarda_peca: true
+            }
+          },
           orcamento: {
             include: { itens_orcamento: true }
           }
@@ -144,6 +154,16 @@ export async function GET(request: Request) {
         : null;
 
       // Convert BigInt fields to strings for JSON serialization
+      // Get waiting parts from items marked as awaiting
+      const waitingPartsData = ordemTrabalho.itens_ordem_trabalho
+        ?.filter((item: any) => item.tipo_item === 'peca' && item.aguarda_peca)
+        .map((item: any) => ({
+          id: Number(item.id),
+          descricao: item.descricao ?? '',
+          quantidade: Number(item.quantidade) || 0,
+          valor_total: Number(item.valor_total) || 0
+        })) ?? [];
+
       // construct object shape similar to front-end WorkOrder
       const responseData: any = {
         id: String(ordemTrabalho.id),
@@ -155,9 +175,15 @@ export async function GET(request: Request) {
         status: mapStatus(ordemTrabalho.estado),
         priority: mapPriority(ordemTrabalho.prioridade ?? null),
         problem: ordemTrabalho.descricao_problema ?? '',
-        waitingParts: ordemTrabalho.itens_ordem_trabalho
-          ?.filter((item: any) => item.tipo_item === 'peca' && item.aguarda_peca)
-          .map((item: any) => ({ descricao: item.descricao ?? '' })) ?? [],
+        waitingParts: waitingPartsData,
+        itens_ordem_trabalho: ordemTrabalho.itens_ordem_trabalho?.map((item: any) => ({
+          id: Number(item.id),
+          tipo_item: item.tipo_item,
+          descricao: item.descricao ?? '',
+          quantidade: Number(item.quantidade) || 0,
+          preco_unitario: Number(item.preco_unitario) || 0,
+          valor_total: Number(item.valor_total) || 0
+        })) ?? [],
         orcamento: ordemTrabalho.orcamento ? {
           id: String(ordemTrabalho.orcamento.id),
           ref_orcamento: ordemTrabalho.orcamento.ref_orcamento,
@@ -469,8 +495,8 @@ export async function PATCH(request: Request) {
       }
     }
 
-    // If changing to "Aguarda Peças" and selectedPartIds are provided
-    if (estado === 'Aguarda Peças' && selectedPartIds && Array.isArray(selectedPartIds)) {
+    // If changing to "Aguarda Peças"
+    if (estado === 'Aguarda Peças') {
       // First, reset all parts to not waiting
       await prisma.itens_ordem_trabalho.updateMany({
         where: { 
@@ -480,8 +506,8 @@ export async function PATCH(request: Request) {
         data: { aguarda_peca: false }
       });
 
-      // Then mark selected parts as waiting
-      if (selectedPartIds.length > 0) {
+      // Check if selectedPartIds are provided
+      if (selectedPartIds && Array.isArray(selectedPartIds) && selectedPartIds.length > 0) {
         try {
           // Convert IDs to number for the database query
           const numericIds = selectedPartIds.map((id: any) => {
@@ -500,19 +526,28 @@ export async function PATCH(request: Request) {
             });
           }
         } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
+          const errorMessage = err instanceof Error ? err.message : String(err);
+          const isDbOffline =
+            errorMessage.includes("reach database server") ||
+            errorMessage.includes("ECONNREFUSED");
 
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
+          if (isDbOffline) {
+            return NextResponse.json(
+              { error: "Database unavailable. Please start the database server and try again." },
+              { status: 503 }
+            );
+          }
           console.error('Error updating parts:', err);
         }
+      } else {
+        // If no specific parts selected, mark ALL parts as waiting
+        await prisma.itens_ordem_trabalho.updateMany({
+          where: { 
+            ordem_trabalho_id: Number(ordemTrabalho.id),
+            tipo_item: 'peca'
+          },
+          data: { aguarda_peca: true }
+        });
       }
     }
 

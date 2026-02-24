@@ -75,7 +75,6 @@
     --color-red-500: #fb2c36;
     --color-red-600: #e40014;
     --color-red-700: #bf000f;
-    --color-red-800: #9f0712;
     --color-red-900: #82181a;
     --color-orange-200: #ffd7a8;
     --color-orange-300: #ffb96d;
@@ -113,7 +112,6 @@
     --color-indigo-300: #a4b3ff;
     --color-indigo-400: #7d87ff;
     --color-indigo-700: #432dd7;
-    --color-indigo-800: #372aac;
     --color-indigo-900: #312c85;
     --color-purple-200: #e9d5ff;
     --color-purple-300: #d9b3ff;
@@ -184,7 +182,6 @@
       --color-red-500: lab(55.4814% 75.0732 48.8528);
       --color-red-600: lab(48.4493% 77.4328 61.5452);
       --color-red-700: lab(40.4273% 67.2623 53.7441);
-      --color-red-800: lab(33.7174% 55.8993 41.0293);
       --color-red-900: lab(28.5139% 44.5539 29.0463);
       --color-orange-200: lab(88.4871% 9.94918 28.8378);
       --color-orange-300: lab(80.8059% 21.7313 50.4455);
@@ -222,7 +219,6 @@
       --color-indigo-300: lab(74.0235% 8.54138 -41.6075);
       --color-indigo-400: lab(59.866% 22.4833 -64.4485);
       --color-indigo-700: lab(32.4486% 49.2217 -84.6695);
-      --color-indigo-800: lab(26.6645% 37.9804 -68.6402);
       --color-indigo-900: lab(23.3911% 24.6978 -50.4719);
       --color-purple-200: lab(87.8405% 13.4282 -18.7159);
       --color-purple-300: lab(78.3298% 26.2195 -34.9499);
@@ -689,10 +685,6 @@
     margin-right: calc(var(--spacing) * 6);
   }
 
-  .mb-0 {
-    margin-bottom: calc(var(--spacing) * 0);
-  }
-
   .mb-1 {
     margin-bottom: calc(var(--spacing) * 1);
   }
@@ -893,10 +885,6 @@
     width: calc(var(--spacing) * 96);
   }
 
-  .w-\[520px\] {
-    width: 520px;
-  }
-
   .w-full {
     width: 100%;
   }
@@ -939,10 +927,6 @@
 
   .max-w-sm {
     max-width: var(--container-sm);
-  }
-
-  .min-w-full {
-    min-width: 100%;
   }
 
   .flex-1 {
@@ -1306,10 +1290,6 @@
     border-color: var(--color-indigo-700);
   }
 
-  .border-indigo-800 {
-    border-color: var(--color-indigo-800);
-  }
-
   .border-indigo-900 {
     border-color: var(--color-indigo-900);
   }
@@ -1322,6 +1302,10 @@
     .border-orange-400\/50 {
       border-color: color-mix(in oklab, var(--color-orange-400) 50%, transparent);
     }
+  }
+
+  .border-orange-600 {
+    border-color: var(--color-orange-600);
   }
 
   .border-orange-700 {
@@ -1542,10 +1526,6 @@
     background-color: var(--color-green-600);
   }
 
-  .bg-green-700 {
-    background-color: var(--color-green-700);
-  }
-
   .bg-green-800\/50 {
     background-color: #01663080;
   }
@@ -1670,10 +1650,6 @@
     background-color: var(--color-red-600);
   }
 
-  .bg-red-700 {
-    background-color: var(--color-red-700);
-  }
-
   .bg-red-900 {
     background-color: var(--color-red-900);
   }
@@ -1714,10 +1690,6 @@
 
   .bg-yellow-500 {
     background-color: var(--color-yellow-500);
-  }
-
-  .bg-yellow-700 {
-    background-color: var(--color-yellow-700);
   }
 
   .bg-yellow-800\/50 {
@@ -1958,10 +1930,6 @@
 
   .py-16 {
     padding-block: calc(var(--spacing) * 16);
-  }
-
-  .py-20 {
-    padding-block: calc(var(--spacing) * 20);
   }
 
   .pt-2 {
@@ -2468,12 +2436,6 @@
   }
 
   @media (hover: hover) {
-    .hover\:bg-blue-800:hover {
-      background-color: var(--color-blue-800);
-    }
-  }
-
-  @media (hover: hover) {
     .hover\:bg-brand-yellow:hover {
       background-color: #facc15;
     }
@@ -2546,20 +2508,8 @@
   }
 
   @media (hover: hover) {
-    .hover\:bg-green-800:hover {
-      background-color: var(--color-green-800);
-    }
-  }
-
-  @media (hover: hover) {
     .hover\:bg-purple-700:hover {
       background-color: var(--color-purple-700);
-    }
-  }
-
-  @media (hover: hover) {
-    .hover\:bg-red-800:hover {
-      background-color: var(--color-red-800);
     }
   }
 
@@ -2590,12 +2540,6 @@
   @media (hover: hover) {
     .hover\:bg-yellow-600:hover {
       background-color: var(--color-yellow-600);
-    }
-  }
-
-  @media (hover: hover) {
-    .hover\:bg-yellow-800:hover {
-      background-color: var(--color-yellow-800);
     }
   }
 
@@ -2869,12 +2813,6 @@
   }
 
   @media (min-width: 64rem) {
-    .lg\:w-48 {
-      width: calc(var(--spacing) * 48);
-    }
-  }
-
-  @media (min-width: 64rem) {
     .lg\:grid-cols-3 {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
@@ -2883,12 +2821,6 @@
   @media (min-width: 64rem) {
     .lg\:grid-cols-4 {
       grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-  }
-
-  @media (min-width: 64rem) {
-    .lg\:flex-row {
-      flex-direction: row;
     }
   }
 }

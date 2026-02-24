@@ -225,76 +225,35 @@ export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTi
                   </div>
                 )}
               </div>
-              {card.estado === 'aguarda_peca' && card.waiting_parts && card.waiting_parts.length > 0 && (
-                <div className="mt-4 border-t border-gray-600 pt-3">
-                  <h5 className="text-xs font-semibold text-gray-200 uppercase mb-2">Peças em Falta</h5>
+              {/* Mostrar peças em falta - usar waiting_parts se existir, senão usar todos os itens do tipo peça da OT */}
+              {(card.estado === 'aguarda_peca') && (
+                <div className="mt-4 border-t border-orange-600 pt-3">
+                  <h5 className="text-xs font-semibold text-orange-200 uppercase mb-2">Peças em Falta</h5>
                   <div className="space-y-2">
-                    {card.waiting_parts.map(item => (
-                      <div key={item.id} className="flex items-center justify-between text-sm text-gray-300">
-                        <span className="truncate pr-3">{item.descricao}</span>
-                        <span className="text-gray-400">x{item.quantidade}</span>
-                        <span className="font-mono text-brand-yellow">€{Number(item.valor_total).toFixed(2)}</span>
-                      </div>
-                    ))}
+                    {Array.isArray(card.waiting_parts) && card.waiting_parts.length > 0 ? (
+                      card.waiting_parts.map(item => (
+                        <div key={item.id} className="flex items-center text-sm text-orange-200">
+                          <span className="truncate pr-3">{item.descricao}</span>
+                          <span className="text-orange-300 ml-2">x{item.quantidade}</span>
+                        </div>
+                      ))
+                    ) : Array.isArray(card.work_order_items) ? (
+                      card.work_order_items
+                        .filter(item => (item.tipo_item === 'peça' || item.tipo_item === 'peca') &&
+                          !(Array.isArray(card.waiting_parts) && card.waiting_parts.some(wp => wp.id === item.id)))
+                        .map(item => (
+                          <div key={item.id} className="flex items-center text-sm text-orange-200">
+                            <span className="truncate pr-3">{item.descricao}</span>
+                            <span className="text-orange-300 ml-2">x{item.quantidade}</span>
+                          </div>
+                        ))
+                    ) : (
+                      <span className="text-orange-300">Nenhuma peça em falta encontrada.</span>
+                    )}
                   </div>
                 </div>
               )}
-              {card.estado !== 'em_recepcao' && card.estado !== 'em_aprovacao' && (
-                <>
-                  {card.work_order_items && card.work_order_items.length > 0 ? (
-                    <div className="mt-4 border-t border-gray-600 pt-3">
-                      <h5 className="text-xs font-semibold text-gray-200 uppercase mb-2">Itens da Ordem de Trabalho</h5>
-                      <div className="space-y-2">
-                        {card.work_order_items.map(item => (
-                          <div key={item.id} className="flex items-center justify-between text-sm text-gray-300">
-                            <span className="truncate pr-3">{item.descricao}</span>
-                            <span className="text-gray-400">x{item.quantidade}</span>
-                            <span className="text-gray-400">{item.tipo_item === 'servico' ? 'Serviço' : 'Peça'}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : card.itens_orcamento && card.itens_orcamento.length > 0 ? (
-                    <div className="mt-4 border-t border-gray-600 pt-3">
-                      <h5 className="text-xs font-semibold text-gray-200 uppercase mb-2">Itens do Orçamento</h5>
-                      <div className="space-y-2">
-                        {card.itens_orcamento.map(item => (
-                          <div key={item.id} className="flex items-center justify-between text-sm text-gray-300">
-                            <span className="truncate pr-3">{item.descricao}</span>
-                            <span className="text-gray-400">x{item.quantidade}</span>
-                            <span className="font-mono text-brand-yellow">€{Number(item.valor_total).toFixed(2)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Budget Details */}
-          {card.estado === 'em_aprovacao' && (
-            <div className="bg-indigo-900/30 border border-indigo-800 p-4 rounded">
-              <h4 className="text-sm font-bold text-indigo-200 mb-4">Detalhes do Orçamento</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-400 uppercase mb-1">Total</label>
-                  <p className="text-lg font-bold text-brand-yellow">€{card.total_geral?.toFixed(2) || '0.00'}</p>
-                </div>
-                {card.data_emissao && (
-                  <div>
-                    <label className="block text-xs font-medium text-gray-400 uppercase mb-1">Data de Emissão</label>
-                    <p className="text-sm text-gray-300">
-                      {new Date(card.data_emissao).toLocaleDateString('pt-PT')}
-                    </p>
-                  </div>
-                )}
-                <div>
-                  <label className="block text-xs font-medium text-gray-400 uppercase mb-1">Itens</label>
-                  <p className="text-sm text-gray-300">{card.itens_count ?? 0}</p>
-                </div>
-              </div>
+          
               {card.work_order_ref && (
                 <div className="mt-4 border-t border-indigo-700 pt-3">
                   <h5 className="text-xs font-semibold text-indigo-200 uppercase mb-2">Ordem de Trabalho Associada</h5>
