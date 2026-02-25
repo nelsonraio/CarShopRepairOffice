@@ -113,7 +113,10 @@ export async function GET(request: Request) {
         mechanic: agendamento.mecanico_id != null ? (mecanicoMap.get(agendamento.mecanico_id) as any)?.nome || '' : '',
         tipoServico: agendamento.titulo.includes(' - ') ? agendamento.titulo.split(' - ')[0] : agendamento.titulo,
         status: agendamento.estado || 'agendado',
-        descricao: agendamento.descricao ?? ''
+        descricao: agendamento.descricao ?? '',
+        contacto_nome: agendamento.contacto_nome || '',
+        contacto_telefone: agendamento.contacto_telefone || '',
+        contacto_email: agendamento.contacto_email || ''
       }));
 
       return NextResponse.json(transformedAgendamentos);

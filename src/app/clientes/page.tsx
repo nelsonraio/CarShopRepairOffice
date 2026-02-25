@@ -9,6 +9,13 @@ import ClientModal from "../../components/ClientModal";
 const ITEMS_PER_PAGE = 20;
 
 export default function ClientesPage() {
+    const [clientModalOpen, setClientModalOpen] = useState(false);
+    const [clientDetails, setClientDetails] = useState<ClienteRecord | null>(null);
+
+    const handleClientClick = (client: ClienteRecord) => {
+      setClientDetails(client);
+      setClientModalOpen(true);
+    };
   const [clients, setClients] = useState<ClienteRecord[]>([]);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -139,7 +146,31 @@ export default function ClientesPage() {
             <ClientTable
               clients={paginatedClients}
               onDelete={handleDelete}
+              onClientClick={handleClientClick}
             />
+            {/* Client Details Modal */}
+            {clientModalOpen && clientDetails && (
+              <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+                <div className="bg-gray-800 border border-brand-yellow w-full max-w-md p-8 rounded-lg shadow-2xl relative">
+                  <button
+                    onClick={() => setClientModalOpen(false)}
+                    className="absolute top-3 right-3 text-brand-yellow hover:text-yellow-400"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                  </button>
+                  <h2 className="text-xl font-bold text-brand-yellow mb-6">Detalhes do Cliente</h2>
+                  <div className="space-y-3">
+                    {Object.entries(clientDetails).map(([key, value]) => (
+                      <div className="text-gray-100" key={key}>
+                        <span className="font-semibold text-brand-yellow">{key.replace(/_/g, ' ').toUpperCase()}:</span> {typeof value === 'string' || typeof value === 'number' ? value : JSON.stringify(value)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Pagination */}
             {filteredClients.length > 0 && (

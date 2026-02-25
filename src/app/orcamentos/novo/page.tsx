@@ -579,24 +579,8 @@ const NewBudgetPage = () => {
       if (response.ok) {
         const result = await response.json();
         alert(`Orçamento ${budgetId} criado com sucesso!\nTotal: €${total.toFixed(2)}\nItens: ${budgetItems.length}`);
-
-        // Se foi criado a partir de um agendamento, apagar o agendamento
-        if (agendamento_id) {
-          try {
-            await fetch(`/api/agendamentos/${agendamento_id}`, { method: 'DELETE' });
-            console.log('Agendamento apagado após criação do orçamento:', agendamento_id);
-          } catch (err) {
-            console.error('Erro ao apagar agendamento após criar orçamento:', err);
-          }
-        }
-
-        // Reset form after creation
-        setBudgetItems([]);
-        setTotal(0);
-        setSelectedClient(null);
-        setClientSearch('');
-        setBudgetId('');
-        setAlternateContact({ nome: '', telefone: '', email: '' });
+        // Redireciona para a grelha de orçamentos
+        window.location.href = '/orcamentos';
       } else {
         const error = await response.json();
         alert(`Erro ao criar orçamento: ${error.error || 'Erro desconhecido'}`);

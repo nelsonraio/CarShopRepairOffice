@@ -20,9 +20,10 @@ interface ClientTableProps {
   clients: ClienteRecord[];
   onEdit?: (client: ClienteRecord) => void;
   onDelete?: (id: string) => void;
+  onClientClick?: (client: ClienteRecord) => void;
 }
 
-export default function ClientTable({ clients, onEdit, onDelete }: ClientTableProps) {
+export default function ClientTable({ clients, onEdit, onDelete, onClientClick }: ClientTableProps) {
 
   return (
     <div className="bg-gray-700 border border-gray-600 rounded-none overflow-hidden shadow-sm">
@@ -41,7 +42,14 @@ export default function ClientTable({ clients, onEdit, onDelete }: ClientTablePr
           <tbody className="divide-y divide-gray-600">
             {clients.map(client => (
               <tr key={client.id} className="hover:bg-gray-600 transition-colors">
-                <td className="px-6 py-4 font-medium text-gray-100">{client.nome}</td>
+                <td className="px-6 py-4 font-medium text-gray-100">
+                  <button
+                    className="underline text-brand-yellow hover:text-yellow-400 focus:outline-none"
+                    onClick={() => onClientClick?.(client)}
+                  >
+                    {client.nome}
+                  </button>
+                </td>
                 <td className="px-6 py-4">
                   <div className="text-gray-200">{client.email}</div>
                   <div className="text-xs text-gray-500">{client.telefone}</div>

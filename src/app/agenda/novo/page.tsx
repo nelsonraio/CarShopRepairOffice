@@ -357,23 +357,8 @@ const NewAppointmentPage = () => {
 
       if (response.ok) {
         alert('Agendamento criado com sucesso!');
-        // Reset form
-        setFormData({
-          cliente: '',
-          marca: '',
-          modelo: '',
-          ano: '',
-          matricula: '',
-          data: '',
-          hora: '',
-          tipoServico: 'Revisão Geral',
-          mecanico: '',
-          notas: '',
-          contacto_nome: '',
-          contacto_telefone: '',
-          contacto_email: ''
-        });
-        setVehicleFound(true);
+        // Redireciona para a grelha de agendamento
+        window.location.href = '/agenda';
       } else {
         alert('Erro ao criar agendamento');
       }

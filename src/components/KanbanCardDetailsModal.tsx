@@ -62,6 +62,23 @@ interface KanbanCardDetailsModalProps {
 }
 
 export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTitle, isReadOnly = false }: KanbanCardDetailsModalProps) {
+    const [clientModalOpen, setClientModalOpen] = React.useState(false);
+    const [clientDetails, setClientDetails] = React.useState<any | null>(null);
+
+    const handleClientClick = async () => {
+      if (!card.cliente_nome) return;
+      try {
+        const response = await fetch(`/api/clientes?nome=${encodeURIComponent(card.cliente_nome)}`);
+        if (response.ok) {
+          const data = await response.json();
+          setClientDetails(data);
+          setClientModalOpen(true);
+        }
+      } catch (err) {
+        setClientDetails({ nome: card.cliente_nome });
+        setClientModalOpen(true);
+      }
+    };
   const router = useRouter();
 
   if (!isOpen || !card) return null;
@@ -149,7 +166,16 @@ export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTi
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-500 uppercase">Cliente</label>
-              <p className="text-sm text-gray-300">{card.cliente_nome || 'N/A'}</p>
+              {card.cliente_nome ? (
+                <button
+                  className="text-sm text-brand-yellow underline hover:text-yellow-400 focus:outline-none"
+                  onClick={handleClientClick}
+                >
+                  {card.cliente_nome}
+                </button>
+              ) : (
+                <p className="text-sm text-gray-300">N/A</p>
+              )}
             </div>
             {/* Mostrar contacto destacado para agendamentos em recepção */}
             {card.estado === 'em_recepcao' && (
@@ -387,6 +413,29 @@ export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTi
           </button>
         </div>
       </div>
+      {/* Client Details Modal */}
+      {clientModalOpen && clientDetails && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div className="bg-gray-800 border border-brand-yellow w-full max-w-md p-8 rounded-lg shadow-2xl relative">
+            <button
+              onClick={() => setClientModalOpen(false)}
+              className="absolute top-3 right-3 text-brand-yellow hover:text-yellow-400"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+            <h2 className="text-xl font-bold text-brand-yellow mb-6">Detalhes do Cliente</h2>
+            <div className="space-y-3">
+              {Object.entries(clientDetails).map(([key, value]) => (
+                <div className="text-gray-100" key={key}>
+                  <span className="font-semibold text-brand-yellow">{key.replace(/_/g, ' ').toUpperCase()}:</span> {typeof value === 'string' || typeof value === 'number' ? value : JSON.stringify(value)}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

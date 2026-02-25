@@ -87,3 +87,169 @@
 [00:19:14.145] Browser LOG     target: mb-4 flex justify-between items-center
 [00:19:14.145] Browser LOG     ✓ Drop fora detectado! {"card":{"avatar":"https://i.pravatar.cc/40?u=OT-2026-C0002","cliente_nome":"Cliente Genérico TVDE Interno","contacto_email":null,"contacto_nome":"nelson raio","contacto_telefone":"9999999","data_conclusao":"2026-02-24T00:00:00.000Z","data_inicio":"2026-02-24T00:00:00.000Z","estado":"concluido","id":"OT-2026-C0002","mechanic":"manel da esquina","model":"Dacia Logan","plate":"99-UU-UU","prioridade":"Normal","proc":"OT-2026-C0002","total_geral":23.25,"work_order_items":[{"descricao":"Filtro de Ar Peugeot 308","id":135,"preco_unitario":23.25,"quantidade":1,"tipo_item":"peca","valor_total":23.25}]},"fromColumnId":"concluido"}
 [00:19:14.145] Browser LOG     fromColumnId: concluido
+[02:45:41.313] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0002","waitingParts":[]}
+[02:45:41.313] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"manel da esquina","ref":"OT-2026-C0002"}
+[02:45:41.313] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[02:45:41.313] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Joaquim F.","ref":"OT-2026-C0001"}
+[02:45:41.313] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0002","waitingParts":[]}
+[02:45:41.313] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"manel da esquina","ref":"OT-2026-C0002"}
+[02:45:41.313] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[02:45:41.313] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Joaquim F.","ref":"OT-2026-C0001"}
+[02:52:11.607] Server  LOG     ✓ Compiled in 236ms
+[04:28:03.894] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0002","waitingParts":[]}
+[04:28:03.894] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"manel da esquina","ref":"OT-2026-C0002"}
+[04:28:03.894] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[04:28:03.894] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Joaquim F.","ref":"OT-2026-C0001"}
+[04:28:03.894] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0002","waitingParts":[]}
+[04:28:03.894] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"manel da esquina","ref":"OT-2026-C0002"}
+[04:28:03.894] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[04:28:03.894] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Joaquim F.","ref":"OT-2026-C0001"}
+[04:28:04.962] Browser LOG     Drag started: {"card":{"avatar":"https://i.pravatar.cc/40?u=171","cliente_nome":"Cliente Genérico TVDE Interno","contacto_email":null,"contacto_nome":"nelson raio","contacto_telefone":"9999999","descricao":"","estado":"em_recepcao","hora_agendamento":"1970-01-01T10:10:00.000Z","id":"171","mechanic":"N/A","model":"Logan","plate":"99-UU-UU","prioridade":"normal","proc":"AGD-171","titulo":"Revisão Geral - Cliente Genérico TVDE Interno","total_geral":0},"fromColumnId":"em_recepcao"}
+[04:28:05.531] Browser LOG     Drag from Recepção to Aprovação {"card":{"avatar":"https://i.pravatar.cc/40?u=171","cliente_nome":"Cliente Genérico TVDE Interno","contacto_email":null,"contacto_nome":"nelson raio","contacto_telefone":"9999999","descricao":"","estado":"em_recepcao","hora_agendamento":"1970-01-01T10:10:00.000Z","id":"171","mechanic":"N/A","model":"Logan","plate":"99-UU-UU","prioridade":"normal","proc":"AGD-171","titulo":"Revisão Geral - Cliente Genérico TVDE Interno","total_geral":0},"cliente":"Cliente Genérico TVDE Interno","matricula":"99-UU-UU"}
+[04:28:05.531] Browser LOG     === Document Drop Event ===
+[04:28:05.531] Browser LOG     isInsideColumn: true
+[04:28:05.531] Browser LOG     draggedCard: {"card":{"avatar":"https://i.pravatar.cc/40?u=171","cliente_nome":"Cliente Genérico TVDE Interno","contacto_email":null,"contacto_nome":"nelson raio","contacto_telefone":"9999999","descricao":"","estado":"em_recepcao","hora_agendamento":"1970-01-01T10:10:00.000Z","id":"171","mechanic":"N/A","model":"Logan","plate":"99-UU-UU","prioridade":"normal","proc":"AGD-171","titulo":"Revisão Geral - Cliente Genérico TVDE Interno","total_geral":0},"fromColumnId":"em_recepcao"}
+[04:28:05.531] Browser LOG     target: kanban-column-content space-y-3 transition-all 
+[04:28:05.531] Browser LOG     ⚠ Não foi drop fora ou draggedCard é null
+[04:28:05.531] Browser LOG     Redirecting to: /orcamentos/novo?agendamento_id=171&matricula=99-UU-UU&cliente=Cliente%20Gen%C3%A9rico%20TVDE%20Interno&from=kanban
+[04:28:05.811] Browser LOG     Found agendamento_id in URL: 171
+[04:28:05.812] Browser LOG     Found cliente in URL: Cliente Genérico TVDE Interno
+[04:28:05.812] Browser LOG     [2;38;2;124;124;124m%s[0m Found cliente in URL: Cliente Genérico TVDE Interno
+[04:28:06.727] Browser LOG     Found appointment: {"ano":"2014","client":"Cliente Genérico TVDE Interno","clientId":"48","contacto_email":null,"contacto_nome":"nelson raio","contacto_telefone":"9999999","date":"24/02/2026","id":"171","marca":"Dacia","matricula":"99-UU-UU","mechanic":"","modelo":"Logan","notas":"","status":"agendado","time":"11:10","tipoServico":"Revisão Geral","title":"Revisão Geral - Cliente Genérico TVDE Interno","veiculo_matricula":"99-UU-UU"}
+[04:28:06.727] Browser LOG     Contacto Nome: nelson raio
+[04:28:06.727] Browser LOG     Contacto Telefone: 9999999
+[04:28:06.727] Browser LOG     Contacto Email: null
+[04:28:06.727] Browser LOG     Setting alternate contact...
+[04:28:06.727] Browser LOG     Setting license plate: 99-UU-UU
+[04:28:54.303] Server  LOG     ✓ Compiled in 173ms
+[05:44:39.488] Server  LOG     ✓ Compiled in 243ms
+[05:47:43.177] Server  LOG     ✓ Compiled in 207ms
+[05:50:08.418] Server  LOG     ✓ Compiled in 217ms
+[05:52:16.802] Server  LOG     ✓ Compiled in 234ms
+[05:53:41.014] Server  LOG     ✓ Compiled in 179ms
+[05:56:41.368] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0002","waitingParts":[]}
+[05:56:41.368] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"manel da esquina","ref":"OT-2026-C0002"}
+[05:56:41.368] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[05:56:41.368] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Joaquim F.","ref":"OT-2026-C0001"}
+[05:56:41.368] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0002","waitingParts":[]}
+[05:56:41.368] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"manel da esquina","ref":"OT-2026-C0002"}
+[05:56:41.368] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[05:56:41.368] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Joaquim F.","ref":"OT-2026-C0001"}
+[05:57:26.406] Server  LOG     ✓ Compiled in 175ms
+[06:01:29.993] Server  ERROR   ⨯ ./src/app/api/agendamentos/route.ts:117:11
+Parsing ecmascript source code failed
+  115 |         status: agendamento.estado || 'agendado',
+  116 |         descricao: agendamento.descricao ?? ''
+> 117 |           contacto_nome: agendamento.contacto_nome || '',
+      |           ^^^^^^^^^^^^^
+  118 |           contacto_telefone: agendamento.contacto_telefone || '',
+  119 |           contacto_email: agendamento.contacto_email || ''
+  120 |         }));
+
+Expected ',', got 'ident'
+
+
+[06:01:30.465] Browser ERROR   ./src/app/api/agendamentos/route.ts:117:11
+Parsing ecmascript source code failed
+  115 |         status: agendamento.estado || 'agendado',
+  116 |         descricao: agendamento.descricao ?? ''
+> 117 |           contacto_nome: agendamento.contacto_nome || '',
+      |           ^^^^^^^^^^^^^
+  118 |           contacto_telefone: agendamento.contacto_telefone || '',
+  119 |           contacto_email: agendamento.contacto_email || ''
+  120 |         }));
+
+Expected ',', got 'ident'
+[06:01:30.590] Browser ERROR   ./src/app/api/agendamentos/route.ts:117:11
+Parsing ecmascript source code failed
+  115 |         status: agendamento.estado || 'agendado',
+  116 |         descricao: agendamento.descricao ?? ''
+> 117 |           contacto_nome: agendamento.contacto_nome || '',
+      |           ^^^^^^^^^^^^^
+  118 |           contacto_telefone: agendamento.contacto_telefone || '',
+  119 |           contacto_email: agendamento.contacto_email || ''
+  120 |         }));
+
+Expected ',', got 'ident'
+[06:01:41.807] Server  ERROR   ⨯ ./src/app/api/agendamentos/route.ts:117:11
+Parsing ecmascript source code failed
+  115 |         status: agendamento.estado || 'agendado',
+  116 |         descricao: agendamento.descricao ?? ''
+> 117 |           contacto_nome: agendamento.contacto_nome || '',
+      |           ^^^^^^^^^^^^^
+  118 |           contacto_telefone: agendamento.contacto_telefone || '',
+  119 |           contacto_email: agendamento.contacto_email || ''
+  120 |         }));
+
+Expected ',', got 'ident'
+
+
+[06:01:42.019] Browser ERROR   ./src/app/api/agendamentos/route.ts:117:11
+Parsing ecmascript source code failed
+  115 |         status: agendamento.estado || 'agendado',
+  116 |         descricao: agendamento.descricao ?? ''
+> 117 |           contacto_nome: agendamento.contacto_nome || '',
+      |           ^^^^^^^^^^^^^
+  118 |           contacto_telefone: agendamento.contacto_telefone || '',
+  119 |           contacto_email: agendamento.contacto_email || ''
+  120 |         }));
+
+Expected ',', got 'ident'
+[06:01:42.020] Browser ERROR   ./src/app/api/agendamentos/route.ts:117:11
+Parsing ecmascript source code failed
+  115 |         status: agendamento.estado || 'agendado',
+  116 |         descricao: agendamento.descricao ?? ''
+> 117 |           contacto_nome: agendamento.contacto_nome || '',
+      |           ^^^^^^^^^^^^^
+  118 |           contacto_telefone: agendamento.contacto_telefone || '',
+  119 |           contacto_email: agendamento.contacto_email || ''
+  120 |         }));
+
+Expected ',', got 'ident'
+[06:01:42.020] Browser ERROR   ./src/app/api/agendamentos/route.ts:117:11
+Parsing ecmascript source code failed
+  115 |         status: agendamento.estado || 'agendado',
+  116 |         descricao: agendamento.descricao ?? ''
+> 117 |           contacto_nome: agendamento.contacto_nome || '',
+      |           ^^^^^^^^^^^^^
+  118 |           contacto_telefone: agendamento.contacto_telefone || '',
+  119 |           contacto_email: agendamento.contacto_email || ''
+  120 |         }));
+
+Expected ',', got 'ident'
+[06:02:08.219] Browser ERROR   ./src/app/api/agendamentos/route.ts:117:11
+Parsing ecmascript source code failed
+  115 |         status: agendamento.estado || 'agendado',
+  116 |         descricao: agendamento.descricao ?? ''
+> 117 |           contacto_nome: agendamento.contacto_nome || '',
+      |           ^^^^^^^^^^^^^
+  118 |           contacto_telefone: agendamento.contacto_telefone || '',
+  119 |           contacto_email: agendamento.contacto_email || ''
+  120 |         }));
+
+Expected ',', got 'ident'
+[06:02:12.216] Browser ERROR   ./src/app/api/agendamentos/route.ts:117:11
+Parsing ecmascript source code failed
+  115 |         status: agendamento.estado || 'agendado',
+  116 |         descricao: agendamento.descricao ?? ''
+> 117 |           contacto_nome: agendamento.contacto_nome || '',
+      |           ^^^^^^^^^^^^^
+  118 |           contacto_telefone: agendamento.contacto_telefone || '',
+  119 |           contacto_email: agendamento.contacto_email || ''
+  120 |         }));
+
+Expected ',', got 'ident'
+[06:02:18.469] Browser ERROR   ./src/app/api/agendamentos/route.ts:117:11
+Parsing ecmascript source code failed
+  115 |         status: agendamento.estado || 'agendado',
+  116 |         descricao: agendamento.descricao ?? ''
+> 117 |           contacto_nome: agendamento.contacto_nome || '',
+      |           ^^^^^^^^^^^^^
+  118 |           contacto_telefone: agendamento.contacto_telefone || '',
+  119 |           contacto_email: agendamento.contacto_email || ''
+  120 |         }));
+
+Expected ',', got 'ident'
+[06:11:32.408] Server  LOG     ✓ Compiled in 171ms
+[06:14:29.271] Server  LOG     ✓ Compiled in 153ms
+[06:31:35.888] Server  LOG     ✓ Compiled in 173ms
