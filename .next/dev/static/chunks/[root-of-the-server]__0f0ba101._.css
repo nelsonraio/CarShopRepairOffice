@@ -1779,10 +1779,6 @@
     background-color: #0000;
   }
 
-  .bg-white {
-    background-color: var(--color-white);
-  }
-
   .bg-yellow-400\/20 {
     background-color: #fac80033;
   }
@@ -2735,12 +2731,6 @@
   @media (hover: hover) {
     .hover\:text-yellow-400:hover {
       color: var(--color-yellow-400);
-    }
-  }
-
-  @media (hover: hover) {
-    .hover\:text-yellow-700:hover {
-      color: var(--color-yellow-700);
     }
   }
 

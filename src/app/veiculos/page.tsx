@@ -16,6 +16,13 @@ interface Vehicle {
 }
 
 export default function VeiculosPage() {
+    const [plateModalOpen, setPlateModalOpen] = useState(false);
+    const [plateDetails, setPlateDetails] = useState<VehicleData | null>(null);
+
+    const handlePlateClick = (vehicle: VehicleData) => {
+      setPlateDetails(vehicle);
+      setPlateModalOpen(true);
+    };
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -126,7 +133,31 @@ export default function VeiculosPage() {
               vehicles={paginatedVehicles}
               onViewHistory={handleViewHistory}
               onDelete={handleDelete}
+              onPlateClick={handlePlateClick}
             />
+            {/* Plate Details Modal */}
+            {plateModalOpen && plateDetails && (
+              <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+                <div className="bg-gray-800 border border-brand-yellow w-full max-w-md p-8 rounded-lg shadow-2xl relative">
+                  <button
+                    onClick={() => setPlateModalOpen(false)}
+                    className="absolute top-3 right-3 text-brand-yellow hover:text-yellow-400"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                  </button>
+                  <h2 className="text-xl font-bold text-brand-yellow mb-6">Detalhes do Veículo</h2>
+                  <div className="space-y-3">
+                    {Object.entries(plateDetails).map(([key, value]) => (
+                      <div className="text-gray-100" key={key}>
+                        <span className="font-semibold text-brand-yellow">{key.replace(/_/g, ' ').toUpperCase()}:</span> {typeof value === 'string' || typeof value === 'number' ? value : JSON.stringify(value)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Pagination */}
             {filteredVehicles.length > 0 && (

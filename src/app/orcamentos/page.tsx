@@ -40,6 +40,9 @@ interface Budget {
 const ITEMS_PER_PAGE = 20;
 
 const BudgetsPage = () => {
+    // Estado para modal de detalhes do orçamento
+    const [budgetModalOpen, setBudgetModalOpen] = useState(false);
+    const [budgetDetails, setBudgetDetails] = useState<Budget | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [budgets, setBudgets] = useState<Budget[]>([]);
@@ -602,7 +605,18 @@ const BudgetsPage = () => {
                   ) : (
                     paginatedBudgets.map(budget => (
                       <tr key={budget.id} className="hover:bg-gray-600 transition-colors">
-                        <td className="px-6 py-4 font-medium text-gray-200 whitespace-nowrap">{budget.ref_orcamento}</td>
+                        <td className="px-6 py-4 font-medium text-gray-200 whitespace-nowrap">
+                          <button
+                            className="underline text-brand-yellow hover:text-yellow-400 focus:outline-none"
+                            onClick={() => {
+                              setBudgetModalOpen(true);
+                              setBudgetDetails(budget);
+                            }}
+                            type="button"
+                          >
+                            {budget.ref_orcamento}
+                          </button>
+                        </td>
                         <td className="px-6 py-4 text-gray-400">{budget.veiculo ? `${budget.veiculo.marca} ${budget.veiculo.modelo} | ${budget.veiculo.matricula}` : 'Veículo não informado'}</td>
 
                         <td className="px-6 py-4">{budget.cliente?.nome || 'Cliente não informado'}</td>
@@ -710,6 +724,48 @@ const BudgetsPage = () => {
       </main>
 
       {/* Modal de Seleção de Mecânico */}
+            {/* Modal de Detalhes do Orçamento */}
+            {budgetModalOpen && budgetDetails && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 w-full max-w-2xl mx-4">
+                  <h3 className="text-xl font-bold text-white mb-4">Detalhes do Orçamento</h3>
+                  <div className="space-y-2 text-gray-200">
+                    <div><span className="font-semibold">ID:</span> {budgetDetails.ref_orcamento}</div>
+                    <div><span className="font-semibold">Cliente:</span> {budgetDetails.cliente?.nome || '-'}</div>
+                    <div><span className="font-semibold">Veículo:</span> {budgetDetails.veiculo ? `${budgetDetails.veiculo.marca} ${budgetDetails.veiculo.modelo} | ${budgetDetails.veiculo.matricula}` : '-'}</div>
+                    <div><span className="font-semibold">Data:</span> {new Date(budgetDetails.data_emissao).toLocaleDateString('pt-PT')}</div>
+                    <div><span className="font-semibold">Total:</span> €{budgetDetails.total_geral.toFixed(2)}</div>
+                    <div><span className="font-semibold">Estado:</span> {getStatusLabel(budgetDetails.estado)}</div>
+                    <div><span className="font-semibold">Mecânico:</span> {budgetDetails.mecanico_nome || '-'}</div>
+                    <div>
+                      <span className="font-semibold">Itens:</span>
+                      <ul className="mt-2 space-y-1">
+                        {budgetDetails.itens_orcamento && budgetDetails.itens_orcamento.length > 0 ? (
+                          budgetDetails.itens_orcamento.map((item, idx) => (
+                            <li key={idx} className="border border-gray-700 rounded p-2">
+                              <div><span className="font-semibold">Descrição:</span> {item.descricao}</div>
+                              <div><span className="font-semibold">Quantidade:</span> {item.quantidade}</div>
+                              <div><span className="font-semibold">Valor Total:</span> €{item.valor_total.toFixed(2)}</div>
+                              {item.notas && <div><span className="font-semibold">Notas:</span> {item.notas}</div>}
+                            </li>
+                          ))
+                        ) : (
+                          <li className="text-gray-400">Nenhum item.</li>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                  <div className="flex justify-end mt-6">
+                    <button
+                      onClick={() => setBudgetModalOpen(false)}
+                      className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
+                    >
+                      Fechar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
       {showMechanicModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 w-96 max-w-full mx-4">
@@ -765,7 +821,10 @@ const BudgetsPage = () => {
       )}
     </div>
   );
+
 };
 
-
 export default BudgetsPage;
+
+
+

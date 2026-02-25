@@ -66,7 +66,7 @@ export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTi
     const [clientDetails, setClientDetails] = React.useState<any | null>(null);
 
     const handleClientClick = async () => {
-      if (!card.cliente_nome) return;
+      if (!card || !card.cliente_nome) return;
       try {
         const response = await fetch(`/api/clientes?nome=${encodeURIComponent(card.cliente_nome)}`);
         if (response.ok) {

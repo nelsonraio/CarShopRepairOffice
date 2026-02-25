@@ -22,9 +22,10 @@ interface VehiclesTableProps {
   onViewHistory: (vehicle: VehicleData) => void;
   onEdit?: (vehicle: VehicleData) => void;
   onDelete?: (id: string) => void;
+  onPlateClick?: (vehicle: VehicleData) => void;
 }
 
-export default function VehiclesTable({ vehicles, onViewHistory, onEdit, onDelete }: VehiclesTableProps) {
+export default function VehiclesTable({ vehicles, onViewHistory, onEdit, onDelete, onPlateClick }: VehiclesTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredVehicles = vehicles.filter(vehicle => {
@@ -77,7 +78,14 @@ export default function VehiclesTable({ vehicles, onViewHistory, onEdit, onDelet
                 const clientName = vehicle.clientName || 'Cliente não encontrado';
                 return (
                   <tr key={`${vehicle.id}_${vehicle.licensePlate}`} className="hover:bg-gray-600 transition-colors">
-                    <td className="px-6 py-4 font-medium text-gray-100 font-mono">{vehicle.licensePlate}</td>
+                    <td className="px-6 py-4 font-medium text-gray-100 font-mono">
+                      <button
+                        className="underline text-brand-yellow hover:text-yellow-400 focus:outline-none"
+                        onClick={() => onPlateClick?.(vehicle)}
+                      >
+                        {vehicle.licensePlate}
+                      </button>
+                    </td>
                     <td className="px-6 py-4 text-gray-200">{`${vehicle.make} ${vehicle.model}`}</td>
                     <td className="px-6 py-4 text-gray-300">{clientName}</td>
                     <td className="px-6 py-4 text-gray-400">{vehicle.year}</td>
