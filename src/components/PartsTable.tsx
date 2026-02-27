@@ -17,6 +17,7 @@ interface Part {
 interface PartsTableProps {
   parts: Part[];
   onEdit?: (part: Part) => void;
+  onReferenceClick?: (part: Part) => void;
 }
 
 const getCategoryLabel = (category: string) => {
@@ -53,7 +54,23 @@ const getStockColor = (stockStatus: string, stock: number) => {
   }
 };
 
-export default function PartsTable({ parts, onEdit }: PartsTableProps) {
+// determina a classe de background da linha com base no stock
+const getRowBgClass = (stockStatus: string, stock: number) => {
+  // especial: se houver apenas uma unidade, destacamos com tom amarelado/laranja
+  if (stock === 1) {
+    return 'bg-yellow-800/30';
+  }
+  switch (stockStatus) {
+    case 'baixo_stock':
+      return 'bg-yellow-900/30';
+    case 'esgotado':
+      return 'bg-red-900/30';
+    default:
+      return '';
+  }
+};
+
+export default function PartsTable({ parts, onEdit, onReferenceClick }: PartsTableProps) {
   return (
     <div className="bg-gray-700 border border-gray-600 rounded-none overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
@@ -71,8 +88,16 @@ export default function PartsTable({ parts, onEdit }: PartsTableProps) {
           </thead>
           <tbody className="divide-y divide-gray-600">
             {parts.map((part) => (
-              <tr key={part.id} className="hover:bg-gray-600 transition-colors">
-                <td className="px-6 py-4 font-medium text-gray-200 font-mono">{part.reference}</td>
+              <tr key={part.id} className={`hover:bg-gray-600 transition-colors ${getRowBgClass(part.stockStatus, part.stock)}` }>
+                <td className="px-6 py-4 font-medium text-gray-200 font-mono">
+                  <button
+                    className="underline text-brand-yellow hover:text-yellow-400 cursor-pointer"
+                    onClick={() => onReferenceClick && onReferenceClick(part)}
+                    title="Ver detalhes da peça"
+                  >
+                    {part.reference}
+                  </button>
+                </td>
                 <td className="px-6 py-4 text-gray-100">{part.name}</td>
                 <td className="px-6 py-4">
                   <span className="px-2 py-1 text-xs font-semibold bg-gray-800 text-gray-300 border border-gray-600">

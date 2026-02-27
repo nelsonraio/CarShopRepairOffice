@@ -119,9 +119,9 @@ export default function ClientModal({ isOpen, onClose, onAddClient, client }: Cl
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-      <div className="bg-gray-800 border border-gray-600 w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 shadow-2xl relative">
-        <h3 className="text-xl font-bold text-gray-100 mb-6 border-b border-gray-700 pb-2">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <h3 className="text-xl font-bold text-white mb-4">
           {client ? 'Editar Cliente' : 'Novo Cliente'}
         </h3>
 
@@ -133,7 +133,7 @@ export default function ClientModal({ isOpen, onClose, onAddClient, client }: Cl
               name="nome"
               value={formData.nome}
               onChange={handleChange}
-              className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+              className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
               required
             />
           </div>
@@ -221,6 +221,15 @@ export default function ClientModal({ isOpen, onClose, onAddClient, client }: Cl
 
           </div>
         </form>
+        <div className="flex justify-end mt-6">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
+          >
+            Fechar
+          </button>
+        </div>
       </div>
     </div>
   );

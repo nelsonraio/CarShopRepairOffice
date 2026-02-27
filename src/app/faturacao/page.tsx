@@ -22,7 +22,7 @@ interface Invoice {
 }
 
 
-const mockInvoices: Invoice[] = [];
+
 
 const ITEMS_PER_PAGE = 20;
 

@@ -1,11 +1,623 @@
-[00:00:02.036] Server  LOG     ✓ Ready in 1497ms
-[00:00:03.133] Server  ERROR   ⨯ Error: The default export is not a React Component in "/orcamentos/page"
-[00:00:03.413] Server  ERROR   ⨯ Error: The default export is not a React Component in "/orcamentos/page"
-[00:00:03.864] Browser ERROR   uncaughtError: Error: The default export is not a React Component in "/orcamentos/page"
-[00:00:12.327] Server  ERROR   ⨯ Error: The default export is not a React Component in "/orcamentos/page"
-[00:00:12.638] Server  ERROR   ⨯ Error: The default export is not a React Component in "/orcamentos/page"
-[00:00:13.093] Server  ERROR   ⨯ Error: The default export is not a React Component in "/orcamentos/page"
-[00:00:13.415] Server  ERROR   ⨯ Error: The default export is not a React Component in "/orcamentos/page"
-[00:00:13.554] Browser ERROR   uncaughtError: Error: The default export is not a React Component in "/orcamentos/page"
-[00:00:46.666] Server  LOG     ✓ Compiled in 1186ms
-[00:46:59.135] Server  LOG     ✓ Compiled in 200ms
+[00:00:01.070] Server  LOG     ✓ Ready in 813ms
+[13:14:44.156] Browser LOG     DEBUG - Card data: {"estado":"concluido","hasWaitingParts":false,"ref":"OT-2026-C0002","waitingParts":[]}
+[13:14:44.156] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"manel da esquina","ref":"OT-2026-C0002"}
+[13:14:44.156] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[13:14:44.156] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"manel da esquina","ref":"OT-2026-C0001"}
+[14:05:24.103] Server  LOG     ✓ Compiled in 239ms
+[14:05:24.701] Browser ERROR   ./src/app/veiculos/page.tsx:42:10
+Ecmascript file had an error
+  40 |   const [loading, setLoading] = useState(true);
+  41 |   const [error, setError] = useState<string | null>(null);
+> 42 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |          ^^^^^^^^^^^^^^^
+  43 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  44 |   const [currentPage, setCurrentPage] = useState(1);
+  45 |
+
+the name `selectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:05:24.701] Browser ERROR   ./src/app/veiculos/page.tsx:42:27
+Ecmascript file had an error
+  40 |   const [loading, setLoading] = useState(true);
+  41 |   const [error, setError] = useState<string | null>(null);
+> 42 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |                           ^^^^^^^^^^^^^^^^^^
+  43 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  44 |   const [currentPage, setCurrentPage] = useState(1);
+  45 |
+
+the name `setSelectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:05:26.701] Browser ERROR   ./src/app/veiculos/page.tsx:42:10
+Ecmascript file had an error
+  40 |   const [loading, setLoading] = useState(true);
+  41 |   const [error, setError] = useState<string | null>(null);
+> 42 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |          ^^^^^^^^^^^^^^^
+  43 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  44 |   const [currentPage, setCurrentPage] = useState(1);
+  45 |
+
+the name `selectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:05:26.701] Browser ERROR   ./src/app/veiculos/page.tsx:42:27
+Ecmascript file had an error
+  40 |   const [loading, setLoading] = useState(true);
+  41 |   const [error, setError] = useState<string | null>(null);
+> 42 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |                           ^^^^^^^^^^^^^^^^^^
+  43 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  44 |   const [currentPage, setCurrentPage] = useState(1);
+  45 |
+
+the name `setSelectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:05:30.722] Server  LOG     ✓ Compiled in 189ms
+[14:05:31.701] Browser ERROR   ./src/app/veiculos/page.tsx:56:10
+Ecmascript file had an error
+  54 |   const [loading, setLoading] = useState(true);
+  55 |   const [error, setError] = useState<string | null>(null);
+> 56 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |          ^^^^^^^^^^^^^^^
+  57 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  58 |   const [currentPage, setCurrentPage] = useState(1);
+  59 |
+
+the name `selectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:05:31.701] Browser ERROR   ./src/app/veiculos/page.tsx:56:27
+Ecmascript file had an error
+  54 |   const [loading, setLoading] = useState(true);
+  55 |   const [error, setError] = useState<string | null>(null);
+> 56 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |                           ^^^^^^^^^^^^^^^^^^
+  57 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  58 |   const [currentPage, setCurrentPage] = useState(1);
+  59 |
+
+the name `setSelectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:05:40.701] Browser ERROR   ./src/app/veiculos/page.tsx:56:10
+Ecmascript file had an error
+  54 |   const [loading, setLoading] = useState(true);
+  55 |   const [error, setError] = useState<string | null>(null);
+> 56 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |          ^^^^^^^^^^^^^^^
+  57 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  58 |   const [currentPage, setCurrentPage] = useState(1);
+  59 |
+
+the name `selectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:05:40.701] Browser ERROR   ./src/app/veiculos/page.tsx:56:27
+Ecmascript file had an error
+  54 |   const [loading, setLoading] = useState(true);
+  55 |   const [error, setError] = useState<string | null>(null);
+> 56 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |                           ^^^^^^^^^^^^^^^^^^
+  57 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  58 |   const [currentPage, setCurrentPage] = useState(1);
+  59 |
+
+the name `setSelectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:05:41.414] Server  LOG     ✓ Compiled in 276ms
+[14:05:41.698] Browser ERROR   ./src/app/veiculos/page.tsx:56:10
+Ecmascript file had an error
+  54 |   const [loading, setLoading] = useState(true);
+  55 |   const [error, setError] = useState<string | null>(null);
+> 56 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |          ^^^^^^^^^^^^^^^
+  57 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  58 |   const [currentPage, setCurrentPage] = useState(1);
+  59 |
+
+the name `selectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:05:41.698] Browser ERROR   ./src/app/veiculos/page.tsx:56:27
+Ecmascript file had an error
+  54 |   const [loading, setLoading] = useState(true);
+  55 |   const [error, setError] = useState<string | null>(null);
+> 56 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |                           ^^^^^^^^^^^^^^^^^^
+  57 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  58 |   const [currentPage, setCurrentPage] = useState(1);
+  59 |
+
+the name `setSelectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:05:43.702] Browser ERROR   ./src/app/veiculos/page.tsx:56:10
+Ecmascript file had an error
+  54 |   const [loading, setLoading] = useState(true);
+  55 |   const [error, setError] = useState<string | null>(null);
+> 56 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |          ^^^^^^^^^^^^^^^
+  57 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  58 |   const [currentPage, setCurrentPage] = useState(1);
+  59 |
+
+the name `selectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:05:43.703] Browser ERROR   ./src/app/veiculos/page.tsx:56:27
+Ecmascript file had an error
+  54 |   const [loading, setLoading] = useState(true);
+  55 |   const [error, setError] = useState<string | null>(null);
+> 56 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |                           ^^^^^^^^^^^^^^^^^^
+  57 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  58 |   const [currentPage, setCurrentPage] = useState(1);
+  59 |
+
+the name `setSelectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:05:47.654] Server  LOG     ✓ Compiled in 176ms
+[14:05:48.705] Browser ERROR   ./src/app/veiculos/page.tsx:54:10
+Ecmascript file had an error
+  52 |   const [loading, setLoading] = useState(true);
+  53 |   const [error, setError] = useState<string | null>(null);
+> 54 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |          ^^^^^^^^^^^^^^^
+  55 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  56 |   const [currentPage, setCurrentPage] = useState(1);
+  57 |
+
+the name `selectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:05:48.705] Browser ERROR   ./src/app/veiculos/page.tsx:54:27
+Ecmascript file had an error
+  52 |   const [loading, setLoading] = useState(true);
+  53 |   const [error, setError] = useState<string | null>(null);
+> 54 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |                           ^^^^^^^^^^^^^^^^^^
+  55 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  56 |   const [currentPage, setCurrentPage] = useState(1);
+  57 |
+
+the name `setSelectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:05:49.702] Browser ERROR   ./src/app/veiculos/page.tsx:54:10
+Ecmascript file had an error
+  52 |   const [loading, setLoading] = useState(true);
+  53 |   const [error, setError] = useState<string | null>(null);
+> 54 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |          ^^^^^^^^^^^^^^^
+  55 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  56 |   const [currentPage, setCurrentPage] = useState(1);
+  57 |
+
+the name `selectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:05:49.702] Browser ERROR   ./src/app/veiculos/page.tsx:54:27
+Ecmascript file had an error
+  52 |   const [loading, setLoading] = useState(true);
+  53 |   const [error, setError] = useState<string | null>(null);
+> 54 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |                           ^^^^^^^^^^^^^^^^^^
+  55 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  56 |   const [currentPage, setCurrentPage] = useState(1);
+  57 |
+
+the name `setSelectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:06:01.763] Server  LOG     ✓ Compiled in 148ms
+[14:06:02.703] Browser ERROR   ./src/app/veiculos/page.tsx:54:10
+Ecmascript file had an error
+  52 |   const [loading, setLoading] = useState(true);
+  53 |   const [error, setError] = useState<string | null>(null);
+> 54 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |          ^^^^^^^^^^^^^^^
+  55 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  56 |   const [currentPage, setCurrentPage] = useState(1);
+  57 |
+
+the name `selectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:06:02.703] Browser ERROR   ./src/app/veiculos/page.tsx:54:27
+Ecmascript file had an error
+  52 |   const [loading, setLoading] = useState(true);
+  53 |   const [error, setError] = useState<string | null>(null);
+> 54 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |                           ^^^^^^^^^^^^^^^^^^
+  55 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  56 |   const [currentPage, setCurrentPage] = useState(1);
+  57 |
+
+the name `setSelectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:06:03.701] Browser ERROR   ./src/app/veiculos/page.tsx:54:10
+Ecmascript file had an error
+  52 |   const [loading, setLoading] = useState(true);
+  53 |   const [error, setError] = useState<string | null>(null);
+> 54 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |          ^^^^^^^^^^^^^^^
+  55 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  56 |   const [currentPage, setCurrentPage] = useState(1);
+  57 |
+
+the name `selectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:06:03.701] Browser ERROR   ./src/app/veiculos/page.tsx:54:27
+Ecmascript file had an error
+  52 |   const [loading, setLoading] = useState(true);
+  53 |   const [error, setError] = useState<string | null>(null);
+> 54 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |                           ^^^^^^^^^^^^^^^^^^
+  55 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  56 |   const [currentPage, setCurrentPage] = useState(1);
+  57 |
+
+the name `setSelectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:06:23.499] Server  ERROR   ⨯ ./src/app/veiculos/page.tsx:54:10
+Ecmascript file had an error
+  52 |   const [loading, setLoading] = useState(true);
+  53 |   const [error, setError] = useState<string | null>(null);
+> 54 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |          ^^^^^^^^^^^^^^^
+  55 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  56 |   const [currentPage, setCurrentPage] = useState(1);
+  57 |
+
+the name `selectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+
+
+./src/app/veiculos/page.tsx:54:27
+Ecmascript file had an error
+  52 |   const [loading, setLoading] = useState(true);
+  53 |   const [error, setError] = useState<string | null>(null);
+> 54 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |                           ^^^^^^^^^^^^^^^^^^
+  55 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  56 |   const [currentPage, setCurrentPage] = useState(1);
+  57 |
+
+the name `setSelectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+
+[14:06:24.001] Browser ERROR   ./src/app/veiculos/page.tsx:54:10
+Ecmascript file had an error
+  52 |   const [loading, setLoading] = useState(true);
+  53 |   const [error, setError] = useState<string | null>(null);
+> 54 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |          ^^^^^^^^^^^^^^^
+  55 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  56 |   const [currentPage, setCurrentPage] = useState(1);
+  57 |
+
+the name `selectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:06:24.001] Browser ERROR   ./src/app/veiculos/page.tsx:54:27
+Ecmascript file had an error
+  52 |   const [loading, setLoading] = useState(true);
+  53 |   const [error, setError] = useState<string | null>(null);
+> 54 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |                           ^^^^^^^^^^^^^^^^^^
+  55 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  56 |   const [currentPage, setCurrentPage] = useState(1);
+  57 |
+
+the name `setSelectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:06:24.244] Browser ERROR   uncaughtError: Error: ./src/app/veiculos/page.tsx:54:10
+Ecmascript file had an error
+  52 |   const [loading, setLoading] = useState(true);
+  53 |   const [error, setError] = useState<string | null>(null);
+> 54 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |          ^^^^^^^^^^^^^^^
+  55 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  56 |   const [currentPage, setCurrentPage] = useState(1);
+  57 |
+
+the name `selectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+
+[14:06:24.410] Browser ERROR   ./src/app/veiculos/page.tsx:54:10
+Ecmascript file had an error
+  52 |   const [loading, setLoading] = useState(true);
+  53 |   const [error, setError] = useState<string | null>(null);
+> 54 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |          ^^^^^^^^^^^^^^^
+  55 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  56 |   const [currentPage, setCurrentPage] = useState(1);
+  57 |
+
+the name `selectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:06:24.410] Browser ERROR   ./src/app/veiculos/page.tsx:54:27
+Ecmascript file had an error
+  52 |   const [loading, setLoading] = useState(true);
+  53 |   const [error, setError] = useState<string | null>(null);
+> 54 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |                           ^^^^^^^^^^^^^^^^^^
+  55 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  56 |   const [currentPage, setCurrentPage] = useState(1);
+  57 |
+
+the name `setSelectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:06:24.517] Browser ERROR   ./src/app/veiculos/page.tsx:54:10
+Ecmascript file had an error
+  52 |   const [loading, setLoading] = useState(true);
+  53 |   const [error, setError] = useState<string | null>(null);
+> 54 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |          ^^^^^^^^^^^^^^^
+  55 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  56 |   const [currentPage, setCurrentPage] = useState(1);
+  57 |
+
+the name `selectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:06:24.517] Browser ERROR   ./src/app/veiculos/page.tsx:54:27
+Ecmascript file had an error
+  52 |   const [loading, setLoading] = useState(true);
+  53 |   const [error, setError] = useState<string | null>(null);
+> 54 |   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+     |                           ^^^^^^^^^^^^^^^^^^
+  55 |   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  56 |   const [currentPage, setCurrentPage] = useState(1);
+  57 |
+
+the name `setSelectedVehicle` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/veiculos/page.tsx [Client Component Browser]
+    ./src/app/veiculos/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/veiculos/page.tsx [Client Component SSR]
+    ./src/app/veiculos/page.tsx [Server Component]
+[14:06:34.243] Server  LOG     ✓ Compiled in 248ms
+[14:09:38.162] Server  LOG     ✓ Compiled in 212ms
+[14:11:52.387] Server  LOG     ✓ Compiled in 157ms
+[14:13:18.643] Server  LOG     ✓ Compiled in 154ms
+[14:16:03.072] Server  LOG     ✓ Compiled in 265ms
+[14:17:33.243] Server  LOG     ✓ Compiled in 191ms
+[15:37:43.212] Server  LOG     ✓ Compiled in 256ms
+[15:40:33.444] Server  LOG     ✓ Compiled in 149ms
+[15:43:05.071] Server  LOG     ✓ Compiled in 172ms
+[15:43:47.440] Server  LOG     ✓ Compiled in 271ms
+[15:46:15.493] Server  LOG     ✓ Compiled in 190ms
+[15:46:15.699] Browser ERROR   uncaughtError: ReferenceError: React is not defined
+[15:46:33.410] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[15:46:33.422] Server  LOG     ✓ Compiled in 207ms
+[15:46:33.697] Browser ERROR   uncaughtError: ReferenceError: React is not defined
+[15:46:33.786] Server  ERROR   ⨯ ReferenceError: React is not defined
+[15:46:34.690] Browser ERROR   uncaughtError: ReferenceError: React is not defined
+[15:47:05.312] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[15:47:05.321] Server  LOG     ✓ Compiled in 201ms
+[15:47:05.642] Server  ERROR   ⨯ ReferenceError: React is not defined
+[15:47:06.696] Browser ERROR   uncaughtError: ReferenceError: React is not defined
+[15:55:48.860] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[15:55:48.879] Server  LOG     ✓ Compiled in 173ms
+[16:44:30.352] Server  LOG     ✓ Compiled in 241ms
+[16:44:43.158] Server  LOG     ✓ Compiled in 176ms
+[16:45:06.712] Server  LOG     ✓ Compiled in 212ms

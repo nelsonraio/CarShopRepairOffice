@@ -31,6 +31,29 @@ const ITEMS_PER_PAGE = 20;
 
 
 const WorkOrdersPage = () => {
+    // Modal for viewing work order details
+    const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+    const [detailsWorkOrder, setDetailsWorkOrder] = useState<WorkOrder | null>(null);
+
+    const handleWorkOrderIdClick = (workOrder: WorkOrder) => {
+      setDetailsWorkOrder(workOrder);
+      setDetailsModalOpen(true);
+    };
+
+    // Traduções para os campos do modal de detalhes
+    const workOrderFieldLabels: Record<string,string> = {
+      id: 'ID',
+      client: 'Cliente',
+      vehicle: 'Veículo',
+      mechanic: 'Mecânico',
+      openDate: 'Data de Abertura',
+      closeDate: 'Data de Encerramento',
+      status: 'Estado',
+      priority: 'Prioridade',
+      problem: 'Descrição do Problema',
+      waitingParts: 'Peças em Espera',
+      // quaisquer outros campos que possam aparecer
+    };
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
@@ -469,7 +492,15 @@ const WorkOrdersPage = () => {
                     ) : (
                       paginatedWorkOrders.map(workOrder => (
                         <tr key={workOrder.id} className="hover:bg-gray-600 transition-colors">
-                          <td className="px-6 py-4 font-medium text-gray-200 whitespace-nowrap">{workOrder.id}</td>
+                          <td className="px-6 py-4 font-medium text-gray-200 whitespace-nowrap">
+                            <button
+                              className="underline text-brand-yellow hover:text-yellow-400 cursor-pointer"
+                              onClick={() => handleWorkOrderIdClick(workOrder)}
+                              title="Ver detalhes da OT"
+                            >
+                              {workOrder.id}
+                            </button>
+                          </td>
                           
                           <td className="px-6 py-4 text-gray-400">{workOrder.vehicle}</td>
                           <td className="px-6 py-4">{workOrder.client}</td>
@@ -576,6 +607,74 @@ const WorkOrdersPage = () => {
         </div>
       </main>
 
+      {/* Work Order Details Modal */}
+      {detailsModalOpen && detailsWorkOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 w-full max-w-2xl mx-4">
+            <h3 className="text-xl font-bold text-white mb-4">Detalhes da Ordem de Trabalho</h3>
+            <div className="space-y-2 text-gray-200">
+              {Object.entries(detailsWorkOrder).map(([key, value]) => {
+                // evitar mostrar mecanico_nome se já existe mechanic
+                if (key === 'mecanico_nome' && ('mechanic' in detailsWorkOrder)) {
+                  return null;
+                }
+                if (key === 'items' && Array.isArray(value)) {
+                  return (
+                    <div className="mt-4" key={key}>
+                      <span className="font-semibold block mb-2">ITENS:</span>
+                      {value.length === 0 ? (
+                        <div className="text-gray-400">Nenhum item.</div>
+                      ) : (
+                        <table className="w-full text-sm text-left text-gray-300 border border-gray-700 rounded mb-2">
+                          <thead className="bg-gray-900 text-gray-400">
+                            <tr>
+                              <th className="px-2 py-1">Tipo</th>
+                              <th className="px-2 py-1">Descrição</th>
+                              <th className="px-2 py-1">Qtd</th>
+                              <th className="px-2 py-1">Outros</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {value.map((item, idx) => (
+                              <tr key={idx} className="border-t border-gray-700">
+                                <td className="px-2 py-1">{item.tipo_item || '-'}</td>
+                                <td className="px-2 py-1">{item.descricao || '-'}</td>
+                                <td className="px-2 py-1">{item.quantidade || '-'}</td>
+                                <td className="px-2 py-1 text-xs">
+                                  {Object.entries(item)
+                                    .filter(([k]) => !['tipo_item','descricao','quantidade'].includes(k))
+                                    .map(([k, v]) => (
+                                      <div key={k}><span className="font-semibold">{k}:</span> {typeof v === 'string' || typeof v === 'number' ? v : JSON.stringify(v)}</div>
+                                    ))}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
+                    </div>
+                  );
+                }
+                const label = workOrderFieldLabels[key] 
+                  || (key === 'mecanico_nome' ? 'Mecânico' : key.replace(/_/g, ' ').toUpperCase());
+                return (
+                  <div className="text-gray-100" key={key}>
+                    <span className="font-semibold">{label}:</span> {typeof value === 'string' || typeof value === 'number' ? value : JSON.stringify(value)}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => setDetailsModalOpen(false)}
+                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Status Change Modal */}
       {showStatusModal && selectedWorkOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">

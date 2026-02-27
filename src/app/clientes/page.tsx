@@ -16,6 +16,20 @@ export default function ClientesPage() {
       setClientDetails(client);
       setClientModalOpen(true);
     };
+
+    // Labels de tradução para detalhes do cliente
+    const clientDetailLabels: Record<string, string> = {
+      nome: 'Nome',
+      email: 'Email',
+      telefone: 'Telefone',
+      nif: 'NIF',
+      endereco: 'Endereço',
+      perfil: 'Perfil',
+      veiculos: 'Veículos',
+      dataRegistro: 'Data de Registro',
+      totalGasto: 'Total Gasto',
+      visitas: 'Visitas',
+    };
   const [clients, setClients] = useState<ClienteRecord[]>([]);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -150,23 +164,26 @@ export default function ClientesPage() {
             />
             {/* Client Details Modal */}
             {clientModalOpen && clientDetails && (
-              <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-                <div className="bg-gray-800 border border-brand-yellow w-full max-w-md p-8 rounded-lg shadow-2xl relative">
-                  <button
-                    onClick={() => setClientModalOpen(false)}
-                    className="absolute top-3 right-3 text-brand-yellow hover:text-yellow-400"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                  </button>
-                  <h2 className="text-xl font-bold text-brand-yellow mb-6">Detalhes do Cliente</h2>
-                  <div className="space-y-3">
-                    {Object.entries(clientDetails).map(([key, value]) => (
-                      <div className="text-gray-100" key={key}>
-                        <span className="font-semibold text-brand-yellow">{key.replace(/_/g, ' ').toUpperCase()}:</span> {typeof value === 'string' || typeof value === 'number' ? value : JSON.stringify(value)}
-                      </div>
-                    ))}
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 w-full max-w-2xl mx-4">
+                  <h3 className="text-xl font-bold text-white mb-4">Detalhes do Cliente</h3>
+                  <div className="space-y-2 text-gray-200">
+                    {Object.entries(clientDetails).map(([key, value]) => {
+                      const label = clientDetailLabels[key] || key.replace(/_/g, ' ').toUpperCase();
+                      return (
+                        <div className="text-gray-100" key={key}>
+                          <span className="font-semibold">{label}:</span> {typeof value === 'string' || typeof value === 'number' ? value : JSON.stringify(value)}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="flex justify-end mt-6">
+                    <button
+                      onClick={() => setClientModalOpen(false)}
+                      className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
+                    >
+                      Fechar
+                    </button>
                   </div>
                 </div>
               </div>

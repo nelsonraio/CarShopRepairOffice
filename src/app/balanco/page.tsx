@@ -22,6 +22,10 @@ export default function BalancoPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
+  // Pagination state
+  const ITEMS_PER_PAGE = 20;
+  const [currentPage, setCurrentPage] = useState(1);
+
   useEffect(() => {
     const fetchBalanceData = async () => {
       try {
@@ -90,6 +94,17 @@ export default function BalancoPage() {
   };
 
   const totals = calculateTotals(filteredProcesses);
+
+  // pagination calculations
+  const totalPages = Math.ceil(filteredProcesses.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedProcesses = filteredProcesses.slice(startIndex, endIndex);
+
+  // reset page if filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredProcesses]);
 
   const handleExport = () => {
     // In a real app, this would export the data
@@ -230,7 +245,7 @@ export default function BalancoPage() {
                       </td>
                     </tr>
                   ) : (
-                    filteredProcesses.map((process) => (
+                    paginatedProcesses.map((process) => (
                       <tr key={process.id} className="bg-gray-800 hover:bg-gray-700 transition-colors">
                         <td className="px-6 py-4 font-medium text-gray-200 font-mono">{process.id}</td>
                         <td className="px-6 py-4 font-medium text-gray-200">{process.matricula}</td>
@@ -250,34 +265,36 @@ export default function BalancoPage() {
             </div>
 
             {/* Pagination */}
-            <div className="bg-gray-800 px-4 py-3 border-t border-gray-600 flex items-center justify-between sm:px-6">
-              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">
-                    A mostrar <span className="font-medium text-gray-200">1</span> a <span className="font-medium text-gray-200">{filteredProcesses.length}</span> de <span className="font-medium text-gray-200">{processes.length}</span> processos
-                  </p>
-                </div>
-                <div>
-                  <nav className="relative z-0 inline-flex shadow-sm -space-x-px" aria-label="Pagination">
-                    <button className="relative inline-flex items-center px-2 py-2 border border-gray-600 bg-gray-800 text-sm font-medium text-gray-400 hover:bg-gray-700">
-                      <span className="sr-only">Anterior</span>
-                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
+            {!loading && filteredProcesses.length > 0 && (
+              <div className="mt-4 bg-gray-700 px-4 py-3 border border-gray-600 flex items-center justify-between rounded">
+                <div className="flex-1 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-400">
+                      A mostrar <span className="font-medium text-gray-200">{startIndex + 1}</span> a <span className="font-medium text-gray-200">{Math.min(endIndex, filteredProcesses.length)}</span> de <span className="font-medium text-gray-200">{filteredProcesses.length}</span> processos
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 text-sm bg-gray-600 hover:bg-gray-500 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:text-gray-500 text-gray-300 rounded border border-gray-500 transition-colors"
+                    >
+                      Anterior
                     </button>
-                    <button aria-current="page" className="z-10 bg-brand-yellow border-brand-yellow text-gray-900 relative inline-flex items-center px-4 py-2 border text-sm font-bold">1</button>
-                    <button className="bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700 relative inline-flex items-center px-4 py-2 border text-sm font-medium">2</button>
-                    <button className="bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700 relative inline-flex items-center px-4 py-2 border text-sm font-medium">3</button>
-                    <button className="relative inline-flex items-center px-2 py-2 border border-gray-600 bg-gray-800 text-sm font-medium text-gray-400 hover:bg-gray-700">
-                      <span className="sr-only">Seguinte</span>
-                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                      </svg>
+                    <span className="text-sm text-gray-400 px-3">
+                      Página <span className="font-medium text-gray-200">{currentPage}</span> de <span className="font-medium text-gray-200">{totalPages}</span>
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 text-sm bg-gray-600 hover:bg-gray-500 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:text-gray-500 text-gray-300 rounded border border-gray-500 transition-colors"
+                    >
+                      Próxima
                     </button>
-                  </nav>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         )}
       </main>
