@@ -14,6 +14,10 @@ export async function POST(
   try {
     const { id } = await context.params;
 
+    const body = await request.json();
+    const selectedItems: Array<{ id: string; quantity?: number }> =
+      body?.items && Array.isArray(body.items) ? body.items : [];
+
     const encomenda = await prismaAny.encomendas_pecas.findUnique({
       where: { id: BigInt(id) },
       include: { itens: true }
@@ -25,13 +29,32 @@ export async function POST(
 
     await prismaAny.$transaction(async (tx: any) => {
       for (const item of encomenda.itens) {
-        const quantidade = Number(item.quantidade_encomendada) || 0;
-        if (quantidade > 0) {
+        const totalOrdered = Number(item.quantidade_encomendada) || 0;
+        let qtyToReceive = totalOrdered;
+
+        if (selectedItems.length > 0) {
+          const sel = selectedItems.find((s: any) => String(s.id) === String(item.id));
+          if (!sel) {
+            // user did not select this part, skip entirely
+            continue;
+          }
+          qtyToReceive = Number(sel.quantity ?? 0);
+          if (isNaN(qtyToReceive) || qtyToReceive <= 0) {
+            continue;
+          }
+        }
+
+        // never exceed originally ordered quantity
+        if (qtyToReceive > totalOrdered) {
+          qtyToReceive = totalOrdered;
+        }
+
+        if (qtyToReceive > 0) {
           await tx.pecas.update({
             where: { id: item.peca_id },
             data: {
               quantidade_stock: {
-                increment: quantidade
+                increment: qtyToReceive
               }
             }
           });
@@ -40,7 +63,7 @@ export async function POST(
         await tx.itens_encomenda_peca.update({
           where: { id: item.id },
           data: {
-            quantidade_recebida: quantidade,
+            quantidade_recebida: qtyToReceive,
             estado: 'recebido'
           }
         });

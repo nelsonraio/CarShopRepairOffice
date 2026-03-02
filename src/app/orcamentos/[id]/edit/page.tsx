@@ -32,6 +32,7 @@ interface CatalogItem {
   type: 'service' | 'part';
   price: number;
   unit: string;
+  margem_lucro?: number;
 }
 
 interface BudgetItem {
@@ -131,7 +132,8 @@ const EditBudgetPage = () => {
           name: part.nome,
           type: 'part' as const,
           price: parseFloat(part.preco_venda) || 0,
-          unit: 'un'
+          unit: 'un',
+          margem_lucro: typeof part.margem_lucro === 'number' ? part.margem_lucro : (part.margem_lucro ? Number(part.margem_lucro) : 0)
         }));
         setParts(formattedParts);
       }
@@ -246,15 +248,23 @@ const EditBudgetPage = () => {
   const PARTS_MARKUP = 1.55;
 
   const addItemToBudget = (item: CatalogItem) => {
-    const markupPrice = item.type === 'part' ? item.price * PARTS_MARKUP : item.price;
-
+    let finalPrice = item.price;
+    if (item.type === 'part') {
+      // Procurar a peça pelo id
+      const foundPart = parts.find(p => p.id === item.id);
+      if (foundPart && foundPart.margem_lucro && foundPart.margem_lucro > 0) {
+        finalPrice = item.price * (1 + foundPart.margem_lucro / 100);
+      } else {
+        finalPrice = item.price * PARTS_MARKUP;
+      }
+    }
     const newItem: BudgetItem = {
       id: item.id,
       name: item.name,
       quantity: 1,
-      unitPrice: markupPrice,
+      unitPrice: finalPrice,
       unit: item.unit,
-      total: markupPrice,
+      total: finalPrice,
       type: item.type
     };
     setBudgetItems([...budgetItems, newItem]);

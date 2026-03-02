@@ -17,6 +17,7 @@ interface Part {
   supplierId: string;
   supplierName: string;
   stockStatus: 'em_stock' | 'baixo_stock' | 'esgotado';
+  margem_lucro?: number;
 }
 
 interface AddPartModalProps {
@@ -41,7 +42,8 @@ const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart 
     supplier: '',
     supplierId: '',
     supplierName: '',
-    stockStatus: 'em_stock' as 'em_stock' | 'baixo_stock' | 'esgotado'
+    stockStatus: 'em_stock' as 'em_stock' | 'baixo_stock' | 'esgotado',
+    margem_lucro: 0
   });
 
   // Fetch suppliers and categories on mount
@@ -104,7 +106,8 @@ const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart 
       supplier: '',
       supplierId: '',
       supplierName: '',
-      stockStatus: 'em_stock'
+      stockStatus: 'em_stock',
+      margem_lucro: 0
     });
     onClose();
   };
@@ -113,7 +116,7 @@ const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart 
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'stock' || name === 'minStock' || name === 'price' ? Number(value) : value
+      [name]: name === 'stock' || name === 'minStock' || name === 'price' || name === 'margem_lucro' ? Number(value) : value
     }));
   };
 
@@ -203,20 +206,38 @@ const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart 
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Preço (€)
-            </label>
-            <input
-              type="number"
-              name="price"
-              value={formData.price}
-              onChange={handleChange}
-              min="0"
-              step="0.01"
-              required
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-brand-yellow"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Preço (€)
+              </label>
+              <input
+                type="number"
+                name="price"
+                value={formData.price}
+                onChange={handleChange}
+                min="0"
+                step="0.01"
+                required
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Margem Lucro (%)
+              </label>
+              <input
+                type="number"
+                name="margem_lucro"
+                value={formData.margem_lucro}
+                onChange={handleChange}
+                min="0"
+                max="100"
+                step="0.01"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+              />
+            </div>
           </div>
 
           <div>

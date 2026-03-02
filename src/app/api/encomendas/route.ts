@@ -23,7 +23,11 @@ export async function GET() {
     const encomendas = await prismaAny.encomendas_pecas.findMany({
       include: {
         fornecedor: true,
-        itens: true
+        itens: {
+          include: {
+            peca: true
+          }
+        }
       },
       orderBy: { criado_em: 'desc' }
     });
@@ -41,11 +45,13 @@ export async function GET() {
       dias_atraso: calculateDiasAtraso(enc.data_entrega_estimada, enc.data_entrega_real, enc.estado),
       itens: (enc.itens || []).map((item: any) => ({
         id: String(item.id),
-        peca_id: String(item.peca_id),
+        peca_id: item.peca_id !== null ? String(item.peca_id) : null,
         quantidade_encomendada: item.quantidade_encomendada,
         quantidade_recebida: item.quantidade_recebida,
         preco_unitario: Number(item.preco_unitario),
-        estado: item.estado
+        estado: item.estado,
+        nome: item.peca?.nome || item.peca_descricao || '',
+        referencia: item.peca?.referencia || item.referencia || ''
       }))
     }));
 
@@ -72,12 +78,23 @@ export async function POST(request: Request) {
     const body = await request.json();
     console.log('📨 Pedido POST encomendas:', body);
     
-    const { fornecedor_id, data_entrega_estimada, itens } = body;
+    let { fornecedor_id, data_entrega_estimada, itens } = body;
 
-    if (!fornecedor_id) {
-      console.error('❌ Erro: Fornecedor obrigatorio');
-      return NextResponse.json({ error: 'Fornecedor obrigatorio' }, { status: 400 });
+    // if no supplier provided, try to infer from first real part
+    if (!fornecedor_id && Array.isArray(itens) && itens.length > 0) {
+      const firstPecaId = itens[0].peca_id;
+      if (firstPecaId && !String(firstPecaId).startsWith('custom')) {
+        const p = await prisma.pecas.findUnique({
+          where: { id: BigInt(firstPecaId) },
+          select: { fornecedor_id: true }
+        });
+        if (p && p.fornecedor_id) {
+          fornecedor_id = String(p.fornecedor_id);
+        }
+      }
     }
+
+    // fornecedor_id may still be undefined; that's acceptable now
 
     if (!Array.isArray(itens) || itens.length === 0) {
       console.error('❌ Erro: Itens obrigatorios');
@@ -116,7 +133,7 @@ export async function POST(request: Request) {
         const encomenda = await tx.encomendas_pecas.create({
           data: {
             numero_encomenda,
-            fornecedor_id: parseInt(fornecedor_id),
+            fornecedor_id: fornecedor_id ? parseInt(fornecedor_id) : null,
             data_encomenda: new Date(),
             data_entrega_estimada: data_entrega_estimada ? new Date(data_entrega_estimada) : null,
             estado: 'pendente',
@@ -126,21 +143,66 @@ export async function POST(request: Request) {
         
         console.log(`✅ Encomenda criada com ID: ${encomenda.id}`);
 
-        const itensData = itens.map((item: any) => {
+        // build itensData, creating placeholder parts for any custom entries
+        const itensData: any[] = [];
+        for (const item of itens) {
           const qtd = Number(item.quantidade_encomendada) || 1;
           const preco = Number(item.preco_unitario) || 0;
           const total = qtd * preco;
-          
-          return {
-            encomenda_id: encomenda.id,
-            peca_id: BigInt(item.peca_id),
-            quantidade_encomendada: qtd,
-            quantidade_recebida: 0,
-            preco_unitario: parseFloat(preco.toFixed(2)),
-            preco_total: parseFloat(total.toFixed(2)),
-            estado: 'pendente'
-          };
-        });
+
+          let pecaId: bigint | null = null;
+          if (item.peca_id && !String(item.peca_id).startsWith('custom')) {
+            pecaId = BigInt(item.peca_id);
+            itensData.push({
+              encomenda_id: encomenda.id,
+              peca_id: pecaId,
+              quantidade_encomendada: qtd,
+              quantidade_recebida: 0,
+              preco_unitario: parseFloat(preco.toFixed(2)),
+              preco_total: parseFloat(total.toFixed(2)),
+              estado: 'pendente'
+            });
+          } else {
+            // custom part: require name and reference from payload
+            if (!item.part || !item.part.name || !item.part.reference) {
+              throw new Error('Custom part must include name and reference');
+            }
+            const ref = item.part.reference.trim();
+            const nome = item.part.name.trim();
+            const categoria = item.part.category || 'custom';
+            let fornecedorId: number | null = null;
+            if (item.part.supplier) {
+              const fornecedor = await tx.fornecedores.findFirst({ where: { nome: item.part.supplier } });
+              if (fornecedor) fornecedorId = fornecedor.id;
+            }
+            console.log(`🆕 Creating custom part: nome=${nome}, referencia=${ref}, categoria=${categoria}, fornecedor_id=${fornecedorId}`);
+            const createdPart = await tx.pecas.create({
+              data: {
+                nome,
+                referencia: ref,
+                categoria,
+                quantidade_stock: 0,
+                nivel_stock_minimo: 0,
+                preco_venda: 0,
+                custo_unitario: 0,
+                ativo: true,
+                fornecedor_id: fornecedorId
+              }
+            });
+            console.log(`🆕 Custom part created: id=${createdPart.id}, nome=${createdPart.nome}, referencia=${createdPart.referencia}`);
+            pecaId = BigInt(createdPart.id);
+            console.log(`🔗 Linking item to custom part: encomenda_id=${encomenda.id}, peca_id=${pecaId}`);
+            itensData.push({
+              encomenda_id: encomenda.id,
+              peca_id: pecaId,
+              quantidade_encomendada: qtd,
+              quantidade_recebida: 0,
+              preco_unitario: parseFloat(preco.toFixed(2)),
+              preco_total: parseFloat(total.toFixed(2)),
+              estado: 'pendente'
+            });
+          }
+        }
 
         console.log(`📦 Itens a criar: ${itensData.length}`);
 

@@ -468,12 +468,19 @@ export async function PATCH(request: Request) {
       for (const item of itensOrdem) {
         if (item.peca_id && item.quantidade) {
           try {
+            // clamp stock so it never goes negative
+            const current = await prisma.pecas.findUnique({
+              where: { id: BigInt(item.peca_id) },
+              select: { quantidade_stock: true }
+            });
+            const decrement = Math.floor(Number(item.quantidade));
+            let newStock = (current?.quantidade_stock ?? 0) - decrement;
+            if (newStock < 0) newStock = 0;
+
             await prisma.pecas.update({
               where: { id: BigInt(item.peca_id) },
               data: {
-                quantidade_stock: {
-                  decrement: Math.floor(Number(item.quantidade))
-                }
+                quantidade_stock: newStock
               }
             });
           } catch (error) {

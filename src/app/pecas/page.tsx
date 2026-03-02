@@ -21,6 +21,7 @@ interface Part {
   minStock?: number;
   price: number;
   stockStatus: 'em_stock' | 'baixo_stock' | 'esgotado';
+  margem_lucro?: number;
 }
 
 const ITEMS_PER_PAGE = 20;
@@ -86,7 +87,8 @@ export default function PartsPage() {
           price: parseFloat(peca.preco_venda) || 0,
           stockStatus: peca.ativo === false ? 'esgotado' : 
                       (peca.quantidade_stock || 0) === 0 ? 'esgotado' :
-                      (peca.quantidade_stock || 0) <= (peca.nivel_stock_minimo || 0) ? 'baixo_stock' : 'em_stock'
+                      (peca.quantidade_stock || 0) <= (peca.nivel_stock_minimo || 0) ? 'baixo_stock' : 'em_stock',
+          margem_lucro: typeof peca.margem_lucro === 'number' ? peca.margem_lucro : (peca.margem_lucro ? Number(peca.margem_lucro) : 0)
         }));
         setParts(mappedParts);
       }
@@ -142,24 +144,12 @@ export default function PartsPage() {
           price: newPart.price,
           fornecedor_id: newPart.supplierId ? parseInt(newPart.supplierId) : null,
           supplierName: newPart.supplierName,
+          margem_lucro: typeof newPart.margem_lucro === 'number' ? newPart.margem_lucro : 0
         }),
       });
 
       if (response.ok) {
-        const savedPart = await response.json();
-        const partToAdd: Part = {
-          id: savedPart.id,
-          reference: savedPart.referencia,
-          name: savedPart.nome,
-          category: savedPart.categoria,
-          supplier: savedPart.supplierName || '',
-          supplierId: savedPart.fornecedor_id ? String(savedPart.fornecedor_id) : '',
-          supplierName: savedPart.supplierName || '',
-          stock: savedPart.stock,
-          price: parseFloat(savedPart.price),
-          stockStatus: savedPart.stockStatus
-        };
-        setParts(prevParts => [...prevParts, partToAdd]);
+        await fetchParts();
       } else {
         const error = await response.json();
         alert(error.error || 'Erro ao adicionar peça');
@@ -190,37 +180,12 @@ export default function PartsPage() {
           price: updatedPart.price,
           fornecedor_id: updatedPart.supplierId ? parseInt(updatedPart.supplierId) : null,
           supplierName: updatedPart.supplierName,
+          margem_lucro: typeof updatedPart.margem_lucro === 'number' ? updatedPart.margem_lucro : 0
         }),
       });
 
       if (response.ok) {
-        const savedPart = await response.json();
-        // Update the parts state with the edited part
-        setParts(prevParts => prevParts.map(part => {
-          if (part.id === updatedPart.id) {
-            const updatedPartData: Part = {
-              ...part,
-              name: savedPart.nome || updatedPart.name,
-              reference: savedPart.referencia || updatedPart.reference,
-              category: savedPart.categoria || updatedPart.category,
-              stock: savedPart.quantidade_stock ?? updatedPart.stock,
-              minStock: savedPart.nivel_stock_minimo ?? updatedPart.minStock,
-              price: parseFloat(savedPart.preco_venda) ?? updatedPart.price,
-              supplier: savedPart.supplierName || updatedPart.supplierName,
-              supplierName: savedPart.supplierName || updatedPart.supplierName,
-              stockStatus: savedPart.stockStatus || updatedPart.stockStatus
-            };
-            
-            if (savedPart.fornecedor_id) {
-              updatedPartData.supplierId = String(savedPart.fornecedor_id);
-            } else if (updatedPart.supplierId) {
-              updatedPartData.supplierId = updatedPart.supplierId;
-            }
-            
-            return updatedPartData;
-          }
-          return part;
-        }));
+        await fetchParts();
       } else {
         const error = await response.json();
         alert(error.error || 'Erro ao atualizar peça');

@@ -386,12 +386,7 @@ export async function PUT(request: Request) {
           where.matricula = matricula;
         }
 
-        await prisma.agendamentos.updateMany({
-          where,
-          data: {
-            estado: 'em_aprovacao'
-          }
-        });
+        await prisma.agendamentos.deleteMany({ where });
       }
 
       // Check if a work order already exists for this budget

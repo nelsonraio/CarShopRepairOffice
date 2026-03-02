@@ -20,16 +20,21 @@ interface Order {
   itens: ItemEncomenda[];
   data_encomenda: string;
   data_entrega_estimada: string | null;
+  data_entrega_real: string | null;
   estado: 'pendente' | 'em_transito' | 'recebido' | 'cancelado';
   custo_total: number;
   dias_atraso?: number;
 }
 
 interface ItemEncomenda {
+  id: string;
   peca_id: string;
   quantidade_encomendada: number;
   quantidade_recebida: number;
   preco_unitario: number;
+  estado: string;
+  nome?: string;
+  referencia?: string;
 }
 
 interface OrdersModalProps {
@@ -92,6 +97,28 @@ const OrdersModal: React.FC<OrdersModalProps> = ({ isOpen, onClose, parts, onReo
       }
     } catch (error) {
       console.error('Error updating status:', error);
+    }
+  };
+
+  const handleAddToStock = async (orderId: string, itemId: string, quantity: number) => {
+    try {
+      const response = await fetch(`/api/encomendas/${orderId}/adicionar-stock`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: [{ id: itemId, quantity }] })
+      });
+
+      if (response.ok) {
+        // Reload orders to get updated quantities
+        loadOrders();
+        alert('Stock atualizado com sucesso!');
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Erro ao adicionar ao stock');
+      }
+    } catch (error) {
+      console.error('Error adding to stock:', error);
+      alert('Erro ao adicionar ao stock');
     }
   };
 
@@ -216,10 +243,12 @@ const OrdersModal: React.FC<OrdersModalProps> = ({ isOpen, onClose, parts, onReo
                       {order.itens && order.itens.length > 0 ? (
                         order.itens.map((item, index) => {
                           const part = parts.find(p => p.id === item.peca_id);
+                          const remaining = item.quantidade_encomendada - (item.quantidade_recebida || 0);
                           return (
                             <div key={index} className="flex justify-between items-center bg-gray-800 p-3 border border-gray-700">
                               <div className="flex-1">
-                                <p className="text-white font-medium">{part?.name || `Peça ID: ${item.peca_id}`}</p>
+                                <p className="text-white font-medium">{item.nome || part?.name || `Peça ID: ${item.peca_id}`}</p>
+                                {item.referencia && <p className="text-gray-400 text-sm">Ref: {item.referencia}</p>}
                                 {part && <p className="text-gray-400 text-sm">Ref: {part.reference}</p>}
                               </div>
                               <div className="text-right mr-6">
@@ -228,7 +257,23 @@ const OrdersModal: React.FC<OrdersModalProps> = ({ isOpen, onClose, parts, onReo
                                 {item.quantidade_recebida > 0 && (
                                   <p className="text-xs text-green-400">{item.quantidade_recebida} recebidas</p>
                                 )}
+                                {remaining > 0 && (
+                                  <p className="text-xs text-yellow-400">{remaining} por receber</p>
+                                )}
                               </div>
+                              {/* Botão Adicionar ao Stock - sempre visível se houver quantidade restante */}
+                              {remaining > 0 && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleAddToStock(order.id, item.id, remaining);
+                                  }}
+                                  className="ml-4 px-3 py-1 bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold rounded transition-colors"
+                                  title="Adicionar esta peça ao stock"
+                                >
+                                  Adicionar ao Stock
+                                </button>
+                              )}
                             </div>
                           );
                         })

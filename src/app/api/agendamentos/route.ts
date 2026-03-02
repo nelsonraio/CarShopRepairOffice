@@ -61,27 +61,20 @@ export async function GET(request: Request) {
         orderBy: { data_agendamento: 'asc' }
       });
 
-      const orcamentos = await prisma.orcamentos.findMany({
-        select: {
-          data_emissao: true,
-          cliente_id: true,
-          veiculo_id: true
+      // Filtrar duplicados pela matrícula: só mostrar o agendamento com estado mais "alto" (prioridade: em_andamento > em_aprovacao > agendado)
+      const filteredAgendamentos = agendamentos.filter((agendamento) => {
+        if (!agendamento.matricula) return true;
+        const sameMatricula = agendamentos.filter(a => a.matricula === agendamento.matricula);
+        if (sameMatricula.length === 0) return true;
+        if (sameMatricula.length === 1) return true;
+        const prioridade = { 'em_andamento': 3, 'em_aprovacao': 2, 'agendado': 1 };
+        function getPrioridade(estado: string | null | undefined): number {
+          return prioridade[estado as keyof typeof prioridade] || 0;
         }
+        const sorted = sameMatricula.sort((a, b) => getPrioridade(b.estado) - getPrioridade(a.estado));
+        const maxEstado = sorted[0];
+        return maxEstado ? agendamento.id === maxEstado.id : false;
       });
-
-      const budgetMatriculasByDate = new Set<string>();
-      // Original logic was broken; removed veiculo relation dependency
-
-      const filteredAgendamentos = agendamentos.filter((agendamento: typeof agendamentos[number]) => {
-        if (agendamento.matricula) {
-          const dateKey = agendamento.data_agendamento.toISOString().slice(0, 10);
-          if (budgetMatriculasByDate.has(`${agendamento.matricula}|${dateKey}`)) {
-            return false;
-          }
-        }
-        return true;
-      });
-
       const clienteIds = Array.from(new Set(filteredAgendamentos.map((a: typeof filteredAgendamentos[number]) => a.cliente_id).filter((v: number | null | undefined): v is number => v != null)));
       const mecanicoIds = Array.from(new Set(filteredAgendamentos.map((a: typeof filteredAgendamentos[number]) => a.mecanico_id).filter((v: number | null | undefined): v is number => v != null)));
 

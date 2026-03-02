@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import partCategories from "../data/partCategories";
 
 interface Part {
   id: string;
@@ -42,8 +43,8 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
   const [orderText, setOrderText] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [showNewPartForm, setShowNewPartForm] = useState(false);
-  const [fornecedorId, setFornecedorId] = useState("");
-  const [dataEntrega, setDataEntrega] = useState("");
+  // no global supplier; deliveries still optional
+  // delivery date no longer used
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -51,6 +52,7 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
     name: "",
     reference: "",
     supplier: "",
+    category: "",
     quantity: 1
   });
 
@@ -117,28 +119,46 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
   );
 
   const handleAddNewPart = () => {
-    if (newPart.name && newPart.supplier) {
-      const customPart: Part = {
-        id: `custom-${Date.now()}`,
-        reference: newPart.reference || "N/A",
-        name: newPart.name,
-        category: "custom",
-        supplier: newPart.supplier,
-        stock: 0,
-        price: 0,
-        stockStatus: "esgotado"
-      };
+    // require name, supplier and reference
 
-      const newOrderItem: OrderItem = {
-        part: customPart,
-        quantity: newPart.quantity,
-        selected: true
-      };
-
-      setOrderItems(prevItems => [...prevItems, newOrderItem]);
-      setNewPart({ name: "", reference: "", supplier: "", quantity: 1 });
-      setShowNewPartForm(false);
+    if (!newPart.name) {
+      setErrorMsg("Informe o nome da peça");
+      return;
     }
+    if (!newPart.reference) {
+      setErrorMsg("Informe a referência da peça");
+      return;
+    }
+    if (!newPart.supplier) {
+      setErrorMsg("Informe o fornecedor da peça");
+      return;
+    }
+    if (!newPart.category) {
+      setErrorMsg("Selecione a categoria da peça");
+      return;
+    }
+
+    const customPart: Part = {
+      id: `custom-${Date.now()}`,
+      reference: newPart.reference,
+      name: newPart.name,
+      category: newPart.category,
+      supplier: newPart.supplier,
+      stock: 0,
+      price: 0,
+      stockStatus: "esgotado"
+    };
+
+    const newOrderItem: OrderItem = {
+      part: customPart,
+      quantity: newPart.quantity,
+      selected: true
+    };
+
+    setOrderItems(prevItems => [...prevItems, newOrderItem]);
+    setNewPart({ name: "", reference: "", supplier: "", category: "", quantity: 1 });
+    setShowNewPartForm(false);
+    setSuccessMsg("Nova peça personalizada adicionada. Será criada no stock com quantidade 0.");
   };
 
   const handleOrder = async () => {
@@ -152,28 +172,56 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
       return;
     }
 
-    // Check if fornecedor is selected
-    if (!fornecedorId) {
-      setErrorMsg("Selecione um fornecedor para gravar a encomenda");
-      return;
-    }
-
     setLoading(true);
 
     try {
       console.log("📨 Enviando envelope para API...");
 
-      const itens = selectedParts.map(item => ({
-        peca_id: item.part.id,
-        quantidade_encomendada: item.quantity,
-        preco_unitario: item.part.price || 0
+      // ensure custom items have reference
+    for (const item of selectedParts) {
+      if (item.part.id.startsWith('custom') && !item.part.reference) {
+        setErrorMsg('Referência obrigatória para peças novas');
+        setLoading(false);
+        return;
+      }
+    }
+
+    const itens = selectedParts.map(item => ({
+        // send part object for custom parts so backend can create it
+        ...(item.part.id.startsWith('custom')
+          ? {
+              peca_id: null,
+              quantidade_encomendada: item.quantity,
+              preco_unitario: item.part.price || 0,
+              part: {
+                name: item.part.name,
+                reference: item.part.reference,
+                category: item.part.category || 'custom',
+                supplier: item.part.supplier || ''
+              }
+            }
+          : {
+              peca_id: item.part.id,
+              quantidade_encomendada: item.quantity,
+              preco_unitario: item.part.price || 0
+            })
       }));
 
-      const payload = {
-        fornecedor_id: fornecedorId,
-        data_entrega_estimada: dataEntrega || null,
+      // determine supplier id from selected parts if they share one
+      let fornecedor_id: string | null = null;
+      if (selectedParts.length > 0) {
+        const suppliers = new Set(selectedParts.map(i => i.part.supplier).filter(Boolean));
+        if (suppliers.size === 1) {
+          const supplierName = [...suppliers][0];
+          const found = fornecedores.find(f => f.nome === supplierName);
+          if (found) fornecedor_id = String(found.id);
+        }
+      }
+
+      const payload: any = {
         itens: itens
       };
+      if (fornecedor_id) payload.fornecedor_id = fornecedor_id;
 
       console.log("📤 Payload enviado:", JSON.stringify(payload, null, 2));
 
@@ -195,8 +243,6 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
       // Reset form after 2 seconds
       setTimeout(() => {
         setOrderItems([]);
-        setFornecedorId("");
-        setDataEntrega("");
         setSuccessMsg("");
         onClose();
       }, 2000);
@@ -234,38 +280,7 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
 
         {!successMsg && (
           <>
-            {/* Form Section for Supplier & Delivery Date */}
-            <div className="mb-4 p-4 bg-gray-700 border border-gray-600 rounded-lg grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Fornecedor para Encomenda BD *
-                </label>
-                <select
-                  value={fornecedorId}
-                  onChange={(e) => setFornecedorId(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-900 border border-gray-600 text-white rounded focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow"
-                >
-                  <option value="">Selecione um fornecedor...</option>
-                  {fornecedores.map(f => (
-                    <option key={f.id} value={f.id}>
-                      {f.nome}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Data de Entrega Estimada
-                </label>
-                <input
-                  type="date"
-                  value={dataEntrega}
-                  onChange={(e) => setDataEntrega(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-900 border border-gray-600 text-white rounded focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow"
-                />
-              </div>
-            </div>
-
+    
         <div className="flex-1 flex mt-2 overflow-hidden gap-6">
           <div className="w-7/12 flex flex-col">
             <div className="flex gap-4 mb-4">
@@ -303,8 +318,22 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
                     <input type="text" value={newPart.reference} onChange={(e) => setNewPart({ ...newPart, reference: e.target.value })} className="w-full bg-gray-800 border border-gray-500 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow outline-none" placeholder="Ex: BOS-0986452058" />
                   </div>
                   <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Categoria *</label>
+                    <select value={newPart.category} onChange={e => setNewPart({ ...newPart, category: e.target.value })} className="w-full bg-gray-800 border border-gray-500 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow outline-none">
+                      <option value="">Selecione uma categoria...</option>
+                      {partCategories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
                     <label className="block text-sm font-medium text-gray-400 mb-1">Fornecedor *</label>
-                    <input type="text" value={newPart.supplier} onChange={(e) => setNewPart({ ...newPart, supplier: e.target.value })} className="w-full bg-gray-800 border border-gray-500 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow outline-none" placeholder="Ex: Bosch Portugal" />
+                    <select value={newPart.supplier} onChange={(e) => setNewPart({ ...newPart, supplier: e.target.value })} className="w-full bg-gray-800 border border-gray-500 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow outline-none">
+                      <option value="">Selecione um fornecedor...</option>
+                      {fornecedores.map(f => (
+                        <option key={f.id} value={f.nome}>{f.nome}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-1">Quantidade *</label>
@@ -399,7 +428,7 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
           <button
             type="button"
             onClick={handleOrder}
-            disabled={orderItems.filter(item => item.selected).length === 0 || loading || !fornecedorId}
+            disabled={orderItems.filter(item => item.selected).length === 0 || loading}
             className="px-6 py-2 bg-brand-yellow text-gray-900 font-bold hover:bg-brand-yellow-dark transition-colors rounded-none disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed"
           >
             {loading ? '⏳ Criando...' : 'Criar Encomenda'}

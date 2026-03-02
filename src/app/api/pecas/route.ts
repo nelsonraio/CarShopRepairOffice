@@ -44,7 +44,8 @@ export async function GET() {
       preco_venda: peca.preco_venda,
       ativo: peca.ativo,
       fornecedor_id: peca.fornecedor_id,
-      fornecedor_nome: peca.fornecedor_id ? fornecedoresMap.get(peca.fornecedor_id) || null : null
+      fornecedor_nome: peca.fornecedor_id ? fornecedoresMap.get(peca.fornecedor_id) || null : null,
+      margem_lucro: peca.margem_lucro ? Number(peca.margem_lucro) : null
     }));
 
     return NextResponse.json(serializedPecas);
@@ -78,8 +79,17 @@ export async function POST(request: Request) {
       price,
       fornecedor_id,
       supplierName,
-      descricao
+      descricao,
+      margem_lucro
     } = body;
+
+    // Ensure stock values are not negative
+    if (stock !== undefined && stock < 0) {
+      return NextResponse.json({ error: 'O stock não pode ser negativo' }, { status: 400 });
+    }
+    if (minStock !== undefined && minStock < 0) {
+      return NextResponse.json({ error: 'O stock mínimo não pode ser negativo' }, { status: 400 });
+    }
 
     // Check if reference already exists
     const existingPeca = await prisma.pecas.findUnique({
@@ -104,7 +114,8 @@ export async function POST(request: Request) {
         custo_unitario: 0, // Default to 0, can be updated later
         descricao: descricao || null,
         ativo: true,
-        fornecedor_id: fornecedor_id || null
+        fornecedor_id: fornecedor_id || null,
+        margem_lucro: margem_lucro ? Number(margem_lucro) : null
       }
     });
 
@@ -130,7 +141,8 @@ export async function POST(request: Request) {
       fornecedor_nome: fornecedorNome,
       supplierName: fornecedorNome,
       stockStatus: (newPeca.quantidade_stock ?? 0) === 0 ? 'esgotado' : 
-                   (newPeca.quantidade_stock ?? 0) <= (newPeca.nivel_stock_minimo ?? 0) ? 'baixo_stock' : 'em_stock'
+                   (newPeca.quantidade_stock ?? 0) <= (newPeca.nivel_stock_minimo ?? 0) ? 'baixo_stock' : 'em_stock',
+      margem_lucro: newPeca.margem_lucro ? Number(newPeca.margem_lucro) : null
     }, { status: 201 });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -165,8 +177,17 @@ export async function PUT(request: Request) {
       minStock,
       price,
       fornecedor_id,
-      supplierName
+      supplierName,
+      margem_lucro
     } = body;
+
+    // Prevent negative stock adjustments
+    if (stock !== undefined && stock < 0) {
+      return NextResponse.json({ error: 'O stock não pode ser negativo' }, { status: 400 });
+    }
+    if (minStock !== undefined && minStock < 0) {
+      return NextResponse.json({ error: 'O stock mínimo não pode ser negativo' }, { status: 400 });
+    }
 
     // Check if the part exists
     const existingPeca = await prisma.pecas.findUnique({
@@ -203,7 +224,8 @@ export async function PUT(request: Request) {
         quantidade_stock: stock,
         nivel_stock_minimo: minStock,
         preco_venda: price,
-        fornecedor_id: fornecedor_id || null
+        fornecedor_id: fornecedor_id || null,
+        margem_lucro: margem_lucro !== undefined ? Number(margem_lucro) : null
       }
     });
 
@@ -229,7 +251,8 @@ export async function PUT(request: Request) {
       fornecedor_nome: fornecedorNome,
       supplierName: fornecedorNome,
       stockStatus: (updatedPeca.quantidade_stock ?? 0) === 0 ? 'esgotado' : 
-                   (updatedPeca.quantidade_stock ?? 0) <= (updatedPeca.nivel_stock_minimo ?? 0) ? 'baixo_stock' : 'em_stock'
+                   (updatedPeca.quantidade_stock ?? 0) <= (updatedPeca.nivel_stock_minimo ?? 0) ? 'baixo_stock' : 'em_stock',
+      margem_lucro: updatedPeca.margem_lucro ? Number(updatedPeca.margem_lucro) : null
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -250,5 +273,3 @@ export async function PUT(request: Request) {
     );
   }
 }
-
-

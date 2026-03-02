@@ -444,10 +444,27 @@ export default function KanbanBoard() {
           grouped[state] = [];
         });
 
+        // First, collect all budget plates (these should take priority in em_aprovacao)
+        const budgetPlates = new Set<string>();
+        budgets
+          .filter(budget => budget.estado?.toLowerCase() === 'pendente')
+          .forEach(budget => {
+            if (budget.veiculo?.matricula) {
+              budgetPlates.add(budget.veiculo.matricula);
+            }
+          });
+
+        // Then process appointments - only add if not already in em_aprovacao (budget takes priority)
         appointments.forEach(appt => {
+          // Skip if this plate already has a budget in em_aprovacao
+          if (budgetPlates.has(appt.veiculo_matricula)) {
+            return;
+          }
+          
           if (!grouped['em_recepcao']) {
             grouped['em_recepcao'] = [];
           }
+          
           const card: KanbanCard = {
             id: appt.id,
             proc: appt.ref_agendamento,
@@ -894,6 +911,33 @@ export default function KanbanBoard() {
       const defaultDate = dateStr || '';
       setCompletionDate(defaultDate);
       setShowCompletionModal(true);
+      return;
+    }
+
+    // Lógica especial: quando move de "aguarda_peca" para "em_andamento" (retomar trabalho)
+    if (fromColumnId === 'aguarda_peca' && toColumnId === 'em_andamento') {
+      try {
+        const response = await fetch('/api/ordens-trabalho', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: card.proc,
+            estado: 'Em Andamento'
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update work order');
+        }
+      } catch (error) {
+        console.error('Erro ao atualizar ordem de trabalho ao retomar de aguardando peças:', error);
+        alert('Erro ao atualizar ordem de trabalho ao retomar de aguardando peças. Por favor, tente novamente.');
+      }
+
+      // Update UI immediately
+      updateCardState(card, 'em_andamento');
       return;
     }
 

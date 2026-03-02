@@ -12,6 +12,7 @@ interface Part {
   minStock?: number;
   price: number;
   stockStatus: 'em_stock' | 'baixo_stock' | 'esgotado';
+  margem_lucro?: number;
 }
 
 interface PartsTableProps {
@@ -83,6 +84,7 @@ export default function PartsTable({ parts, onEdit, onReferenceClick }: PartsTab
               <th scope="col" className="px-6 py-3">Fornecedor</th>
               <th scope="col" className="px-6 py-3">Stock</th>
               <th scope="col" className="px-6 py-3 text-right">Preço Unit.</th>
+              <th scope="col" className="px-6 py-3 text-right">Margem</th>
               <th scope="col" className="px-6 py-3 text-center">Ações</th>
             </tr>
           </thead>
@@ -111,6 +113,9 @@ export default function PartsTable({ parts, onEdit, onReferenceClick }: PartsTab
                 <td className="px-6 py-4 text-right font-medium text-gray-200">
                   €{part.price.toFixed(2)}
                 </td>
+                <td className="px-6 py-4 text-right font-medium text-gray-200">
+                  {part.margem_lucro ? `${part.margem_lucro}%` : '-'}
+                </td>
                 <td className="px-6 py-4 text-center">
                   <button 
                     onClick={() => onEdit && onEdit(part)}
@@ -125,7 +130,7 @@ export default function PartsTable({ parts, onEdit, onReferenceClick }: PartsTab
             ))}
             {parts.length === 0 && (
               <tr>
-                <td colSpan={7} className="text-center py-12 text-gray-500">
+                <td colSpan={8} className="text-center py-12 text-gray-500">
                   Nenhuma peça encontrada com os filtros aplicados.
                 </td>
               </tr>
