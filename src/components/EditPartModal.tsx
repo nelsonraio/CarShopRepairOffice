@@ -18,6 +18,7 @@ interface Part {
   supplierName?: string;
   stockStatus: 'em_stock' | 'baixo_stock' | 'esgotado';
   margem_lucro?: number;
+  notas?: string;
 }
 
 interface EditPartModalProps {
@@ -44,7 +45,8 @@ const EditPartModal: React.FC<EditPartModalProps> = ({ isOpen, onClose, onEdit, 
     supplierId: '',
     supplierName: '',
     stockStatus: 'em_stock' as 'em_stock' | 'baixo_stock' | 'esgotado',
-    margem_lucro: 0
+    margem_lucro: 0,
+    notas: ''
   });
 
   // Populate form data when part changes
@@ -61,7 +63,8 @@ const EditPartModal: React.FC<EditPartModalProps> = ({ isOpen, onClose, onEdit, 
         supplierId: part.supplierId || '',
         supplierName: part.supplierName || '',
         stockStatus: part.stockStatus || 'em_stock',
-        margem_lucro: part.margem_lucro || 0
+        margem_lucro: part.margem_lucro || 0,
+        notas: part.notas || ''
       });
     }
   }, [part]);
@@ -123,14 +126,15 @@ const EditPartModal: React.FC<EditPartModalProps> = ({ isOpen, onClose, onEdit, 
       supplierId: formData.supplierId,
       supplierName: supplierName,
       stockStatus: formData.stockStatus,
-      margem_lucro: formData.margem_lucro
+      margem_lucro: formData.margem_lucro,
+      notas: formData.notas
     };
     
     onEdit(updatedPart);
     onClose();
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -282,6 +286,20 @@ const EditPartModal: React.FC<EditPartModalProps> = ({ isOpen, onClose, onEdit, 
                 ))}
               </select>
             )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Notas
+            </label>
+            <textarea
+              name="notas"
+              value={formData.notas}
+              onChange={handleChange}
+              rows={3}
+              placeholder="Ex: Compatível com sedans Honda, marca XYZ..."
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-brand-yellow resize-none"
+            />
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">

@@ -38,6 +38,7 @@ export async function GET() {
       id: String(peca.id),
       referencia: peca.referencia,
       nome: peca.nome,
+      descricao: peca.descricao,
       categoria: peca.categoria,
       quantidade_stock: peca.quantidade_stock,
       nivel_stock_minimo: peca.nivel_stock_minimo,
@@ -45,7 +46,9 @@ export async function GET() {
       ativo: peca.ativo,
       fornecedor_id: peca.fornecedor_id,
       fornecedor_nome: peca.fornecedor_id ? fornecedoresMap.get(peca.fornecedor_id) || null : null,
-      margem_lucro: peca.margem_lucro ? Number(peca.margem_lucro) : null
+      margem_lucro: peca.margem_lucro ? Number(peca.margem_lucro) : null,
+      veiculos_compativeis: peca.veiculos_compativeis,
+      notas: peca.notas
     }));
 
     return NextResponse.json(serializedPecas);
@@ -80,7 +83,8 @@ export async function POST(request: Request) {
       fornecedor_id,
       supplierName,
       descricao,
-      margem_lucro
+      margem_lucro,
+      notas
     } = body;
 
     // Ensure stock values are not negative
@@ -115,7 +119,8 @@ export async function POST(request: Request) {
         descricao: descricao || null,
         ativo: true,
         fornecedor_id: fornecedor_id || null,
-        margem_lucro: margem_lucro ? Number(margem_lucro) : null
+        margem_lucro: margem_lucro ? Number(margem_lucro) : null,
+        notas: notas || null
       }
     });
 
@@ -133,6 +138,7 @@ export async function POST(request: Request) {
       id: String(newPeca.id),
       nome: newPeca.nome,
       referencia: newPeca.referencia,
+      descricao: newPeca.descricao,
       categoria: newPeca.categoria,
       stock: newPeca.quantidade_stock,
       minStock: newPeca.nivel_stock_minimo,
@@ -142,7 +148,8 @@ export async function POST(request: Request) {
       supplierName: fornecedorNome,
       stockStatus: (newPeca.quantidade_stock ?? 0) === 0 ? 'esgotado' : 
                    (newPeca.quantidade_stock ?? 0) <= (newPeca.nivel_stock_minimo ?? 0) ? 'baixo_stock' : 'em_stock',
-      margem_lucro: newPeca.margem_lucro ? Number(newPeca.margem_lucro) : null
+      margem_lucro: newPeca.margem_lucro ? Number(newPeca.margem_lucro) : null,
+      notas: newPeca.notas
     }, { status: 201 });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -178,7 +185,8 @@ export async function PUT(request: Request) {
       price,
       fornecedor_id,
       supplierName,
-      margem_lucro
+      margem_lucro,
+      notas
     } = body;
 
     // Prevent negative stock adjustments
@@ -225,7 +233,8 @@ export async function PUT(request: Request) {
         nivel_stock_minimo: minStock,
         preco_venda: price,
         fornecedor_id: fornecedor_id || null,
-        margem_lucro: margem_lucro !== undefined ? Number(margem_lucro) : null
+        margem_lucro: margem_lucro !== undefined ? Number(margem_lucro) : null,
+        notas: notas !== undefined ? notas : undefined
       }
     });
 
@@ -243,6 +252,7 @@ export async function PUT(request: Request) {
       id: String(updatedPeca.id),
       nome: updatedPeca.nome,
       referencia: updatedPeca.referencia,
+      descricao: updatedPeca.descricao,
       categoria: updatedPeca.categoria,
       quantidade_stock: updatedPeca.quantidade_stock,
       nivel_stock_minimo: updatedPeca.nivel_stock_minimo,
@@ -252,7 +262,8 @@ export async function PUT(request: Request) {
       supplierName: fornecedorNome,
       stockStatus: (updatedPeca.quantidade_stock ?? 0) === 0 ? 'esgotado' : 
                    (updatedPeca.quantidade_stock ?? 0) <= (updatedPeca.nivel_stock_minimo ?? 0) ? 'baixo_stock' : 'em_stock',
-      margem_lucro: updatedPeca.margem_lucro ? Number(updatedPeca.margem_lucro) : null
+      margem_lucro: updatedPeca.margem_lucro ? Number(updatedPeca.margem_lucro) : null,
+      notas: updatedPeca.notas
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

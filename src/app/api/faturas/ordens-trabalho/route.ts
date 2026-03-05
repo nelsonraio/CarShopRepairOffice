@@ -12,12 +12,12 @@ export async function GET(req: NextRequest) {
 
     const where: any = {};
 
-    // Se não especificar estado, busca as que podem ser faturadas (concluído)
-    if (estado) {
-      where.estado = estado;
-    } else {
-      where.estado = 'concluido';
-    }
+    const normalizeEstado = (value?: string | null) =>
+      (value || '')
+        .trim()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
 
     if (clienteId) {
       where.cliente_id = parseInt(clienteId);
@@ -36,7 +36,55 @@ export async function GET(req: NextRequest) {
       take: 100
     });
 
-    const formatadas = ordensTrabalho.map((ot: typeof ordensTrabalho[number]) => ({
+    const ordensFiltradasPorEstado = ordensTrabalho.filter((ot: typeof ordensTrabalho[number]) => {
+      const estadoNormalizado = normalizeEstado(ot.estado);
+
+      if (estado) {
+        return estadoNormalizado === normalizeEstado(estado);
+      }
+
+      // Sem filtro explícito, considerar concluído/concluída independentemente de acentos/maiúsculas/espaços
+      return estadoNormalizado.startsWith('concluid');
+    });
+
+    // Defesa extra: excluir ordens que já tenham fatura pela tabela faturas
+    const faturasComOrdem = await prisma.faturas.findMany({
+      where: { ordem_trabalho_id: { not: null } },
+      select: { id: true, ordem_trabalho_id: true }
+    });
+
+    const faturaIdsExistentes = new Set(
+      faturasComOrdem.map((f: { id: bigint }) => Number(f.id))
+    );
+
+    const ordensJaFaturadas = new Set(
+      faturasComOrdem
+        .map((f: { ordem_trabalho_id: number | null }) => f.ordem_trabalho_id)
+        .filter((id: number | null): id is number => typeof id === 'number')
+    );
+
+    // Limpar vínculos órfãos (ordens com fatura_id apontando para fatura inexistente)
+    const ordensComVinculoOrfao = ordensFiltradasPorEstado.filter((ot: typeof ordensTrabalho[number]) => {
+      if (!ot.fatura_id) return false;
+      return !faturaIdsExistentes.has(Number(ot.fatura_id));
+    });
+
+    if (ordensComVinculoOrfao.length > 0) {
+      const idsParaLimpar = ordensComVinculoOrfao.map((ot: typeof ordensTrabalho[number]) => Number(ot.id));
+      await prisma.ordens_trabalho.updateMany({
+        where: { id: { in: idsParaLimpar.map((id: number) => BigInt(id)) } },
+        data: { fatura_id: null }
+      });
+      console.warn('⚠️ Vínculos órfãos removidos de ordens_trabalho.fatura_id:', idsParaLimpar);
+    }
+
+    const formatadas = ordensFiltradasPorEstado
+      .filter((ot: typeof ordensTrabalho[number]) => {
+        const jaFaturadaPorTabelaFaturas = ordensJaFaturadas.has(Number(ot.id));
+        const temVinculoValidoPorFaturaId = !!ot.fatura_id && faturaIdsExistentes.has(Number(ot.fatura_id));
+        return !jaFaturadaPorTabelaFaturas && !temVinculoValidoPorFaturaId;
+      })
+      .map((ot: typeof ordensTrabalho[number]) => ({
       id: Number(ot.id),
       ref_ordem_trabalho: ot.ref_ordem_trabalho,
       cliente_id: ot.cliente_id,
@@ -55,6 +103,12 @@ export async function GET(req: NextRequest) {
       estado: ot.estado,
       criado_em: ot.criado_em
     }));
+
+    console.log('📊 [Ordens para faturar] Totais:');
+    console.log('   Ordens sem fatura_id:', ordensTrabalho.length);
+    console.log('   Após filtro de estado:', ordensFiltradasPorEstado.length);
+    console.log('   Excluídas por já faturadas:', ordensFiltradasPorEstado.length - formatadas.length);
+    console.log('   Resultado final:', formatadas.length);
 
     return NextResponse.json({
       success: true,
@@ -94,7 +148,8 @@ export async function POST(req: NextRequest) {
           include: {
             cliente: true
           }
-        }
+        },
+        itens_ordem_trabalho: true
       }
     });
 
@@ -102,6 +157,45 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { success: false, error: 'Ordem de trabalho não encontrada' },
         { status: 404 }
+      );
+    }
+
+    if (ordemTrabalho.fatura_id) {
+      const faturaPorVinculo = await prisma.faturas.findUnique({
+        where: { id: ordemTrabalho.fatura_id },
+        select: { id: true, numero_fatura: true }
+      });
+
+      if (faturaPorVinculo) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Esta ordem de trabalho já está associada à fatura ${faturaPorVinculo.numero_fatura}.`
+          },
+          { status: 409 }
+        );
+      }
+
+      // Vínculo órfão: limpar e continuar
+      await prisma.ordens_trabalho.update({
+        where: { id: ordemTrabalho.id },
+        data: { fatura_id: null }
+      });
+      console.warn('⚠️ Vínculo órfão limpo em ordem_trabalho:', Number(ordemTrabalho.id));
+    }
+
+    const faturaExistente = await prisma.faturas.findFirst({
+      where: { ordem_trabalho_id: Number(ordemTrabalho.id) },
+      select: { id: true, numero_fatura: true }
+    });
+
+    if (faturaExistente) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Esta ordem de trabalho já foi faturada (fatura ${faturaExistente.numero_fatura}).`
+        },
+        { status: 409 }
       );
     }
 
@@ -115,6 +209,10 @@ export async function POST(req: NextRequest) {
         cliente_nif: ordemTrabalho.veiculo?.cliente?.nif,
         cliente_email: ordemTrabalho.veiculo?.cliente?.email,
         cliente_telefone: ordemTrabalho.veiculo?.cliente?.telefone,
+        cliente_morada: ordemTrabalho.veiculo?.cliente?.endereco,
+        cliente_cidade: '', // Campo não disponível em clientes
+        cliente_pais: '', // Campo não disponível em clientes
+        cliente_codigo_postal: '', // Campo não disponível em clientes
         matricula: ordemTrabalho.veiculo?.matricula,
         veiculo_marca: ordemTrabalho.veiculo?.marca,
         veiculo_modelo: ordemTrabalho.veiculo?.modelo,
@@ -125,7 +223,14 @@ export async function POST(req: NextRequest) {
         total_imposto: parseFloat(ordemTrabalho.total_imposto?.toString() || '0'),
         total_geral: parseFloat(ordemTrabalho.total_geral.toString()),
         descricao_problema: ordemTrabalho.descricao_problema,
-        trabalho_realizado: ordemTrabalho.trabalho_realizado
+        trabalho_realizado: ordemTrabalho.trabalho_realizado,
+        itens: ordemTrabalho.itens_ordem_trabalho.map(item => ({
+          tipo: item.tipo_item,
+          descricao: item.descricao,
+          quantidade: parseFloat(item.quantidade?.toString() || '1'),
+          preco_unitario: parseFloat(item.preco_unitario.toString()),
+          valor_total: parseFloat(item.valor_total.toString())
+        }))
       }
     });
   } catch (error) {

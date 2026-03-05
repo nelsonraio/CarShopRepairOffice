@@ -44,9 +44,10 @@ interface CriarFaturaModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  oauthToken?: string;
 }
 
-export default function CriarFaturaModal({ isOpen, onClose, onSuccess }: CriarFaturaModalProps) {
+export default function CriarFaturaModal({ isOpen, onClose, onSuccess, oauthToken }: CriarFaturaModalProps) {
   const [step, setStep] = useState<'selecionar_ordem' | 'preencher_dados'>('selecionar_ordem');
   const [ordensTrabalho, setOrdensTrabalho] = useState<OrdemTrabalho[]>([]);
   const [ordensLoading, setOrdensLoading] = useState(false);
@@ -70,9 +71,8 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess }: CriarFa
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [authCode, setAuthCode] = useState('');
-  const [proximo_numero, setProximoNumero] = useState('');
   const [debugJson, setDebugJson] = useState('');
+  const [itens, setItens] = useState<any[]>([]);
 
   const round2 = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
@@ -80,7 +80,6 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess }: CriarFa
   useEffect(() => {
     if (isOpen) {
       carregarOrdensTrabalho();
-      carregarProximoNumero();
     }
   }, [isOpen]);
 
@@ -109,18 +108,6 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess }: CriarFa
     }
   };
 
-  const carregarProximoNumero = async () => {
-    try {
-      const response = await fetch('/api/faturas/proximo-numero');
-      const data = await response.json();
-      if (data.success) {
-        setProximoNumero(data.data.numero_fatura);
-      }
-    } catch (err) {
-      console.error('Erro ao carregar número de fatura:', err);
-    }
-  };
-
   const handleSelecionarOrdem = async (ordem: OrdemTrabalho) => {
     setLoading(true);
     try {
@@ -138,11 +125,26 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess }: CriarFa
           modelo: dados.veiculo_modelo,
           matricula: dados.matricula
         });
+
+        // Guardar itens para depois usar no envio para TOConline
+        setItens(dados.itens || []);
+
         const novoSubtotal = round2(dados.total_mao_obra + dados.total_pecas);
         const novoPercentual = 23;
         const novoDesconto = round2(dados.total_desconto);
         const novoImposto = round2(novoSubtotal * novoPercentual / 100);
         const novoTotal = round2(novoSubtotal + novoImposto - novoDesconto);
+
+        // Construir descrição com itens da ordem de trabalho
+        let descricao = '';
+        if (dados.itens && Array.isArray(dados.itens) && dados.itens.length > 0) {
+          descricao = dados.itens.map((item: any) => {
+            const tipo = item.tipo === 'servico' ? 'Serviço' : 'Peça';
+            return `${tipo}: ${item.descricao} (${item.quantidade}x €${item.preco_unitario.toFixed(2)} = €${item.valor_total.toFixed(2)})`;
+          }).join('\n');
+        } else {
+          descricao = dados.trabalho_realizado || 'Serviços de reparação automóvel';
+        }
 
         setFormData({
           cliente_id: dados.cliente_id,
@@ -159,7 +161,7 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess }: CriarFa
           percentual_imposto: novoPercentual,
           valor_desconto: novoDesconto,
           valor_total: novoTotal,
-          notas: `Trabalho: ${dados.trabalho_realizado || 'Reparação'}`
+          notas: descricao
         });
         setStep('preencher_dados');
       }
@@ -200,7 +202,30 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess }: CriarFa
       return;
     }
 
+    // Validar se temos token OAuth2
+    if (!oauthToken) {
+      setError('⚠️ Token OAuth2 não encontrado. Por favor, autentique-se primeiro clicando no botão "Autenticar" no topo da página.');
+      setLoading(false);
+      return;
+    }
+
     // Monta o JSON no formato TOConline
+    const lines = itens && itens.length > 0
+      ? itens.map((item: any) => ({
+          description: `${item.descricao}`,
+          unit_price: item.preco_unitario.toFixed(2),
+          quantity: item.quantidade.toString(),
+          tax_code: 'NOR'
+        }))
+      : [
+          {
+            description: formData.notas || 'Serviço/Produto',
+            unit_price: formData.subtotal.toFixed(2),
+            quantity: '1',
+            tax_code: 'NOR'
+          }
+        ];
+
     const jsonFatura = {
       document_type: 'FT',
       customer_business_name: formData.cliente_nome ? formData.cliente_nome : 'Consumidor Final',
@@ -209,29 +234,30 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess }: CriarFa
       customer_city: formData.cliente_cidade || '',
       customer_country: formData.cliente_pais || '',
       customer_postcode: formData.cliente_codigo_postal || '',
-      lines: [
-        {
-          description: formData.notas || 'Serviço/Produto',
-          unit_price: formData.subtotal.toFixed(2),
-          quantity: '1',
-          tax_code: 'NOR'
-        }
-      ]
+      lines: lines
     };
 
     // Confirmação antes de enviar para TOConline
     if (window.confirm('Deseja enviar os dados para o TOConline?')) {
       try {
+        const requestBody: any = {
+          payload: jsonFatura,
+          percentual_imposto: formData.percentual_imposto,
+          subtotal: formData.subtotal,
+          valor_desconto: formData.valor_desconto,
+          ordem_trabalho_id: formData.ordem_trabalho_id || null,
+          accessToken: oauthToken
+        };
+
+        console.log('✅ Usando access_token existente');
+        console.log('   Comprimento:', oauthToken.length);
+        console.log('   Primeiros 20 chars:', oauthToken.substring(0, 20) + '...');
+        console.log('   Últimos 10 chars:', '...' + oauthToken.substring(oauthToken.length - 10));
+
         const response = await fetch('/api/fatura-simplificada', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            payload: jsonFatura,
-            authCode,
-            percentual_imposto: formData.percentual_imposto,
-            subtotal: formData.subtotal,
-            valor_desconto: formData.valor_desconto
-          })
+          body: JSON.stringify(requestBody)
         });
         const data = await response.json();
         if (data.success) {
@@ -256,6 +282,7 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess }: CriarFa
   const handleClose = () => {
     setStep('selecionar_ordem');
     setVeiculoInfo({});
+    setItens([]);
     setFormData({
       cliente_id: '',
       ordem_trabalho_id: '',
@@ -283,9 +310,18 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess }: CriarFa
     <div className="fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm">
       <div className="bg-gray-800 border border-gray-600 w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 shadow-2xl relative">
         <div className="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
-          <h3 className="text-xl font-bold text-gray-100">
-            {step === 'selecionar_ordem' ? 'Selecione uma Ordem de Trabalho' : 'Nova Fatura'}
-          </h3>
+          <div>
+            <h3 className="text-xl font-bold text-gray-100">
+              {step === 'selecionar_ordem' ? 'Selecione uma Ordem de Trabalho' : 'Nova Fatura'}
+            </h3>
+            {/* Indicador de Status do Token */}
+            <div className="flex items-center gap-2 mt-2">
+              <div className={`w-2 h-2 rounded-full ${oauthToken ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <span className={`text-xs ${oauthToken ? 'text-green-400' : 'text-red-400'}`}>
+                {oauthToken ? 'Autenticado' : 'Não autenticado - clique em "Autenticar" no topo da página'}
+              </span>
+            </div>
+          </div>
           <button onClick={handleClose} className="text-gray-400 hover:text-gray-200">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -427,51 +463,6 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess }: CriarFa
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Código de Autorização OAuth2</label>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <input
-                    type="text"
-                    value={authCode}
-                    onChange={e => {
-                      setAuthCode(e.target.value);
-                      if (typeof window !== 'undefined') {
-                        localStorage.setItem('toconline_auth_code', e.target.value);
-                      }
-                    }}
-                    placeholder="Cole aqui o código de autorização..."
-                    className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus-border-brand-yellow outline-none"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      if (navigator.clipboard) {
-                        const text = await navigator.clipboard.readText();
-                        setAuthCode(text);
-                        localStorage.setItem('toconline_auth_code', text);
-                      }
-                    }}
-                    className="px-2 py-1 bg-gray-700 text-gray-300 rounded-none border border-gray-600"
-                    style={{ minWidth: '100px' }}
-                  >
-                    Colar do clipboard
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      window.open('https://app7.toconline.pt/oauth/authorize?client_id=pt999999990_c101423-6604ef0f5744561b&redirect_uri=https://oauth.pstmn.io/v1/callback&response_type=code&scope=commercial', '_blank');
-                    }}
-                    className="px-2 py-1 bg-brand-yellow text-gray-900 font-bold rounded-none border border-gray-600"
-                    style={{ minWidth: '100px' }}
-                  >
-                    Abrir OAuth2
-                  </button>
-                </div>
-              </div>
-            </div>
-
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-1">Subtotal (€)</label>
@@ -528,14 +519,14 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess }: CriarFa
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">Observações</label>
+              <label className="block text-sm font-medium text-gray-400 mb-1">Descrição</label>
               <textarea
                 name="notas"
                 value={formData.notas}
                 onChange={handleInputChange}
-                rows={3}
-                className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-                placeholder="Adicione notas ou observações..."
+                rows={6}
+                className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600 font-mono text-sm"
+                placeholder="Detalhes dos serviços e peças..."
               />
             </div>
 

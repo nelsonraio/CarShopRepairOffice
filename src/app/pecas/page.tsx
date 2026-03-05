@@ -22,6 +22,7 @@ interface Part {
   price: number;
   stockStatus: 'em_stock' | 'baixo_stock' | 'esgotado';
   margem_lucro?: number;
+  notas?: string;
 }
 
 const ITEMS_PER_PAGE = 20;
@@ -88,7 +89,8 @@ export default function PartsPage() {
           stockStatus: peca.ativo === false ? 'esgotado' : 
                       (peca.quantidade_stock || 0) === 0 ? 'esgotado' :
                       (peca.quantidade_stock || 0) <= (peca.nivel_stock_minimo || 0) ? 'baixo_stock' : 'em_stock',
-          margem_lucro: typeof peca.margem_lucro === 'number' ? peca.margem_lucro : (peca.margem_lucro ? Number(peca.margem_lucro) : 0)
+          margem_lucro: typeof peca.margem_lucro === 'number' ? peca.margem_lucro : (peca.margem_lucro ? Number(peca.margem_lucro) : 0),
+          notas: peca.notas || ''
         }));
         setParts(mappedParts);
       }
@@ -144,7 +146,8 @@ export default function PartsPage() {
           price: newPart.price,
           fornecedor_id: newPart.supplierId ? parseInt(newPart.supplierId) : null,
           supplierName: newPart.supplierName,
-          margem_lucro: typeof newPart.margem_lucro === 'number' ? newPart.margem_lucro : 0
+          margem_lucro: typeof newPart.margem_lucro === 'number' ? newPart.margem_lucro : 0,
+          notas: newPart.notas || null
         }),
       });
 
@@ -180,7 +183,8 @@ export default function PartsPage() {
           price: updatedPart.price,
           fornecedor_id: updatedPart.supplierId ? parseInt(updatedPart.supplierId) : null,
           supplierName: updatedPart.supplierName,
-          margem_lucro: typeof updatedPart.margem_lucro === 'number' ? updatedPart.margem_lucro : 0
+          margem_lucro: typeof updatedPart.margem_lucro === 'number' ? updatedPart.margem_lucro : 0,
+          notas: updatedPart.notas || null
         }),
       });
 

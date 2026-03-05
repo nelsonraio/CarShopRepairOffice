@@ -96,6 +96,8 @@ export async function GET(req: NextRequest) {
       valor_total: parseFloat(f.valor_total.toString()),
       valor_pago: parseFloat(f.valor_pago?.toString() || '0'),
       notas: f.notas,
+      toconline_id: f.toconline_id,
+      recibo_toconline_id: f.recibo_toconline_id,
       criado_em: f.criado_em
     }));
 
@@ -135,6 +137,9 @@ export async function POST(req: NextRequest) {
     const {
       cliente_id,
       cliente_nif,
+      numero_fatura,
+      toconline_id,
+      toconline_customer_id,
       ordem_trabalho_id,
       data_emissao,
       data_vencimento,
@@ -145,27 +150,66 @@ export async function POST(req: NextRequest) {
       notas
     } = body;
 
-    // Gerar número de fatura no formato TOQ Online (FT YYYY/NNNNN)
-    const ano = new Date().getFullYear();
-    const ultimaFatura = await prisma.faturas.findMany({
-      where: {
-        numero_fatura: {
-          startsWith: `FT ${ano}/`
-        }
-      },
-      orderBy: { numero_fatura: 'desc' },
-      take: 1
-    });
-
-    let numero_sequencial = 1;
-    if (ultimaFatura.length > 0) {
-      const parts = ultimaFatura[0]?.numero_fatura?.split('/') || [];
-      if (parts[1]) {
-        numero_sequencial = parseInt(parts[1]) + 1;
-      }
+    if (!numero_fatura) {
+      return NextResponse.json(
+        { success: false, error: 'numero_fatura obrigatório. Use o número devolvido pelo TOConline.' },
+        { status: 400 }
+      );
     }
 
-    const numero_fatura = `FT ${ano}/${String(numero_sequencial).padStart(5, '0')}`;
+    const ordemTrabalhoIdParsed = ordem_trabalho_id ? parseInt(ordem_trabalho_id) : null;
+
+    if (ordemTrabalhoIdParsed) {
+      const faturaExistente = await prisma.faturas.findFirst({
+        where: { ordem_trabalho_id: ordemTrabalhoIdParsed },
+        select: { id: true, numero_fatura: true }
+      });
+
+      if (faturaExistente) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `A ordem de trabalho já está faturada (fatura ${faturaExistente.numero_fatura}).`
+          },
+          { status: 409 }
+        );
+      }
+
+      const ordemTrabalho = await prisma.ordens_trabalho.findUnique({
+        where: { id: BigInt(ordemTrabalhoIdParsed) },
+        select: { id: true, ref_ordem_trabalho: true, fatura_id: true }
+      });
+
+      if (!ordemTrabalho) {
+        return NextResponse.json(
+          { success: false, error: 'Ordem de trabalho não encontrada.' },
+          { status: 404 }
+        );
+      }
+
+      if (ordemTrabalho.fatura_id) {
+        const faturaPorVinculo = await prisma.faturas.findUnique({
+          where: { id: ordemTrabalho.fatura_id },
+          select: { id: true, numero_fatura: true }
+        });
+
+        if (faturaPorVinculo) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: `A ordem ${ordemTrabalho.ref_ordem_trabalho} já está associada à fatura ${faturaPorVinculo.numero_fatura}.`
+            },
+            { status: 409 }
+          );
+        }
+
+        await prisma.ordens_trabalho.update({
+          where: { id: BigInt(ordemTrabalhoIdParsed) },
+          data: { fatura_id: null }
+        });
+        console.warn('⚠️ Vínculo órfão limpo em ordens_trabalho.fatura_id:', ordemTrabalhoIdParsed);
+      }
+    }
 
     if (cliente_nif && cliente_id) {
       const nifExistente = await prisma.clientes.findFirst({
@@ -194,7 +238,7 @@ export async function POST(req: NextRequest) {
       data: {
         numero_fatura,
         cliente_id,
-        ordem_trabalho_id: ordem_trabalho_id ? parseInt(ordem_trabalho_id) : null,
+        ordem_trabalho_id: ordemTrabalhoIdParsed,
         data_emissao: new Date(data_emissao),
         data_vencimento: new Date(data_vencimento),
         subtotal: parseFloat(subtotal),
@@ -203,13 +247,15 @@ export async function POST(req: NextRequest) {
         valor_total: parseFloat(valor_total),
         estado: 'pendente',
         notas,
-        valor_pago: 0
+        valor_pago: 0,
+        toconline_id: toconline_id ? String(toconline_id) : null,
+        toconline_customer_id: toconline_customer_id ? String(toconline_customer_id) : null
       }
     });
     // Se ordem_trabalho_id existe, associar id da fatura à ordem de trabalho
-    if (ordem_trabalho_id) {
+    if (ordemTrabalhoIdParsed) {
       await prisma.ordens_trabalho.update({
-        where: { id: BigInt(ordem_trabalho_id) },
+        where: { id: BigInt(ordemTrabalhoIdParsed) },
         data: { fatura_id: fatura.id }
       });
     }

@@ -18,6 +18,7 @@ interface Part {
   supplierName: string;
   stockStatus: 'em_stock' | 'baixo_stock' | 'esgotado';
   margem_lucro?: number;
+  notas?: string;
 }
 
 interface AddPartModalProps {
@@ -43,7 +44,8 @@ const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart 
     supplierId: '',
     supplierName: '',
     stockStatus: 'em_stock' as 'em_stock' | 'baixo_stock' | 'esgotado',
-    margem_lucro: 0
+    margem_lucro: 0,
+    notas: ''
   });
 
   // Fetch suppliers and categories on mount
@@ -107,12 +109,13 @@ const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart 
       supplierId: '',
       supplierName: '',
       stockStatus: 'em_stock',
-      margem_lucro: 0
+      margem_lucro: 0,
+      notas: ''
     });
     onClose();
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -264,6 +267,20 @@ const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart 
                 ))}
               </select>
             )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Notas
+            </label>
+            <textarea
+              name="notas"
+              value={formData.notas}
+              onChange={handleChange}
+              rows={3}
+              placeholder="Ex: Compatível com sedans Honda, marca XYZ..."
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-brand-yellow resize-none"
+            />
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">

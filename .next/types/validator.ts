@@ -137,6 +137,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../src/app/oauth-callback/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/oauth-callback">> = Specific
+  const handler = {} as typeof import("../../src/app/oauth-callback/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../src/app/orcamentos/[id]/edit/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/orcamentos/[id]/edit">> = Specific
@@ -443,10 +452,37 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../src/app/api/faturas/[id]/pdf-recibo/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/faturas/[id]/pdf-recibo">> = Specific
+  const handler = {} as typeof import("../../src/app/api/faturas/[id]/pdf-recibo/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/faturas/[id]/pdf-toconline/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/faturas/[id]/pdf-toconline">> = Specific
+  const handler = {} as typeof import("../../src/app/api/faturas/[id]/pdf-toconline/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../src/app/api/faturas/[id]/pdf/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/faturas/[id]/pdf">> = Specific
   const handler = {} as typeof import("../../src/app/api/faturas/[id]/pdf/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/faturas/[id]/recibo/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/faturas/[id]/recibo">> = Specific
+  const handler = {} as typeof import("../../src/app/api/faturas/[id]/recibo/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check
@@ -582,6 +618,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/modelos/search">> = Specific
   const handler = {} as typeof import("../../src/app/api/modelos/search/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/oauth-config-check/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/oauth-config-check">> = Specific
+  const handler = {} as typeof import("../../src/app/api/oauth-config-check/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check
