@@ -327,6 +327,7 @@ model ordens_trabalho {
   contacto_telefone     String?               @db.VarChar(20)
   contacto_email        String?               @db.VarChar(255)
   kms                   Int?
+  fatura_id             BigInt?
   veiculo               veiculos              @relation(fields: [veiculo_id], references: [id])
   cliente               clientes              @relation(fields: [cliente_id], references: [id])
   mecanico              mecanicos?            @relation(fields: [mecanico_id], references: [id])

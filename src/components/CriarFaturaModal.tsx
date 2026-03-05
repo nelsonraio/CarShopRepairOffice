@@ -26,10 +26,15 @@ interface FaturaFormData {
   cliente_id: number | '';
   ordem_trabalho_id: number | '';
   cliente_nif: string;
+  cliente_nome: string;
+  cliente_morada: string;
+  cliente_cidade: string;
+  cliente_pais: string;
+  cliente_codigo_postal: string;
   data_emissao: string;
   data_vencimento: string;
   subtotal: number;
-  valor_imposto: number;
+  percentual_imposto: number;
   valor_desconto: number;
   valor_total: number;
   notas: string;
@@ -50,17 +55,24 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess }: CriarFa
     cliente_id: '',
     ordem_trabalho_id: '',
     cliente_nif: '',
+    cliente_nome: '',
+    cliente_morada: '',
+    cliente_cidade: '',
+    cliente_pais: '',
+    cliente_codigo_postal: '',
     data_emissao: new Date().toISOString().split('T')[0] || '',
     data_vencimento: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] || '',
     subtotal: 0,
-    valor_imposto: 0,
+    percentual_imposto: 23,
     valor_desconto: 0,
     valor_total: 0,
     notas: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [authCode, setAuthCode] = useState('');
   const [proximo_numero, setProximoNumero] = useState('');
+  const [debugJson, setDebugJson] = useState('');
 
   const round2 = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
@@ -126,16 +138,27 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess }: CriarFa
           modelo: dados.veiculo_modelo,
           matricula: dados.matricula
         });
+        const novoSubtotal = round2(dados.total_mao_obra + dados.total_pecas);
+        const novoPercentual = 23;
+        const novoDesconto = round2(dados.total_desconto);
+        const novoImposto = round2(novoSubtotal * novoPercentual / 100);
+        const novoTotal = round2(novoSubtotal + novoImposto - novoDesconto);
+
         setFormData({
           cliente_id: dados.cliente_id,
           ordem_trabalho_id: ordem.id,
           cliente_nif: dados.cliente_nif || '',
+          cliente_nome: dados.cliente_nome || '',
+          cliente_morada: dados.cliente_morada || '',
+          cliente_cidade: dados.cliente_cidade || '',
+          cliente_pais: dados.cliente_pais || '',
+          cliente_codigo_postal: dados.cliente_codigo_postal || '',
           data_emissao: new Date().toISOString().split('T')[0] || '',
           data_vencimento: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] || '',
-          subtotal: round2(dados.total_mao_obra + dados.total_pecas),
-          valor_imposto: round2(dados.total_imposto),
-          valor_desconto: round2(dados.total_desconto),
-          valor_total: round2(dados.total_geral),
+          subtotal: novoSubtotal,
+          percentual_imposto: novoPercentual,
+          valor_desconto: novoDesconto,
+          valor_total: novoTotal,
           notas: `Trabalho: ${dados.trabalho_realizado || 'Reparação'}`
         });
         setStep('preencher_dados');
@@ -149,21 +172,21 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess }: CriarFa
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name.includes('valor') || name.includes('subtotal') ? parseFloat(value) || 0 : value
-    }));
+    const isNumericField = name.includes('percentual') || name.includes('valor') || name.includes('subtotal');
+    const parsedValue = isNumericField ? parseFloat(value) || 0 : value;
 
-    // Recalcular total
-    if (name === 'subtotal' || name === 'valor_imposto' || name === 'valor_desconto') {
-      setTimeout(() => {
-        const newSubtotal = name === 'subtotal' ? parseFloat(value) || 0 : formData.subtotal;
-        const newImposto = name === 'valor_imposto' ? parseFloat(value) || 0 : formData.valor_imposto;
-        const newDesconto = name === 'valor_desconto' ? parseFloat(value) || 0 : formData.valor_desconto;
-        const total = round2(newSubtotal + newImposto - newDesconto);
-        setFormData(prev => ({ ...prev, valor_total: total }));
-      }, 0);
-    }
+    // Calcular o total ao mesmo tempo que atualiza o estado
+    setFormData(prev => {
+      const updated = { ...prev, [name]: parsedValue };
+      
+      // Recalcular total se um dos campos relevantes mudou
+      if (name === 'subtotal' || name === 'percentual_imposto' || name === 'valor_desconto') {
+        const valorImposto = round2(updated.subtotal * updated.percentual_imposto / 100);
+        updated.valor_total = round2(updated.subtotal + valorImposto - updated.valor_desconto);
+      }
+      
+      return updated;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -177,25 +200,55 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess }: CriarFa
       return;
     }
 
-    try {
-      const response = await fetch('/api/faturas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
+    // Monta o JSON no formato TOConline
+    const jsonFatura = {
+      document_type: 'FT',
+      customer_business_name: formData.cliente_nome ? formData.cliente_nome : 'Consumidor Final',
+      customer_tax_registration_number: formData.cliente_nif || '',
+      customer_address_detail: formData.cliente_morada || '',
+      customer_city: formData.cliente_cidade || '',
+      customer_country: formData.cliente_pais || '',
+      customer_postcode: formData.cliente_codigo_postal || '',
+      lines: [
+        {
+          description: formData.notas || 'Serviço/Produto',
+          unit_price: formData.subtotal.toFixed(2),
+          quantity: '1',
+          tax_code: 'NOR'
+        }
+      ]
+    };
 
-      const data = await response.json();
-      if (data.success) {
-        alert(`Fatura ${data.data.numero_fatura} criada com sucesso!`);
-        handleClose();
-        onSuccess?.();
-      } else {
-        setError(data.error || 'Erro ao criar fatura');
+    // Confirmação antes de enviar para TOConline
+    if (window.confirm('Deseja enviar os dados para o TOConline?')) {
+      try {
+        const response = await fetch('/api/fatura-simplificada', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            payload: jsonFatura,
+            authCode,
+            percentual_imposto: formData.percentual_imposto,
+            subtotal: formData.subtotal,
+            valor_desconto: formData.valor_desconto
+          })
+        });
+        const data = await response.json();
+        if (data.success) {
+          alert('Fatura criada com sucesso!');
+          handleClose();
+          onSuccess?.();
+        } else {
+          setError(data.error || 'Erro ao criar fatura');
+          setDebugJson(JSON.stringify(data, null, 2));
+        }
+      } catch (err) {
+        setError('Erro ao criar fatura');
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError('Erro ao criar fatura');
-      console.error(err);
-    } finally {
+    } else {
       setLoading(false);
     }
   };
@@ -207,10 +260,15 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess }: CriarFa
       cliente_id: '',
       ordem_trabalho_id: '',
       cliente_nif: '',
+      cliente_nome: '',
+      cliente_morada: '',
+      cliente_cidade: '',
+      cliente_pais: '',
+      cliente_codigo_postal: '',
       data_emissao: new Date().toISOString().split('T')[0] || '',
       data_vencimento: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] || '',
       subtotal: 0,
-      valor_imposto: 0,
+      percentual_imposto: 23,
       valor_desconto: 0,
       valor_total: 0,
       notas: ''
@@ -236,7 +294,10 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess }: CriarFa
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-900 border border-red-700 text-red-200 rounded-none text-sm">
+          <div
+            className="mb-4 p-3 bg-red-900 border border-red-700 text-red-200 rounded-none text-sm cursor-pointer"
+            onDoubleClick={() => alert(debugJson || error)}
+          >
             {error}
           </div>
         )}
@@ -281,11 +342,6 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess }: CriarFa
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="bg-gray-900 p-3 border border-gray-700 rounded-none text-sm">
-              <div className="text-gray-400">Número da Fatura:</div>
-              <div className="font-mono text-brand-yellow text-lg">{proximo_numero}</div>
-            </div>
-
-            <div className="bg-gray-900 p-3 border border-gray-700 rounded-none text-sm">
               <div className="text-gray-400 mb-2">Veículo:</div>
               <div className="text-white font-mono">
                 {veiculoInfo.marca && veiculoInfo.modelo && veiculoInfo.matricula ? (
@@ -303,43 +359,120 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess }: CriarFa
             </div>
 
             <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">Nome do Cliente</label>
+              <input
+                type="text"
+                name="cliente_nome"
+                value={formData.cliente_nome || ''}
+                onChange={handleInputChange}
+                maxLength={100}
+                className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
+              />
+            </div>
+            <div>
               <label className="block text-sm font-medium text-gray-400 mb-1">NIF do Cliente</label>
               <input
                 type="text"
                 name="cliente_nif"
                 value={formData.cliente_nif}
                 onChange={handleInputChange}
-                required
                 maxLength={20}
                 inputMode="numeric"
+                className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">Morada</label>
+              <input
+                type="text"
+                name="cliente_morada"
+                value={formData.cliente_morada || ''}
+                onChange={handleInputChange}
+                maxLength={100}
+                className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">Cidade</label>
+              <input
+                type="text"
+                name="cliente_cidade"
+                value={formData.cliente_cidade || ''}
+                onChange={handleInputChange}
+                maxLength={50}
+                className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">País</label>
+              <input
+                type="text"
+                name="cliente_pais"
+                value={formData.cliente_pais || ''}
+                onChange={handleInputChange}
+                maxLength={50}
+                className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
+                autoComplete="country"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">Código Postal</label>
+              <input
+                type="text"
+                name="cliente_codigo_postal"
+                value={formData.cliente_codigo_postal || ''}
+                onChange={handleInputChange}
+                maxLength={20}
                 className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Data de Emissão</label>
-                <input
-                  type="date"
-                  name="data_emissao"
-                  value={formData.data_emissao}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Data de Vencimento</label>
-                <input
-                  type="date"
-                  name="data_vencimento"
-                  value={formData.data_vencimento}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
-                />
+                <label className="block text-sm font-medium text-gray-400 mb-1">Código de Autorização OAuth2</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="text"
+                    value={authCode}
+                    onChange={e => {
+                      setAuthCode(e.target.value);
+                      if (typeof window !== 'undefined') {
+                        localStorage.setItem('toconline_auth_code', e.target.value);
+                      }
+                    }}
+                    placeholder="Cole aqui o código de autorização..."
+                    className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus-border-brand-yellow outline-none"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (navigator.clipboard) {
+                        const text = await navigator.clipboard.readText();
+                        setAuthCode(text);
+                        localStorage.setItem('toconline_auth_code', text);
+                      }
+                    }}
+                    className="px-2 py-1 bg-gray-700 text-gray-300 rounded-none border border-gray-600"
+                    style={{ minWidth: '100px' }}
+                  >
+                    Colar do clipboard
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      window.open('https://app7.toconline.pt/oauth/authorize?client_id=pt999999990_c101423-6604ef0f5744561b&redirect_uri=https://oauth.pstmn.io/v1/callback&response_type=code&scope=commercial', '_blank');
+                    }}
+                    className="px-2 py-1 bg-brand-yellow text-gray-900 font-bold rounded-none border border-gray-600"
+                    style={{ minWidth: '100px' }}
+                  >
+                    Abrir OAuth2
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-1">Subtotal (€)</label>
                 <input
@@ -352,20 +485,43 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess }: CriarFa
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Imposto (IVA) (€)</label>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Imposto (IVA) (%)</label>
                 <input
                   type="number"
                   step="0.01"
-                  name="valor_imposto"
-                  value={formData.valor_imposto}
+                  name="percentual_imposto"
+                  value={formData.percentual_imposto}
+                  onChange={handleInputChange}
+                  className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Desconto (€)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  name="valor_desconto"
+                  value={formData.valor_desconto}
                   onChange={handleInputChange}
                   className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
                 />
               </div>
             </div>
 
-            <div className="bg-gray-900 p-4 border border-gray-700 rounded-none">
-              <div className="flex justify-between items-center">
+            <div className="bg-gray-900 p-4 border border-gray-700 rounded-none space-y-2">
+              <div className="flex justify-between items-center text-sm text-gray-400">
+                <span>Subtotal:</span>
+                <span>€{formData.subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm text-gray-400">
+                <span>Imposto ({formData.percentual_imposto.toFixed(2)}%):</span>
+                <span>€{round2(formData.subtotal * formData.percentual_imposto / 100).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm text-gray-400">
+                <span>Desconto:</span>
+                <span>-€{formData.valor_desconto.toFixed(2)}</span>
+              </div>
+              <div className="border-t border-gray-600 pt-2 flex justify-between items-center">
                 <span className="text-gray-400 font-medium">Total:</span>
                 <span className="text-2xl font-bold text-brand-yellow">€{formData.valor_total.toFixed(2)}</span>
               </div>

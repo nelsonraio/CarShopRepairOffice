@@ -1,0 +1,68 @@
+{
+  "info": {
+    "name": "Teste Fatura e PDF",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Criar Fatura",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"data\": {\n    \"type\": \"commercial_sales_documents\",\n    \"attributes\": {\n      \"document_type\": \"FT\",\n      \"date\": \"2026-03-02\",\n      \"customer_id\": 2,\n      \"due_date\": \"2026-03-10\",\n      \"notes\": \"Teste de fatura gerada via Postman\",\n      \"currency_iso_code\": \"EUR\",\n      \"vat_included_prices\": false\n    }\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/commercial_sales_documents",
+          "host": ["{{base_url}}"],
+          "path": ["api", "commercial_sales_documents"]
+        }
+      }
+    },
+    {
+      "name": "Adicionar Linha à Fatura",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"data\": {\n    \"type\": \"commercial_sales_document_lines\",\n    \"attributes\": {\n      \"document_id\": {{faturaId}},\n      \"item_type\": \"Product\",\n      \"quantity\": 1,\n      \"unit_price\": 9.99,\n      \"item_id\": 2,\n      \"unit_of_measure_id\": 2,\n      \"tax_id\": 2\n    }\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/commercial_sales_document_lines",
+          "host": ["{{base_url}}"],
+          "path": ["api", "commercial_sales_document_lines"]
+        }
+      }
+    },
+    {
+      "name": "Obter PDF da Fatura",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/url_for_print/{{faturaId}}?filter[type]=Document",
+          "host": ["{{base_url}}"],
+          "path": ["api", "url_for_print", "{{faturaId}}"],
+          "query": [
+            { "key": "filter[type]", "value": "Document" }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "Link PDF",
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "body": "{\n  \"data\": {\n    \"type\": \"url_for_print\",\n    \"id\": \"{{faturaId}}\",\n    \"attributes\": {\n      \"url\": \"https://integration.toconline.pt/public-file/SEU_TOKEN_AQUI\"\n    }\n  }\n}"
+        }
+      ]
+    }
+  ]
+}

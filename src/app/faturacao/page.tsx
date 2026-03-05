@@ -27,6 +27,89 @@ interface Invoice {
 const ITEMS_PER_PAGE = 20;
 
 export default function FaturacaoPage() {
+    const normalizarEstado = (estado: string): Invoice['estado'] => {
+      if (estado === 'pendente' || estado === 'parcial' || estado === 'paga' || estado === 'vencida' || estado === 'cancelada') {
+        return estado;
+      }
+      return 'pendente';
+    };
+
+    const mapearExternaParaInvoice = (f: any): Invoice => ({
+      id: Number(f.id) || 0,
+      numero_fatura: f.attributes.document_number || '',
+      cliente_id: 0,
+      cliente_nome: f.attributes.customer_business_name || '',
+      cliente_nif: f.attributes.customer_tax_registration_number || '',
+      data_emissao: f.attributes.date || '',
+      data_vencimento: f.attributes.due_date || '',
+      valor_total: Number(f.attributes.total_amount) || 0,
+      estado: normalizarEstado(f.attributes.status || 'pendente'),
+      notas: f.attributes.notes || ''
+    });
+
+    const combinarFaturas = (locais: any[], externasRaw: any[]): Invoice[] => {
+      const externas = externasRaw.map(mapearExternaParaInvoice);
+      const combinadas = new Map<string, Invoice>();
+
+      for (const f of externas) {
+        const key = f.numero_fatura || `ext-${f.id}`;
+        combinadas.set(key, f);
+      }
+
+      for (const f of locais as Invoice[]) {
+        const key = f.numero_fatura || `loc-${f.id}`;
+        combinadas.set(key, f);
+      }
+
+      return Array.from(combinadas.values());
+    };
+
+    // Função para abrir OAuth2 e instruir usuário
+    const handleOAuth2 = () => {
+      window.open('https://app7.toconline.pt/oauth/authorize?client_id=pt999999990_c101423-6604ef0f5744561b&redirect_uri=https://oauth.pstmn.io/v1/callback&response_type=code&scope=commercial', '_blank');
+      alert('Após autorizar, cole o código de autorização no campo abaixo para obter o token.');
+    };
+
+    // Função para salvar token manualmente
+    const [authCodeInput, setAuthCodeInput] = useState('');
+    const [tokenStatus, setTokenStatus] = useState('');
+    const handleGetToken = async () => {
+      setTokenStatus('');
+      try {
+        // Obter token OAuth2
+        const res = await fetch('/api/fatura-simplificada', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ payload: {}, authCode: authCodeInput })
+        });
+        const data = await res.json();
+        if (data.success && data.data?.access_token) {
+          localStorage.setItem('toconline_access_token', data.data.access_token);
+          setTokenStatus('Token salvo com sucesso! Consultando faturas TOConline...');
+          // Chamar endpoint de consulta de faturas TOConline
+          const resFaturas = await fetch(`/api/faturas-externas?token=${data.data.access_token}`);
+          const jsonFaturas = await resFaturas.json();
+          // Buscar faturas locais
+          const responseLocal = await fetch('/api/faturas');
+          const dataLocal = await responseLocal.json();
+          let locais = dataLocal.success ? dataLocal.data : [];
+          let externas = [];
+          if (jsonFaturas.success && Array.isArray(jsonFaturas.data?.data)) {
+            externas = jsonFaturas.data.data;
+          }
+          setInvoices(combinarFaturas(locais, externas));
+          console.log('Faturas TOConline:', jsonFaturas);
+        } else if (data.data?.error) {
+          setTokenStatus('Erro: ' + data.data.error);
+          console.log('Erro TOConline:', data);
+        } else {
+          setTokenStatus('Token não retornado. Verifique o código.');
+          console.log('Resposta TOConline:', data);
+        }
+      } catch (err) {
+        setTokenStatus('Erro ao obter token.');
+      }
+    };
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -39,17 +122,29 @@ export default function FaturacaoPage() {
 
   // Carregar faturas da API
   useEffect(() => {
-    carregarFaturas();
+    carregarFaturasCombinadas();
   }, []);
 
-  const carregarFaturas = async () => {
+  // Busca faturas locais e externas e une os dados
+  const carregarFaturasCombinadas = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/faturas');
-      const data = await response.json();
-      if (data.success) {
-        setInvoices(data.data);
+      // Buscar faturas locais
+      const responseLocal = await fetch('/api/faturas');
+      const dataLocal = await responseLocal.json();
+      let locais = dataLocal.success ? dataLocal.data : [];
+
+      // Buscar token OAuth2 salvo (ajuste conforme sua lógica de autenticação)
+      const token = typeof window !== 'undefined' ? localStorage.getItem('toconline_access_token') : '';
+      let externas = [];
+      if (token) {
+        const responseExt = await fetch(`/api/faturas-externas?token=${token}`);
+        const dataExt = await responseExt.json();
+        if (dataExt.success && Array.isArray(dataExt.data?.data)) {
+          externas = dataExt.data.data;
+        }
       }
+      setInvoices(combinarFaturas(locais, externas));
     } catch (error) {
       console.error('Erro ao carregar faturas:', error);
     } finally {
@@ -101,7 +196,7 @@ export default function FaturacaoPage() {
         );
         
         // Depois recarregar para garantir sincronização
-        setTimeout(() => carregarFaturas(), 500);
+        setTimeout(() => carregarFaturasCombinadas(), 500);
         alert('Fatura marcada como paga com sucesso!');
       } else {
         const errorData = await response.json();
@@ -123,7 +218,7 @@ export default function FaturacaoPage() {
         });
 
         if (response.ok) {
-          carregarFaturas();
+          carregarFaturasCombinadas();
           alert('Fatura anulada com sucesso!');
         }
       } catch (error) {
@@ -282,8 +377,8 @@ export default function FaturacaoPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
-            <h2 className="text-3xl font-bold text-gray-100 leading-tight">Faturação</h2>
-            <p className="mt-1 text-gray-400">Gestão de faturas e pagamentos</p>
+            <h2 className="text-3xl font-bold text-gray-100 leading-tight">Faturação Externa (TOConline)</h2>
+            <p className="mt-1 text-gray-400">Gestão de faturas TOConline</p>
           </div>
           <button
             onClick={() => setIsModalOpen(true)}
@@ -292,7 +387,7 @@ export default function FaturacaoPage() {
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
             </svg>
-            Nova Fatura
+            Gerar Fatura (TOConline)
           </button>
         </div>
 
@@ -506,7 +601,7 @@ export default function FaturacaoPage() {
       <CriarFaturaModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)}
-        onSuccess={() => carregarFaturas()}
+        onSuccess={() => carregarFaturasCombinadas()}
       />
     </div>
   );

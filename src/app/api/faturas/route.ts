@@ -206,6 +206,13 @@ export async function POST(req: NextRequest) {
         valor_pago: 0
       }
     });
+    // Se ordem_trabalho_id existe, associar id da fatura à ordem de trabalho
+    if (ordem_trabalho_id) {
+      await prisma.ordens_trabalho.update({
+        where: { id: BigInt(ordem_trabalho_id) },
+        data: { fatura_id: fatura.id }
+      });
+    }
 
     return NextResponse.json({
       success: true,
