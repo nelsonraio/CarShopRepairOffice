@@ -1,0 +1,1368 @@
+ANEXO - Contrato de API (Schema Inferido)
+Gerado em: 2026-03-06T08:09:27.496Z
+Fonte: src/app/api/**/route.*
+Aviso: schema inferido estaticamente (pode exigir ajuste manual em casos complexos).
+
+Legenda:
+- required: yes | no | unknown
+- type: inferido por uso no codigo
+- response_keys: chaves observadas em NextResponse.json({...})
+- status_codes: codigos observados no endpoint
+
+============================================================
+/api/agendamentos/{id}
+arquivo: src/app/api/agendamentos/[id]/route.ts
+path_params: id
+
+[GET]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error
+status_codes: 404, 500, 503
+
+[PUT]
+query_params: -
+request_body_schema:
+- ano: type=number, required=unknown
+- cliente: type=unknown, required=yes
+- contacto_email: type=unknown, required=no
+- contacto_nome: type=unknown, required=no
+- contacto_telefone: type=unknown, required=no
+- data: type=string(date-time), required=unknown
+- hora: type=unknown, required=unknown
+- marca: type=unknown, required=no
+- matricula: type=unknown, required=no
+- mecanico: type=unknown, required=yes
+- modelo: type=unknown, required=no
+- notas: type=unknown, required=no
+- tipoServico: type=unknown, required=unknown
+request_body_example:
+{
+  "ano": 0,
+  "cliente": null,
+  "contacto_email": null,
+  "contacto_nome": null,
+  "contacto_telefone": null,
+  "data": "2026-03-06T00:00:00.000Z",
+  "hora": null,
+  "marca": null,
+  "matricula": null,
+  "mecanico": null,
+  "modelo": null,
+  "notas": null,
+  "tipoServico": null
+}
+response_keys: agendamento, error, success
+status_codes: 500, 503
+
+[PATCH]
+query_params: -
+request_body_schema:
+- estado: type=unknown, required=yes
+request_body_example:
+{
+  "estado": null
+}
+response_keys: agendamento, error, success
+status_codes: 500, 503
+
+[DELETE]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error, message, success
+status_codes: 500, 503
+
+============================================================
+/api/agendamentos/hoje
+arquivo: src/app/api/agendamentos/hoje/route.ts
+path_params: -
+
+[GET]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error
+status_codes: 500, 503
+
+============================================================
+/api/agendamentos
+arquivo: src/app/api/agendamentos/route.ts
+path_params: -
+
+[GET]
+query_params: id
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+[POST]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+[PUT]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+============================================================
+/api/agendamentos/search
+arquivo: src/app/api/agendamentos/search/route.ts
+path_params: -
+
+[GET]
+query_params: matricula
+request_body_schema: -
+request_body_example: {}
+response_keys: error, found
+status_codes: 400, 500, 503
+
+============================================================
+/api/app-status
+arquivo: src/app/api/app-status/route.ts
+path_params: -
+
+[GET]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error, success
+status_codes: 500
+
+[POST]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error, success
+status_codes: 400, 401, 500
+
+============================================================
+/api/app-status/toggle
+arquivo: src/app/api/app-status/toggle/route.ts
+path_params: -
+
+[GET]
+query_params: enabled, key
+request_body_schema: -
+request_body_example: {}
+response_keys: error, success
+status_codes: 400, 401, 500
+
+============================================================
+/api/balanco
+arquivo: src/app/api/balanco/route.ts
+path_params: -
+
+[GET]
+query_params: limit, page
+request_body_schema: -
+request_body_example: {}
+response_keys: error
+status_codes: 500
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+============================================================
+/api/categorias-pecas
+arquivo: src/app/api/categorias-pecas/route.ts
+path_params: -
+
+[GET]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+============================================================
+/api/categorias-servico/{id}
+arquivo: src/app/api/categorias-servico/[id]/route.ts
+path_params: id
+
+[PUT]
+query_params: -
+request_body_schema:
+- ativo: type=unknown, required=no
+- descricao: type=unknown, required=no
+- duracao_estimada: type=unknown, required=no
+- nome: type=unknown, required=yes
+request_body_example:
+{
+  "ativo": null,
+  "descricao": null,
+  "duracao_estimada": null,
+  "nome": null
+}
+response_keys: error
+status_codes: 500, 503
+
+[PATCH]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error
+status_codes: 500, 503
+
+[DELETE]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error, success
+status_codes: 500, 503
+
+============================================================
+/api/categorias-servico
+arquivo: src/app/api/categorias-servico/route.ts
+path_params: -
+
+[GET]
+query_params: all
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+[POST]
+query_params: -
+request_body_schema:
+- ativo: type=unknown, required=no
+- descricao: type=unknown, required=no
+- duracao_estimada: type=unknown, required=no
+- nome: type=unknown, required=yes
+request_body_example:
+{
+  "ativo": null,
+  "descricao": null,
+  "duracao_estimada": null,
+  "nome": null
+}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+============================================================
+/api/clientes/{id}
+arquivo: src/app/api/clientes/[id]/route.ts
+path_params: id
+
+[GET]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: client, error, serviceHistory, vehicles
+status_codes: 400, 404, 500, 503
+
+[DELETE]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error, message, success
+status_codes: 400, 500, 503
+
+[PUT]
+query_params: -
+request_body_schema:
+- email: type=unknown, required=yes
+- endereco: type=unknown, required=yes
+- nif: type=unknown, required=yes
+- nome: type=unknown, required=yes
+- perfil: type=unknown, required=unknown
+- telefone: type=unknown, required=yes
+request_body_example:
+{
+  "email": null,
+  "endereco": null,
+  "nif": null,
+  "nome": null,
+  "perfil": null,
+  "telefone": null
+}
+response_keys: error
+status_codes: 400, 500, 503
+
+============================================================
+/api/clientes
+arquivo: src/app/api/clientes/route.ts
+path_params: -
+
+[GET]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+[POST]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+============================================================
+/api/clientes/search
+arquivo: src/app/api/clientes/search/route.ts
+path_params: -
+
+[GET]
+query_params: q
+request_body_schema: -
+request_body_example: {}
+response_keys: error
+status_codes: 500, 503
+
+============================================================
+/api/encomendas/{id}/adicionar-stock
+arquivo: src/app/api/encomendas/[id]/adicionar-stock/route.ts
+path_params: id
+
+[POST]
+query_params: -
+request_body_schema:
+- items: type=array, required=unknown
+request_body_example:
+{
+  "items": []
+}
+response_keys: details, error, success
+status_codes: 400, 404, 500, 503
+
+============================================================
+/api/encomendas/{id}/receber
+arquivo: src/app/api/encomendas/[id]/receber/route.ts
+path_params: id
+
+[POST]
+query_params: -
+request_body_schema:
+- items: type=array, required=unknown
+request_body_example:
+{
+  "items": []
+}
+response_keys: error, success
+status_codes: 404, 500, 503
+
+============================================================
+/api/encomendas/{id}
+arquivo: src/app/api/encomendas/[id]/route.ts
+path_params: id
+
+[PATCH]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error, estado, id
+status_codes: 400, 500, 503
+
+============================================================
+/api/encomendas
+arquivo: src/app/api/encomendas/route.ts
+path_params: -
+
+[GET]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+[POST]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+============================================================
+/api/fatura-simplificada
+arquivo: src/app/api/fatura-simplificada/route.js
+path_params: -
+
+[POST]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: access_token, data, details, error, faturaLocalId, success
+status_codes: 500
+
+============================================================
+/api/faturas-externas
+arquivo: src/app/api/faturas-externas/route.js
+path_params: -
+
+[GET]
+query_params: token
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+
+[POST]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error
+status_codes: 400
+
+============================================================
+/api/faturas/{id}/pdf-recibo
+arquivo: src/app/api/faturas/[id]/pdf-recibo/route.ts
+path_params: id
+
+[POST]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: details, error, pdfUrl, recibo, recibo_id, success
+status_codes: 400, 404, 500
+
+============================================================
+/api/faturas/{id}/pdf-toconline
+arquivo: src/app/api/faturas/[id]/pdf-toconline/route.ts
+path_params: id
+
+[POST]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: PDF, details, error, pdfUrl, success, toconline_id
+status_codes: 400, 404, 500
+
+============================================================
+/api/faturas/{id}/pdf
+arquivo: src/app/api/faturas/[id]/pdf/route.ts
+path_params: id
+
+[GET]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error, success
+status_codes: 404, 500, 503
+
+============================================================
+/api/faturas/{id}/recibo
+arquivo: src/app/api/faturas/[id]/recibo/route.ts
+path_params: id
+
+[POST]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: data, details, error, errorStack, errorType, estado, id, mensagem, name, numero_fatura, recibo, recibo_id, success, valor_pago
+status_codes: 400, 404, 500
+
+============================================================
+/api/faturas/{id}
+arquivo: src/app/api/faturas/[id]/route.ts
+path_params: id
+
+[GET]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: atualizado_em, cliente_id, criado_em, data, data_emissao, data_vencimento, error, estado, id, notas, numero_fatura, recibo_toconline_id, subtotal, success, toconline_id, valor_desconto, valor_imposto, valor_pago, valor_total
+status_codes: 404, 500, 503
+
+[PUT]
+query_params: -
+request_body_schema:
+- data_pagamento: type=string(date-time), required=unknown
+- estado: type=unknown, required=unknown
+- notas: type=unknown, required=unknown
+- valor_pago: type=number, required=unknown
+request_body_example:
+{
+  "data_pagamento": "2026-03-06T00:00:00.000Z",
+  "estado": null,
+  "notas": null,
+  "valor_pago": 0
+}
+response_keys: atualizado_em, cliente_id, criado_em, data, error, estado, id, numero_fatura, subtotal, success, valor_desconto, valor_imposto, valor_pago, valor_total
+status_codes: 500, 503
+
+[PATCH]
+query_params: -
+request_body_schema:
+- authCode: type=unknown, required=unknown
+- data_pagamento: type=string(date-time), required=unknown
+- estado: type=unknown, required=unknown
+- marcar_paga: type=unknown, required=unknown
+- notas: type=unknown, required=unknown
+- valor_pago: type=number, required=unknown
+request_body_example:
+{
+  "authCode": null,
+  "data_pagamento": "2026-03-06T00:00:00.000Z",
+  "estado": null,
+  "marcar_paga": null,
+  "notas": null,
+  "valor_pago": 0
+}
+response_keys: atualizado_em, cliente_id, criado_em, data, error, estado, id, numero_fatura, subtotal, success, valor_pago, valor_total
+status_codes: 404, 500, 503
+
+[DELETE]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: data, error, estado, id, message, numero_fatura, success
+status_codes: 500, 503
+
+============================================================
+/api/faturas/ordens-trabalho
+arquivo: src/app/api/faturas/ordens-trabalho/route.ts
+path_params: -
+
+[GET]
+query_params: cliente_id, estado
+request_body_schema: -
+request_body_example: {}
+response_keys: data, error, success, total
+status_codes: 500, 503
+
+[POST]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: cliente_cidade, cliente_codigo_postal, cliente_email, cliente_id, cliente_morada, cliente_nif, cliente_nome, cliente_pais, cliente_telefone, data, data_conclusao, descricao, descricao_problema, error, itens, matricula, ordem_trabalho_id, preco_unitario, quantidade, ref_ordem_trabalho, success, tipo, total_desconto, total_geral, total_imposto, total_mao_obra, total_pecas, trabalho_realizado, valor_total, veiculo_marca, veiculo_modelo
+status_codes: 404, 409, 500, 503
+
+============================================================
+/api/faturas/proximo-numero
+arquivo: src/app/api/faturas/proximo-numero/route.ts
+path_params: -
+
+[GET]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: data, error, message, numero_fatura, success
+status_codes: 500, 503
+
+============================================================
+/api/faturas
+arquivo: src/app/api/faturas/route.ts
+path_params: -
+
+[GET]
+query_params: limit, page, status
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+[POST]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+============================================================
+/api/fornecedores/{id}
+arquivo: src/app/api/fornecedores/[id]/route.ts
+path_params: id
+
+[PUT]
+query_params: -
+request_body_schema:
+- ativo: type=unknown, required=no
+- email: type=unknown, required=no
+- endereco: type=unknown, required=no
+- nif: type=unknown, required=no
+- nome: type=unknown, required=yes
+- pessoa_contato: type=unknown, required=no
+- telefone: type=unknown, required=no
+- termos_pagamento: type=unknown, required=no
+request_body_example:
+{
+  "ativo": null,
+  "email": null,
+  "endereco": null,
+  "nif": null,
+  "nome": null,
+  "pessoa_contato": null,
+  "telefone": null,
+  "termos_pagamento": null
+}
+response_keys: error
+status_codes: 500, 503
+
+[PATCH]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error
+status_codes: 500, 503
+
+[DELETE]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error, success
+status_codes: 500, 503
+
+============================================================
+/api/fornecedores
+arquivo: src/app/api/fornecedores/route.ts
+path_params: -
+
+[GET]
+query_params: all
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+[POST]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+============================================================
+/api/health
+arquivo: src/app/api/health/route.ts
+path_params: -
+
+[GET]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error, ok, timestamp
+status_codes: 503
+
+============================================================
+/api/marcas/{id}
+arquivo: src/app/api/marcas/[id]/route.ts
+path_params: id
+
+[PUT]
+query_params: -
+request_body_schema:
+- ativo: type=unknown, required=no
+- nome: type=unknown, required=yes
+- pais_origem: type=unknown, required=no
+request_body_example:
+{
+  "ativo": null,
+  "nome": null,
+  "pais_origem": null
+}
+response_keys: error
+status_codes: 500, 503
+
+[PATCH]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error
+status_codes: 500, 503
+
+[DELETE]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error, success
+status_codes: 500, 503
+
+============================================================
+/api/marcas
+arquivo: src/app/api/marcas/route.ts
+path_params: -
+
+[GET]
+query_params: all
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+[POST]
+query_params: -
+request_body_schema:
+- ativo: type=unknown, required=no
+- nome: type=unknown, required=yes
+- pais_origem: type=unknown, required=no
+request_body_example:
+{
+  "ativo": null,
+  "nome": null,
+  "pais_origem": null
+}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+============================================================
+/api/marcas/search
+arquivo: src/app/api/marcas/search/route.ts
+path_params: -
+
+[GET]
+query_params: q
+request_body_schema: -
+request_body_example: {}
+response_keys: error
+status_codes: 500, 503
+
+============================================================
+/api/mecanicos/{id}
+arquivo: src/app/api/mecanicos/[id]/route.ts
+path_params: id
+
+[PUT]
+query_params: -
+request_body_schema:
+- ativo: type=unknown, required=no
+- data_contratacao: type=string(date-time), required=unknown
+- email: type=unknown, required=no
+- especialidade: type=unknown, required=no
+- nome: type=unknown, required=yes
+- tarifa_horaria: type=number, required=unknown
+- telefone: type=unknown, required=no
+request_body_example:
+{
+  "ativo": null,
+  "data_contratacao": "2026-03-06T00:00:00.000Z",
+  "email": null,
+  "especialidade": null,
+  "nome": null,
+  "tarifa_horaria": 0,
+  "telefone": null
+}
+response_keys: details, error
+status_codes: 500, 503
+
+[PATCH]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error
+status_codes: 500, 503
+
+[DELETE]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error, success
+status_codes: 500, 503
+
+============================================================
+/api/mecanicos
+arquivo: src/app/api/mecanicos/route.ts
+path_params: -
+
+[GET]
+query_params: all
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+[POST]
+query_params: -
+request_body_schema:
+- ativo: type=unknown, required=no
+- data_contratacao: type=string(date-time), required=unknown
+- email: type=unknown, required=no
+- especialidade: type=unknown, required=no
+- nome: type=unknown, required=yes
+- tarifa_horaria: type=number, required=unknown
+- telefone: type=unknown, required=no
+request_body_example:
+{
+  "ativo": null,
+  "data_contratacao": "2026-03-06T00:00:00.000Z",
+  "email": null,
+  "especialidade": null,
+  "nome": null,
+  "tarifa_horaria": 0,
+  "telefone": null
+}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+============================================================
+/api/mecanicos/search
+arquivo: src/app/api/mecanicos/search/route.ts
+path_params: -
+
+[GET]
+query_params: q
+request_body_schema: -
+request_body_example: {}
+response_keys: error
+status_codes: 500, 503
+
+============================================================
+/api/modelos/{id}
+arquivo: src/app/api/modelos/[id]/route.ts
+path_params: id
+
+[PUT]
+query_params: -
+request_body_schema:
+- ativo: type=unknown, required=no
+- marca_id: type=number, required=unknown
+- nome: type=unknown, required=yes
+- tipo_veiculo: type=unknown, required=no
+request_body_example:
+{
+  "ativo": null,
+  "marca_id": 0,
+  "nome": null,
+  "tipo_veiculo": null
+}
+response_keys: error
+status_codes: 500, 503
+
+[PATCH]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error
+status_codes: 500, 503
+
+[DELETE]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error, success
+status_codes: 500, 503
+
+============================================================
+/api/modelos
+arquivo: src/app/api/modelos/route.ts
+path_params: -
+
+[GET]
+query_params: all, marca_id
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+[POST]
+query_params: -
+request_body_schema:
+- ativo: type=unknown, required=no
+- marca_id: type=number, required=unknown
+- nome: type=unknown, required=yes
+- tipo_veiculo: type=unknown, required=no
+request_body_example:
+{
+  "ativo": null,
+  "marca_id": 0,
+  "nome": null,
+  "tipo_veiculo": null
+}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+============================================================
+/api/modelos/search
+arquivo: src/app/api/modelos/search/route.ts
+path_params: -
+
+[GET]
+query_params: marca_id, q
+request_body_schema: -
+request_body_example: {}
+response_keys: error
+status_codes: 500, 503
+
+============================================================
+/api/oauth-capture
+arquivo: src/app/api/oauth-capture/route.js
+path_params: -
+
+[GET]
+query_params: code, error, error_description
+request_body_schema: -
+request_body_example: {}
+response_keys: details, error, stack, status, statusText, success, timestamp
+status_codes: 400, 500
+
+============================================================
+/api/oauth-config-check
+arquivo: src/app/api/oauth-config-check/route.ts
+path_params: -
+
+[GET]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: CLIENT_SECRET_FIRST_4, CLIENT_SECRET_LENGTH, HAS_CLIENT_ID, HAS_CLIENT_SECRET, config
+status_codes: 200
+
+============================================================
+/api/oauth-debug
+arquivo: src/app/api/oauth-debug/route.js
+path_params: -
+
+[GET]
+query_params: code
+request_body_schema: -
+request_body_example: {}
+response_keys: error, ok, stack, status, tokenResponse
+status_codes: 500
+
+============================================================
+/api/oauth-test
+arquivo: src/app/api/oauth-test/route.js
+path_params: -
+
+[POST]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: basicAuthLength, clientId, config, error, stack, status, success
+status_codes: 500
+
+[GET]
+query_params: clientId, clientSecret, code, redirectUri
+request_body_schema: -
+request_body_example: {}
+response_keys: clientId, currentConfig, error, example, hasSecret, message, redirectUri
+status_codes: 500
+
+============================================================
+/api/orcamentos/next-id
+arquivo: src/app/api/orcamentos/next-id/route.ts
+path_params: -
+
+[GET]
+query_params: perfil
+request_body_schema: -
+request_body_example: {}
+response_keys: error
+status_codes: 400, 500, 503
+
+============================================================
+/api/orcamentos
+arquivo: src/app/api/orcamentos/route.ts
+path_params: -
+
+[POST]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+[GET]
+query_params: id, limit, page
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+[PUT]
+query_params: id
+request_body_schema:
+- cliente_id: type=number, required=unknown
+- contacto_email: type=unknown, required=no
+- contacto_nome: type=unknown, required=no
+- contacto_telefone: type=unknown, required=no
+- data_emissao: type=string(date-time), required=unknown
+- data_expiracao: type=string(date-time), required=unknown
+- estado: type=unknown, required=no
+- kms: type=number, required=unknown
+- notas: type=unknown, required=no
+- ref_orcamento: type=unknown, required=no
+- total_desconto: type=number, required=no
+- total_geral: type=number, required=no
+- total_imposto: type=number, required=no
+- total_mao_obra: type=number, required=no
+- total_pecas: type=number, required=no
+- veiculo_id: type=unknown, required=unknown
+request_body_example:
+{
+  "cliente_id": 0,
+  "contacto_email": null,
+  "contacto_nome": null,
+  "contacto_telefone": null,
+  "data_emissao": "2026-03-06T00:00:00.000Z",
+  "data_expiracao": "2026-03-06T00:00:00.000Z",
+  "estado": null,
+  "kms": 0,
+  "notas": null,
+  "ref_orcamento": null,
+  "total_desconto": 0,
+  "total_geral": 0,
+  "total_imposto": 0,
+  "total_mao_obra": 0,
+  "total_pecas": 0,
+  "veiculo_id": null
+}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+[DELETE]
+query_params: id
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+============================================================
+/api/ordens-trabalho
+arquivo: src/app/api/ordens-trabalho/route.ts
+path_params: -
+
+[POST]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+[GET]
+query_params: id
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+[DELETE]
+query_params: id
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+[PATCH]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+============================================================
+/api/pecas
+arquivo: src/app/api/pecas/route.ts
+path_params: -
+
+[GET]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+[POST]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+[PUT]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+============================================================
+/api/pecas/search
+arquivo: src/app/api/pecas/search/route.ts
+path_params: -
+
+[GET]
+query_params: q
+request_body_schema: -
+request_body_example: {}
+response_keys: error
+status_codes: 500, 503
+
+============================================================
+/api/perfis-clientes/{id}
+arquivo: src/app/api/perfis-clientes/[id]/route.ts
+path_params: id
+
+[PUT]
+query_params: -
+request_body_schema:
+- ativo: type=unknown, required=no
+- descricao: type=unknown, required=no
+- nome: type=unknown, required=yes
+- perclucro: type=number, required=unknown
+request_body_example:
+{
+  "ativo": null,
+  "descricao": null,
+  "nome": null,
+  "perclucro": 0
+}
+response_keys: error, perclucro
+status_codes: 500, 503
+
+[PATCH]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error, perclucro
+status_codes: 500, 503
+
+[DELETE]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error, success
+status_codes: 500, 503
+
+============================================================
+/api/perfis-clientes
+arquivo: src/app/api/perfis-clientes/route.ts
+path_params: -
+
+[GET]
+query_params: all
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+[POST]
+query_params: -
+request_body_schema:
+- ativo: type=unknown, required=no
+- descricao: type=unknown, required=no
+- nome: type=unknown, required=yes
+- perclucro: type=number, required=unknown
+request_body_example:
+{
+  "ativo": null,
+  "descricao": null,
+  "nome": null,
+  "perclucro": 0
+}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+============================================================
+/api/produtos
+arquivo: src/app/api/produtos/route.js
+path_params: -
+
+[POST]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error
+status_codes: 200, 500
+
+============================================================
+/api/servicos/{id}
+arquivo: src/app/api/servicos/[id]/route.ts
+path_params: id
+
+[PUT]
+query_params: -
+request_body_schema:
+- ativo: type=unknown, required=no
+- descricao: type=unknown, required=no
+- duracao_estimada: type=unknown, required=no
+- nome: type=unknown, required=yes
+- preco_base: type=number, required=unknown
+- requer_pecas: type=unknown, required=no
+request_body_example:
+{
+  "ativo": null,
+  "descricao": null,
+  "duracao_estimada": null,
+  "nome": null,
+  "preco_base": 0,
+  "requer_pecas": null
+}
+response_keys: error
+status_codes: 500, 503
+
+[PATCH]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error
+status_codes: 500, 503
+
+[DELETE]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error, success
+status_codes: 500, 503
+
+============================================================
+/api/servicos
+arquivo: src/app/api/servicos/route.ts
+path_params: -
+
+[GET]
+query_params: all
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+[POST]
+query_params: -
+request_body_schema:
+- ativo: type=unknown, required=no
+- descricao: type=unknown, required=no
+- duracao_estimada: type=unknown, required=no
+- nome: type=unknown, required=yes
+- preco_base: type=number, required=unknown
+- requer_pecas: type=unknown, required=no
+request_body_example:
+{
+  "ativo": null,
+  "descricao": null,
+  "duracao_estimada": null,
+  "nome": null,
+  "preco_base": 0,
+  "requer_pecas": null
+}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+============================================================
+/api/servicos/search
+arquivo: src/app/api/servicos/search/route.ts
+path_params: -
+
+[GET]
+query_params: q
+request_body_schema: -
+request_body_example: {}
+response_keys: error
+status_codes: 500, 503
+
+============================================================
+/api/veiculos/{id}
+arquivo: src/app/api/veiculos/[id]/route.ts
+path_params: id
+
+[GET]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error
+status_codes: 404, 500, 503
+
+[PUT]
+query_params: -
+request_body_schema:
+- clientAddress: type=unknown, required=no
+- clientEmail: type=unknown, required=no
+- clientId: type=number, required=unknown
+- clientName: type=unknown, required=yes
+- clientNif: type=unknown, required=no
+- clientPhone: type=unknown, required=no
+- clientProfile: type=unknown, required=no
+- licensePlate: type=unknown, required=yes
+- make: type=unknown, required=yes
+- model: type=unknown, required=yes
+- vin: type=unknown, required=no
+- year: type=number, required=unknown
+request_body_example:
+{
+  "clientAddress": null,
+  "clientEmail": null,
+  "clientId": 0,
+  "clientName": null,
+  "clientNif": null,
+  "clientPhone": null,
+  "clientProfile": null,
+  "licensePlate": null,
+  "make": null,
+  "model": null,
+  "vin": null,
+  "year": 0
+}
+response_keys: error
+status_codes: 404, 500, 503
+
+[DELETE]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: error, message
+status_codes: 200, 404, 500, 503
+
+============================================================
+/api/veiculos
+arquivo: src/app/api/veiculos/route.ts
+path_params: -
+
+[GET]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+[POST]
+query_params: -
+request_body_schema: -
+request_body_example: {}
+response_keys: -
+status_codes: -
+nota: resposta tambem passa por helper (successResponse/errorResponse).
+
+============================================================
+/api/veiculos/search
+arquivo: src/app/api/veiculos/search/route.ts
+path_params: -
+
+[GET]
+query_params: matricula
+request_body_schema: -
+request_body_example: {}
+response_keys: error, found
+status_codes: 200, 400, 500, 503
+

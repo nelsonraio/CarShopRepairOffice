@@ -1,109 +1,75 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import Sidebar from '../../components/Sidebar';
 import AppointmentDetailsModal from '../../components/AppointmentDetailsModal';
+import { useFetch, useModal, usePagination, useFilters, filterPredicates } from '@/hooks';
 
 const ITEMS_PER_PAGE = 20;
 
+/**
+ * Agenda Page - Manage appointments
+ * Uses custom hooks for simplified state management:
+ * - useFetch: Data loading with loading/error handling
+ * - useModal: Details modal state
+ * - usePagination: Pagination logic with auto-reset
+ * - useFilters: Date range and search filtering
+ */
 export default function AgendaPage() {
-  const [clientModalOpen, setClientModalOpen] = useState(false);
-  const [clientDetails, setClientDetails] = useState<any | null>(null);
+  // Data fetching
+  const { data: appointmentsData, loading, error, refetch } = useFetch<any[]>('/api/agendamentos');
+  const appointments = Array.isArray(appointmentsData) ? appointmentsData : [];
 
-  const handleClientClick = async (clientName: string) => {
-    if (!clientName) return;
-    try {
-      const response = await fetch(`/api/clientes?nome=${encodeURIComponent(clientName)}`);
-      if (response.ok) {
-        const data = await response.json();
-        setClientDetails(data);
-        setClientModalOpen(true);
-      }
-    } catch (err) {
-      setClientDetails({ nome: clientName });
-      setClientModalOpen(true);
-    }
-  };
+  // Modal for appointment details
+  const { isOpen: modalOpen, selectedItem: selectedAppointment, select: selectAppointment, close: closeModal } = useModal<any>();
 
-  const [appointments, setAppointments] = useState<any[]>([]);
-  const [filteredAppointments, setFilteredAppointments] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedAppointment, setSelectedAppointment] = useState<any | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-
-  const [searchTerm, setSearchTerm] = useState('');
+  // Custom date filter state (outside useFilters for quick filter buttons)
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
-  useEffect(() => {
-    fetchAppointments();
-  }, []);
+  // Filtering configuration
+  const filterConfig = {
+    search: filterPredicates.search(['client', 'matricula']),
+  };
 
-  useEffect(() => {
-    filterAppointments();
-    setCurrentPage(1);
-  }, [appointments, searchTerm, dateFrom, dateTo]);
+  const { filters, setFilter } = useFilters(appointments, filterConfig);
 
-  const fetchAppointments = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('/api/agendamentos');
-      if (!response.ok) {
-        throw new Error('Failed to fetch appointments');
+  // Apply filters with date range
+  const filteredAppointments = appointments.filter(appointment => {
+    // Search filter
+    const searchTerm = filters.search || '';
+    const matchesSearch = searchTerm === '' ||
+      appointment.client?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      appointment.matricula?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Date range filter
+    let matchesDateRange = true;
+    if (dateFrom || dateTo) {
+      const appointmentDate = new Date(appointment.date.split('/').reverse().join('-'));
+      if (dateFrom) {
+        const fromDate = new Date(dateFrom);
+        matchesDateRange = matchesDateRange && appointmentDate >= fromDate;
       }
-      const data = await response.json();
-      setAppointments(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterAppointments = () => {
-    let filtered = appointments;
-
-    if (searchTerm) {
-      filtered = filtered.filter(appointment =>
-        appointment.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        appointment.matricula.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      if (dateTo) {
+        const toDate = new Date(dateTo);
+        matchesDateRange = matchesDateRange && appointmentDate <= toDate;
+      }
     }
 
-    if (dateFrom) {
-      const fromDate = new Date(dateFrom);
-      filtered = filtered.filter(appointment => {
-        const appointmentDate = new Date(appointment.date.split('/').reverse().join('-'));
-        return appointmentDate >= fromDate;
-      });
-    }
-
-    if (dateTo) {
-      const toDate = new Date(dateTo);
-      filtered = filtered.filter(appointment => {
-        const appointmentDate = new Date(appointment.date.split('/').reverse().join('-'));
-        return appointmentDate <= toDate;
-      });
-    }
-
+    return matchesSearch && matchesDateRange;
+  }).sort((a, b) => {
     // Sort by date ascending
-    filtered.sort((a, b) => {
-      const dateA = new Date(a.date.split('/').reverse().join('-'));
-      const dateB = new Date(b.date.split('/').reverse().join('-'));
-      return dateA.getTime() - dateB.getTime();
-    });
+    const dateA = new Date(a.date.split('/').reverse().join('-'));
+    const dateB = new Date(b.date.split('/').reverse().join('-'));
+    return dateA.getTime() - dateB.getTime();
+  });
 
-    setFilteredAppointments(filtered);
-  };
+  // Pagination with automatic reset on filter changes
+  const { currentPage, totalPages, paginatedItems: paginatedAppointments, prevPage, nextPage } =
+    usePagination(filteredAppointments, ITEMS_PER_PAGE, [filters.search, dateFrom, dateTo]);
 
-  const totalPages = Math.ceil(filteredAppointments.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedAppointments = filteredAppointments.slice(startIndex, endIndex);
-
+  // Quick filter buttons
   const setQuickFilter = (filter: string) => {
     const today = new Date();
     let fromDate = '';
@@ -138,29 +104,30 @@ export default function AgendaPage() {
     setDateTo(toDate);
   };
 
-  const handleOpenModal = (appointment: any) => {
-    setSelectedAppointment(appointment);
-    setModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setModalOpen(false);
-    setSelectedAppointment(null);
-  };
-
+  // Delete handler
   const handleDelete = async (id: string) => {
+    if (!window.confirm('Tem certeza que deseja apagar este agendamento?')) {
+      return;
+    }
 
-    if (window.confirm('Tem certeza que deseja apagar este agendamento?')) {
-      try {
-        await fetch(`/api/agendamentos?id=${id}`, {
-          method: 'DELETE'
-        });
-        await fetchAppointments();
-      } catch (err) {
-        console.error('Failed to delete appointment', err);
+    try {
+      const response = await fetch(`/api/agendamentos/${id}`, {
+        method: 'DELETE'
+      });
+      if (response.ok) {
+        await refetch();
+      } else {
+        alert('Erro ao apagar agendamento');
       }
+    } catch (err) {
+      console.error('Failed to delete appointment', err);
+      alert('Erro ao apagar agendamento');
     }
   };
+
+  // Pagination info calculation
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, filteredAppointments.length);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
@@ -223,8 +190,8 @@ export default function AgendaPage() {
                 <label className="block text-sm font-medium text-gray-400 mb-1">Pesquisar (Cliente/Matrícula)</label>
                 <input
                   type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  value={filters.search || ''}
+                  onChange={(e) => setFilter('search', e.target.value)}
                   className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
                   placeholder="Pesquisar..."
                 />
@@ -270,7 +237,7 @@ export default function AgendaPage() {
                     <td className="px-6 py-4 font-mono text-gray-400">
                       <button
                         className="underline text-blue-400 hover:text-blue-300 font-mono"
-                        onClick={() => handleOpenModal(appointment)}
+                        onClick={() => selectAppointment(appointment)}
                         title="Visualizar dados do agendamento"
                       >
                         {appointment.id}
@@ -326,7 +293,7 @@ export default function AgendaPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    onClick={prevPage}
                     disabled={currentPage === 1}
                     className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-600 text-gray-300 rounded border border-gray-600 transition-colors"
                   >
@@ -336,7 +303,7 @@ export default function AgendaPage() {
                     Página <span className="font-medium text-gray-200">{currentPage}</span> de <span className="font-medium text-gray-200">{totalPages}</span>
                   </span>
                   <button
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    onClick={nextPage}
                     disabled={currentPage === totalPages}
                     className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-600 text-gray-300 rounded border border-gray-600 transition-colors"
                   >
@@ -350,7 +317,7 @@ export default function AgendaPage() {
           <AppointmentDetailsModal
             appointment={selectedAppointment}
             isOpen={modalOpen}
-            onClose={handleCloseModal}
+            onClose={closeModal}
           />
         </main>
       </div>

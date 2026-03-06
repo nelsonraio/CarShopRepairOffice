@@ -1,390 +1,148 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { ChangeEvent, FormEvent } from 'react'; // Type-only imports para TS verbatimModuleSyntax
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import Sidebar from '../../../../components/Sidebar';
+import { useFetch } from '@/hooks';
 
-interface Client {
-  id: string;
-  nome: string;
-  telefone: string;
-  email: string;
+/**
+ * Interface para resposta da API ao buscar dados de cliente
+ */
+interface ClientApiResponse {
+  client: {
+    id: string;
+    nome: string;
+    nif: string;
+    telefone: string;
+    email: string;
+    endereco: string;
+    perfil: string;
+  };
 }
 
-interface Brand {
-  id: string;
-  nome: string;
-}
-
-interface Model {
-  id: string;
-  nome: string;
-}
-
-interface Mechanic {
-  id: string;
-  nome: string;
-}
-
-interface Service {
-  id: string;
-  nome: string;
-  descricao: string;
-}
-
-const EditAppointmentPage = () => {
+/**
+ * Página de Edição de Cliente
+ * 
+ * Uso de hooks customizados:
+ * - useFetch: Carrega dados do cliente e lista de perfis
+ * - useParams: Obtém ID do cliente da URL (/clientes/[id]/edit)
+ * 
+ * Processo:
+ * 1. Carrega cliente existente via API
+ * 2. Popula formulário com dados atuais
+ * 3. Permite edição de campos
+ * 4. Envia PUT para /api/clientes/{id}
+ * 5. Redireciona para lista após sucesso
+ */
+const EditClientPage = () => {
   const params = useParams();
   const id = params.id as string;
 
+  // Memoiza URL para evitar re-fetches desnecessários
+  const clientUrl = useMemo(() => `/api/clientes/${id}`, [id]);
+  
+  // Carrega dados do cliente via useFetch hook
+  const { data: clientData, loading: loadingClient, error: clientError } = useFetch<ClientApiResponse>(clientUrl);
+
+  const loading = loadingClient;
+  const error = clientError;
+
+  // Estado do formulário - inicializado vazio
   const [formData, setFormData] = useState({
-    cliente: '',
-    marca: '',
-    modelo: '',
-    ano: '',
-    matricula: '',
-    data: '',
-    hora: '',
-    tipoServico: 'Revisão Geral',
-    mecanico: '',
-    notas: ''
+    nome: '',
+    nif: '',
+    telefone: '',
+    email: '',
+    endereco: '',
+    perfil: 'Normal',
   });
 
-  const [clients, setClients] = useState<Client[]>([]);
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [models, setModels] = useState<Model[]>([]);
-  const [mechanics, setMechanics] = useState<Mechanic[]>([]);
-  const [services, setServices] = useState<Service[]>([]);
-  const [clientSuggestions, setClientSuggestions] = useState<Client[]>([]);
-  const [showClientSuggestions, setShowClientSuggestions] = useState(false);
-  const [brandSuggestions, setBrandSuggestions] = useState<Brand[]>([]);
-  const [showBrandSuggestions, setShowBrandSuggestions] = useState(false);
-  const [modelSuggestions, setModelSuggestions] = useState<Model[]>([]);
-  const [showModelSuggestions, setShowModelSuggestions] = useState(false);
-  const [serviceSearchTerm, setServiceSearchTerm] = useState('');
-  const [showServiceSearchResults, setShowServiceSearchResults] = useState(false);
-  const [serviceSearchResults, setServiceSearchResults] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const searchVehicleByLicensePlate = async (matricula: string) => {
-    try {
-      const response = await fetch(`/api/veiculos/search?matricula=${encodeURIComponent(matricula)}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.found) {
-          setFormData(prev => ({
-            ...prev,
-            marca: data.vehicle.marca,
-            modelo: data.vehicle.modelo,
-            ano: data.vehicle.ano ? data.vehicle.ano.toString() : '',
-            cliente: data.client.nome
-          }));
-        }
-      }
-    } catch (error) {
-      console.error('Failed to search vehicle:', error);
-    }
-  };
-
+  /**
+   * Popula formulário quando dados do cliente são carregados
+   * Executa apenas quando clientData muda
+   */
   useEffect(() => {
-    fetchAppointment();
-    fetchMechanics();
-    fetchServices();
-    fetchBrands();
-  }, []);
+    const client = clientData?.client;
+    if (!client) return;
 
-  const fetchAppointment = async () => {
-    try {
-      const response = await fetch(`/api/agendamentos/${id}`);
-      if (response.ok) {
-        const data = await response.json();
-        // Convert date format from DD/MM/YYYY to YYYY-MM-DD
-        let dateStrValue = '';
-        if (data.date) {
-          const dateParts = data.date.split('/');
-          if (dateParts.length === 3) {
-            dateStrValue = `${dateParts[2]}-${dateParts[1].padStart(2, '0')}-${dateParts[0].padStart(2, '0')}`;
-          }
-        }
-
-        setFormData({
-          cliente: data.client || '',
-          marca: data.marca || '',
-          modelo: data.modelo || '',
-          ano: data.ano || '',
-          matricula: data.matricula || '',
-          data: dateStrValue,
-          hora: data.time || '',
-          tipoServico: data.tipoServico || 'Revisão Geral',
-          mecanico: data.mechanic || '',
-          notas: data.notas || ''
-        });
-      }
-    } catch (error) {
-      console.error('Failed to fetch appointment:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchMechanics = async () => {
-    try {
-      const response = await fetch('/api/mecanicos');
-      if (response.ok) {
-        const data = await response.json();
-        setMechanics(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch mechanics:', error);
-    }
-  };
-
-  const fetchServices = async () => {
-    try {
-      const response = await fetch('/api/servicos');
-      if (response.ok) {
-        const data = await response.json();
-        const servicesWithOutro = [...data, { id: 'outro', nome: 'Outro' }];
-        setServices(servicesWithOutro);
-      }
-    } catch (error) {
-      console.error('Failed to fetch services:', error);
-    }
-  };
-
-  const fetchBrands = async () => {
-    try {
-      const response = await fetch('/api/marcas');
-      if (response.ok) {
-        const data = await response.json();
-        setBrands(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch brands:', error);
-    }
-  };
-
-  const fetchModels = async (brandId: string) => {
-    try {
-      const response = await fetch(`/api/modelos?marca_id=${brandId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setModels(data);
-        return data;
-      }
-    } catch (error) {
-      console.error('Failed to fetch models:', error);
-    }
-    return [];
-  };
-
-  const searchClients = async (query: string) => {
-    try {
-      const response = await fetch(`/api/clientes/search?q=${encodeURIComponent(query)}`);
-      if (response.ok) {
-        const data = await response.json();
-        setClientSuggestions(data);
-        setShowClientSuggestions(true);
-      }
-    } catch (error) {
-      console.error('Failed to search clients:', error);
-    }
-  };
-
-  const searchBrands = async (query: string) => {
-    try {
-      const response = await fetch(`/api/marcas/search?q=${encodeURIComponent(query)}`);
-      if (response.ok) {
-        const data = await response.json();
-        setBrandSuggestions(data);
-        setShowBrandSuggestions(true);
-      }
-    } catch (error) {
-      console.error('Failed to search brands:', error);
-    }
-  };
-
-  const searchModels = async (query: string) => {
-    try {
-      const selectedBrand = brands.find(brand => brand.nome === formData.marca);
-      const brandId = selectedBrand ? selectedBrand.id : '';
-      const response = await fetch(`/api/modelos/search?q=${encodeURIComponent(query)}&marca_id=${brandId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setModelSuggestions(data);
-        setShowModelSuggestions(true);
-      }
-    } catch (error) {
-      console.error('Failed to search models:', error);
-    }
-  };
-
-  const searchServices = async (query: string) => {
-    try {
-      const response = await fetch(`/api/servicos/search?q=${encodeURIComponent(query)}`);
-      if (response.ok) {
-        const data = await response.json();
-        setServiceSearchResults(data);
-        setShowServiceSearchResults(true);
-      }
-    } catch (error) {
-      console.error('Failed to search services:', error);
-      setServiceSearchResults([]);
-    }
-  };
-
-  const addServiceDescription = (service: Service) => {
-    const serviceText = `- ${service.nome}`;
-    setFormData(prev => ({
-      ...prev,
-      notas: prev.notas ? prev.notas + '\n' + serviceText : serviceText
-    }));
-    setServiceSearchTerm('');
-    setShowServiceSearchResults(false);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-
-    // Handle client search
-    if (name === 'cliente' && value && value.length >= 2) {
-      searchClients(value);
-    } else if (name === 'cliente' && (!value || value.length < 2)) {
-      setClientSuggestions([]);
-      setShowClientSuggestions(false);
-    }
-
-    // Handle brand search
-    if (name === 'marca' && value && value.length >= 2) {
-      searchBrands(value);
-    } else if (name === 'marca' && (!value || value.length < 2)) {
-      setBrandSuggestions([]);
-      setShowBrandSuggestions(false);
-      setModelSuggestions([]);
-      setShowModelSuggestions(false);
-      setFormData(prev => ({
-        ...prev,
-        modelo: ''
-      }));
-    }
-
-    // Handle model search
-    if (name === 'modelo' && value && value.length >= 2) {
-      searchModels(value);
-    } else if (name === 'modelo' && (!value || value.length < 2)) {
-      setModelSuggestions([]);
-      setShowModelSuggestions(false);
-    }
-
-    // Handle service selection and description append
-    if (name === 'tipoServico') {
-      const selectedService = services.find(service => service.nome === value);
-      if (selectedService && selectedService.descricao) {
-        setFormData(prev => ({
-          ...prev,
-          notas: prev.notas ? prev.notas + '\n\n' + selectedService.descricao : selectedService.descricao
-        }));
-      }
-    }
-
-    // Handle license plate formatting and auto-fill
-    if (name === 'matricula') {
-      const cleaned = value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-      let formatted = cleaned;
-      if (cleaned.length > 2 && cleaned.length <= 4) {
-        formatted = cleaned.slice(0, 2) + '-' + cleaned.slice(2);
-      } else if (cleaned.length > 4) {
-        formatted = cleaned.slice(0, 2) + '-' + cleaned.slice(2, 4) + '-' + cleaned.slice(4, 6);
-      }
-      setFormData(prev => ({
-        ...prev,
-        [name]: formatted
-      }));
-
-      // Auto-fill if license plate is complete (XX-XX-XX format)
-      if (formatted.length >= 8 && formatted.includes('-')) {
-        searchVehicleByLicensePlate(formatted);
-      }
-      return;
-    }
-  };
-
-  const selectClient = (client: Client) => {
-    setFormData(prev => ({
-      ...prev,
-      cliente: client.nome
-    }));
-    setClientSuggestions([]);
-    setShowClientSuggestions(false);
-  };
-
-  const selectBrand = (brand: Brand) => {
-    setFormData(prev => ({
-      ...prev,
-      marca: brand.nome,
-      modelo: ''
-    }));
-    setBrandSuggestions([]);
-    setShowBrandSuggestions(false);
-    fetchModels(brand.id).then(models => {
-      if (models && models.length > 0) {
-        setModelSuggestions(models);
-        setShowModelSuggestions(true);
-      }
+    setFormData({
+      nome: client.nome || '',
+      nif: client.nif || '',
+      telefone: client.telefone || '',
+      email: client.email || '',
+      endereco: client.endereco || '',
+      perfil: client.perfil || 'Normal',
     });
-  };
+  }, [clientData]);
 
-  const selectModel = (model: Model) => {
-    setFormData(prev => ({
+  /**
+   * Handler para mudanças em campos do formulário
+   * Atualiza formData preservando outros campos
+   */
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      modelo: model.nome
+      [name]: value,
     }));
-    setModelSuggestions([]);
-    setShowModelSuggestions(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  /**
+   * Submete formulário de edição
+   * 
+   * Processo:
+   * 1. Previne submit padrão do formulário
+   * 2. Envia PUT para /api/clientes/{id} com dados do formulário
+   * 3. Se sucesso: alerta e redireciona para lista
+   * 4. Se erro: mostra mensagem de erro
+   */
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    // Validate that notes are required when "Outro" is selected
-    if (formData.tipoServico === 'Outro' && !formData.notas.trim()) {
-      alert('As notas são obrigatórias quando o tipo de serviço é "Outro".');
-      return;
-    }
-
     try {
-      const response = await fetch(`/api/agendamentos`, {
+      const response = await fetch(`/api/clientes/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...formData, id }),
+        body: JSON.stringify(formData),
       });
 
-      if (response.ok) {
-        alert('Agendamento atualizado com sucesso!');
-        // Redirect to agenda page
-        window.location.href = '/agenda';
-      } else {
-        alert('Erro ao atualizar agendamento');
+      if (!response.ok) {
+        alert('Erro ao atualizar cliente');
+        return;
       }
+
+      alert('Cliente atualizado com sucesso!');
+      window.location.href = '/clientes'; // Redireciona após sucesso
     } catch (error) {
-      console.error('Error updating appointment:', error);
-      alert('Erro ao atualizar agendamento');
+      console.error('Error updating client:', error);
+      alert('Erro ao atualizar cliente');
     }
   };
 
   if (loading) {
     return (
       <div className="flex h-screen bg-gray-800">
-        <Sidebar activePage="agenda" />
+        <Sidebar activePage="clientes" />
         <main className="flex-1 relative overflow-y-auto focus:outline-none p-8">
           <div className="flex justify-center items-center py-8">
-            <div className="text-gray-400">Carregando agendamento...</div>
+            <div className="text-gray-400">Carregando cliente...</div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-screen bg-gray-800">
+        <Sidebar activePage="clientes" />
+        <main className="flex-1 relative overflow-y-auto focus:outline-none p-8">
+          <div className="max-w-5xl mx-auto bg-red-900 border border-red-700 text-red-100 p-4">
+            Erro ao carregar dados do cliente: {error}
           </div>
         </main>
       </div>
@@ -393,17 +151,19 @@ const EditAppointmentPage = () => {
 
   return (
     <div className="flex h-screen bg-gray-800">
-      <Sidebar activePage="agenda" />
+      <Sidebar activePage="clientes" />
       <main className="flex-1 relative overflow-y-auto focus:outline-none p-8">
         <div className="max-w-5xl mx-auto bg-gray-700 rounded-none shadow-lg border border-gray-600">
           <header className="bg-gray-900 rounded-t-none p-6 border-b border-gray-600">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-3xl font-bold text-gray-100">Editar Agendamento</h1>
-                <p className="text-sm text-gray-400 mt-1">ID: <span className="font-mono text-brand-yellow">{id}</span></p>
+                <h1 className="text-3xl font-bold text-gray-100">Editar Cliente</h1>
+                <p className="text-sm text-gray-400 mt-1">
+                  ID: <span className="font-mono text-brand-yellow">{id}</span>
+                </p>
               </div>
               <div className="flex space-x-3">
-                <Link href="/agenda" className="px-4 py-2 bg-gray-600 text-gray-200 font-medium hover:bg-gray-500 transition-colors rounded-none flex items-center">
+                <Link href="/clientes" className="px-4 py-2 bg-gray-600 text-gray-200 font-medium hover:bg-gray-500 transition-colors rounded-none flex items-center">
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                   </svg>
@@ -416,7 +176,7 @@ const EditAppointmentPage = () => {
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
                   </svg>
-                  Atualizar Agendamento
+                  Atualizar Cliente
                 </button>
               </div>
             </div>
@@ -424,229 +184,81 @@ const EditAppointmentPage = () => {
 
           <div className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Matrícula *</label>
-                  <input
-                    type="text"
-                    name="matricula"
-                    value={formData.matricula}
-                    onChange={handleInputChange}
-                    className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-                    placeholder="XX-XX-XX"
-                    required
-                  />
-                </div>
-                <div className="relative">
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Marca</label>
-                  <input
-                    type="text"
-                    name="marca"
-                    value={formData.marca}
-                    onChange={handleInputChange}
-                    className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-                    placeholder="Pesquisar marca..."
-                  />
-                  {showBrandSuggestions && brandSuggestions.length > 0 && (
-                    <div className="absolute z-10 w-full bg-gray-800 border border-gray-600 mt-1 max-h-40 overflow-y-auto">
-                      {brandSuggestions.map((brand) => (
-                        <div
-                          key={brand.id}
-                          className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
-                          onClick={() => selectBrand(brand)}
-                        >
-                          <div className="font-medium">{brand.nome}</div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="relative">
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Modelo</label>
-                  <input
-                    type="text"
-                    name="modelo"
-                    value={formData.modelo}
-                    onChange={handleInputChange}
-                    disabled={!formData.marca}
-                    className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                    placeholder={formData.marca ? "Pesquisar modelo..." : "Selecione uma marca primeiro"}
-                  />
-                  {showModelSuggestions && modelSuggestions.length > 0 && (
-                    <div className="absolute z-10 w-full bg-gray-800 border border-gray-600 mt-1 max-h-40 overflow-y-auto">
-                      {modelSuggestions.map((model) => (
-                        <div
-                          key={model.id}
-                          className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
-                          onClick={() => selectModel(model)}
-                        >
-                          <div className="font-medium">{model.nome}</div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Ano</label>
-                  <input
-                    type="number"
-                    name="ano"
-                    value={formData.ano}
-                    onChange={handleInputChange}
-                    className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-                    placeholder="Ano"
-                  />
-                </div>
-              </div>
-
-              <div className="relative">
-                <label className="block text-sm font-medium text-gray-400 mb-1">Cliente *</label>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Nome Completo *</label>
                 <input
                   type="text"
-                  name="cliente"
-                  value={formData.cliente}
+                  name="nome"
+                  value={formData.nome}
                   onChange={handleInputChange}
                   className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-                  placeholder="Pesquisar cliente..."
+                  placeholder="Nome completo do cliente"
                   required
                 />
-                {showClientSuggestions && clientSuggestions.length > 0 && (
-                  <div className="absolute z-10 w-full bg-gray-800 border border-gray-600 mt-1 max-h-40 overflow-y-auto">
-                    {clientSuggestions.map((client) => (
-                      <div
-                        key={client.id}
-                        className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
-                        onClick={() => selectClient(client)}
-                      >
-                        <div className="font-medium">{client.nome}</div>
-                        <div className="text-sm text-gray-400">
-                          {client.telefone} {client.email && `• ${client.email}`}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Data *</label>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">NIF</label>
                   <input
-                    type="date"
-                    name="data"
-                    value={formData.data}
+                    type="text"
+                    name="nif"
+                    value={formData.nif}
                     onChange={handleInputChange}
                     className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-                    required
+                    placeholder="Número de Identificação Fiscal"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Hora *</label>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Telefone</label>
                   <input
-                    type="time"
-                    name="hora"
-                    value={formData.hora}
+                    type="tel"
+                    name="telefone"
+                    value={formData.telefone}
                     onChange={handleInputChange}
                     className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-                    required
+                    placeholder="Número de telefone"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Tipo de Serviço</label>
-                <select
-                  name="tipoServico"
-                  value={formData.tipoServico}
+                <label className="block text-sm font-medium text-gray-400 mb-1">Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
-                >
-                  {services.map((service) => (
-                    <option key={service.id} value={service.nome}>
-                      {service.nome}
-                    </option>
-                  ))}
-                </select>
+                  className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                  placeholder="endereço de email"
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Adicionar Serviços à Descrição</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Pesquisar serviço para adicionar descrição..."
-                    className="w-full pl-10 pr-4 py-2.5 bg-gray-800 border border-gray-600 text-white rounded-none focus:ring-2 focus:ring-brand-yellow focus:border-brand-yellow transition placeholder-gray-500"
-                    value={serviceSearchTerm}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setServiceSearchTerm(value);
-                      if (value.length >= 2) {
-                        searchServices(value);
-                        setShowServiceSearchResults(true);
-                      } else {
-                        setServiceSearchResults([]);
-                        setShowServiceSearchResults(false);
-                      }
-                    }}
-                    onBlur={() => setTimeout(() => setShowServiceSearchResults(false), 200)}
-                  />
-                  {showServiceSearchResults && (
-                    <div className="absolute z-10 w-full bg-gray-700 border border-gray-600 shadow-lg max-h-60 overflow-y-auto">
-                      {serviceSearchResults.map(service => (
-                        <div
-                          key={service.id}
-                          className="p-3 hover:bg-gray-600 cursor-pointer border-b border-gray-600 last:border-0"
-                          onClick={() => addServiceDescription(service)}
-                        >
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <div className="font-medium text-gray-200">{service.nome}</div>
-                              <div className="text-xs text-gray-400">{service.id}</div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Mecânico Preferencial</label>
-                <select
-                  name="mecanico"
-                  value={formData.mecanico}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
-                >
-                  <option value="">Qualquer</option>
-                  {mechanics.map((mechanic) => (
-                    <option key={mechanic.id} value={mechanic.nome}>
-                      {mechanic.nome}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">
-                  Descrição {formData.tipoServico === 'Outro' && <span className="text-red-500">*</span>}
-                </label>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Morada</label>
                 <textarea
-                  name="notas"
-                  value={formData.notas}
+                  name="endereco"
+                  value={formData.endereco}
                   onChange={handleInputChange}
                   rows={2}
-                  required={formData.tipoServico === 'Outro'}
                   className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                  placeholder="Morada completa"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Perfil de Cliente</label>
+                <select
+                  name="perfil"
+                  value={formData.perfil}
+                  onChange={handleInputChange}
+                  className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
+                >
+                  <option value="Normal">Normal</option>
+                  <option value="TVDE_Interno">TVDE Interno</option>
+                  <option value="TVDE_Externo">TVDE Externo</option>
+                  <option value="Empresa">Empresa</option>
+                </select>
               </div>
             </form>
           </div>
@@ -656,5 +268,4 @@ const EditAppointmentPage = () => {
   );
 };
 
-export default EditAppointmentPage;
-
+export default EditClientPage;

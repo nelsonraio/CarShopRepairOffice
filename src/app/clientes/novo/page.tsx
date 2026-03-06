@@ -1,19 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import Sidebar from '../../../components/Sidebar';
 
-interface PerfilCliente {
-  id: string;
-  nome: string;
-  descricao: string | null;
-  desconto: number;
-  ativo: boolean;
-}
-
 const NewClientPage = () => {
-  const [perfis, setPerfis] = useState<PerfilCliente[]>([]);
   const [formData, setFormData] = useState({
     nome: '',
     nif: '',
@@ -22,22 +13,6 @@ const NewClientPage = () => {
     endereco: '',
     perfil: 'Normal'
   });
-
-  useEffect(() => {
-    fetchPerfis();
-  }, []);
-
-  const fetchPerfis = async () => {
-    try {
-      const response = await fetch('/api/perfis-clientes');
-      if (response.ok) {
-        const data = await response.json();
-        setPerfis(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch perfis:', error);
-    }
-  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -61,21 +36,14 @@ const NewClientPage = () => {
 
       if (response.ok) {
         alert('Cliente criado com sucesso!');
-        // Reset form
-        setFormData({
-          nome: '',
-          nif: '',
-          telefone: '',
-          email: '',
-          endereco: '',
-          perfil: 'Normal'
-        });
+        window.location.href = '/clientes'; // Redireciona após sucesso
       } else {
-        alert('Erro ao criar cliente');
+        const error = await response.json();
+        alert(`Erro ao criar cliente: ${error.error || 'Erro desconhecido'}`);
       }
     } catch (error) {
       console.error('Error creating client:', error);
-      alert('Erro ao criar cliente');
+      alert('Erro ao criar cliente: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
     }
   };
 
@@ -136,7 +104,7 @@ const NewClientPage = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Telefone *</label>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Telefone</label>
                   <input
                     type="tel"
                     name="telefone"
@@ -144,7 +112,6 @@ const NewClientPage = () => {
                     onChange={handleInputChange}
                     className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
                     placeholder="Número de telefone"
-                    required
                   />
                 </div>
               </div>
@@ -178,20 +145,11 @@ const NewClientPage = () => {
                   onChange={handleInputChange}
                   className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
                 >
-                  {perfis.map((perfil) => (
-                    <option key={perfil.id} value={perfil.nome}>
-                      {perfil.nome} {perfil.desconto > 0 && `(-${perfil.desconto}%)`}
-                    </option>
-                  ))}
+                  <option value="Normal">Normal</option>
+                  <option value="TVDE_Interno">TVDE Interno</option>
+                  <option value="TVDE_Externo">TVDE Externo</option>
+                  <option value="Empresa">Empresa</option>
                 </select>
-                {(() => {
-                  const selectedPerfil = perfis.find(p => p.nome === formData.perfil);
-                  return selectedPerfil && selectedPerfil.desconto && selectedPerfil.desconto > 0 ? (
-                    <p className="text-xs text-brand-yellow mt-1">
-                      Desconto de {selectedPerfil.desconto}% aplicado a este perfil
-                    </p>
-                  ) : null;
-                })()}
               </div>
             </form>
           </div>

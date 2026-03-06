@@ -7,9 +7,10 @@ interface NewVehicleModalProps {
   onClose: () => void;
   onSuccess?: () => void;
   vehicle?: any; // For editing mode
+  initialData?: any; // For pre-filling data when creating new vehicle
 }
 
-export default function NewVehicleModal({ isOpen, onClose, onSuccess, vehicle }: NewVehicleModalProps) {
+export default function NewVehicleModal({ isOpen, onClose, onSuccess, vehicle, initialData }: NewVehicleModalProps) {
   const [formData, setFormData] = useState({
     licensePlate: "",
     vin: "",
@@ -153,28 +154,29 @@ export default function NewVehicleModal({ isOpen, onClose, onSuccess, vehicle }:
           setClientFieldsEditable(true); // Allow editing for new clients
         }
       } else {
-        // Reset form for new vehicle
+        // Reset form for new vehicle (or pre-fill with initialData if provided)
         setFormData({
-          licensePlate: "",
-          vin: "",
-          make: "",
-          model: "",
-          year: "",
-          color: "",
-          clientProfile: "Normal",
-          clientName: "",
-          clientPhone: "",
-          clientEmail: "",
-          clientNif: "",
-          clientAddress: "",
+          licensePlate: initialData?.licensePlate || "",
+          vin: initialData?.vin || "",
+          make: initialData?.make || "",
+          model: initialData?.model || "",
+          year: initialData?.year || "",
+          color: initialData?.color || "",
+          clientProfile: initialData?.clientProfile || "Normal",
+          clientName: initialData?.clientName || "",
+          clientPhone: initialData?.clientPhone || "",
+          clientEmail: initialData?.clientEmail || "",
+          clientNif: initialData?.clientNif || "",
+          clientAddress: initialData?.clientAddress || "",
           serviceType: "",
           priority: "normal"
         });
         setSelectedClient(null);
         setIsNewClient(true);
+        setClientFieldsEditable(true);
       }
     }
-  }, [isOpen, vehicle]);
+  }, [isOpen, vehicle, initialData]);
 
   const searchClients = async (query: string) => {
     try {

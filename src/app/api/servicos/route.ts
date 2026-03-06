@@ -1,11 +1,19 @@
-import { NextResponse } from 'next/server';
+import { successResponse, handleDatabaseError, serializeBigInt } from '@/lib/api-utils';
 import { PrismaClient } from '@prisma/client';
 
+/**
+ * Initialize Prisma Client for database operations
+ */
 // @ts-ignore
 const prisma = new PrismaClient({
   log: ['error'],
 });
 
+/**
+ * GET: Fetch all services or active services only
+ * @param request - HTTP request
+ * @returns JSON array of services or error response
+ */
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -17,29 +25,19 @@ export async function GET(request: Request) {
     });
 
     // Serialize BigInt fields
-    const serializedServicos = servicos.map((serv: typeof servicos[number]) => ({
-      ...serv,
-      id: Number(serv.id)
-    }));
+    const serializedServicos = servicos.map(serializeBigInt);
 
-    return NextResponse.json(serializedServicos);
+    return successResponse(serializedServicos);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error fetching servicos:', error);
-    return NextResponse.json({ error: 'Failed to fetch servicos' }, { status: 500 });
+    return handleDatabaseError(error as Error);
   }
 }
 
+/**
+ * POST: Create new service
+ * @param request - HTTP request with service data
+ * @returns Created service or error response
+ */
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -56,26 +54,11 @@ export async function POST(request: Request) {
     });
 
     // Serialize BigInt fields
-    const serialized = {
-      ...servico,
-      id: Number(servico.id)
-    };
+    const serialized = serializeBigInt(servico);
 
-    return NextResponse.json(serialized);
+    return successResponse(serialized, 201);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error creating servico:', error);
-    return NextResponse.json({ error: 'Failed to create servico' }, { status: 500 });
+    return handleDatabaseError(error as Error);
   }
 }
 

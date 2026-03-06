@@ -9,7 +9,7 @@ export interface ClienteRecord {
   telefone: string;
   nif: string;
   endereco?: string;
-  perfil?: "Normal" | "TVDE Interno" | "TVDE Externo" | "Empresa";
+  perfil?: "Normal" | "TVDE_Interno" | "TVDE_Externo" | "Empresa";
   veiculos: number;
   dataRegistro?: string;
   totalGasto?: number;
@@ -35,7 +35,6 @@ export default function ClientTable({ clients, onEdit, onDelete, onClientClick }
               <th scope="col" className="px-6 py-3">Contactos</th>
               <th scope="col" className="px-6 py-3">NIF</th>
               <th scope="col" className="px-6 py-3 text-center">Perfil</th>
-              <th scope="col" className="px-6 py-3 text-center">Veículos</th>
               <th scope="col" className="px-6 py-3 text-center">Ações</th>
             </tr>
           </thead>
@@ -58,16 +57,14 @@ export default function ClientTable({ clients, onEdit, onDelete, onClientClick }
                 <td className="px-6 py-4 text-center">
                   <span className={`px-2 py-1 text-xs font-bold border border-gray-600 ${
                     client.perfil === 'Normal' ? 'bg-blue-900 text-blue-200' :
-                    client.perfil === 'TVDE Interno' ? 'bg-green-900 text-green-200' :
+                    client.perfil === 'TVDE_Interno' ? 'bg-green-900 text-green-200' :
+                    client.perfil === 'TVDE_Externo' ? 'bg-orange-900 text-orange-200' :
                     client.perfil === 'Empresa' ? 'bg-purple-900 text-purple-200' :
                     'bg-gray-900 text-gray-200'
                   }`}>
-                    {client.perfil || 'Normal'}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-center">
-                  <span className="px-2 py-1 text-xs font-bold bg-gray-800 text-gray-300 border border-gray-600">
-                    {client.veiculos}
+                    {client.perfil === 'TVDE_Interno' ? 'TVDE Interno' :
+                     client.perfil === 'TVDE_Externo' ? 'TVDE Externo' :
+                     client.perfil || 'Normal'}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-center">

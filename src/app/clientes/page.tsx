@@ -1,110 +1,77 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useFetch, useModal, usePagination, useFilters, filterPredicates } from "@/hooks";
 import Sidebar from "../../components/Sidebar";
 import ClientTable, { type ClienteRecord } from "../../components/ClientTable";
-import ClientModal from "../../components/ClientModal";
 
 const ITEMS_PER_PAGE = 20;
 
+// Translation labels for client details
+const CLIENT_DETAIL_LABELS: Record<string, string> = {
+  nome: 'Nome',
+  email: 'Email',
+  telefone: 'Telefone',
+  nif: 'NIF',
+  endereco: 'Endereço',
+  perfil: 'Perfil',
+  veiculos: 'Veículos',
+  dataRegistro: 'Data de Registro',
+  totalGasto: 'Total Gasto',
+  visitas: 'Visitas',
+};
+
+/**
+ * Clientes Page - Main view for managing clients
+ * Uses custom hooks for simplified state management:
+ * - useFetch: Data loading with loading/error handling
+ * - useModal: Details modal state
+ * - usePagination: Pagination logic
+ * - useFilters: Search/filtering functionality
+ */
 export default function ClientesPage() {
-    const [clientModalOpen, setClientModalOpen] = useState(false);
-    const [clientDetails, setClientDetails] = useState<ClienteRecord | null>(null);
+  // Data fetching
+  const { data: rawClients, loading, error, refetch } = useFetch<ClienteRecord[]>('/api/clientes');
+  const clients = rawClients || [];
 
-    const handleClientClick = (client: ClienteRecord) => {
-      setClientDetails(client);
-      setClientModalOpen(true);
-    };
+  // Modal for client details
+  const { isOpen: clientModalOpen, selectedItem: clientDetails, select: selectClientDetails, close: closeClientModal } = useModal<ClienteRecord>();
 
-    // Labels de tradução para detalhes do cliente
-    const clientDetailLabels: Record<string, string> = {
-      nome: 'Nome',
-      email: 'Email',
-      telefone: 'Telefone',
-      nif: 'NIF',
-      endereco: 'Endereço',
-      perfil: 'Perfil',
-      veiculos: 'Veículos',
-      dataRegistro: 'Data de Registro',
-      totalGasto: 'Total Gasto',
-      visitas: 'Visitas',
-    };
-  const [clients, setClients] = useState<ClienteRecord[]>([]);
-
-  const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-
-
-  useEffect(() => {
-    const fetchClients = async () => {
-      try {
-        const response = await fetch('/api/clientes');
-        if (!response.ok) {
-          throw new Error('Failed to fetch clients');
-        }
-        const data = await response.json();
-        setClients(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchClients();
-  }, []);
-
-  // Reset pagination on search change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
-
-  const handleAddClient = async (newClient: Omit<ClienteRecord, 'id' | 'dataRegistro' | 'totalGasto' | 'visitas'>) => {
-    try {
-      const response = await fetch('/api/clientes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newClient)
-      });
-      if (response.ok) {
-        const savedClient = await response.json();
-        setClients(prev => [...prev, savedClient]);
-      }
-    } catch (err) {
-      console.error('Failed to add client:', err);
-    }
+  // Filtering (search across multiple fields)
+  const searchConfig = {
+    search: filterPredicates.search(['nome', 'nif', 'telefone'])
   };
+  const { filters, setFilter } = useFilters(clients, searchConfig);
+  const searchTerm = filters.search || '';
 
-
-
-  const handleDelete = async (id: string) => {
-    try {
-      const response = await fetch(`/api/clientes/${id}`, {
-        method: 'DELETE'
-      });
-      if (response.ok) {
-        setClients(prev => prev.filter(c => c.id !== id));
-      }
-    } catch (err) {
-      console.error('Failed to delete client:', err);
-    }
-  };
-
-
+  // Pagination with automatic reset on filter change
   const filteredClients = clients.filter(client =>
     client.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.nif.includes(searchTerm) ||
     client.telefone.includes(searchTerm)
   );
 
-  // Pagination
-  const totalPages = Math.ceil(filteredClients.length / ITEMS_PER_PAGE);
+  const { currentPage, totalPages, paginatedItems: paginatedClients, prevPage, nextPage } = 
+    usePagination(filteredClients, ITEMS_PER_PAGE, [searchTerm]);
+
+  // Delete handler
+  const handleDelete = async (id: string) => {
+    try {
+      const response = await fetch(`/api/clientes/${id}`, {
+        method: 'DELETE'
+      });
+      if (response.ok) {
+        // Refresh data after deletion
+        await refetch();
+      }
+    } catch (err) {
+      console.error('Failed to delete client:', err);
+    }
+  };
+
+  // Pagination info calculation
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedClients = filteredClients.slice(startIndex, endIndex);
+  const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, filteredClients.length);
 
   return (
     <div className="flex h-screen bg-gray-800">
@@ -140,7 +107,7 @@ export default function ClientesPage() {
               type="text"
               placeholder="Pesquisar por nome, NIF ou telefone..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => setFilter('search', e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-600 text-white rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow placeholder-gray-500"
             />
           </div>
@@ -160,8 +127,9 @@ export default function ClientesPage() {
             <ClientTable
               clients={paginatedClients}
               onDelete={handleDelete}
-              onClientClick={handleClientClick}
+              onClientClick={selectClientDetails}
             />
+
             {/* Client Details Modal */}
             {clientModalOpen && clientDetails && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -169,7 +137,7 @@ export default function ClientesPage() {
                   <h3 className="text-xl font-bold text-white mb-4">Detalhes do Cliente</h3>
                   <div className="space-y-2 text-gray-200">
                     {Object.entries(clientDetails).map(([key, value]) => {
-                      const label = clientDetailLabels[key] || key.replace(/_/g, ' ').toUpperCase();
+                      const label = CLIENT_DETAIL_LABELS[key] || key.replace(/_/g, ' ').toUpperCase();
                       return (
                         <div className="text-gray-100" key={key}>
                           <span className="font-semibold">{label}:</span> {typeof value === 'string' || typeof value === 'number' ? value : JSON.stringify(value)}
@@ -179,7 +147,7 @@ export default function ClientesPage() {
                   </div>
                   <div className="flex justify-end mt-6">
                     <button
-                      onClick={() => setClientModalOpen(false)}
+                      onClick={closeClientModal}
                       className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
                     >
                       Fechar
@@ -195,12 +163,12 @@ export default function ClientesPage() {
                 <div className="flex-1 flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-400">
-                      A mostrar <span className="font-medium text-gray-200">{startIndex + 1}</span> a <span className="font-medium text-gray-200">{Math.min(endIndex, filteredClients.length)}</span> de <span className="font-medium text-gray-200">{filteredClients.length}</span> clientes
+                      A mostrar <span className="font-medium text-gray-200">{startIndex + 1}</span> a <span className="font-medium text-gray-200">{endIndex}</span> de <span className="font-medium text-gray-200">{filteredClients.length}</span> clientes
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      onClick={prevPage}
                       disabled={currentPage === 1}
                       className="px-3 py-1 text-sm bg-gray-600 hover:bg-gray-500 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:text-gray-500 text-gray-300 rounded border border-gray-500 transition-colors"
                     >
@@ -210,7 +178,7 @@ export default function ClientesPage() {
                       Página <span className="font-medium text-gray-200">{currentPage}</span> de <span className="font-medium text-gray-200">{totalPages}</span>
                     </span>
                     <button
-                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      onClick={nextPage}
                       disabled={currentPage === totalPages}
                       className="px-3 py-1 text-sm bg-gray-600 hover:bg-gray-500 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:text-gray-500 text-gray-300 rounded border border-gray-500 transition-colors"
                     >
@@ -221,11 +189,8 @@ export default function ClientesPage() {
               </div>
             )}
           </>
-
         )}
       </main>
-
     </div>
-
   );
 }

@@ -1,107 +1,115 @@
 import { PrismaClient } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
+import { 
+  successResponse, 
+  errorResponse, 
+  handleDatabaseError,
+  parsePaginationParams,
+  parseNum,
+  buildDataMap,
+  extractUniqueIds
+} from '@/lib/api-utils';
 
 const prisma = new PrismaClient();
 
-// Simula API da TOQ Online - Listar Faturas
+/**
+ * Format invoice data for API response
+ */
+const formatInvoice = (invoice: any, clientMap: Map<any, any>, orderMap: Map<any, any>) => ({
+  id: Number(invoice.id),
+  numero_fatura: invoice.numero_fatura,
+  cliente_id: invoice.cliente_id,
+  cliente_nome: clientMap.get(invoice.cliente_id)?.nome,
+  cliente_nif: clientMap.get(invoice.cliente_id)?.nif,
+  ordem_trabalho_ref: invoice.ordem_trabalho_id
+    ? orderMap.get(invoice.ordem_trabalho_id)?.ref_ordem_trabalho
+    : undefined,
+  veiculo_marca: invoice.ordem_trabalho_id
+    ? orderMap.get(invoice.ordem_trabalho_id)?.veiculo?.marca
+    : undefined,
+  veiculo_modelo: invoice.ordem_trabalho_id
+    ? orderMap.get(invoice.ordem_trabalho_id)?.veiculo?.modelo
+    : undefined,
+  veiculo_matricula: invoice.ordem_trabalho_id
+    ? orderMap.get(invoice.ordem_trabalho_id)?.veiculo?.matricula
+    : undefined,
+  data_emissao: invoice.data_emissao instanceof Date ? invoice.data_emissao.toISOString() : invoice.data_emissao,
+  data_vencimento: invoice.data_vencimento instanceof Date ? invoice.data_vencimento.toISOString() : invoice.data_vencimento,
+  estado: invoice.estado,
+  subtotal: parseNum(invoice.subtotal),
+  valor_imposto: parseNum(invoice.valor_imposto || 0),
+  valor_desconto: parseNum(invoice.valor_desconto || 0),
+  valor_total: parseNum(invoice.valor_total),
+  valor_pago: parseNum(invoice.valor_pago || 0),
+  notas: invoice.notas,
+  toconline_id: invoice.toconline_id,
+  recibo_toconline_id: invoice.recibo_toconline_id,
+  criado_em: invoice.criado_em instanceof Date ? invoice.criado_em.toISOString() : invoice.criado_em
+});
+
+/**
+ * GET /api/faturas - List invoices with pagination
+ */
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const { skip, take } = parsePaginationParams(new URL(req.url));
     const status = searchParams.get('status');
 
     const where: any = {};
-    if (status) {
-      where.estado = status;
-    }
+    if (status) where.estado = status;
 
-    const faturas = await prisma.faturas.findMany({
-      where,
-      skip: (page - 1) * limit,
-      take: limit,
-      orderBy: { data_emissao: 'desc' }
-    });
+    // Fetch invoices with pagination
+    const [faturas, total] = await Promise.all([
+      prisma.faturas.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { data_emissao: 'desc' }
+      }),
+      prisma.faturas.count({ where })
+    ]);
 
-    const clienteIds = Array.from(new Set(faturas.map((f: typeof faturas[number]) => f.cliente_id)));
-    const clientes = clienteIds.length
-      ? await prisma.clientes.findMany({
-          where: { id: { in: clienteIds } },
-          select: { id: true, nome: true, nif: true }
-        })
-      : [];
-
-    const clienteMap = new Map<number, { nome: string; nif: string | null }>(
-      clientes.map((cliente: typeof clientes[number]) => [cliente.id, { nome: cliente.nome, nif: cliente.nif }])
+    // Batch load related data
+    const clienteIds = extractUniqueIds(faturas, 'cliente_id');
+    const orderIds = extractUniqueIds(
+      faturas.filter(f => f.ordem_trabalho_id),
+      'ordem_trabalho_id'
     );
 
-    const ordemIds = faturas
-      .map((f: typeof faturas[number]) => f.ordem_trabalho_id)
-      .filter((id: unknown): id is number => typeof id === 'number');
-
-    const ordensTrabalho = ordemIds.length
-      ? await prisma.ordens_trabalho.findMany({
-          where: { id: { in: ordemIds.map((id: number) => BigInt(id)) } },
-          select: { 
-            id: true, 
-            ref_ordem_trabalho: true,
-            veiculo: {
-              select: {
-                marca: true,
-                modelo: true,
-                matricula: true
+    const [clientes, ordensTrabalho] = await Promise.all([
+      clienteIds.length
+        ? prisma.clientes.findMany({
+            where: { id: { in: clienteIds as number[] } },
+            select: { id: true, nome: true, nif: true }
+          })
+        : Promise.resolve([]),
+      orderIds.length
+        ? prisma.ordens_trabalho.findMany({
+            where: { id: { in: orderIds.map(id => BigInt(id)) } },
+            select: {
+              id: true,
+              ref_ordem_trabalho: true,
+              veiculo: {
+                select: { marca: true, modelo: true, matricula: true }
               }
             }
-          }
-        })
-      : [];
+          })
+        : Promise.resolve([])
+    ]);
 
-    const ordemMap = new Map<number, { ref_ordem_trabalho?: string | null; veiculo?: { marca?: string | null; modelo?: string | null; matricula?: string | null } }>(
-      ordensTrabalho.map((ordem: typeof ordensTrabalho[number]) => [
-        Number(ordem.id), 
-        {
-          ref_ordem_trabalho: ordem.ref_ordem_trabalho,
-          veiculo: ordem.veiculo
-        }
-      ])
+    const clientMap = buildDataMap(clientes, 'id');
+    const orderMap = buildDataMap(
+      ordensTrabalho.map(o => ({ ...o, id: Number(o.id) })),
+      'id'
     );
 
-    const total = await prisma.faturas.count({ where });
+    // Format and return response
+    const faturasFormatadas = faturas.map(f => formatInvoice(f, clientMap, orderMap));
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
 
-    // Converter BigInt para Number para JSON serialization
-    const faturasFormatadas = faturas.map((f: typeof faturas[number]) => ({
-      id: Number(f.id),
-      numero_fatura: f.numero_fatura,
-      cliente_id: f.cliente_id,
-      cliente_nome: clienteMap.get(f.cliente_id)?.nome,
-      cliente_nif: clienteMap.get(f.cliente_id)?.nif,
-      ordem_trabalho_ref: f.ordem_trabalho_id
-        ? ordemMap.get(f.ordem_trabalho_id)?.ref_ordem_trabalho
-        : undefined,
-      veiculo_marca: f.ordem_trabalho_id
-        ? ordemMap.get(f.ordem_trabalho_id)?.veiculo?.marca
-        : undefined,
-      veiculo_modelo: f.ordem_trabalho_id
-        ? ordemMap.get(f.ordem_trabalho_id)?.veiculo?.modelo
-        : undefined,
-      veiculo_matricula: f.ordem_trabalho_id
-        ? ordemMap.get(f.ordem_trabalho_id)?.veiculo?.matricula
-        : undefined,
-      data_emissao: f.data_emissao,
-      data_vencimento: f.data_vencimento,
-      estado: f.estado,
-      subtotal: parseFloat(f.subtotal.toString()),
-      valor_imposto: parseFloat(f.valor_imposto?.toString() || '0'),
-      valor_desconto: parseFloat(f.valor_desconto?.toString() || '0'),
-      valor_total: parseFloat(f.valor_total.toString()),
-      valor_pago: parseFloat(f.valor_pago?.toString() || '0'),
-      notas: f.notas,
-      toconline_id: f.toconline_id,
-      recibo_toconline_id: f.recibo_toconline_id,
-      criado_em: f.criado_em
-    }));
-
-    return NextResponse.json({
+    return successResponse({
       success: true,
       data: faturasFormatadas,
       total,
@@ -110,30 +118,20 @@ export async function GET(req: NextRequest) {
       pages: Math.ceil(total / limit)
     });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
+    console.error('Error fetching invoices:', error);
+    if (error instanceof Error) {
+      return handleDatabaseError(error);
     }
-    console.error('Erro ao listar faturas:', error);
-    return NextResponse.json(
-      { success: false, error: 'Erro ao listar faturas' },
-      { status: 500 }
-    );
+    return errorResponse('Failed to fetch invoices', 500);
   }
 }
 
-// Simula API da TOQ Online - Criar Fatura
+/**
+ * POST /api/faturas - Create new invoice
+ */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    
     const {
       cliente_id,
       cliente_nif,
@@ -150,15 +148,14 @@ export async function POST(req: NextRequest) {
       notas
     } = body;
 
+    // Validate required fields
     if (!numero_fatura) {
-      return NextResponse.json(
-        { success: false, error: 'numero_fatura obrigatório. Use o número devolvido pelo TOConline.' },
-        { status: 400 }
-      );
+      return errorResponse('numero_fatura is required', 400);
     }
 
     const ordemTrabalhoIdParsed = ordem_trabalho_id ? parseInt(ordem_trabalho_id) : null;
 
+    // Check for existing invoice on work order
     if (ordemTrabalhoIdParsed) {
       const faturaExistente = await prisma.faturas.findFirst({
         where: { ordem_trabalho_id: ordemTrabalhoIdParsed },
@@ -166,27 +163,23 @@ export async function POST(req: NextRequest) {
       });
 
       if (faturaExistente) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: `A ordem de trabalho já está faturada (fatura ${faturaExistente.numero_fatura}).`
-          },
-          { status: 409 }
+        return errorResponse(
+          `The work order is already invoiced (invoice ${faturaExistente.numero_fatura})`,
+          409
         );
       }
 
+      // Verify work order exists
       const ordemTrabalho = await prisma.ordens_trabalho.findUnique({
         where: { id: BigInt(ordemTrabalhoIdParsed) },
         select: { id: true, ref_ordem_trabalho: true, fatura_id: true }
       });
 
       if (!ordemTrabalho) {
-        return NextResponse.json(
-          { success: false, error: 'Ordem de trabalho não encontrada.' },
-          { status: 404 }
-        );
+        return errorResponse('Work order not found', 404);
       }
 
+      // Clean up orphaned invoice links
       if (ordemTrabalho.fatura_id) {
         const faturaPorVinculo = await prisma.faturas.findUnique({
           where: { id: ordemTrabalho.fatura_id },
@@ -194,12 +187,9 @@ export async function POST(req: NextRequest) {
         });
 
         if (faturaPorVinculo) {
-          return NextResponse.json(
-            {
-              success: false,
-              error: `A ordem ${ordemTrabalho.ref_ordem_trabalho} já está associada à fatura ${faturaPorVinculo.numero_fatura}.`
-            },
-            { status: 409 }
+          return errorResponse(
+            `Work order ${ordemTrabalho.ref_ordem_trabalho} is already linked to invoice ${faturaPorVinculo.numero_fatura}`,
+            409
           );
         }
 
@@ -207,24 +197,19 @@ export async function POST(req: NextRequest) {
           where: { id: BigInt(ordemTrabalhoIdParsed) },
           data: { fatura_id: null }
         });
-        console.warn('⚠️ Vínculo órfão limpo em ordens_trabalho.fatura_id:', ordemTrabalhoIdParsed);
+        console.warn('⚠️ Cleaned orphaned invoice link for work order:', ordemTrabalhoIdParsed);
       }
     }
 
+    // Update client NIF if provided
     if (cliente_nif && cliente_id) {
       const nifExistente = await prisma.clientes.findFirst({
-        where: {
-          nif: cliente_nif,
-          id: { not: cliente_id }
-        },
+        where: { nif: cliente_nif, id: { not: cliente_id } },
         select: { id: true }
       });
 
       if (nifExistente) {
-        return NextResponse.json(
-          { success: false, error: 'NIF ja associado a outro cliente' },
-          { status: 409 }
-        );
+        return errorResponse('NIF is already associated with another client', 409);
       }
 
       await prisma.clientes.update({
@@ -233,7 +218,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Criar fatura
+    // Create invoice
     const fatura = await prisma.faturas.create({
       data: {
         numero_fatura,
@@ -241,10 +226,10 @@ export async function POST(req: NextRequest) {
         ordem_trabalho_id: ordemTrabalhoIdParsed,
         data_emissao: new Date(data_emissao),
         data_vencimento: new Date(data_vencimento),
-        subtotal: parseFloat(subtotal),
-        valor_imposto: parseFloat(valor_imposto || 0),
-        valor_desconto: parseFloat(valor_desconto || 0),
-        valor_total: parseFloat(valor_total),
+        subtotal: parseNum(subtotal),
+        valor_imposto: parseNum(valor_imposto || 0),
+        valor_desconto: parseNum(valor_desconto || 0),
+        valor_total: parseNum(valor_total),
         estado: 'pendente',
         notas,
         valor_pago: 0,
@@ -252,7 +237,8 @@ export async function POST(req: NextRequest) {
         toconline_customer_id: toconline_customer_id ? String(toconline_customer_id) : null
       }
     });
-    // Se ordem_trabalho_id existe, associar id da fatura à ordem de trabalho
+
+    // Link invoice to work order if provided
     if (ordemTrabalhoIdParsed) {
       await prisma.ordens_trabalho.update({
         where: { id: BigInt(ordemTrabalhoIdParsed) },
@@ -260,42 +246,33 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: Number(fatura.id),
-        numero_fatura: fatura.numero_fatura,
-        cliente_id: fatura.cliente_id,
-        data_emissao: fatura.data_emissao,
-        data_vencimento: fatura.data_vencimento,
-        estado: fatura.estado,
-        subtotal: parseFloat(fatura.subtotal.toString()),
-        valor_imposto: parseFloat(fatura.valor_imposto?.toString() || '0'),
-        valor_desconto: parseFloat(fatura.valor_desconto?.toString() || '0'),
-        valor_total: parseFloat(fatura.valor_total.toString()),
-        valor_pago: parseFloat(fatura.valor_pago?.toString() || '0'),
-        notas: fatura.notas,
-        criado_em: fatura.criado_em
-      }
-    }, { status: 201 });
-
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Erro ao criar fatura:', error);
-    return NextResponse.json(
-      { success: false, error: 'Erro ao criar fatura' },
-      { status: 500 }
+    return successResponse(
+      {
+        success: true,
+        data: {
+          id: Number(fatura.id),
+          numero_fatura: fatura.numero_fatura,
+          cliente_id: fatura.cliente_id,
+          data_emissao: fatura.data_emissao,
+          data_vencimento: fatura.data_vencimento,
+          estado: fatura.estado,
+          subtotal: parseNum(fatura.subtotal),
+          valor_imposto: parseNum(fatura.valor_imposto || 0),
+          valor_desconto: parseNum(fatura.valor_desconto || 0),
+          valor_total: parseNum(fatura.valor_total),
+          valor_pago: parseNum(fatura.valor_pago || 0),
+          notas: fatura.notas,
+          criado_em: fatura.criado_em
+        }
+      },
+      201
     );
+  } catch (error) {
+    console.error('Error creating invoice:', error);
+    if (error instanceof Error) {
+      return handleDatabaseError(error);
+    }
+    return errorResponse('Failed to create invoice', 500);
   }
 }
 

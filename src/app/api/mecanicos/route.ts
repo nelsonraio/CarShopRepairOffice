@@ -1,11 +1,19 @@
-import { NextResponse } from 'next/server';
+import { successResponse, handleDatabaseError } from '@/lib/api-utils';
 import { PrismaClient } from '@prisma/client';
 
+/**
+ * Initialize Prisma Client for database operations
+ */
 // @ts-ignore
 const prisma = new PrismaClient({
   log: ['error'],
 });
 
+/**
+ * GET: Fetch all mechanics or active mechanics only
+ * @param request - HTTP request
+ * @returns JSON array of mechanics or error response
+ */
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -16,24 +24,17 @@ export async function GET(request: Request) {
       orderBy: { nome: 'asc' }
     });
 
-    return NextResponse.json(mecanicos);
+    return successResponse(mecanicos);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error fetching mecanicos:', error);
-    return NextResponse.json({ error: 'Failed to fetch mecanicos' }, { status: 500 });
+    return handleDatabaseError(error as Error);
   }
 }
 
+/**
+ * POST: Create new mechanic
+ * @param request - HTTP request with mechanic data
+ * @returns Created mechanic or error response
+ */
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -50,24 +51,9 @@ export async function POST(request: Request) {
       }
     });
 
-    return NextResponse.json(mecanico);
-  } catch (error: any) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error creating mecanico:', error);
-    return NextResponse.json({ 
-      error: 'Failed to create mecanico',
-      details: error.message 
-    }, { status: 500 });
+    return successResponse(mecanico, 201);
+  } catch (error) {
+    return handleDatabaseError(error as Error);
   }
 }
 

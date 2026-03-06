@@ -162,12 +162,14 @@
 
 @layer theme {
   :root, :host {
+    --color-red-100: #ffe2e2;
     --color-red-200: #ffcaca;
     --color-red-300: #ffa3a3;
     --color-red-400: #ff6568;
     --color-red-500: #fb2c36;
     --color-red-600: #e40014;
     --color-red-700: #bf000f;
+    --color-red-800: #9f0712;
     --color-red-900: #82181a;
     --color-orange-200: #ffd7a8;
     --color-orange-300: #ffb96d;
@@ -192,8 +194,6 @@
     --color-green-700: #008138;
     --color-green-800: #016630;
     --color-green-900: #0d542b;
-    --color-emerald-400: #00d294;
-    --color-emerald-900: #004e3b;
     --color-blue-200: #bedbff;
     --color-blue-300: #90c5ff;
     --color-blue-400: #54a2ff;
@@ -261,7 +261,6 @@
     --radius-md: .375rem;
     --radius-lg: .5rem;
     --animate-spin: spin 1s linear infinite;
-    --animate-pulse: pulse 2s cubic-bezier(.4, 0, .6, 1) infinite;
     --blur-sm: 8px;
     --default-transition-duration: .15s;
     --default-transition-timing-function: cubic-bezier(.4, 0, .2, 1);
@@ -271,12 +270,14 @@
 
   @supports (color: lab(0% 0 0)) {
     :root, :host {
+      --color-red-100: lab(92.243% 10.2865 3.83865);
       --color-red-200: lab(86.017% 19.8815 7.75869);
       --color-red-300: lab(76.5514% 36.4219 15.5335);
       --color-red-400: lab(63.7053% 60.7449 31.3109);
       --color-red-500: lab(55.4814% 75.0732 48.8528);
       --color-red-600: lab(48.4493% 77.4328 61.5452);
       --color-red-700: lab(40.4273% 67.2623 53.7441);
+      --color-red-800: lab(33.7174% 55.8993 41.0293);
       --color-red-900: lab(28.5139% 44.5539 29.0463);
       --color-orange-200: lab(88.4871% 9.94918 28.8378);
       --color-orange-300: lab(80.8059% 21.7313 50.4455);
@@ -301,8 +302,6 @@
       --color-green-700: lab(47.0329% -47.0239 31.4788);
       --color-green-800: lab(37.4616% -36.7971 22.9692);
       --color-green-900: lab(30.797% -29.6927 17.382);
-      --color-emerald-400: lab(75.0771% -60.7313 19.4146);
-      --color-emerald-900: lab(28.8637% -26.9249 5.45986);
       --color-blue-200: lab(86.15% -4.04379 -21.0797);
       --color-blue-300: lab(77.5052% -6.4629 -36.42);
       --color-blue-400: lab(65.0361% -1.42062 -56.9803);
@@ -603,6 +602,10 @@
     visibility: collapse;
   }
 
+  .visible {
+    visibility: visible;
+  }
+
   .absolute {
     position: absolute;
   }
@@ -685,6 +688,10 @@
 
   .col-span-3 {
     grid-column: span 3 / span 3;
+  }
+
+  .col-span-full {
+    grid-column: 1 / -1;
   }
 
   .container {
@@ -819,6 +826,10 @@
 
   .hidden {
     display: none;
+  }
+
+  .inline {
+    display: inline;
   }
 
   .inline-block {
@@ -1040,10 +1051,6 @@
 
   .transform {
     transform: var(--tw-rotate-x, ) var(--tw-rotate-y, ) var(--tw-rotate-z, ) var(--tw-skew-x, ) var(--tw-skew-y, );
-  }
-
-  .animate-pulse {
-    animation: var(--animate-pulse);
   }
 
   .animate-spin {
@@ -1339,10 +1346,6 @@
     border-color: #facc15;
   }
 
-  .border-emerald-900 {
-    border-color: var(--color-emerald-900);
-  }
-
   .border-gray-500 {
     border-color: var(--color-gray-500);
   }
@@ -1467,6 +1470,10 @@
     }
   }
 
+  .border-yellow-600 {
+    border-color: var(--color-yellow-600);
+  }
+
   .border-yellow-700 {
     border-color: var(--color-yellow-700);
   }
@@ -1531,16 +1538,6 @@
 
   .bg-brand-yellow-dark {
     background-color: #eab308;
-  }
-
-  .bg-emerald-900\/30 {
-    background-color: #004e3b4d;
-  }
-
-  @supports (color: color-mix(in lab, red, red)) {
-    .bg-emerald-900\/30 {
-      background-color: color-mix(in oklab, var(--color-emerald-900) 30%, transparent);
-    }
   }
 
   .bg-gray-500 {
@@ -1829,6 +1826,16 @@
 
   .bg-yellow-900 {
     background-color: var(--color-yellow-900);
+  }
+
+  .bg-yellow-900\/20 {
+    background-color: #733e0a33;
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .bg-yellow-900\/20 {
+      background-color: color-mix(in oklab, var(--color-yellow-900) 20%, transparent);
+    }
   }
 
   .bg-yellow-900\/30 {
@@ -2250,10 +2257,6 @@
     color: #facc15;
   }
 
-  .text-emerald-400 {
-    color: var(--color-emerald-400);
-  }
-
   .text-gray-100 {
     color: var(--color-gray-100);
   }
@@ -2348,6 +2351,10 @@
 
   .text-purple-400 {
     color: var(--color-purple-400);
+  }
+
+  .text-red-100 {
+    color: var(--color-red-100);
   }
 
   .text-red-200 {
@@ -2680,6 +2687,18 @@
   @media (hover: hover) {
     .hover\:bg-purple-700:hover {
       background-color: var(--color-purple-700);
+    }
+  }
+
+  @media (hover: hover) {
+    .hover\:bg-red-700:hover {
+      background-color: var(--color-red-700);
+    }
+  }
+
+  @media (hover: hover) {
+    .hover\:bg-red-800:hover {
+      background-color: var(--color-red-800);
     }
   }
 
@@ -3382,12 +3401,6 @@ body {
 @keyframes spin {
   to {
     transform: rotate(360deg);
-  }
-}
-
-@keyframes pulse {
-  50% {
-    opacity: .5;
   }
 }
 

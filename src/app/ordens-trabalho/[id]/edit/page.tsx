@@ -799,7 +799,7 @@ const EditWorkOrderPage = () => {
                   <div className="absolute z-10 w-full bg-gray-700 border border-gray-600 shadow-lg max-h-60 overflow-y-auto">
                     {searchResults.map(item => (
                       <div
-                        key={item.id}
+                        key={`${item.type}-${item.id}`}
                         className="p-3 hover:bg-gray-600 cursor-pointer border-b border-gray-600 last:border-0"
                         onClick={() => addItemToWorkOrder(item)}
                       >

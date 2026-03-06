@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Sidebar from '../../../components/Sidebar';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface Client {
   id: number;
@@ -45,8 +46,12 @@ interface BudgetItem {
 }
 
 const NewBudgetPage = () => {
+  const router = useRouter();
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const [clientType, setClientType] = useState('C');
   const [budgetId, setBudgetId] = useState('');
+  const [dataEmissao, setDataEmissao] = useState(today);
   const [searchTerm, setSearchTerm] = useState('');
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
@@ -298,38 +303,7 @@ const NewBudgetPage = () => {
     setAlternateContact({ nome: '', telefone: '', email: '' });
   };
 
-  const isGenericTvdeClient = (client: Client | null) => {
-    if (!client) return false;
-    const perfil = (client.perfil || '').toLowerCase();
-    const nome = (client.nome || '').toLowerCase();
-    const isTvde = perfil.includes('tvde');
-    const isGenerico = nome.includes('generico') || nome.includes('genérico');
-    return isTvde && isGenerico;
-  };
 
-  const validateAlternateContact = () => {
-    if (!isGenericTvdeClient(selectedClient)) return true;
-
-    const altPhone = alternateContact.telefone.trim();
-    const altEmail = alternateContact.email.trim();
-    const clientPhone = selectedClient?.telefone?.trim() || '';
-    const clientEmail = selectedClient?.email?.trim() || '';
-
-    if (!altPhone && !altEmail) {
-      alert('Para clientes TVDE genéricos, indique um contacto alternativo (telefone ou email).');
-      return false;
-    }
-
-    const phoneDifferent = altPhone && altPhone !== clientPhone;
-    const emailDifferent = altEmail && altEmail !== clientEmail;
-
-    if (!phoneDifferent && !emailDifferent) {
-      alert('O contacto alternativo deve ser diferente do contacto do cliente.');
-      return false;
-    }
-
-    return true;
-  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -407,6 +381,11 @@ const NewBudgetPage = () => {
   };
 
   const createBudget = async () => {
+    if (!selectedVehicle) {
+      alert('veiculo ainda nao existente. Criar primeiro.');
+      return;
+    }
+
     if (budgetItems.length === 0) {
       alert('Adicione pelo menos um item ao orçamento antes de criar.');
       return;
@@ -417,12 +396,20 @@ const NewBudgetPage = () => {
       return;
     }
 
-    if (!quilometragem) {
-      // Campo quilometragem agora é opcional
+    // Validar contacto alternativo se o telefone principal não existir
+    const clienteTelefone = selectedClient.telefone?.trim();
+    if (!clienteTelefone) {
+      const nomeAlternativo = alternateContact.nome.trim();
+      const telefoneAlternativo = alternateContact.telefone.trim();
+      
+      if (!nomeAlternativo || !telefoneAlternativo) {
+        alert('O cliente não tem telefone registado. Por favor, preencha o Nome e Telefone do contacto alternativo.');
+        return;
+      }
     }
 
-    if (!validateAlternateContact()) {
-      return;
+    if (!quilometragem) {
+      // Campo quilometragem agora é opcional
     }
 
     try {
@@ -451,7 +438,7 @@ const NewBudgetPage = () => {
         cliente_id: selectedClient.id,
         veiculo_id: selectedVehicle ? parseInt(selectedVehicle) : null,
         preparado_por: null, // TODO: Add user ID when authentication is implemented
-        data_emissao: new Date().toISOString().split('T')[0],
+        data_emissao: dataEmissao,
         data_expiracao: null,
         estado: 'pendente',
         kms: parseInt(quilometragem.toString()),
@@ -483,16 +470,11 @@ const NewBudgetPage = () => {
       });
 
       if (response.ok) {
-        const result = await response.json();
+        await response.json();
         alert(`Orçamento ${budgetId} criado com sucesso!\nTotal: €${total.toFixed(2)}\nItens: ${budgetItems.length}`);
-
-        // Reset form after creation
-        setBudgetItems([]);
-        setTotal(0);
-        setSelectedClient(null);
-        setClientSearch('');
-        setBudgetId('');
-        setAlternateContact({ nome: '', telefone: '', email: '' });
+        const params = new URLSearchParams(window.location.search);
+        const origem = params.get('from');
+        router.push(origem === 'kanban' ? '/kanban' : '/orcamentos');
       } else {
         const error = await response.json();
         alert(`Erro ao criar orçamento: ${error.error || 'Erro desconhecido'}`);
@@ -504,13 +486,31 @@ const NewBudgetPage = () => {
   };
 
   const approveBudget = () => {
+    if (!selectedVehicle) {
+      alert('veiculo ainda nao existente. Criar primeiro.');
+      return;
+    }
+
     if (budgetItems.length === 0) {
       alert('Adicione pelo menos um item ao orçamento antes de aprovar.');
       return;
     }
 
-    if (!validateAlternateContact()) {
+    if (!selectedClient) {
+      alert('Selecione um cliente antes de aprovar o orçamento.');
       return;
+    }
+
+    // Validar contacto alternativo se o telefone principal não existir
+    const clienteTelefone = selectedClient.telefone?.trim();
+    if (!clienteTelefone) {
+      const nomeAlternativo = alternateContact.nome.trim();
+      const telefoneAlternativo = alternateContact.telefone.trim();
+      
+      if (!nomeAlternativo || !telefoneAlternativo) {
+        alert('O cliente não tem telefone registado. Por favor, preencha o Nome e Telefone do contacto alternativo.');
+        return;
+      }
     }
 
     const budgetData = {
@@ -671,7 +671,8 @@ const NewBudgetPage = () => {
                   <label className="block text-sm font-medium text-gray-400 mb-1">Data</label>
                   <input
                     type="date"
-                    defaultValue={new Date().toISOString().split('T')[0]}
+                    value={dataEmissao}
+                    onChange={(e) => setDataEmissao(e.target.value)}
                     className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none transition-colors"
                   />
                 </div>
@@ -743,10 +744,16 @@ const NewBudgetPage = () => {
 
             <div className="bg-gray-800 p-4 border border-gray-600 rounded-none mb-8">
               <h4 className="text-lg font-semibold text-gray-200 mb-4">Contacto Alternativo</h4>
-              <p className="text-xs text-gray-400 mb-4">Use este contacto quando o cliente for genérico ou não tiver dados completos.</p>
+              {selectedClient && !selectedClient.telefone?.trim() && (
+                <div className="bg-yellow-900/20 border border-yellow-600 text-yellow-200 px-4 py-2 rounded mb-4">
+                  <p className="text-sm">⚠️ O cliente não tem telefone registado. É obrigatório preencher o Nome e Telefone alternativo.</p>
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Nome</label>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">
+                    Nome {selectedClient && !selectedClient.telefone?.trim() && <span className="text-red-400">*</span>}
+                  </label>
                   <input
                     type="text"
                     value={alternateContact.nome}
@@ -756,7 +763,9 @@ const NewBudgetPage = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Telefone</label>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">
+                    Telefone {selectedClient && !selectedClient.telefone?.trim() && <span className="text-red-400">*</span>}
+                  </label>
                   <input
                     type="text"
                     value={alternateContact.telefone}
@@ -813,7 +822,7 @@ const NewBudgetPage = () => {
                   <div className="absolute z-10 w-full bg-gray-700 border border-gray-600 shadow-lg max-h-60 overflow-y-auto">
                     {searchResults.map(item => (
                       <div
-                        key={item.id}
+                        key={`${item.type}-${item.id}`}
                         className="p-3 hover:bg-gray-600 cursor-pointer border-b border-gray-600 last:border-0"
                         onClick={() => addItemToBudget(item)}
                       >

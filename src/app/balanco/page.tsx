@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import Sidebar from "@/components/Sidebar";
+import { filterPredicates, useFetch, useFilters, usePagination } from "@/hooks";
 
 interface BalanceProcess {
   id: string;
@@ -14,44 +15,29 @@ interface BalanceProcess {
   lucro: number;
 }
 
+interface BalanceResponse {
+  balances?: BalanceProcess[];
+}
+
 export default function BalancoPage() {
-  const [processes, setProcesses] = useState<BalanceProcess[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const ITEMS_PER_PAGE = 20;
+
+  const { data, loading, error } = useFetch<BalanceResponse>('/api/balanco?page=1&limit=100');
+  const processes = data?.balances ?? [];
+
+  const { filters, setFilter, filteredItems: searchFilteredProcesses } = useFilters<BalanceProcess>(
+    processes,
+    {
+      search: filterPredicates.search(['id', 'matricula']),
+    }
+  );
+
   const [dateFilter, setDateFilter] = useState("todos");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  // Pagination state
-  const ITEMS_PER_PAGE = 20;
-  const [currentPage, setCurrentPage] = useState(1);
-
-  useEffect(() => {
-    const fetchBalanceData = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/balanco?page=1&limit=100');
-        const data = await response.json();
-        
-        if (data.balances) {
-          setProcesses(data.balances);
-        }
-      } catch (error) {
-        console.error('Error fetching balance data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBalanceData();
-  }, []);
-
-  const filteredProcesses = processes.filter(process => {
-    const matchesSearch = searchTerm === "" ||
-      process.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      process.matricula.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesDate = (() => {
+  const filteredProcesses = useMemo(() => {
+    return searchFilteredProcesses.filter(process => {
       const now = new Date();
       const processDate = new Date(process.dataConclusao);
 
@@ -76,10 +62,8 @@ export default function BalancoPage() {
       }
 
       return true;
-    })();
-
-    return matchesSearch && matchesDate;
-  });
+    });
+  }, [searchFilteredProcesses, dateFilter, startDate, endDate]);
 
   const calculateTotals = (data: BalanceProcess[]) => {
     const totalEntradas = data.reduce((sum, item) => sum + item.valorEntrada, 0);
@@ -95,16 +79,16 @@ export default function BalancoPage() {
 
   const totals = calculateTotals(filteredProcesses);
 
-  // pagination calculations
-  const totalPages = Math.ceil(filteredProcesses.length / ITEMS_PER_PAGE);
+  const {
+    currentPage,
+    totalPages,
+    paginatedItems: paginatedProcesses,
+    prevPage,
+    nextPage,
+  } = usePagination(filteredProcesses, ITEMS_PER_PAGE, [filters.search, dateFilter, startDate, endDate]);
+
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedProcesses = filteredProcesses.slice(startIndex, endIndex);
-
-  // reset page if filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filteredProcesses]);
 
   const handleExport = () => {
     // In a real app, this would export the data
@@ -199,12 +183,18 @@ export default function BalancoPage() {
             <input
               type="text"
               placeholder="Pesquisar por ID processo ou matrícula..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={filters.search || ""}
+              onChange={(e) => setFilter('search', e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-600 text-white rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow placeholder-gray-500"
             />
           </div>
         </div>
+
+        {error && (
+          <div className="mb-4 bg-red-900 border border-red-700 text-red-200 p-4 rounded-none">
+            Erro ao carregar balanço: {error}
+          </div>
+        )}
 
         {/* Balance Table */}
         {loading ? (
@@ -275,7 +265,7 @@ export default function BalancoPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      onClick={prevPage}
                       disabled={currentPage === 1}
                       className="px-3 py-1 text-sm bg-gray-600 hover:bg-gray-500 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:text-gray-500 text-gray-300 rounded border border-gray-500 transition-colors"
                     >
@@ -285,7 +275,7 @@ export default function BalancoPage() {
                       Página <span className="font-medium text-gray-200">{currentPage}</span> de <span className="font-medium text-gray-200">{totalPages}</span>
                     </span>
                     <button
-                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      onClick={nextPage}
                       disabled={currentPage === totalPages}
                       className="px-3 py-1 text-sm bg-gray-600 hover:bg-gray-500 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:text-gray-500 text-gray-300 rounded border border-gray-500 transition-colors"
                     >

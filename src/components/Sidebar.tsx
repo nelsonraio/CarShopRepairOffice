@@ -1,18 +1,48 @@
 import Link from 'next/link';
 
+/**
+ * Props para o componente Sidebar
+ */
 interface SidebarProps {
-  activePage?: string;
+  activePage?: string; // Identifica página atual para highlight
 }
 
+/**
+ * Sidebar - Menu de navegação lateral da aplicação
+ * 
+ * Funcionalidades:
+ * - Logo e nome da aplicação no topo
+ * - Links de navegação para todas as páginas principais
+ * - Highlight visual da página ativa
+ * - Ícones SVG para cada secção
+ * - Estilo dark theme consistente
+ * 
+ * Páginas disponíveis:
+ * - Quadro da Oficina (Kanban)
+ * - Agenda
+ * - Clientes
+ * - Veículos
+ * - Orçamentos
+ * - Ordens de Trabalho
+ * - Peças
+ * - Faturação (TOConline)
+ * - Balanço
+ * - Tabelas (Configurações)
+ * 
+ * @param activePage - Nome da página ativa para highlight (default: 'dashboard')
+ */
 const Sidebar: React.FC<SidebarProps> = ({ activePage = 'dashboard' }) => {
   return (
     <aside className="w-64 flex-shrink-0 bg-gray-900 border-r border-gray-700">
+      {/* Cabeçalho com Logo */}
       <div className="h-16 flex items-center justify-start border-b border-gray-700">
         <div className="flex items-center space-x-2">
           <img src="/logo.png" alt="MQAuto Logo" className="w-12 h-12 object-contain" />
           <h1 className="text-xl font-bold text-white">MQAuto</h1>
         </div>
       </div>
+      
+      {/* Menu de Navegação */}
       <nav className="mt-6">
         <Link
           href="/kanban"

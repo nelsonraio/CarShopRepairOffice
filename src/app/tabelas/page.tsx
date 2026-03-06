@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 
@@ -10,50 +10,65 @@ interface SystemTable {
   description: string;
   recordCount: number;
   icon: string;
+  endpoint?: string;
 }
 
-const systemTables: SystemTable[] = [
+const systemTablesConfig: SystemTable[] = [
   {
     id: "mecanicos",
     name: "Mecânicos",
     description: "Gerir equipa técnica, especialidades e disponibilidade.",
-    recordCount: 3,
-    icon: "users"
+    recordCount: 0,
+    icon: "users",
+    endpoint: "/api/mecanicos"
   },
   {
     id: "categorias-servico",
     name: "Categorias de Serviço",
     description: "Definir categorias para organização de serviços.",
-    recordCount: 5,
-    icon: "tag"
+    recordCount: 0,
+    icon: "tag",
+    endpoint: "/api/categorias-servico"
   },
   {
     id: "tipos-servico",
     name: "Tipos de Serviço",
     description: "Configurar tipos de intervenção e tempos estimados.",
-    recordCount: 8,
-    icon: "settings"
+    recordCount: 0,
+    icon: "settings",
+    endpoint: "/api/servicos"
   },
   {
     id: "marcas-modelos",
     name: "Marcas e Modelos",
     description: "Gerir lista de marcas de veículos suportadas.",
-    recordCount: 12,
-    icon: "zap"
+    recordCount: 0,
+    icon: "zap",
+    endpoint: "/api/marcas"
   },
   {
     id: "perfis-clientes",
     name: "Perfis de Clientes",
     description: "Gerir perfis (Normal, TVDE Interno, TVDE Externo, etc).",
-    recordCount: 4,
-    icon: "user"
+    recordCount: 0,
+    icon: "user",
+    endpoint: "/api/perfis-clientes"
   },
   {
     id: "fornecedores",
     name: "Fornecedores",
     description: "Gerir lista de fornecedores de peças e contactos.",
-    recordCount: 15,
-    icon: "building"
+    recordCount: 0,
+    icon: "building",
+    endpoint: "/api/fornecedores"
+  },
+  {
+    id: "utilizadores",
+    name: "Utilizadores",
+    description: "Gerir utilizadores do sistema com papéis e permissões.",
+    recordCount: 0,
+    icon: "users-admin",
+    endpoint: "/api/utilizadores"
   }
 ];
 
@@ -102,6 +117,12 @@ const getIcon = (iconName: string) => {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
         </svg>
       );
+    case "users-admin":
+      return (
+        <svg className="w-8 h-8 text-brand-yellow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+        </svg>
+      );
     default:
       return (
         <svg className="w-8 h-8 text-brand-yellow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,6 +135,42 @@ const getIcon = (iconName: string) => {
 export default function TabelasPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
+  const [systemTables, setSystemTables] = useState<SystemTable[]>(systemTablesConfig);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchRecordCounts();
+  }, []);
+
+  const fetchRecordCounts = async () => {
+    try {
+      const updatedTables = await Promise.all(
+        systemTablesConfig.map(async (table) => {
+          if (!table.endpoint) return table;
+
+          try {
+            const response = await fetch(table.endpoint);
+            if (response.ok) {
+              const data = await response.json();
+              return {
+                ...table,
+                recordCount: Array.isArray(data) ? data.length : 0,
+              };
+            }
+          } catch (error) {
+            console.error(`Erro ao buscar ${table.name}:`, error);
+          }
+          return table;
+        })
+      );
+
+      setSystemTables(updatedTables);
+    } catch (error) {
+      console.error("Erro ao buscar contadores:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredTables = systemTables.filter(table =>
     table.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -157,34 +214,38 @@ export default function TabelasPage() {
 
         {/* Tables Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTables.map((table) => (
-            <div
-              key={table.id}
-              className="bg-gray-700 border border-gray-600 p-6 hover:border-brand-yellow transition-colors group"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-gray-800 rounded-lg group-hover:bg-gray-600 transition-colors">
-                  {getIcon(table.icon)}
-                </div>
-                <span className="text-xs font-mono text-gray-400">{table.recordCount} Registos</span>
-              </div>
-              <h3 className="text-xl font-bold text-gray-100 mb-2">{table.name}</h3>
-              <p className="text-sm text-gray-400 mb-6">{table.description}</p>
-              <button
-                onClick={() => handleManageTable(table.id)}
-                className="w-full py-2 px-4 bg-gray-800 hover:bg-brand-yellow hover:text-gray-900 text-gray-300 font-medium transition-colors border border-gray-600 rounded-none"
-              >
-                Gerir Tabela
-              </button>
+          {loading ? (
+            <div className="col-span-full flex justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-yellow"></div>
             </div>
-          ))}
+          ) : filteredTables.length === 0 ? (
+            <div className="col-span-full text-center py-12 text-gray-400">
+              Nenhuma tabela encontrada com os critérios de pesquisa.
+            </div>
+          ) : (
+            filteredTables.map((table) => (
+              <div
+                key={table.id}
+                className="bg-gray-700 border border-gray-600 p-6 hover:border-brand-yellow transition-colors group"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-gray-800 rounded-lg group-hover:bg-gray-600 transition-colors">
+                    {getIcon(table.icon)}
+                  </div>
+                  <span className="text-xs font-mono text-gray-400">{table.recordCount} Registos</span>
+                </div>
+                <h3 className="text-xl font-bold text-gray-100 mb-2">{table.name}</h3>
+                <p className="text-sm text-gray-400 mb-6">{table.description}</p>
+                <button
+                  onClick={() => handleManageTable(table.id)}
+                  className="w-full py-2 px-4 bg-gray-800 hover:bg-brand-yellow hover:text-gray-900 text-gray-300 font-medium transition-colors border border-gray-600 rounded-none"
+                >
+                  Gerir Tabela
+                </button>
+              </div>
+            ))
+          )}
         </div>
-
-        {filteredTables.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-400">Nenhuma tabela encontrada com os critérios de pesquisa.</p>
-          </div>
-        )}
       </main>
     </div>
   );

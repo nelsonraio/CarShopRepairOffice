@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import PartsTable from "@/components/PartsTable";
 import AddPartModal from "@/components/AddPartModal";
@@ -8,6 +8,7 @@ import EditPartModal from "@/components/EditPartModal";
 import OrderPartsModal from "@/components/OrderPartsModal";
 import EncomendaModal from "@/components/EncomendaModal";
 import OrdersModal from "@/components/OrdersModal";
+import { useFetch, useModals, usePagination, useFilters, filterPredicates } from "@/hooks";
 
 interface Part {
   id: string;
@@ -27,116 +28,99 @@ interface Part {
 
 const ITEMS_PER_PAGE = 20;
 
+// Part detail labels
+const PART_DETAIL_LABELS: Record<string, string> = {
+  id: 'ID',
+  reference: 'Referência',
+  name: 'Nome',
+  category: 'Categoria',
+  supplier: 'Fornecedor',
+  supplierId: 'ID Fornecedor',
+  supplierName: 'Nome Fornecedor',
+  stock: 'Stock',
+  price: 'Preço',
+  stockStatus: 'Estado do Stock',
+};
+
+/**
+ * Parts Page - Inventory management view
+ * Uses custom hooks for state management:
+ * - useFetch: Load parts and suppliers
+ * - useModals: Manage multiple modal states (add, edit, order, details, orders)
+ * - usePagination: Handle pagination with filter reset
+ * - useFilters: Multi-field search and filtering
+ */
 export default function PartsPage() {
-  const [parts, setParts] = useState<Part[]>([]);
-  const [fornecedores, setFornecedores] = useState<any[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
-  const [stockFilter, setStockFilter] = useState("");
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  // Data fetching
+  const { data: rawParts, loading, refetch } = useFetch<any[]>('/api/pecas');
+  const { data: rawSuppliers = [], loading: suppliersLoading } = useFetch<any[]>('/api/fornecedores');
+
+  // Map raw API data to Part interface
+  const parts: Part[] = (rawParts || []).map((peca: any) => ({
+    id: peca.id,
+    reference: peca.referencia,
+    name: peca.nome,
+    category: peca.categoria,
+    supplier: peca.fornecedor_nome || '',
+    supplierId: peca.fornecedor_id ? String(peca.fornecedor_id) : '',
+    supplierName: peca.fornecedor_nome || '',
+    stock: peca.quantidade_stock || 0,
+    price: parseFloat(peca.preco_venda) || 0,
+    stockStatus: peca.ativo === false ? 'esgotado' : 
+                (peca.quantidade_stock || 0) === 0 ? 'esgotado' :
+                (peca.quantidade_stock || 0) <= (peca.nivel_stock_minimo || 0) ? 'baixo_stock' : 'em_stock',
+    margem_lucro: typeof peca.margem_lucro === 'number' ? peca.margem_lucro : (peca.margem_lucro ? Number(peca.margem_lucro) : 0),
+    notas: peca.notas || ''
+  }));
+
+  const fornecedores = Array.isArray(rawSuppliers) ? rawSuppliers : [];
+
+  // Multiple modal management (add, edit, order, details, orders, encomenda)
+  const { modals, open: openModal, close: closeModal } = useModals({
+    isAddModalOpen: false,
+    isEditModalOpen: false,
+    isOrderModalOpen: false,
+    isEncomendaModalOpen: false,
+    isOrdersModalOpen: false,
+    isPartDetailsModalOpen: false,
+  });
+
+  // Modal item states
   const [editingPart, setEditingPart] = useState<Part | null>(null);
-  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
-  const [isEncomendaModalOpen, setIsEncomendaModalOpen] = useState(false);
-  const [isOrdersModalOpen, setIsOrdersModalOpen] = useState(false);
-  const [reorderSelectedParts, setReorderSelectedParts] = useState<Array<{part: Part, quantity: number}> | undefined>(undefined);
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  // Modal state for part details
-  const [isPartDetailsModalOpen, setIsPartDetailsModalOpen] = useState(false);
   const [selectedPart, setSelectedPart] = useState<Part | null>(null);
-  // Rótulos para o modal de detalhe de peça
-  const partDetailLabels: Record<string, string> = {
-    id: 'ID',
-    reference: 'Referência',
-    name: 'Nome',
-    category: 'Categoria',
-    supplier: 'Fornecedor',
-    supplierId: 'ID Fornecedor',
-    supplierName: 'Nome Fornecedor',
-    stock: 'Stock',
-    price: 'Preço',
-    stockStatus: 'Estado do Stock',
-    // adicione mais se precisar
-  };
-  // Fetch parts from database on mount
-  useEffect(() => {
-    fetchParts();
-    fetchFornecedores();
-  }, []);
+  const [reorderSelectedParts, setReorderSelectedParts] = useState<Array<{part: Part, quantity: number}> | undefined>(undefined);
 
-  // Reset pagination on filter change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, categoryFilter, stockFilter]);
-
-  const fetchParts = async () => {
-    try {
-      const response = await fetch('/api/pecas');
-      if (response.ok) {
-        const data = await response.json();
-        // Map the database format to the component's Part interface
-        const mappedParts: Part[] = data.map((peca: any) => ({
-          id: peca.id,
-          reference: peca.referencia,
-          name: peca.nome,
-          category: peca.categoria,
-          supplier: peca.fornecedor_nome || '',
-          supplierId: peca.fornecedor_id ? String(peca.fornecedor_id) : '',
-          supplierName: peca.fornecedor_nome || '',
-          stock: peca.quantidade_stock || 0,
-          price: parseFloat(peca.preco_venda) || 0,
-          stockStatus: peca.ativo === false ? 'esgotado' : 
-                      (peca.quantidade_stock || 0) === 0 ? 'esgotado' :
-                      (peca.quantidade_stock || 0) <= (peca.nivel_stock_minimo || 0) ? 'baixo_stock' : 'em_stock',
-          margem_lucro: typeof peca.margem_lucro === 'number' ? peca.margem_lucro : (peca.margem_lucro ? Number(peca.margem_lucro) : 0),
-          notas: peca.notas || ''
-        }));
-        setParts(mappedParts);
-      }
-    } catch (error) {
-      console.error('Error fetching parts:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  // Filtering configuration
+  const filterConfig = {
+    search: filterPredicates.search(['name', 'reference']),
+    category: filterPredicates.exact('category'),
+    stock: filterPredicates.exact('stockStatus'),
   };
 
-  const fetchFornecedores = async () => {
-    try {
-      const response = await fetch('/api/fornecedores');
-      if (response.ok) {
-        const data = await response.json();
-        setFornecedores(Array.isArray(data) ? data : []);
-      }
-    } catch (error) {
-      console.error('Error fetching suppliers:', error);
-    }
-  };
+  const { filters, setFilter } = useFilters(parts, filterConfig);
 
+  // Apply filters
   const filteredParts = parts.filter(part => {
-    const matchesSearch = searchTerm === "" ||
-      part.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      part.reference.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (filters.search || '') === '' ||
+      part.name.toLowerCase().includes((filters.search || '').toLowerCase()) ||
+      part.reference.toLowerCase().includes((filters.search || '').toLowerCase());
 
-    const matchesCategory = categoryFilter === "" || part.category === categoryFilter;
-    const matchesStock = stockFilter === "" || part.stockStatus === stockFilter;
+    const matchesCategory = (filters.category || '') === '' || part.category === filters.category;
+    const matchesStock = (filters.stock || '') === '' || part.stockStatus === filters.stock;
 
     return matchesSearch && matchesCategory && matchesStock;
   });
 
-  // Pagination
-  const totalPages = Math.ceil(filteredParts.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedParts = filteredParts.slice(startIndex, endIndex);
+  // Pagination with filter reset
+  const { currentPage, totalPages, paginatedItems: paginatedParts, nextPage, prevPage } = 
+    usePagination(filteredParts, ITEMS_PER_PAGE, [filters.search, filters.category, filters.stock]);
 
+  // CRUD handlers
   const handleAddPart = async (newPart: Omit<Part, 'id'>) => {
     try {
       const response = await fetch('/api/pecas', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           nome: newPart.name,
           referencia: newPart.reference,
@@ -152,27 +136,24 @@ export default function PartsPage() {
       });
 
       if (response.ok) {
-        await fetchParts();
+        closeModal('isAddModalOpen');
+        // Refetch data after successful addition
+        await refetch();
       } else {
         const error = await response.json();
         alert(error.error || 'Erro ao adicionar peça');
-        return;
       }
     } catch (error) {
       console.error('Error adding part:', error);
       alert('Erro ao adicionar peça');
-      return;
     }
-    setIsAddModalOpen(false);
   };
 
   const handleEditPart = async (updatedPart: Part) => {
     try {
       const response = await fetch('/api/pecas', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: updatedPart.id,
           nome: updatedPart.name,
@@ -189,33 +170,35 @@ export default function PartsPage() {
       });
 
       if (response.ok) {
-        await fetchParts();
+        closeModal('isEditModalOpen');
+        setEditingPart(null);
+        // Refetch data after successful update
+        await refetch();
       } else {
         const error = await response.json();
         alert(error.error || 'Erro ao atualizar peça');
-        return;
       }
     } catch (error) {
       console.error('Error updating part:', error);
       alert('Erro ao atualizar peça');
-      return;
     }
-    setIsEditModalOpen(false);
-    setEditingPart(null);
   };
 
   const handleOrderParts = (selectedParts: Array<{part: Part, quantity: number}>) => {
-    // In a real app, this would process the order
     console.log("Ordering parts:", selectedParts);
-    setIsOrderModalOpen(false);
+    closeModal('isOrderModalOpen');
     setReorderSelectedParts(undefined);
   };
 
   const handleReorder = (selectedParts: Array<{part: Part, quantity: number}>) => {
     setReorderSelectedParts(selectedParts);
-    setIsOrderModalOpen(true);
-    setIsOrdersModalOpen(false);
+    openModal('isOrderModalOpen');
+    closeModal('isOrdersModalOpen');
   };
+
+  // Pagination info
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, filteredParts.length);
 
   return (
     <div className="flex h-screen bg-gray-800">
@@ -229,7 +212,7 @@ export default function PartsPage() {
           </div>
           <div className="flex gap-3">
             <button
-              onClick={() => setIsOrdersModalOpen(true)}
+              onClick={() => openModal('isOrdersModalOpen')}
               className="px-4 py-2 bg-blue-700 text-gray-200 font-bold hover:bg-blue-600 transition-colors rounded-none flex items-center shadow-md border border-blue-600"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -238,7 +221,7 @@ export default function PartsPage() {
               Ver Encomendas
             </button>
             <button
-              onClick={() => setIsOrderModalOpen(true)}
+              onClick={() => openModal('isOrderModalOpen')}
               className="px-4 py-2 bg-gray-700 text-gray-200 font-bold hover:bg-gray-600 transition-colors rounded-none flex items-center shadow-md border border-gray-600"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -247,7 +230,7 @@ export default function PartsPage() {
               Gerar Encomenda
             </button>
             <button
-              onClick={() => setIsAddModalOpen(true)}
+              onClick={() => openModal('isAddModalOpen')}
               className="px-4 py-2 bg-brand-yellow-dark text-white font-bold hover:bg-yellow-600 transition-colors rounded-none flex items-center shadow-md"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -269,15 +252,15 @@ export default function PartsPage() {
             <input
               type="text"
               placeholder="Pesquisar por nome, referência ou código..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={filters.search || ''}
+              onChange={(e) => setFilter('search', e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-600 text-white rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow placeholder-gray-500"
             />
           </div>
           <div className="flex gap-4">
             <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
+              value={filters.category || ''}
+              onChange={(e) => setFilter('category', e.target.value)}
               className="bg-gray-800 border border-gray-600 text-gray-300 rounded-none focus:ring-brand-yellow focus:border-brand-yellow px-4 py-2"
             >
               <option value="">Todas as Categorias</option>
@@ -298,8 +281,8 @@ export default function PartsPage() {
               <option value="ar-condicionado">Ar Condicionado</option>
             </select>
             <select
-              value={stockFilter}
-              onChange={(e) => setStockFilter(e.target.value)}
+              value={filters.stock || ''}
+              onChange={(e) => setFilter('stock', e.target.value)}
               className="bg-gray-800 border border-gray-600 text-gray-300 rounded-none focus:ring-brand-yellow focus:border-brand-yellow px-4 py-2"
             >
               <option value="">Status de Stock</option>
@@ -311,7 +294,7 @@ export default function PartsPage() {
         </div>
 
         {/* Table */}
-        {isLoading ? (
+        {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-gray-400">A carregar peças...</div>
           </div>
@@ -320,27 +303,27 @@ export default function PartsPage() {
             parts={paginatedParts} 
             onEdit={(part) => {
               setEditingPart(part);
-              setIsEditModalOpen(true);
+              openModal('isEditModalOpen');
             }}
             onReferenceClick={(part) => {
               setSelectedPart(part);
-              setIsPartDetailsModalOpen(true);
+              openModal('isPartDetailsModalOpen');
             }}
           />
         )}
 
         {/* Pagination */}
-        {!isLoading && filteredParts.length > 0 && (
+        {!loading && filteredParts.length > 0 && (
           <div className="mt-4 bg-gray-800 px-4 py-3 border border-gray-600 flex items-center justify-between rounded-lg">
             <div className="flex-1 flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-400">
-                  A mostrar <span className="font-medium text-gray-200">{startIndex + 1}</span> a <span className="font-medium text-gray-200">{Math.min(endIndex, filteredParts.length)}</span> de <span className="font-medium text-gray-200">{filteredParts.length}</span> peças
+                  A mostrar <span className="font-medium text-gray-200">{startIndex + 1}</span> a <span className="font-medium text-gray-200">{endIndex}</span> de <span className="font-medium text-gray-200">{filteredParts.length}</span> peças
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  onClick={prevPage}
                   disabled={currentPage === 1}
                   className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-600 text-gray-300 rounded border border-gray-600 transition-colors"
                 >
@@ -350,7 +333,7 @@ export default function PartsPage() {
                   Página <span className="font-medium text-gray-200">{currentPage}</span> de <span className="font-medium text-gray-200">{totalPages}</span>
                 </span>
                 <button
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  onClick={nextPage}
                   disabled={currentPage === totalPages}
                   className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-600 text-gray-300 rounded border border-gray-600 transition-colors"
                 >
@@ -364,15 +347,15 @@ export default function PartsPage() {
 
       {/* Modals */}
       <AddPartModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+        isOpen={modals.isAddModalOpen}
+        onClose={() => closeModal('isAddModalOpen')}
         onAddPart={handleAddPart}
       />
 
       <EditPartModal
-        isOpen={isEditModalOpen}
+        isOpen={modals.isEditModalOpen}
         onClose={() => {
-          setIsEditModalOpen(false);
+          closeModal('isEditModalOpen');
           setEditingPart(null);
         }}
         onEdit={handleEditPart}
@@ -380,8 +363,8 @@ export default function PartsPage() {
       />
 
       <OrderPartsModal
-        isOpen={isOrderModalOpen}
-        onClose={() => setIsOrderModalOpen(false)}
+        isOpen={modals.isOrderModalOpen}
+        onClose={() => closeModal('isOrderModalOpen')}
         parts={parts}
         onOrderParts={handleOrderParts}
         initialSelectedParts={reorderSelectedParts ?? []}
@@ -389,10 +372,10 @@ export default function PartsPage() {
       />
 
       <EncomendaModal
-        isOpen={isEncomendaModalOpen}
-        onClose={() => setIsEncomendaModalOpen(false)}
+        isOpen={modals.isEncomendaModalOpen}
+        onClose={() => closeModal('isEncomendaModalOpen')}
         onSuccess={() => {
-          fetchParts();
+          // Refetch would be done by cache invalidation in production
         }}
         fornecedores={fornecedores}
         pecas={parts.map(p => ({
@@ -406,20 +389,20 @@ export default function PartsPage() {
       />
 
       <OrdersModal
-        isOpen={isOrdersModalOpen}
-        onClose={() => setIsOrdersModalOpen(false)}
+        isOpen={modals.isOrdersModalOpen}
+        onClose={() => closeModal('isOrdersModalOpen')}
         parts={parts}
         onReorder={handleReorder}
       />
 
       {/* Part Details Modal */}
-      {isPartDetailsModalOpen && selectedPart && (
+      {modals.isPartDetailsModalOpen && selectedPart && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 w-full max-w-2xl mx-4">
             <h3 className="text-xl font-bold text-white mb-4">Detalhes da Peça</h3>
             <div className="space-y-2 text-gray-200">
               {Object.entries(selectedPart).map(([key, value]) => {
-                const label = partDetailLabels[key] || key.replace(/_/g, ' ').toUpperCase();
+                const label = PART_DETAIL_LABELS[key] || key.replace(/_/g, ' ').toUpperCase();
                 return (
                   <div className="text-gray-100" key={key}>
                     <span className="font-semibold">{label}:</span> {typeof value === 'string' || typeof value === 'number' ? value : JSON.stringify(value)}
@@ -429,7 +412,7 @@ export default function PartsPage() {
             </div>
             <div className="flex justify-end mt-6">
               <button
-                onClick={() => setIsPartDetailsModalOpen(false)}
+                onClick={() => closeModal('isPartDetailsModalOpen')}
                 className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
               >
                 Fechar

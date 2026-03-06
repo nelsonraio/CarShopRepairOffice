@@ -1,0 +1,510 @@
+CarShopRepairOffice - Documentacao da Estrutura Hierarquica
+Data: 2026-03-06
+
+============================================================
+1) VISAO GERAL
+============================================================
+Projeto web para gestao de oficina automovel (clientes, veiculos, agenda,
+pecas, ordens de trabalho, orcamentos, faturacao e tabelas de configuracao).
+Stack principal: Next.js (App Router), TypeScript/JavaScript, Prisma, MySQL.
+
+============================================================
+2) ESTRUTURA HIERARQUICA (PAGINAS, APIS, COMPONENTES)
+============================================================
+
+2.1) Paginas (src/app)
+- src/app/page.tsx
+- src/app/agenda/page.tsx
+- src/app/agenda/novo/page.tsx
+- src/app/agenda/[id]/edit/page.tsx
+- src/app/balanco/page.tsx
+- src/app/clientes/page.tsx
+- src/app/clientes/novo/page.tsx
+- src/app/clientes/[id]/edit/page.tsx
+- src/app/estoque/page.tsx
+- src/app/fatura-simplificada-json/page.jsx
+- src/app/faturacao/page.tsx
+- src/app/kanban/page.tsx
+- src/app/oauth-callback/page.tsx
+- src/app/offline/page.tsx
+- src/app/orcamentos/page.tsx
+- src/app/orcamentos/novo/page.tsx
+- src/app/orcamentos/[id]/edit/page.tsx
+- src/app/ordens-trabalho/page.tsx
+- src/app/ordens-trabalho/novo/page.tsx
+- src/app/ordens-trabalho/[id]/edit/page.tsx
+- src/app/pecas/page.tsx
+- src/app/tabelas/page.tsx
+- src/app/tabelas/categorias-servico/page.tsx
+- src/app/tabelas/fornecedores/page.tsx
+- src/app/tabelas/marcas-modelos/page.tsx
+- src/app/tabelas/mecanicos/page.tsx
+- src/app/tabelas/perfis-clientes/page.tsx
+- src/app/tabelas/tipos-servico/page.tsx
+- src/app/veiculos/page.tsx
+- src/app/veiculos/novo/page.tsx
+- src/app/veiculos/[id]/edit/page.tsx
+
+2.2) API Routes (src/app/api)
+- src/app/api/agendamentos/route.ts
+- src/app/api/agendamentos/hoje/route.ts
+- src/app/api/agendamentos/search/route.ts
+- src/app/api/agendamentos/[id]/route.ts
+- src/app/api/app-status/route.ts
+- src/app/api/app-status/toggle/route.ts
+- src/app/api/balanco/route.ts
+- src/app/api/categorias-pecas/route.ts
+- src/app/api/categorias-servico/route.ts
+- src/app/api/categorias-servico/[id]/route.ts
+- src/app/api/clientes/route.ts
+- src/app/api/clientes/search/route.ts
+- src/app/api/clientes/[id]/route.ts
+- src/app/api/encomendas/route.ts
+- src/app/api/encomendas/[id]/route.ts
+- src/app/api/encomendas/[id]/adicionar-stock/route.ts
+- src/app/api/encomendas/[id]/receber/route.ts
+- src/app/api/fatura-simplificada/route.js
+- src/app/api/faturas/route.ts
+- src/app/api/faturas/proximo-numero/route.ts
+- src/app/api/faturas/ordens-trabalho/route.ts
+- src/app/api/faturas/[id]/route.ts
+- src/app/api/faturas/[id]/pdf/route.ts
+- src/app/api/faturas/[id]/pdf-recibo/route.ts
+- src/app/api/faturas/[id]/pdf-toconline/route.ts
+- src/app/api/faturas/[id]/recibo/route.ts
+- src/app/api/faturas-externas/route.js
+- src/app/api/fornecedores/route.ts
+- src/app/api/fornecedores/[id]/route.ts
+- src/app/api/health/route.ts
+- src/app/api/marcas/route.ts
+- src/app/api/marcas/search/route.ts
+- src/app/api/marcas/[id]/route.ts
+- src/app/api/mecanicos/route.ts
+- src/app/api/mecanicos/search/route.ts
+- src/app/api/mecanicos/[id]/route.ts
+- src/app/api/modelos/route.ts
+- src/app/api/modelos/search/route.ts
+- src/app/api/modelos/[id]/route.ts
+- src/app/api/oauth-capture/route.js
+- src/app/api/oauth-config-check/route.ts
+- src/app/api/oauth-debug/route.js
+- src/app/api/oauth-test/route.js
+- src/app/api/orcamentos/route.ts
+- src/app/api/orcamentos/next-id/route.ts
+- src/app/api/ordens-trabalho/route.ts
+- src/app/api/pecas/route.ts
+- src/app/api/pecas/search/route.ts
+- src/app/api/perfis-clientes/route.ts
+- src/app/api/perfis-clientes/[id]/route.ts
+- src/app/api/produtos/route.js
+- src/app/api/servicos/route.ts
+- src/app/api/servicos/search/route.ts
+- src/app/api/servicos/[id]/route.ts
+- src/app/api/veiculos/route.ts
+- src/app/api/veiculos/search/route.ts
+- src/app/api/veiculos/[id]/route.ts
+
+2.3) Componentes (src/components)
+- src/components/AddPartModal.tsx
+- src/components/AppointmentCard.tsx
+- src/components/AppointmentDetailsModal.tsx
+- src/components/AppointmentModal.tsx
+- src/components/Calendar.tsx
+- src/components/ClientModal.tsx
+- src/components/ClientTable.tsx
+- src/components/CriarFaturaModal.tsx
+- src/components/DayDetailsModal.tsx
+- src/components/EditableDataGrid.tsx
+- src/components/EditPartModal.tsx
+- src/components/EncomendaModal.tsx
+- src/components/FAB.tsx
+- src/components/FaturaSimplificadaForm.jsx
+- src/components/Form.tsx
+- src/components/KanbanBoard.tsx
+- src/components/KanbanCard.tsx
+- src/components/KanbanCardDetailsModal.tsx
+- src/components/KanbanColumn.tsx
+- src/components/KanbanModal.tsx
+- src/components/KPICard.tsx
+- src/components/NewVehicleModal.tsx
+- src/components/OfflineGuard.tsx
+- src/components/OrderPartsModal.tsx
+- src/components/OrdersModal.tsx
+- src/components/PartsTable.tsx
+- src/components/ProdutosListagem.jsx
+- src/components/ReceiveModal.tsx
+- src/components/ReturnModal.tsx
+- src/components/Sidebar.tsx
+- src/components/VehicleDetailsModal.tsx
+- src/components/VehicleHistoryModal.tsx
+- src/components/VehicleTable.tsx
+- src/components/VehiclesTable.tsx
+
+============================================================
+3) DESCRICAO DAS PAGINAS
+============================================================
+
+- / (src/app/page.tsx)
+  Dashboard inicial da aplicacao com resumo geral e navegacao para modulos.
+
+- /agenda (src/app/agenda/page.tsx)
+  Gestao de agendamentos: listagem, pesquisa, detalhes e acesso a criacao/edicao.
+
+- /agenda/novo (src/app/agenda/novo/page.tsx)
+  Formulario para criar novo agendamento.
+
+- /agenda/[id]/edit (src/app/agenda/[id]/edit/page.tsx)
+  Formulario para editar um agendamento existente.
+
+- /balanco (src/app/balanco/page.tsx)
+  Visao financeira com indicadores de receitas, custos e margem/lucro.
+
+- /clientes (src/app/clientes/page.tsx)
+  Gestao de clientes: listagem, pesquisa, paginação e detalhes.
+
+- /clientes/novo (src/app/clientes/novo/page.tsx)
+  Formulario para registar novo cliente.
+
+- /clientes/[id]/edit (src/app/clientes/[id]/edit/page.tsx)
+  Formulario para atualizar dados de cliente existente.
+
+- /estoque (src/app/estoque/page.tsx)
+  Visao de inventario/stock de pecas, entradas, saidas e estado atual.
+
+- /fatura-simplificada-json (src/app/fatura-simplificada-json/page.jsx)
+  Interface para criar fatura simplificada (fluxo JSON/integracao externa).
+
+- /faturacao (src/app/faturacao/page.tsx)
+  Modulo de faturacao externa (TOConline), listagem e operacoes de faturas.
+
+- /kanban (src/app/kanban/page.tsx)
+  Quadro de trabalho da oficina por estados (pipeline operacional).
+
+- /oauth-callback (src/app/oauth-callback/page.tsx)
+  Pagina de retorno do fluxo OAuth (autorizacao/integracao externa).
+
+- /offline (src/app/offline/page.tsx)
+  Pagina de indisponibilidade quando internet/API/DB estao offline.
+
+- /orcamentos (src/app/orcamentos/page.tsx)
+  Gestao de orcamentos: listagem, consulta e operacoes CRUD.
+
+- /orcamentos/novo (src/app/orcamentos/novo/page.tsx)
+  Formulario para criar novo orcamento.
+
+- /orcamentos/[id]/edit (src/app/orcamentos/[id]/edit/page.tsx)
+  Formulario para editar orcamento existente.
+
+- /ordens-trabalho (src/app/ordens-trabalho/page.tsx)
+  Gestao de ordens de trabalho: listagem, filtros e mudanca de estado.
+
+- /ordens-trabalho/novo (src/app/ordens-trabalho/novo/page.tsx)
+  Formulario para abrir nova ordem de trabalho.
+
+- /ordens-trabalho/[id]/edit (src/app/ordens-trabalho/[id]/edit/page.tsx)
+  Formulario para editar ordem de trabalho existente.
+
+- /pecas (src/app/pecas/page.tsx)
+  Gestao de pecas: catalogo, edicao, reposicao e operacoes de stock.
+
+- /tabelas (src/app/tabelas/page.tsx)
+  Menu de tabelas maestras/configuracoes da aplicacao.
+
+- /tabelas/categorias-servico (src/app/tabelas/categorias-servico/page.tsx)
+  CRUD de categorias de servico.
+
+- /tabelas/fornecedores (src/app/tabelas/fornecedores/page.tsx)
+  CRUD de fornecedores.
+
+- /tabelas/marcas-modelos (src/app/tabelas/marcas-modelos/page.tsx)
+  CRUD de marcas e modelos de veiculos.
+
+- /tabelas/mecanicos (src/app/tabelas/mecanicos/page.tsx)
+  CRUD de mecanicos/tecnicos.
+
+- /tabelas/perfis-clientes (src/app/tabelas/perfis-clientes/page.tsx)
+  CRUD de perfis de cliente e percentagem de lucro associada.
+
+- /tabelas/tipos-servico (src/app/tabelas/tipos-servico/page.tsx)
+  Gestao de tipos de servico e classificacao operacional.
+
+- /veiculos (src/app/veiculos/page.tsx)
+  Gestao de veiculos: listagem, historico e detalhes.
+
+- /veiculos/novo (src/app/veiculos/novo/page.tsx)
+  Formulario para registar novo veiculo.
+
+- /veiculos/[id]/edit (src/app/veiculos/[id]/edit/page.tsx)
+  Formulario para editar dados de veiculo existente.
+
+============================================================
+4) DESCRICAO DAS APIS (ROTAS + METODOS)
+============================================================
+
+Agenda
+- /api/agendamentos (GET, POST, PUT)
+  Lista agendamentos, cria agendamento e atualiza registros.
+- /api/agendamentos/hoje (GET)
+  Retorna agendamentos do dia atual.
+- /api/agendamentos/search (GET)
+  Pesquisa de agendamentos por termos/filtros.
+- /api/agendamentos/[id] (GET, PUT, PATCH, DELETE)
+  Operacoes por id de agendamento.
+
+App status / licenca
+- /api/app-status (GET, POST)
+  Consulta e atualiza estado de ativacao da aplicacao.
+- /api/app-status/toggle (GET)
+  Alterna estado da aplicacao (ativo/inativo).
+
+Balanco
+- /api/balanco (GET)
+  Retorna agregados financeiros e indicadores para painel de balanco.
+
+Categorias
+- /api/categorias-pecas (GET)
+  Lista categorias de pecas.
+- /api/categorias-servico (GET, POST)
+  Lista e cria categorias de servico.
+- /api/categorias-servico/[id] (PUT, PATCH, DELETE)
+  Atualiza parcial/total e remove categoria de servico.
+
+Clientes
+- /api/clientes (GET, POST)
+  Lista e cria clientes.
+- /api/clientes/search (GET)
+  Pesquisa clientes por nome/NIF/telefone e outros filtros.
+- /api/clientes/[id] (GET, PUT, DELETE)
+  Consulta, atualiza e remove cliente por id.
+
+Encomendas
+- /api/encomendas (GET, POST)
+  Lista e cria encomendas de pecas.
+- /api/encomendas/[id] (PATCH)
+  Atualizacao parcial de encomenda.
+- /api/encomendas/[id]/adicionar-stock (POST)
+  Movimenta para stock itens recebidos na encomenda.
+- /api/encomendas/[id]/receber (POST)
+  Regista rececao de encomenda.
+
+Faturacao
+- /api/fatura-simplificada (POST)
+  Cria fatura simplificada (integracao/faturacao externa).
+- /api/faturas (GET, POST)
+  Lista e cria faturas.
+- /api/faturas/proximo-numero (GET)
+  Obtem proximo numero de fatura.
+- /api/faturas/ordens-trabalho (GET, POST)
+  Consulta ordens elegiveis e cria faturacao a partir de ordem.
+- /api/faturas/[id] (GET, PUT, PATCH, DELETE)
+  Operacoes completas por id de fatura.
+- /api/faturas/[id]/pdf (GET)
+  Gera ou obtem PDF da fatura.
+- /api/faturas/[id]/pdf-recibo (POST)
+  Gera PDF do recibo associado.
+- /api/faturas/[id]/pdf-toconline (POST)
+  Obtem/gera PDF via TOConline.
+- /api/faturas/[id]/recibo (POST)
+  Emite/gera recibo da fatura.
+- /api/faturas-externas (GET, POST)
+  Integracao de leitura/criacao de faturas em sistema externo.
+
+Fornecedores
+- /api/fornecedores (GET, POST)
+  Lista e cria fornecedores.
+- /api/fornecedores/[id] (PUT, PATCH, DELETE)
+  Atualiza total/parcial e remove fornecedor.
+
+Infra / Saude
+- /api/health (GET)
+  Health check de servidor + conectividade de base de dados.
+
+Marcas e modelos
+- /api/marcas (GET, POST)
+  Lista e cria marcas.
+- /api/marcas/search (GET)
+  Pesquisa marcas.
+- /api/marcas/[id] (PUT, PATCH, DELETE)
+  Atualiza e remove marca por id.
+- /api/modelos (GET, POST)
+  Lista e cria modelos.
+- /api/modelos/search (GET)
+  Pesquisa modelos.
+- /api/modelos/[id] (PUT, PATCH, DELETE)
+  Atualiza e remove modelo por id.
+
+Mecanicos
+- /api/mecanicos (GET, POST)
+  Lista e cria mecanicos.
+- /api/mecanicos/search (GET)
+  Pesquisa mecanicos.
+- /api/mecanicos/[id] (PUT, PATCH, DELETE)
+  Atualiza e remove mecanico por id.
+
+OAuth / Integracao
+- /api/oauth-capture (GET)
+  Captura parametros de callback OAuth.
+- /api/oauth-config-check (GET)
+  Verifica configuracao OAuth no servidor.
+- /api/oauth-debug (GET)
+  Endpoint de diagnostico do fluxo OAuth.
+- /api/oauth-test (GET, POST)
+  Endpoint de teste para fluxo OAuth e tokens.
+
+Orcamentos
+- /api/orcamentos (GET, POST, PUT, DELETE)
+  Operacoes principais de orcamentos.
+- /api/orcamentos/next-id (GET)
+  Devolve proximo identificador/numero de orcamento.
+
+Ordens de trabalho
+- /api/ordens-trabalho (GET, POST, PATCH, DELETE)
+  CRUD operacional de ordens e mudancas de estado.
+
+Pecas
+- /api/pecas (GET, POST, PUT)
+  Lista, cria e atualiza pecas.
+- /api/pecas/search (GET)
+  Pesquisa de pecas por nome/codigo/categoria.
+
+Perfis de clientes
+- /api/perfis-clientes (GET, POST)
+  Lista e cria perfis de cliente.
+- /api/perfis-clientes/[id] (PUT, PATCH, DELETE)
+  Atualiza total/parcial e remove perfil de cliente.
+
+Produtos
+- /api/produtos (POST)
+  Endpoint para criacao/integracao de produtos.
+
+Servicos
+- /api/servicos (GET, POST)
+  Lista e cria servicos.
+- /api/servicos/search (GET)
+  Pesquisa servicos.
+- /api/servicos/[id] (PUT, PATCH, DELETE)
+  Atualiza e remove servico por id.
+
+Veiculos
+- /api/veiculos (GET, POST)
+  Lista e cria veiculos.
+- /api/veiculos/search (GET)
+  Pesquisa veiculos.
+- /api/veiculos/[id] (GET, PUT, DELETE)
+  Consulta, atualiza e remove veiculo por id.
+
+============================================================
+5) DESCRICAO DOS COMPONENTES
+============================================================
+
+- AddPartModal.tsx
+  Modal para adicionar peca numa ordem/encomenda/processo.
+
+- AppointmentCard.tsx
+  Card visual de agendamento para listagens/calendario.
+
+- AppointmentDetailsModal.tsx
+  Modal com detalhes completos de um agendamento.
+
+- AppointmentModal.tsx
+  Modal/formulario para criar/editar agendamentos.
+
+- Calendar.tsx
+  Componente de calendario para visualizacao de agenda por datas.
+
+- ClientModal.tsx
+  Modal de criacao/edicao/visualizacao rapida de cliente.
+
+- ClientTable.tsx
+  Tabela de clientes com acoes de detalhe, editar e remover.
+
+- CriarFaturaModal.tsx
+  Modal para iniciar criacao de fatura a partir de contexto operacional.
+
+- DayDetailsModal.tsx
+  Modal de detalhe por dia no calendario/agenda.
+
+- EditableDataGrid.tsx
+  Grelha editavel reutilizavel com validacao, criar/editar/remover inline.
+
+- EditPartModal.tsx
+  Modal para editar dados de uma peca.
+
+- EncomendaModal.tsx
+  Modal para criar/editar encomenda e respetivos dados.
+
+- FAB.tsx
+  Floating Action Button para atalhos de acao rapida.
+
+- FaturaSimplificadaForm.jsx
+  Formulario de fatura simplificada (fluxo JSON/integracao).
+
+- Form.tsx
+  Componente base de formulario reutilizavel.
+
+- KanbanBoard.tsx
+  Estrutura principal do quadro Kanban.
+
+- KanbanCard.tsx
+  Card individual no quadro Kanban (ordem/tarefa).
+
+- KanbanCardDetailsModal.tsx
+  Modal de detalhe do card Kanban.
+
+- KanbanColumn.tsx
+  Coluna de estado do Kanban (arrastar/largar cards).
+
+- KanbanModal.tsx
+  Modal de criacao/edicao de item do Kanban.
+
+- KPICard.tsx
+  Cartao de indicador KPI para dashboard/balanco.
+
+- NewVehicleModal.tsx
+  Modal para registar novo veiculo.
+
+- OfflineGuard.tsx
+  Guarda global que monitoriza conectividade e redireciona para /offline.
+
+- OrderPartsModal.tsx
+  Modal para associar/encomendar pecas para ordem de trabalho.
+
+- OrdersModal.tsx
+  Modal para listagem/gestao rapida de ordens.
+
+- PartsTable.tsx
+  Tabela de pecas com operacoes de gestao de stock.
+
+- ProdutosListagem.jsx
+  Listagem de produtos (componente de apresentacao).
+
+- ReceiveModal.tsx
+  Modal para confirmar rececao de materiais/encomendas.
+
+- ReturnModal.tsx
+  Modal para processar devolucao de pecas/produtos.
+
+- Sidebar.tsx
+  Navegacao lateral principal de toda a aplicacao.
+
+- VehicleDetailsModal.tsx
+  Modal com detalhe de dados do veiculo.
+
+- VehicleHistoryModal.tsx
+  Modal de historico de intervencoes do veiculo.
+
+- VehicleTable.tsx
+  Tabela de veiculos (variante de listagem).
+
+- VehiclesTable.tsx
+  Tabela principal de veiculos usada na pagina de gestao.
+
+============================================================
+6) NOTAS
+============================================================
+- Este documento descreve a estrutura atual encontrada no workspace.
+- As descricoes sao funcionais e orientadas ao nome/rota/metodos existentes.
+- Anexo de payloads detalhados ja gerado em: ANEXO_SCHEMAS_API.txt
+- O anexo cobre endpoint-a-endpoint com params, query, body e chaves de resposta.
+- Anexo tecnico (contrato API inferido) gerado em: ANEXO_CONTRATO_API.txt
+- O anexo tecnico inclui por metodo: tipos inferidos, required e exemplos JSON.

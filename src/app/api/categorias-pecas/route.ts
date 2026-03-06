@@ -1,11 +1,18 @@
-import { NextResponse } from 'next/server';
+import { successResponse, handleDatabaseError } from '@/lib/api-utils';
 import { PrismaClient } from '@prisma/client';
 
+/**
+ * Initialize Prisma Client for database operations
+ */
 // @ts-ignore
 const prisma = new PrismaClient({
   log: ['error'],
 });
 
+/**
+ * GET: Fetch all unique part categories from database
+ * @returns JSON array of unique categories or error response
+ */
 export async function GET() {
   try {
     // Fetch all unique categories from pecas table
@@ -21,21 +28,9 @@ export async function GET() {
       .filter((c: string | null | undefined) => c && c.trim() !== '') // Remove null and empty values
       .sort();
 
-    return NextResponse.json(categorias);
+    return successResponse(categorias);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error fetching categories:', error);
-    return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 });
+    return handleDatabaseError(error as Error);
   }
 }
 

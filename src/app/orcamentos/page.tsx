@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Sidebar from '../../components/Sidebar';
+import { useFetch, useModal, useModals, usePagination, useFilters, filterPredicates } from '@/hooks';
 
 interface BudgetItem {
   id: number;
@@ -40,64 +41,66 @@ interface Budget {
 const ITEMS_PER_PAGE = 20;
 
 const BudgetsPage = () => {
-    // Estado para modal de detalhes do orçamento
-    const [budgetModalOpen, setBudgetModalOpen] = useState(false);
-    const [budgetDetails, setBudgetDetails] = useState<Budget | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [budgets, setBudgets] = useState<Budget[]>([]);
-  const [filteredBudgets, setFilteredBudgets] = useState<Budget[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  
-  // Estados para o modal de seleção de mecânico
-  const [showMechanicModal, setShowMechanicModal] = useState(false);
+  // Data fetching
+  const { data: rawData = {}, loading, error, refetch } = useFetch<any>('/api/orcamentos?page=1&limit=1000');
+  const budgets = (Array.isArray(rawData) ? rawData : rawData?.orcamentos) || [];
+
+  // Modal for budget details
+  const { isOpen: budgetModalOpen, selectedItem: budgetDetails, select: selectBudgetDetails, close: closeBudgetModal } = useModal<Budget>();
+
+  // Filtering (search + status)
+  const filterConfig = {
+    search: filterPredicates.search(['ref_orcamento', 'cliente', 'veiculo']),
+    status: filterPredicates.exact('estado'),
+  };
+  const { filters, setFilter } = useFilters(budgets, filterConfig);
+
+  // Apply filters manually (since search needs custom logic)
+  const filteredBudgets = budgets.filter((budget: Budget) => {
+    const searchTerm = filters.search || '';
+    const statusFilter = filters.status || '';
+
+    const matchesSearch =
+      budget.cliente?.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      `${budget.veiculo?.marca} ${budget.veiculo?.modelo} | ${budget.veiculo?.matricula}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      budget.ref_orcamento?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus = statusFilter === '' || budget.estado === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  // Pagination
+  const { currentPage, totalPages, paginatedItems: paginatedBudgets, nextPage, prevPage } = 
+    usePagination(filteredBudgets, ITEMS_PER_PAGE, [filters.search, filters.status]);
+
+  // Mechanic modal states (keep separate as they're dependent on button click)
+  const { modals: mechanicModals, open: openMechanicModal, close: closeMechanicModal } = useModals({
+    showMechanicModal: false,
+  });
+
   const [mechanics, setMechanics] = useState<{id: string, nome: string}[]>([]);
   const [selectedMechanic, setSelectedMechanic] = useState<string>('');
   const [selectedMechanicName, setSelectedMechanicName] = useState<string>('');
   const [pendingBudgetId, setPendingBudgetId] = useState<number | null>(null);
   const [pendingCurrentStatus, setPendingCurrentStatus] = useState<string>('');
 
-
-
-
+  // Auto-refresh when page becomes visible (fixes sync issues after Kanban updates)
   useEffect(() => {
-    fetchBudgets();
-  }, []);
-
-
-  useEffect(() => {
-    const filtered = budgets.filter(budget => {
-      const matchesSearch =
-        budget.cliente?.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        `${budget.veiculo?.marca} ${budget.veiculo?.modelo} | ${budget.veiculo?.matricula}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        budget.ref_orcamento?.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesStatus = statusFilter === '' || budget.estado === statusFilter;
-
-      return matchesSearch && matchesStatus;
-    });
-
-    setFilteredBudgets(filtered);
-    setCurrentPage(1); // Reset pagination on filter change
-  }, [searchTerm, statusFilter, budgets]);
-
-  const fetchBudgets = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/orcamentos?page=1&limit=1000');
-      if (!response.ok) {
-        throw new Error('Failed to fetch budgets');
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refetch();
       }
-      const data = await response.json();
-      setBudgets(data.orcamentos);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', refetch);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', refetch);
+    };
+  }, [refetch]);
 
   const handleDeleteBudget = async (budgetId: number) => {
     if (!confirm('Tem certeza que deseja eliminar este orçamento?')) {
@@ -113,8 +116,8 @@ const BudgetsPage = () => {
         throw new Error('Failed to delete budget');
       }
 
-      // Remove from local state
-      setBudgets(prev => prev.filter(budget => budget.id !== budgetId));
+      // Refresh data after successful deletion
+      await refetch();
     } catch (err) {
       alert('Erro ao eliminar orçamento: ' + (err instanceof Error ? err.message : 'Erro desconhecido'));
     }
@@ -138,20 +141,6 @@ const BudgetsPage = () => {
     }
   };
 
-  const updateBudgetStatus = (budgetId: number, newStatus: string, mechanicName?: string) => {
-    setBudgets(prevBudgets => 
-      prevBudgets.map(budget =>
-        budget.id === budgetId 
-          ? { 
-              ...budget, 
-              estado: newStatus,
-              ...(mechanicName !== undefined ? { mecanico_nome: mechanicName } : newStatus === 'Pendente' ? {} : { mecanico_nome: budget.mecanico_nome })
-            } 
-          : budget
-      )
-    );
-  };
-
 
   const fetchMechanics = async () => {
     try {
@@ -170,19 +159,18 @@ const BudgetsPage = () => {
     const isApproved = currentStatus.toLowerCase() === 'aprovado';
     const newStatus = isApproved ? 'Pendente' : 'Aprovado';
     
-    // Se estiver aprovar (não reverter), mostrar modal de seleção de mecânico
+    // If approving (not reverting), show mechanic selection modal
     if (newStatus === 'Aprovado') {
       setPendingBudgetId(budgetId);
       setPendingCurrentStatus(currentStatus);
       setSelectedMechanic('');
       setSelectedMechanicName('');
       await fetchMechanics();
-      setShowMechanicModal(true);
+      openMechanicModal('showMechanicModal');
       return;
     }
 
-
-    // Se for reverter para Pendente, confirmar diretamente
+    // If reverting to Pending, confirm directly
     if (!confirm('Tem certeza que deseja reverter este orçamento para Em Aprovação?')) {
       return;
     }
@@ -200,8 +188,8 @@ const BudgetsPage = () => {
         throw new Error('Failed to revert budget');
       }
 
-      // Update local state
-      updateBudgetStatus(budgetId, newStatus);
+      // Refresh data after successful update
+      await refetch();
     } catch (err) {
       alert('Erro ao reverter orçamento: ' + (err instanceof Error ? err.message : 'Erro desconhecido'));
     }
@@ -229,11 +217,11 @@ const BudgetsPage = () => {
         throw new Error('Failed to approve budget');
       }
 
-      // Re-fetch budgets to get the mechanic name from the work order
-      await fetchBudgets();
+      // Refresh data after successful update
+      await refetch();
       
-      // Fechar modal e limpar estados
-      setShowMechanicModal(false);
+      // Close modal and clear states
+      closeMechanicModal('showMechanicModal');
       setSelectedMechanic('');
       setSelectedMechanicName('');
       setPendingBudgetId(null);
@@ -335,7 +323,10 @@ const BudgetsPage = () => {
             <div class="client-details">
               <p>Cliente: ${budget.cliente?.nome || ''}</p>
               <p>Matrícula: ${budget.veiculo?.matricula || ''}</p>
-              <p>Data: ${new Date(budget.data_emissao).toLocaleDateString('pt-PT')}</p>
+              <p>Data: ${budget.data_emissao ? (() => {
+                const date = new Date(budget.data_emissao);
+                return !isNaN(date.getTime()) ? date.toLocaleDateString('pt-PT') : '-';
+              })() : '-'}</p>
             </div>
           </div>
 
@@ -474,7 +465,7 @@ const BudgetsPage = () => {
             <div class="client-details">
               <p>Orçamento de Origem: ${budget.ref_orcamento}</p>
               <p>Cliente: ${budget.cliente?.nome || ''}</p>
-              <p>Matrícula: ${budget.veiculo?.matricula || ''}</p>
+              <p>Veículo: ${budget.veiculo ? `${budget.veiculo.marca} ${budget.veiculo.modelo} | ${budget.veiculo.matricula}` : ''}</p>
               <p>Data: ${new Date().toLocaleDateString('pt-PT')}</p>
             </div>
           </div>
@@ -526,11 +517,7 @@ const BudgetsPage = () => {
     }
   };
 
-  // Pagination
-  const totalPages = Math.ceil(filteredBudgets.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedBudgets = filteredBudgets.slice(startIndex, endIndex);
+  // No need for manual pagination - handled by usePagination hook
 
   return (
     <div className="flex h-screen bg-gray-800">
@@ -563,15 +550,15 @@ const BudgetsPage = () => {
                 type="text"
                 placeholder="Procurar por cliente, veículo ou ID..."
                 className="w-full pl-10 pr-4 py-2.5 bg-gray-800 border border-gray-600 text-white rounded-none focus:ring-2 focus:ring-brand-yellow focus:border-brand-yellow transition placeholder-gray-500"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={filters.search || ''}
+                onChange={(e) => setFilter('search', e.target.value)}
               />
             </div>
             <div className="w-full md:w-48">
               <select
                 className="w-full px-4 py-2.5 bg-gray-800 border border-gray-600 text-white rounded-none focus:ring-2 focus:ring-brand-yellow focus:border-brand-yellow transition"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                value={filters.status || ''}
+                onChange={(e) => setFilter('status', e.target.value)}
               >
                 <option value="">Todos os Estados</option>
                 <option value="Pendente">Em Aprovação</option>
@@ -603,14 +590,13 @@ const BudgetsPage = () => {
                       </td>
                     </tr>
                   ) : (
-                    paginatedBudgets.map(budget => (
+                    (paginatedBudgets as Budget[]).map(budget => (
                       <tr key={budget.id} className="hover:bg-gray-600 transition-colors">
                         <td className="px-6 py-4 font-medium text-gray-200 whitespace-nowrap">
                           <button
                             className="underline text-brand-yellow hover:text-yellow-400 focus:outline-none"
                             onClick={() => {
-                              setBudgetModalOpen(true);
-                              setBudgetDetails(budget);
+                              selectBudgetDetails(budget);
                             }}
                             type="button"
                           >
@@ -620,7 +606,12 @@ const BudgetsPage = () => {
                         <td className="px-6 py-4 text-gray-400">{budget.veiculo ? `${budget.veiculo.marca} ${budget.veiculo.modelo} | ${budget.veiculo.matricula}` : 'Veículo não informado'}</td>
 
                         <td className="px-6 py-4">{budget.cliente?.nome || 'Cliente não informado'}</td>
-                        <td className="px-6 py-4 text-gray-400">{new Date(budget.data_emissao).toLocaleDateString('pt-PT')}</td>
+                        <td className="px-6 py-4 text-gray-400">
+                          {budget.data_emissao ? (() => {
+                            const date = new Date(budget.data_emissao);
+                            return !isNaN(date.getTime()) ? date.toLocaleDateString('pt-PT') : '-';
+                          })() : '-'}
+                        </td>
                         <td className="px-6 py-4 text-right font-medium text-gray-200">€{budget.total_geral.toFixed(2)}</td>
                         <td className="px-6 py-4 text-center">
                           <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(budget.estado)}`}>
@@ -694,12 +685,12 @@ const BudgetsPage = () => {
                 <div className="flex-1 flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-400">
-                      A mostrar <span className="font-medium text-gray-200">{startIndex + 1}</span> a <span className="font-medium text-gray-200">{Math.min(endIndex, filteredBudgets.length)}</span> de <span className="font-medium text-gray-200">{filteredBudgets.length}</span> orçamentos
+                      Página <span className="font-medium text-gray-200">{currentPage}</span> de <span className="font-medium text-gray-200">{totalPages}</span> ({filteredBudgets.length} orçamentos)
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      onClick={prevPage}
                       disabled={currentPage === 1}
                       className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-600 text-gray-300 rounded border border-gray-600 transition-colors"
                     >
@@ -709,7 +700,7 @@ const BudgetsPage = () => {
                       Página <span className="font-medium text-gray-200">{currentPage}</span> de <span className="font-medium text-gray-200">{totalPages}</span>
                     </span>
                     <button
-                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      onClick={nextPage}
                       disabled={currentPage === totalPages}
                       className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-600 text-gray-300 rounded border border-gray-600 transition-colors"
                     >
@@ -723,8 +714,7 @@ const BudgetsPage = () => {
         </div>
       </main>
 
-      {/* Modal de Seleção de Mecânico */}
-            {/* Modal de Detalhes do Orçamento */}
+      {/* Modal de Detalhes do Orçamento */}
             {budgetModalOpen && budgetDetails && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                 <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 w-full max-w-2xl mx-4">
@@ -733,7 +723,10 @@ const BudgetsPage = () => {
                     <div><span className="font-semibold">ID:</span> {budgetDetails.ref_orcamento}</div>
                     <div><span className="font-semibold">Cliente:</span> {budgetDetails.cliente?.nome || '-'}</div>
                     <div><span className="font-semibold">Veículo:</span> {budgetDetails.veiculo ? `${budgetDetails.veiculo.marca} ${budgetDetails.veiculo.modelo} | ${budgetDetails.veiculo.matricula}` : '-'}</div>
-                    <div><span className="font-semibold">Data:</span> {new Date(budgetDetails.data_emissao).toLocaleDateString('pt-PT')}</div>
+                    <div><span className="font-semibold">Data:</span> {budgetDetails.data_emissao ? (() => {
+                      const date = new Date(budgetDetails.data_emissao);
+                      return !isNaN(date.getTime()) ? date.toLocaleDateString('pt-PT') : '-';
+                    })() : '-'}</div>
                     <div><span className="font-semibold">Total:</span> €{budgetDetails.total_geral.toFixed(2)}</div>
                     <div><span className="font-semibold">Estado:</span> {getStatusLabel(budgetDetails.estado)}</div>
                     <div><span className="font-semibold">Mecânico:</span> {budgetDetails.mecanico_nome || '-'}</div>
@@ -757,7 +750,7 @@ const BudgetsPage = () => {
                   </div>
                   <div className="flex justify-end mt-6">
                     <button
-                      onClick={() => setBudgetModalOpen(false)}
+                      onClick={closeBudgetModal}
                       className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
                     >
                       Fechar
@@ -766,7 +759,7 @@ const BudgetsPage = () => {
                 </div>
               </div>
             )}
-      {showMechanicModal && (
+      {mechanicModals.showMechanicModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 w-96 max-w-full mx-4">
             <h3 className="text-xl font-bold text-white mb-4">Atribuir Mecânico</h3>
@@ -796,7 +789,7 @@ const BudgetsPage = () => {
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => {
-                  setShowMechanicModal(false);
+                  closeMechanicModal('showMechanicModal');
                   setSelectedMechanic('');
                   setPendingBudgetId(null);
                 }}

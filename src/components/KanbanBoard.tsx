@@ -1026,16 +1026,30 @@ export default function KanbanBoard() {
       if (pendingTargetColumn === 'aguarda_peca' && pendingCard) {
         // Buscar os itens do orçamento para mostrar no modal
         const budgetItems = pendingCard.itens_orcamento || [];
-        
-        // Preparar os itens como peças
-        const pecaItems = budgetItems.map((item, index) => ({
-          id: item.id || index + 1000,
-          tipo_item: 'peca',
-          descricao: item.descricao,
-          quantidade: item.quantidade,
-          preco_unitario: item.valor_total / item.quantidade,
-          valor_total: item.valor_total
-        }));
+
+        // Apenas peças devem aparecer no modal de "Aguarda Peças"
+        const pecaItems = budgetItems
+          .filter((item: any) => {
+            const tipo = String(item?.tipo_item || item?.tipo || item?.type || '').toLowerCase();
+            return tipo === 'peca' || tipo === 'part';
+          })
+          .map((item: any, index: number) => {
+            const quantidade = Number(item.quantidade) || 0;
+            const valorTotal = Number(item.valor_total) || 0;
+            return {
+              id: item.id || index + 1000,
+              tipo_item: 'peca',
+              descricao: item.descricao,
+              quantidade,
+              preco_unitario: quantidade > 0 ? valorTotal / quantidade : 0,
+              valor_total: valorTotal
+            };
+          });
+
+        if (pecaItems.length === 0) {
+          alert('Este orçamento não tem peças. Não é possível mudar para "Aguarda Peças".');
+          return;
+        }
         
         // Configurar o estado para o modal de peças
         setWorkOrderItems(pecaItems);
@@ -1216,7 +1230,7 @@ export default function KanbanBoard() {
       setPendingCard(null);
 
       // Refresh data
-      window.location.reload();
+      await fetchData();
     } catch (error) {
       console.error('Erro ao atualizar ordem de trabalho:', error);
       alert('Erro ao atualizar ordem de trabalho');
@@ -1253,7 +1267,7 @@ export default function KanbanBoard() {
       setPendingCard(null);
 
       // Refresh data
-      window.location.reload();
+      await fetchData();
     } catch (error) {
       console.error('Erro ao atualizar ordem de trabalho:', error);
       alert('Erro ao atualizar ordem de trabalho');
@@ -1301,7 +1315,7 @@ export default function KanbanBoard() {
           setPendingVehicleData(null);
         }}
         onSuccess={handleNewVehicleSuccess}
-        vehicle={pendingVehicleData}
+        initialData={pendingVehicleData}
       />
 
       {/* Modal de Seleção de Mecânico para Aprovação */}

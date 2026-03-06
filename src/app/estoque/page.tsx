@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
+import { useFetch } from '@/hooks';
 
 interface StockSummary {
   resumo: {
@@ -50,41 +51,35 @@ interface Alerta {
 }
 
 export default function EstoquePage() {
-  const [summary, setSummary] = useState<StockSummary | null>(null);
-  const [alertas, setAlertas] = useState<Alerta[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const {
+    data: summary,
+    loading: summaryLoading,
+    error: summaryError,
+    refetch: refetchSummary,
+  } = useFetch<StockSummary>('/api/estoque/resumo');
+
+  const {
+    data: alertasData,
+    loading: alertasLoading,
+    error: alertasError,
+    refetch: refetchAlertas,
+  } = useFetch<Alerta[]>('/api/alertas?apenas_nao_lidos=true');
+
+  const alertas = Array.isArray(alertasData) ? alertasData : [];
+  const loading = summaryLoading || alertasLoading;
+  const error = summaryError || alertasError || '';
 
   useEffect(() => {
-    loadData();
     // Auto-refresh every 5 minutes
-    const interval = setInterval(loadData, 5 * 60 * 1000);
+    const interval = setInterval(() => {
+      void refetchSummary();
+      void refetchAlertas();
+    }, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [refetchSummary, refetchAlertas]);
 
   const loadData = async () => {
-    try {
-      setLoading(true);
-      const [summaryRes, alertasRes] = await Promise.all([
-        fetch('/api/estoque/resumo'),
-        fetch('/api/alertas?apenas_nao_lidos=true'),
-      ]);
-
-      if (summaryRes.ok) {
-        const data = await summaryRes.json();
-        setSummary(data);
-      }
-
-      if (alertasRes.ok) {
-        const data = await alertasRes.json();
-        setAlertas(Array.isArray(data) ? data : []);
-      }
-    } catch (err) {
-      console.error('Error loading dashboard:', err);
-      setError('Erro ao carregar dashboard');
-    } finally {
-      setLoading(false);
-    }
+    await Promise.all([refetchSummary(), refetchAlertas()]);
   };
 
   const markAlertAsRead = async (id: string) => {
@@ -96,7 +91,7 @@ export default function EstoquePage() {
       });
 
       if (response.ok) {
-        setAlertas(alertas.filter(a => a.id !== id));
+        await refetchAlertas();
       }
     } catch (err) {
       console.error('Error marking alert as read:', err);

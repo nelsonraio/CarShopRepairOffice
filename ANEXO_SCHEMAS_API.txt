@@ -1,0 +1,523 @@
+ANEXO - Schemas de Payload por Endpoint
+Gerado em: 2026-03-06T08:05:34.700Z
+Base: inferencia estatica a partir de src/app/api/**/route.*
+
+Legenda:
+- Path params: parametros no caminho ({id}, etc.)
+- Query params: parametros lidos via searchParams.get(...)
+- Body fields: campos usados no request body (body.campo)
+- Response keys: chaves de objetos retornados via NextResponse.json({...})
+
+------------------------------------------------------------
+/api/agendamentos/{id}
+Arquivo: src/app/api/agendamentos/[id]/route.ts
+Metodos: DELETE, GET, PATCH, PUT
+Path params: id
+Query params: -
+Body fields: ano, cliente, contacto_email, contacto_nome, contacto_telefone, data, estado, hora, marca, matricula, mecanico, modelo, notas, tipoServico
+Response keys: agendamento, error, message, success
+
+------------------------------------------------------------
+/api/agendamentos/hoje
+Arquivo: src/app/api/agendamentos/hoje/route.ts
+Metodos: GET
+Path params: -
+Query params: -
+Body fields: -
+Response keys: error
+
+------------------------------------------------------------
+/api/agendamentos
+Arquivo: src/app/api/agendamentos/route.ts
+Metodos: GET, POST, PUT
+Path params: -
+Query params: id
+Body fields: -
+Response keys: -
+
+------------------------------------------------------------
+/api/agendamentos/search
+Arquivo: src/app/api/agendamentos/search/route.ts
+Metodos: GET
+Path params: -
+Query params: matricula
+Body fields: -
+Response keys: error, found
+
+------------------------------------------------------------
+/api/app-status
+Arquivo: src/app/api/app-status/route.ts
+Metodos: GET, POST
+Path params: -
+Query params: -
+Body fields: -
+Response keys: error, success
+
+------------------------------------------------------------
+/api/app-status/toggle
+Arquivo: src/app/api/app-status/toggle/route.ts
+Metodos: GET
+Path params: -
+Query params: enabled, key
+Body fields: -
+Response keys: error, success
+
+------------------------------------------------------------
+/api/balanco
+Arquivo: src/app/api/balanco/route.ts
+Metodos: GET
+Path params: -
+Query params: limit, page
+Body fields: -
+Response keys: error
+
+------------------------------------------------------------
+/api/categorias-pecas
+Arquivo: src/app/api/categorias-pecas/route.ts
+Metodos: GET
+Path params: -
+Query params: -
+Body fields: -
+Response keys: -
+
+------------------------------------------------------------
+/api/categorias-servico/{id}
+Arquivo: src/app/api/categorias-servico/[id]/route.ts
+Metodos: DELETE, PATCH, PUT
+Path params: id
+Query params: -
+Body fields: ativo, descricao, duracao_estimada, nome
+Response keys: error, success
+
+------------------------------------------------------------
+/api/categorias-servico
+Arquivo: src/app/api/categorias-servico/route.ts
+Metodos: GET, POST
+Path params: -
+Query params: all
+Body fields: ativo, descricao, duracao_estimada, nome
+Response keys: -
+
+------------------------------------------------------------
+/api/clientes/{id}
+Arquivo: src/app/api/clientes/[id]/route.ts
+Metodos: DELETE, GET, PUT
+Path params: id
+Query params: -
+Body fields: email, endereco, nif, nome, perfil, telefone
+Response keys: client, error, message, serviceHistory, success, vehicles
+
+------------------------------------------------------------
+/api/clientes
+Arquivo: src/app/api/clientes/route.ts
+Metodos: GET, POST
+Path params: -
+Query params: -
+Body fields: -
+Response keys: -
+
+------------------------------------------------------------
+/api/clientes/search
+Arquivo: src/app/api/clientes/search/route.ts
+Metodos: GET
+Path params: -
+Query params: q
+Body fields: -
+Response keys: error
+
+------------------------------------------------------------
+/api/encomendas/{id}/adicionar-stock
+Arquivo: src/app/api/encomendas/[id]/adicionar-stock/route.ts
+Metodos: POST
+Path params: id
+Query params: -
+Body fields: items
+Response keys: details, error, success
+
+------------------------------------------------------------
+/api/encomendas/{id}/receber
+Arquivo: src/app/api/encomendas/[id]/receber/route.ts
+Metodos: POST
+Path params: id
+Query params: -
+Body fields: items
+Response keys: error, success
+
+------------------------------------------------------------
+/api/encomendas/{id}
+Arquivo: src/app/api/encomendas/[id]/route.ts
+Metodos: PATCH
+Path params: id
+Query params: -
+Body fields: -
+Response keys: error, estado, id
+
+------------------------------------------------------------
+/api/encomendas
+Arquivo: src/app/api/encomendas/route.ts
+Metodos: GET, POST
+Path params: -
+Query params: -
+Body fields: -
+Response keys: -
+
+------------------------------------------------------------
+/api/fatura-simplificada
+Arquivo: src/app/api/fatura-simplificada/route.js
+Metodos: POST
+Path params: -
+Query params: -
+Body fields: -
+Response keys: access_token, data, details, error, faturaLocalId, success
+
+------------------------------------------------------------
+/api/faturas-externas
+Arquivo: src/app/api/faturas-externas/route.js
+Metodos: GET, POST
+Path params: -
+Query params: token
+Body fields: -
+Response keys: details, error, success
+
+------------------------------------------------------------
+/api/faturas/{id}/pdf-recibo
+Arquivo: src/app/api/faturas/[id]/pdf-recibo/route.ts
+Metodos: POST
+Path params: id
+Query params: -
+Body fields: -
+Response keys: details, error, pdfUrl, recibo, recibo_id, success
+
+------------------------------------------------------------
+/api/faturas/{id}/pdf-toconline
+Arquivo: src/app/api/faturas/[id]/pdf-toconline/route.ts
+Metodos: POST
+Path params: id
+Query params: -
+Body fields: -
+Response keys: PDF, details, error, pdfUrl, success, toconline_id
+
+------------------------------------------------------------
+/api/faturas/{id}/pdf
+Arquivo: src/app/api/faturas/[id]/pdf/route.ts
+Metodos: GET
+Path params: id
+Query params: -
+Body fields: -
+Response keys: error, success
+
+------------------------------------------------------------
+/api/faturas/{id}/recibo
+Arquivo: src/app/api/faturas/[id]/recibo/route.ts
+Metodos: POST
+Path params: id
+Query params: -
+Body fields: -
+Response keys: data, details, error, errorStack, errorType, estado, id, mensagem, name, numero_fatura, recibo, recibo_id, success, valor_pago
+
+------------------------------------------------------------
+/api/faturas/{id}
+Arquivo: src/app/api/faturas/[id]/route.ts
+Metodos: DELETE, GET, PATCH, PUT
+Path params: id
+Query params: -
+Body fields: authCode, data_pagamento, estado, marcar_paga, notas, valor_pago
+Response keys: atualizado_em, cliente_id, criado_em, data, data_emissao, data_vencimento, error, estado, id, message, notas, numero_fatura, recibo_toconline_id, subtotal, success, toconline_id, valor_desconto, valor_imposto, valor_pago, valor_total
+
+------------------------------------------------------------
+/api/faturas/ordens-trabalho
+Arquivo: src/app/api/faturas/ordens-trabalho/route.ts
+Metodos: GET, POST
+Path params: -
+Query params: cliente_id, estado
+Body fields: -
+Response keys: cliente_cidade, cliente_codigo_postal, cliente_email, cliente_id, cliente_morada, cliente_nif, cliente_nome, cliente_pais, cliente_telefone, data, data_conclusao, descricao, descricao_problema, error, itens, matricula, ordem_trabalho_id, preco_unitario, quantidade, ref_ordem_trabalho, success, tipo, total, total_desconto, total_geral, total_imposto, total_mao_obra, total_pecas, trabalho_realizado, valor_total, veiculo_marca, veiculo_modelo
+
+------------------------------------------------------------
+/api/faturas/proximo-numero
+Arquivo: src/app/api/faturas/proximo-numero/route.ts
+Metodos: GET
+Path params: -
+Query params: -
+Body fields: -
+Response keys: data, error, message, numero_fatura, success
+
+------------------------------------------------------------
+/api/faturas
+Arquivo: src/app/api/faturas/route.ts
+Metodos: GET, POST
+Path params: -
+Query params: limit, page, status
+Body fields: -
+Response keys: -
+
+------------------------------------------------------------
+/api/fornecedores/{id}
+Arquivo: src/app/api/fornecedores/[id]/route.ts
+Metodos: DELETE, PATCH, PUT
+Path params: id
+Query params: -
+Body fields: ativo, email, endereco, nif, nome, pessoa_contato, telefone, termos_pagamento
+Response keys: error, success
+
+------------------------------------------------------------
+/api/fornecedores
+Arquivo: src/app/api/fornecedores/route.ts
+Metodos: GET, POST
+Path params: -
+Query params: all
+Body fields: -
+Response keys: -
+
+------------------------------------------------------------
+/api/health
+Arquivo: src/app/api/health/route.ts
+Metodos: GET
+Path params: -
+Query params: -
+Body fields: -
+Response keys: error, ok, timestamp
+
+------------------------------------------------------------
+/api/marcas/{id}
+Arquivo: src/app/api/marcas/[id]/route.ts
+Metodos: DELETE, PATCH, PUT
+Path params: id
+Query params: -
+Body fields: ativo, nome, pais_origem
+Response keys: error, success
+
+------------------------------------------------------------
+/api/marcas
+Arquivo: src/app/api/marcas/route.ts
+Metodos: GET, POST
+Path params: -
+Query params: all
+Body fields: ativo, nome, pais_origem
+Response keys: -
+
+------------------------------------------------------------
+/api/marcas/search
+Arquivo: src/app/api/marcas/search/route.ts
+Metodos: GET
+Path params: -
+Query params: q
+Body fields: -
+Response keys: error
+
+------------------------------------------------------------
+/api/mecanicos/{id}
+Arquivo: src/app/api/mecanicos/[id]/route.ts
+Metodos: DELETE, PATCH, PUT
+Path params: id
+Query params: -
+Body fields: ativo, data_contratacao, email, especialidade, nome, tarifa_horaria, telefone
+Response keys: details, error, success
+
+------------------------------------------------------------
+/api/mecanicos
+Arquivo: src/app/api/mecanicos/route.ts
+Metodos: GET, POST
+Path params: -
+Query params: all
+Body fields: ativo, data_contratacao, email, especialidade, nome, tarifa_horaria, telefone
+Response keys: -
+
+------------------------------------------------------------
+/api/mecanicos/search
+Arquivo: src/app/api/mecanicos/search/route.ts
+Metodos: GET
+Path params: -
+Query params: q
+Body fields: -
+Response keys: error
+
+------------------------------------------------------------
+/api/modelos/{id}
+Arquivo: src/app/api/modelos/[id]/route.ts
+Metodos: DELETE, PATCH, PUT
+Path params: id
+Query params: -
+Body fields: ativo, marca_id, nome, tipo_veiculo
+Response keys: error, success
+
+------------------------------------------------------------
+/api/modelos
+Arquivo: src/app/api/modelos/route.ts
+Metodos: GET, POST
+Path params: -
+Query params: all, marca_id
+Body fields: ativo, marca_id, nome, tipo_veiculo
+Response keys: -
+
+------------------------------------------------------------
+/api/modelos/search
+Arquivo: src/app/api/modelos/search/route.ts
+Metodos: GET
+Path params: -
+Query params: marca_id, q
+Body fields: -
+Response keys: error
+
+------------------------------------------------------------
+/api/oauth-capture
+Arquivo: src/app/api/oauth-capture/route.js
+Metodos: GET
+Path params: -
+Query params: code, error, error_description
+Body fields: -
+Response keys: details, error, stack, status, statusText, success, timestamp
+
+------------------------------------------------------------
+/api/oauth-config-check
+Arquivo: src/app/api/oauth-config-check/route.ts
+Metodos: GET
+Path params: -
+Query params: -
+Body fields: -
+Response keys: CLIENT_SECRET_FIRST_4, CLIENT_SECRET_LENGTH, HAS_CLIENT_ID, HAS_CLIENT_SECRET, config
+
+------------------------------------------------------------
+/api/oauth-debug
+Arquivo: src/app/api/oauth-debug/route.js
+Metodos: GET
+Path params: -
+Query params: code
+Body fields: -
+Response keys: error, ok, stack, status, tokenResponse
+
+------------------------------------------------------------
+/api/oauth-test
+Arquivo: src/app/api/oauth-test/route.js
+Metodos: GET, POST
+Path params: -
+Query params: clientId, clientSecret, code, redirectUri
+Body fields: -
+Response keys: basicAuthLength, clientId, config, currentConfig, error, example, hasSecret, message, redirectUri, stack, status, success
+
+------------------------------------------------------------
+/api/orcamentos/next-id
+Arquivo: src/app/api/orcamentos/next-id/route.ts
+Metodos: GET
+Path params: -
+Query params: perfil
+Body fields: -
+Response keys: error
+
+------------------------------------------------------------
+/api/orcamentos
+Arquivo: src/app/api/orcamentos/route.ts
+Metodos: DELETE, GET, POST, PUT
+Path params: -
+Query params: id, limit, page
+Body fields: cliente_id, contacto_email, contacto_nome, contacto_telefone, data_emissao, data_expiracao, estado, kms, notas, ref_orcamento, total_desconto, total_geral, total_imposto, total_mao_obra, total_pecas, veiculo_id
+Response keys: -
+
+------------------------------------------------------------
+/api/ordens-trabalho
+Arquivo: src/app/api/ordens-trabalho/route.ts
+Metodos: DELETE, GET, PATCH, POST
+Path params: -
+Query params: id
+Body fields: -
+Response keys: -
+
+------------------------------------------------------------
+/api/pecas
+Arquivo: src/app/api/pecas/route.ts
+Metodos: GET, POST, PUT
+Path params: -
+Query params: -
+Body fields: -
+Response keys: -
+
+------------------------------------------------------------
+/api/pecas/search
+Arquivo: src/app/api/pecas/search/route.ts
+Metodos: GET
+Path params: -
+Query params: q
+Body fields: -
+Response keys: error
+
+------------------------------------------------------------
+/api/perfis-clientes/{id}
+Arquivo: src/app/api/perfis-clientes/[id]/route.ts
+Metodos: DELETE, PATCH, PUT
+Path params: id
+Query params: -
+Body fields: ativo, descricao, nome, perclucro
+Response keys: error, perclucro, success
+
+------------------------------------------------------------
+/api/perfis-clientes
+Arquivo: src/app/api/perfis-clientes/route.ts
+Metodos: GET, POST
+Path params: -
+Query params: all
+Body fields: ativo, descricao, nome, perclucro
+Response keys: -
+
+------------------------------------------------------------
+/api/produtos
+Arquivo: src/app/api/produtos/route.js
+Metodos: POST
+Path params: -
+Query params: -
+Body fields: -
+Response keys: error
+
+------------------------------------------------------------
+/api/servicos/{id}
+Arquivo: src/app/api/servicos/[id]/route.ts
+Metodos: DELETE, PATCH, PUT
+Path params: id
+Query params: -
+Body fields: ativo, descricao, duracao_estimada, nome, preco_base, requer_pecas
+Response keys: error, success
+
+------------------------------------------------------------
+/api/servicos
+Arquivo: src/app/api/servicos/route.ts
+Metodos: GET, POST
+Path params: -
+Query params: all
+Body fields: ativo, descricao, duracao_estimada, nome, preco_base, requer_pecas
+Response keys: -
+
+------------------------------------------------------------
+/api/servicos/search
+Arquivo: src/app/api/servicos/search/route.ts
+Metodos: GET
+Path params: -
+Query params: q
+Body fields: -
+Response keys: error
+
+------------------------------------------------------------
+/api/veiculos/{id}
+Arquivo: src/app/api/veiculos/[id]/route.ts
+Metodos: DELETE, GET, PUT
+Path params: id
+Query params: -
+Body fields: clientAddress, clientEmail, clientId, clientName, clientNif, clientPhone, clientProfile, licensePlate, make, model, vin, year
+Response keys: error, message
+
+------------------------------------------------------------
+/api/veiculos
+Arquivo: src/app/api/veiculos/route.ts
+Metodos: GET, POST
+Path params: -
+Query params: -
+Body fields: -
+Response keys: -
+
+------------------------------------------------------------
+/api/veiculos/search
+Arquivo: src/app/api/veiculos/search/route.ts
+Metodos: GET
+Path params: -
+Query params: matricula
+Body fields: -
+Response keys: error, found
+

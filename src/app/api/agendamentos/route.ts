@@ -1,11 +1,106 @@
-import { NextResponse } from 'next/server';
+import { successResponse, handleDatabaseError } from '@/lib/api-utils';
 import { PrismaClient } from '@prisma/client';
 
+/**
+ * Initialize Prisma Client for database operations
+ */
 // @ts-ignore
 const prisma = new PrismaClient({
   log: ['error'],
 });
 
+/**
+ * Helper: Parse date string (YYYY-MM-DD format)
+ * @param dateString - Date string in YYYY-MM-DD format
+ * @returns Date object or current date if invalid
+ */
+function parseDateString(dateString?: string): Date {
+  if (!dateString) {
+    return new Date();
+  }
+  const parts = dateString.split('-').map((p: string) => parseInt(p, 10) || 0);
+  const year = parts[0] || new Date().getFullYear();
+  const month = Math.max(1, parts[1] || 1);
+  const day = Math.max(1, parts[2] || 1);
+  return new Date(year, month - 1, day);
+}
+
+/**
+ * Helper: Parse time string (HH:MM format) and set on date
+ * @param timeString - Time string in HH:MM format
+ * @param dateObj - Date object to apply time to
+ * @returns Date with time applied, or 9:00 AM if invalid
+ */
+function parseTimeString(timeString: string | undefined, dateObj: Date): Date {
+  if (!timeString) {
+    return new Date(dateObj.setHours(9, 0, 0, 0));
+  }
+  const [h, m] = timeString.split(':').map((s: string) => parseInt(s, 10));
+  const result = new Date(dateObj);
+  result.setHours(h ?? 9, m ?? 0, 0, 0);
+  return result;
+}
+
+/**
+ * Helper: Transform appointment to API response format
+ */
+function formatAgendamentoResponse(agendamento: any, cliente?: any, mecanico?: any): any {
+  return {
+    id: agendamento.id.toString(),
+    clientId: agendamento.cliente_id?.toString() || '',
+    client: cliente?.nome || '',
+    clientPhone: cliente?.telefone || '',
+    clientEmail: cliente?.email || '',
+    marca: agendamento.marca || '',
+    modelo: agendamento.modelo || '',
+    ano: agendamento.ano?.toString() || '',
+    matricula: agendamento.matricula || '',
+    title: agendamento.titulo,
+    date: agendamento.data_agendamento.toLocaleDateString('pt-PT'),
+    time: agendamento.hora_inicio.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }),
+    mechanic: mecanico?.nome || '',
+    tipoServico: agendamento.titulo.includes(' - ') ? agendamento.titulo.split(' - ')[0] : agendamento.titulo,
+    status: agendamento.estado || 'agendado',
+    descricao: agendamento.descricao ?? '',
+    contacto_nome: agendamento.contacto_nome || '',
+    contacto_telefone: agendamento.contacto_telefone || '',
+    contacto_email: agendamento.contacto_email || ''
+  };
+}
+
+/**
+ * Helper: Find or create client by name
+ */
+async function getOrCreateCliente(clienteNome?: string) {
+  if (clienteNome) {
+    let cliente = await prisma.clientes.findFirst({ where: { nome: clienteNome } });
+    if (!cliente) {
+      cliente = await prisma.clientes.create({ 
+        data: { nome: clienteNome, telefone: '', ativo: true } 
+      });
+    }
+    return cliente;
+  }
+  // Fallback to first client
+  return prisma.clientes.findFirst();
+}
+
+/**
+ * Helper: Find or create mechanic by name
+ */
+async function getOrCreateMecanico(mecanicoNome?: string) {
+  if (!mecanicoNome) return null;
+  
+  let mecanico = await prisma.mecanicos.findFirst({ where: { nome: mecanicoNome } });
+  if (!mecanico) {
+    mecanico = await prisma.mecanicos.create({ data: { nome: mecanicoNome } });
+  }
+  return mecanico;
+}
+
+/**
+ * GET: Fetch appointments (single by ID or all filtered)
+ */
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
@@ -18,301 +113,165 @@ export async function GET(request: Request) {
       });
 
       if (!agendamento) {
-        return NextResponse.json({ error: 'Agendamento not found' }, { status: 404 });
+        return successResponse({ error: 'Agendamento not found' }, 404);
       }
 
       // Get related data
-      const cliente = agendamento.cliente_id ? await prisma.clientes.findUnique({ where: { id: agendamento.cliente_id } }) : null;
-      const mecanico = agendamento.mecanico_id ? await prisma.mecanicos.findUnique({ where: { id: agendamento.mecanico_id } }) : null;
+      const cliente = agendamento.cliente_id 
+        ? await prisma.clientes.findUnique({ where: { id: agendamento.cliente_id } }) 
+        : null;
+      const mecanico = agendamento.mecanico_id 
+        ? await prisma.mecanicos.findUnique({ where: { id: agendamento.mecanico_id } }) 
+        : null;
 
-      // Transform to match Appointment interface
-      const transformedAgendamento = {
-        id: agendamento.id.toString(),
-        clientId: agendamento.cliente_id?.toString() || '',
-        client: cliente?.nome || '',
-        clientPhone: cliente?.telefone || '',
-        clientEmail: cliente?.email || '',
-        marca: agendamento.marca || '',
-        modelo: agendamento.modelo || '',
-        ano: agendamento.ano?.toString() || '',
-        matricula: agendamento.matricula || '',
-        title: agendamento.titulo,
-        date: agendamento.data_agendamento.toLocaleDateString('pt-PT'),
-        time: agendamento.hora_inicio.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }),
-        mechanic: mecanico?.nome || '',
-        tipoServico: agendamento.titulo.includes(' - ') ? agendamento.titulo.split(' - ')[0] : agendamento.titulo,
-        status: agendamento.estado || 'agendado',
-        descricao: agendamento.descricao ?? '',
-        contacto_nome: agendamento.contacto_nome || '',
-        contacto_telefone: agendamento.contacto_telefone || '',
-        contacto_email: agendamento.contacto_email || '',
-        notas: agendamento.descricao ?? ''
-      };
-
-      return NextResponse.json(transformedAgendamento);
+      return successResponse(formatAgendamentoResponse(agendamento, cliente, mecanico));
     } else {
       // Fetch all appointments
       const agendamentos = await prisma.agendamentos.findMany({
         where: {
-          estado: {
-            in: ['agendado', 'em_aprovacao', 'em_andamento']
-          }
+          estado: { in: ['agendado', 'em_aprovacao', 'em_andamento'] }
         },
         orderBy: { data_agendamento: 'asc' }
       });
 
-      // Filtrar duplicados pela matrícula: só mostrar o agendamento com estado mais "alto" (prioridade: em_andamento > em_aprovacao > agendado)
+      // Filter by matricula: show highest priority status per license plate
       const filteredAgendamentos = agendamentos.filter((agendamento) => {
         if (!agendamento.matricula) return true;
         const sameMatricula = agendamentos.filter(a => a.matricula === agendamento.matricula);
-        if (sameMatricula.length === 0) return true;
-        if (sameMatricula.length === 1) return true;
+        if (sameMatricula.length <= 1) return true;
+        
         const prioridade = { 'em_andamento': 3, 'em_aprovacao': 2, 'agendado': 1 };
-        function getPrioridade(estado: string | null | undefined): number {
-          return prioridade[estado as keyof typeof prioridade] || 0;
-        }
+        const getPrioridade = (estado: string | null | undefined): number => 
+          prioridade[estado as keyof typeof prioridade] || 0;
+        
         const sorted = sameMatricula.sort((a, b) => getPrioridade(b.estado) - getPrioridade(a.estado));
-        const maxEstado = sorted[0];
-        return maxEstado ? agendamento.id === maxEstado.id : false;
+        const firstSorted = sorted[0];
+        return firstSorted ? agendamento.id === firstSorted.id : false;
       });
-      const clienteIds = Array.from(new Set(filteredAgendamentos.map((a: typeof filteredAgendamentos[number]) => a.cliente_id).filter((v: number | null | undefined): v is number => v != null)));
-      const mecanicoIds = Array.from(new Set(filteredAgendamentos.map((a: typeof filteredAgendamentos[number]) => a.mecanico_id).filter((v: number | null | undefined): v is number => v != null)));
+
+      // Fetch related data efficiently
+      const clienteIds = Array.from(new Set(
+        filteredAgendamentos
+          .map(a => a.cliente_id)
+          .filter((v): v is number => v !== null)
+      ));
+      const mecanicoIds = Array.from(new Set(
+        filteredAgendamentos
+          .map(a => a.mecanico_id)
+          .filter((v): v is number => v !== null)
+      ));
 
       const [clientes, mecanicos] = await Promise.all([
         clienteIds.length ? prisma.clientes.findMany({ where: { id: { in: clienteIds } } }) : Promise.resolve([]),
         mecanicoIds.length ? prisma.mecanicos.findMany({ where: { id: { in: mecanicoIds } } }) : Promise.resolve([]),
       ]);
 
-      const clienteMap = new Map(clientes.map((c: typeof clientes[number]) => [c.id, c]));
-      const mecanicoMap = new Map(mecanicos.map((m: typeof mecanicos[number]) => [m.id, m]));
+      const clienteMap = new Map(clientes.map(c => [c.id, c]));
+      const mecanicoMap = new Map(mecanicos.map(m => [m.id, m]));
 
-      // Transform to match Appointment interface
-      type Agendamento = any;
-      type TransformedAgendamento = any;
+      const transformedAgendamentos = filteredAgendamentos.map(agendamento => 
+        formatAgendamentoResponse(
+          agendamento,
+          clienteMap.get(agendamento.cliente_id as number),
+          mecanicoMap.get(agendamento.mecanico_id as number)
+        )
+      );
 
-      const transformedAgendamentos: TransformedAgendamento[] = filteredAgendamentos.map((agendamento: Agendamento) => ({
-        id: agendamento.id.toString(),
-        clientId: agendamento.cliente_id?.toString() || '',
-        client: (clienteMap.get(agendamento.cliente_id as number) as any)?.nome || '',
-        clientPhone: (clienteMap.get(agendamento.cliente_id as number) as any)?.telefone || '',
-        clientEmail: (clienteMap.get(agendamento.cliente_id as number) as any)?.email || '',
-        marca: agendamento.marca || '',
-        modelo: agendamento.modelo || '',
-        ano: agendamento.ano?.toString() || '',
-        matricula: agendamento.matricula || '',
-        title: agendamento.titulo,
-        date: agendamento.data_agendamento.toLocaleDateString('pt-PT'),
-        time: agendamento.hora_inicio.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }),
-        mechanic: agendamento.mecanico_id != null ? (mecanicoMap.get(agendamento.mecanico_id) as any)?.nome || '' : '',
-        tipoServico: agendamento.titulo.includes(' - ') ? agendamento.titulo.split(' - ')[0] : agendamento.titulo,
-        status: agendamento.estado || 'agendado',
-        descricao: agendamento.descricao ?? '',
-        contacto_nome: agendamento.contacto_nome || '',
-        contacto_telefone: agendamento.contacto_telefone || '',
-        contacto_email: agendamento.contacto_email || ''
-      }));
-
-      return NextResponse.json(transformedAgendamentos);
+      return successResponse(transformedAgendamentos);
     }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error fetching agendamentos:', error);
-    return NextResponse.json({ error: 'Failed to fetch agendamentos' }, { status: 500 });
+    return handleDatabaseError(error as Error);
   }
 }
 
+/**
+ * POST: Create new appointment
+ */
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { cliente, marca, modelo, ano, matricula, data, hora, tipoServico, mecanico, descricao, notas, contacto_nome, contacto_telefone, contacto_email } = body;
 
-    // find or create cliente by nome
-    let clienteRec = null;
-    if (cliente) {
-      clienteRec = await prisma.clientes.findFirst({ where: { nome: cliente } });
-      if (!clienteRec) {
-        clienteRec = await prisma.clientes.create({ data: { nome: cliente, telefone: '', ativo: true } });
-      }
-    } else {
-      // fallback to first cliente
-      clienteRec = await prisma.clientes.findFirst();
-    }
-
+    const clienteRec = await getOrCreateCliente(cliente);
     if (!clienteRec) {
-      return NextResponse.json({ error: 'No cliente available' }, { status: 400 });
+      return successResponse({ error: 'No cliente available' }, 400);
     }
 
-    // find or create mecanico by nome
-    let mecanicoRec = null;
-    if (mecanico) {
-      mecanicoRec = await prisma.mecanicos.findFirst({ where: { nome: mecanico } });
-      if (!mecanicoRec) {
-        mecanicoRec = await prisma.mecanicos.create({ data: { nome: mecanico } });
+    const mecanicoRec = await getOrCreateMecanico(mecanico);
+
+    const dateObj = parseDateString(data);
+    const horaInicio = parseTimeString(hora, dateObj);
+
+    const created = await prisma.agendamentos.create({
+      data: {
+        cliente_id: clienteRec.id,
+        mecanico_id: mecanicoRec?.id || null,
+        titulo: cliente ? `${tipoServico || 'Agendamento'} - ${cliente}` : (tipoServico || 'Agendamento'),
+        descricao: notas || descricao || '',
+        data_agendamento: dateObj,
+        hora_inicio: horaInicio,
+        estado: 'agendado',
+        marca: marca || null,
+        modelo: modelo || null,
+        ano: ano ? parseInt(ano) : null,
+        matricula: matricula || null,
+        contacto_nome: contacto_nome || null,
+        contacto_telefone: contacto_telefone || null,
+        contacto_email: contacto_email || null
       }
-    }
+    });
 
-    // build dates
-    const [year, month, day] = data ? data.split('-').map((p: string) => parseInt(p, 10)) : [new Date().getFullYear(), new Date().getMonth()+1, new Date().getDate()];
-    const dateObj = new Date(year, (month || 1) - 1, day || 1);
-    let horaInicio: Date | null = null;
-    if (hora) {
-      const [h, m] = hora.split(':').map((s: string) => parseInt(s, 10));
-      horaInicio = new Date(dateObj);
-      horaInicio.setHours(h ?? 9, m ?? 0, 0, 0);
-    }
-
-    const created = await prisma.agendamentos.create({ data: {
-      cliente_id: clienteRec.id,
-      mecanico_id: mecanicoRec ? mecanicoRec.id : null,
-      titulo: cliente ? `${tipoServico || 'Agendamento'} - ${cliente}` : (tipoServico || 'Agendamento'),
-      descricao: notas || descricao || '',
-      data_agendamento: dateObj,
-      hora_inicio: horaInicio || new Date(dateObj.setHours(9,0,0,0)),
-      estado: 'agendado',
-      marca: marca || null,
-      modelo: modelo || null,
-      ano: ano ? parseInt(ano) : null,
-      matricula: matricula || null,
-      contacto_nome: contacto_nome || null,
-      contacto_telefone: contacto_telefone || null,
-      contacto_email: contacto_email || null
-    }});
-
-    return NextResponse.json({ success: true, id: String(created.id) });
-  } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error creating agendamento:', err);
-    return NextResponse.json({ error: 'Failed to create agendamento' }, { status: 500 });
+    return successResponse({ success: true, id: String(created.id) }, 201);
+  } catch (error) {
+    return handleDatabaseError(error as Error);
   }
 }
 
+/**
+ * PUT: Update existing appointment
+ */
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
     const { id, cliente, marca, modelo, ano, matricula, data, hora, tipoServico, mecanico, descricao, notas, contacto_nome, contacto_telefone, contacto_email } = body;
 
     if (!id) {
-      return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+      return successResponse({ error: 'ID is required' }, 400);
     }
 
-    // find or create cliente by nome
-    let clienteRec = null;
-    if (cliente) {
-      clienteRec = await prisma.clientes.findFirst({ where: { nome: cliente } });
-      if (!clienteRec) {
-        clienteRec = await prisma.clientes.create({ data: { nome: cliente, telefone: '', ativo: true } });
-      }
-    }
+    const clienteRec = await getOrCreateCliente(cliente);
+    const mecanicoRec = await getOrCreateMecanico(mecanico);
 
-    // find or create mecanico by nome
-    let mecanicoRec = null;
-    if (mecanico) {
-      mecanicoRec = await prisma.mecanicos.findFirst({ where: { nome: mecanico } });
-      if (!mecanicoRec) {
-        mecanicoRec = await prisma.mecanicos.create({ data: { nome: mecanico } });
-      }
-    }
-
-    // build dates
-    const [year, month, day] = data ? data.split('-').map((p: string) => parseInt(p, 10)) : [new Date().getFullYear(), new Date().getMonth()+1, new Date().getDate()];
-    const dateObj = new Date(year, (month || 1) - 1, day || 1);
-    let horaInicio: Date | null = null;
-    if (hora) {
-      const [h, m] = hora.split(':').map((s: string) => parseInt(s, 10));
-      horaInicio = new Date(dateObj);
-      horaInicio.setHours(h ?? 9, m ?? 0, 0, 0);
-    }
+    const dateObj = parseDateString(data);
+    const horaInicio = parseTimeString(hora, dateObj);
 
     const updateData: any = {
       titulo: cliente ? `${tipoServico || 'Agendamento'} - ${cliente}` : (tipoServico || 'Agendamento'),
       descricao: notas || descricao || '',
       data_agendamento: dateObj,
-      hora_inicio: horaInicio || new Date(dateObj.setHours(9,0,0,0)),
+      hora_inicio: horaInicio,
       marca: marca || null,
       modelo: modelo || null,
       ano: ano ? parseInt(ano) : null,
       matricula: matricula || null,
       contacto_nome: contacto_nome || null,
       contacto_telefone: contacto_telefone || null,
-      contacto_email: contacto_email || null
+      contacto_email: contacto_email || null,
+      mecanico_id: mecanicoRec?.id || null
     };
 
     if (clienteRec) {
       updateData.cliente_id = clienteRec.id;
     }
-    updateData.mecanico_id = mecanicoRec ? mecanicoRec.id : null;
 
     const updated = await prisma.agendamentos.update({
       where: { id: parseInt(id) },
       data: updateData
     });
 
-    return NextResponse.json({ success: true, id: String(updated.id) });
-  } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error updating agendamento:', err);
-    return NextResponse.json({ error: 'Failed to update agendamento' }, { status: 500 });
-  }
-}
-
-export async function DELETE(request: Request) {
-  try {
-    const url = new URL(request.url);
-    const id = url.searchParams.get('id');
-
-    if (!id) {
-      return NextResponse.json({ error: 'ID is required' }, { status: 400 });
-    }
-
-    await prisma.agendamentos.delete({
-      where: { id: parseInt(id) }
-    });
-
-    return NextResponse.json({ success: true });
-  } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error deleting agendamento:', err);
-    return NextResponse.json({ error: 'Failed to delete agendamento' }, { status: 500 });
+    return successResponse({ success: true, id: String(updated.id) });
+  } catch (error) {
+    return handleDatabaseError(error as Error);
   }
 }
 

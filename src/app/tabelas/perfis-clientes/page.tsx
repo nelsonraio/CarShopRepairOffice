@@ -5,14 +5,64 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import EditableDataGrid, { type ColumnDef } from "@/components/EditableDataGrid";
 
+/**
+ * Estrutura de dados para Perfil de Cliente
+ * Define percentagem de lucro padrão aplicada a clientes deste perfil
+ */
 interface PerfilCliente {
   id: number;
   nome: string;
   descricao: string | null;
-  perclucro: number;
+  perclucro: number; // Percentagem de lucro (ex: 55 = 55%)
   ativo: boolean;
 }
 
+/**
+ * parsePercent - Converte diversos formatos em número válido
+ * 
+ * Casos suportados:
+ * 1. number: Retorna diretamente se finito
+ * 2. string: '55' ou '55,00' ou '55.00' → 55
+ * 3. Decimal object (Prisma): {toString: () => '55'} → 55
+ * 4. Outros: Tenta conversão para Number
+ * 
+ * IMPORTANTE: Suporta vírgula como separador decimal (padrão PT)
+ * 
+ * @param value - Valor a converter
+ * @returns Número finito ou 0 se inválido
+ */
+const parsePercent = (value: unknown): number => {
+  // Caso 1: Já é número
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  // Caso 2: String ('55' ou '55,00' ou '55.00')
+  if (typeof value === 'string') {
+    const normalized = value.replace(',', '.').trim(); // PT usa vírgula
+    if (!normalized) return 0;
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  // Caso 3: Objeto Decimal do Prisma (tem método toString)
+  if (value && typeof value === 'object' && typeof (value as { toString?: () => string }).toString === 'function') {
+    const stringValue = (value as { toString: () => string }).toString();
+    const normalized = stringValue.replace(',', '.').trim();
+    if (!normalized) return 0;
+    const parsedObject = Number(normalized);
+    return Number.isFinite(parsedObject) ? parsedObject : 0;
+  }
+
+  // Caso 4: Tentativa genérica de conversão
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+/**
+ * Definição das colunas para o EditableDataGrid
+ * Configura validações, formatações e tipos de input
+ */
 const columns: ColumnDef<PerfilCliente>[] = [
   {
     key: 'nome',
@@ -33,7 +83,19 @@ const columns: ColumnDef<PerfilCliente>[] = [
     type: 'decimal',
     required: true,
     width: '15%',
-    format: (value) => `${parseFloat(value || 0).toFixed(2)}%`
+    // Validação customizada para percentagem
+    validate: (value) => {
+      if (value === null || value === undefined || value === '') return null;
+      const numeric = parsePercent(value);
+      if (!Number.isFinite(numeric)) return 'Percentagem de lucro inválida';
+      if (numeric < 0) return 'Percentagem de lucro não pode ser negativa';
+      return null;
+    },
+    // Formatação para visualização: 55.00%
+    format: (value) => {
+      const safeValue = parsePercent(value);
+      return `${safeValue.toFixed(2)}%`;
+    }
   },
   {
     key: 'ativo',
@@ -43,19 +105,52 @@ const columns: ColumnDef<PerfilCliente>[] = [
   }
 ];
 
+/**
+ * Página de gestão de Perfis de Clientes
+ * 
+ * Permite:
+ * - Visualizar perfis de clientes (ativos e inativos)
+ * - Criar novos perfis
+ * - Editar perfis existentes (inline editing)
+ * - Activar/desactivar perfis
+ * - Validação de percentagens com suporte a vírgula decimal
+ * 
+ * IMPORTANTE: Esta página lida com Decimal do Prisma que precisa de normalização
+ * para evitar exibição de NaN ou 0.00%
+ */
 export default function PerfisClientesPage() {
   const router = useRouter();
   const [perfis, setPerfis] = useState<PerfilCliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [showInactive, setShowInactive] = useState(false);
 
+  /**
+   * Carrega todos os perfis da API (ativos e inativos)
+   * 
+   * IMPORTANTE: Normaliza perclucro de Decimal para number
+   * Prisma retorna Decimal que precisa ser convertido para evitar bugs de exibição
+   */
   const fetchPerfis = async () => {
     setLoading(true);
     try {
       const response = await fetch('/api/perfis-clientes?all=true');
       if (response.ok) {
         const data = await response.json();
-        setPerfis(data);
+        // Normalizar Decimal para number em cada perfil
+        const normalized = Array.isArray(data)
+          ? data.map((perfil) => {
+              const numeric = typeof perfil?.perclucro === 'number'
+                ? perfil.perclucro
+                : parsePercent(perfil?.perclucro);
+
+              return {
+                ...perfil,
+                perclucro: Number.isFinite(numeric) ? numeric : 0,
+              };
+            })
+          : [];
+
+        setPerfis(normalized);
       }
     } catch (error) {
       console.error('Error fetching perfis:', error);
@@ -68,19 +163,48 @@ export default function PerfisClientesPage() {
     fetchPerfis();
   }, []);
 
+  /**
+   * Grava perfil (novo ou editado)
+   * 
+   * Processo:
+   * 1. Determina URL e método (POST para novo, PUT para edição)
+   * 2. Sanitiza percentagem usando parsePercent
+   * 3. Envia para API
+   * 4. Recarrega dados se sucesso
+   * 5. Lança erro se falhar (capturado por EditableDataGrid)
+   */
   const handleSave = async (row: PerfilCliente, isNew: boolean) => {
     const url = isNew ? '/api/perfis-clientes' : `/api/perfis-clientes/${row.id}`;
     const method = isNew ? 'POST' : 'PUT';
 
+    // Sanitizar percentagem para garantir número válido
+    const numeric = parsePercent(row.perclucro);
+    const sanitizedRow: PerfilCliente = {
+      ...row,
+      perclucro: Number.isFinite(numeric) ? numeric : 0,
+    };
+
     const response = await fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(row)
+      body: JSON.stringify(sanitizedRow)
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to save');
+      let errorMessage = 'Failed to save';
+      try {
+        const error = await response.json();
+        errorMessage = error.error || errorMessage;
+      } catch {
+        try {
+          const errorText = await response.text();
+          if (errorText) errorMessage = errorText;
+        } catch {
+          // Ignore parse errors and keep fallback message
+        }
+      }
+
+      throw new Error(errorMessage);
     }
 
     await fetchPerfis();

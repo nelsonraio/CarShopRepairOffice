@@ -1,10 +1,30 @@
-import { NextResponse } from 'next/server';
+import { successResponse, handleDatabaseError } from '@/lib/api-utils';
 import { PrismaClient } from '@prisma/client';
 
+/**
+ * Initialize Prisma Client for database operations
+ */
 const prisma = new PrismaClient({
   log: ['error'],
 });
 
+const toSafePercent = (value: unknown): number => {
+  if (typeof value === 'string') {
+    const normalized = value.replace(',', '.').trim();
+    if (!normalized) return 0;
+    const parsedString = Number(normalized);
+    return Number.isFinite(parsedString) ? parsedString : 0;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+/**
+ * GET: Fetch all client profiles or active profiles only
+ * @param request - HTTP request
+ * @returns JSON array of profiles or error response
+ */
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -15,24 +35,22 @@ export async function GET(request: Request) {
       orderBy: { nome: 'asc' }
     });
 
-    return NextResponse.json(perfis);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
+    const normalized = perfis.map((perfil) => ({
+      ...perfil,
+      perclucro: Number(perfil.perclucro?.toString() || '0'),
+    }));
 
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error fetching perfis clientes:', error);
-    return NextResponse.json({ error: 'Failed to fetch perfis clientes' }, { status: 500 });
+    return successResponse(normalized);
+  } catch (error) {
+    return handleDatabaseError(error as Error);
   }
 }
 
+/**
+ * POST: Create new client profile
+ * @param request - HTTP request with profile data
+ * @returns Created profile or error response
+ */
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -41,26 +59,17 @@ export async function POST(request: Request) {
       data: {
         nome: body.nome,
         descricao: body.descricao || null,
-        perclucro: body.perclucro ? parseFloat(body.perclucro.toString()) : 0,
+        perclucro: toSafePercent(body.perclucro),
         ativo: body.ativo !== undefined ? body.ativo : true
       }
     });
 
-    return NextResponse.json(perfil);
+    return successResponse({
+      ...perfil,
+      perclucro: Number(perfil.perclucro?.toString() || '0'),
+    }, 201);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error creating perfil:', error);
-    return NextResponse.json({ error: 'Failed to create perfil' }, { status: 500 });
+    return handleDatabaseError(error as Error);
   }
 }
 

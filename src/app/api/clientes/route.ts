@@ -1,8 +1,21 @@
-import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-// @ts-ignore
-const prisma = new PrismaClient({
-  log: ['error'],
+import { successResponse, handleDatabaseError } from '@/lib/api-utils';
+
+const prisma = new PrismaClient({ log: ['error'] });
+
+// Formata cliente para retorno na API
+const formatClienteResponse = (cliente: any) => ({
+  id: cliente.id,
+  nome: cliente.nome,
+  email: cliente.email || '',
+  telefone: cliente.telefone,
+  nif: cliente.nif || '',
+  endereco: cliente.endereco || '',
+  perfil: cliente.perfil,
+  veiculos: 0,
+  dataRegistro: cliente.data_registo?.getFullYear().toString() || new Date().getFullYear().toString(),
+  totalGasto: Number(cliente.total_gasto),
+  visitas: cliente.visitas || 0
 });
 
 export async function GET() {
@@ -12,57 +25,48 @@ export async function GET() {
       orderBy: { criado_em: 'desc' }
     });
 
-    // Transform to match Cliente interface
-    const transformedClientes = clientes.map((cliente: typeof clientes[number]) => ({
-      id: cliente.id.toString(),
-      nome: cliente.nome,
-      email: cliente.email || '',
-      telefone: cliente.telefone,
-      nif: cliente.nif || '',
-      endereco: cliente.endereco || '',
-      perfil: cliente.perfil === 'TVDE_Interno' ? 'TVDE Interno' : cliente.perfil === 'TVDE_Externo' ? 'TVDE Externo' : (cliente.perfil || 'Normal'),
-      veiculos: 0, // TODO: Count vehicles for this client
-      dataRegistro: cliente.data_registo ? cliente.data_registo.getFullYear().toString() : new Date().getFullYear().toString(),
-      totalGasto: Number(cliente.total_gasto),
-      visitas: cliente.visitas || 0
-    }));
-
-    return NextResponse.json(transformedClientes);
+    return successResponse(clientes.map(formatClienteResponse));
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error fetching clientes:', error);
-    return NextResponse.json({ error: 'Failed to fetch clientes' }, { status: 500 });
+    return handleDatabaseError(error as Error);
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const { nome, email, telefone, nif, endereco, perfil } = await request.json();
 
-    // Create new client
-    const perfilMap: Record<string, string> = {
-      'TVDE Interno': 'TVDE_Interno',
-      'TVDE Externo': 'TVDE_Externo'
+    // Validação básica
+    if (!nome) {
+      return successResponse({ error: 'Nome é obrigatório' }, 400);
+    }
+
+    // Normaliza o perfil para os valores válidos do enum `clientes_perfil`
+    const normalizePerfil = (rawPerfil: unknown): 'Normal' | 'TVDE_Interno' | 'TVDE_Externo' | 'Empresa' => {
+      const perfilStr = String(rawPerfil ?? '').trim();
+
+      const perfilMap: Record<string, 'Normal' | 'TVDE_Interno' | 'TVDE_Externo' | 'Empresa'> = {
+        'normal': 'Normal',
+        'tvde interno': 'TVDE_Interno',
+        'tvde_interno': 'TVDE_Interno',
+        'tvde externo': 'TVDE_Externo',
+        'tvde_externo': 'TVDE_Externo',
+        'empresa': 'Empresa'
+      };
+
+      const key = perfilStr.toLowerCase();
+      return perfilMap[key] || 'Normal';
     };
+
+    const perfilNormalizado = normalizePerfil(perfil);
 
     const cliente = await prisma.clientes.create({
       data: {
-        nome: body.nome,
-        email: body.email,
-        telefone: body.telefone,
-        nif: body.nif,
-        endereco: body.endereco,
-        perfil: perfilMap[body.perfil as string] || body.perfil,
+        nome,
+        email: email || null,
+        telefone,
+        nif: nif || null,
+        endereco: endereco || null,
+        perfil: perfilNormalizado,
         ativo: true,
         data_registo: new Date(),
         total_gasto: 0,
@@ -70,37 +74,9 @@ export async function POST(request: Request) {
       }
     });
 
-    // Transform and return created client
-    const transformedClient = {
-      id: cliente.id.toString(),
-      nome: cliente.nome,
-      email: cliente.email || '',
-      telefone: cliente.telefone,
-      nif: cliente.nif || '',
-      endereco: cliente.endereco || '',
-      perfil: cliente.perfil === 'TVDE_Interno' ? 'TVDE Interno' : (cliente.perfil || 'Normal'),
-      veiculos: 0,
-      dataRegistro: cliente.data_registo ? cliente.data_registo.getFullYear().toString() : new Date().getFullYear().toString(),
-      totalGasto: Number(cliente.total_gasto),
-      visitas: cliente.visitas || 0
-    };
-
-    return NextResponse.json(transformedClient, { status: 201 });
-
+    return successResponse(formatClienteResponse(cliente), 201);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error creating client:', error);
-    return NextResponse.json({ error: 'Failed to create client' }, { status: 500 });
+    return handleDatabaseError(error as Error);
   }
 }
 

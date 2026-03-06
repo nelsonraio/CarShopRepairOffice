@@ -2,6 +2,20 @@
 
 import { useState, useRef, useEffect } from "react";
 
+/**
+ * Definição de coluna para o EditableDataGrid
+ * 
+ * @property key - Chave da propriedade no objeto de dados
+ * @property header - Texto do cabeçalho da coluna
+ * @property type - Tipo de input: text, number, decimal, boolean, select, date
+ * @property required - Se o campo é obrigatório
+ * @property editable - Se o campo pode ser editado (padrão: true)
+ * @property width - Largura da coluna CSS (ex: '25%', '200px')
+ * @property options - Para type='select': array de opções {value, label}
+ * @property render - Função customizada para renderizar célula em modo visualização
+ * @property format - Função para formatar valor na visualização
+ * @property validate - Função de validação: retorna mensagem de erro ou null se válido
+ */
 export interface ColumnDef<T = any> {
   key: string;
   header: string;
@@ -15,6 +29,21 @@ export interface ColumnDef<T = any> {
   validate?: (value: any) => string | null; // Returns error message or null
 }
 
+/**
+ * Props do componente EditableDataGrid
+ * 
+ * @property columns - Definições das colunas da tabela
+ * @property data - Array de dados a mostrar
+ * @property idField - Nome do campo que serve de ID único (padrão: 'id')
+ * @property onSave - Callback chamado ao gravar (criar ou editar)
+ * @property onDelete - Callback chamado ao eliminar registo
+ * @property onToggleActive - Callback para activar/desactivar registo
+ * @property canAdd - Permitir adicionar novos registos (padrão: true)
+ * @property canEdit - Permitir editar registos existentes (padrão: true)
+ * @property canDelete - Permitir eliminar registos (padrão: false)
+ * @property canToggleActive - Mostrar toggle ativo/inativo (padrão: true)
+ * @property loading - Estado de carregamento para mostrar indicador
+ */
 interface EditableDataGridProps<T = any> {
   columns: ColumnDef<T>[];
   data: T[];
@@ -29,6 +58,33 @@ interface EditableDataGridProps<T = any> {
   loading?: boolean;
 }
 
+/**
+ * EditableDataGrid - Componente de tabela editável reutilizável
+ * 
+ * Funcionalidades:
+ * - Visualização de dados em formato tabela
+ * - Edição inline de registos (clique para editar)
+ * - Criação de novos registos
+ * - Validação de campos obrigatórios e customizada
+ * - Suporte para múltiplos tipos de input (text, number, decimal, boolean, select, date)
+ * - Toggle ativo/inativo
+ * - Eliminação de registos com confirmação
+ * - Formatação customizada de valores
+ * - Estados de loading e salvamento
+ * 
+ * IMPORTANTE: Para campos numéricos/decimais, usa nullish coalescing (??) em vez de OR (||)
+ * para preservar valores zero (0) que são válidos.
+ * 
+ * @example
+ * ```tsx
+ * <EditableDataGrid
+ *   columns={columns}
+ *   data={perfis}
+ *   onSave={handleSave}
+ *   canDelete={true}
+ * />
+ * ```
+ */
 export default function EditableDataGrid<T extends Record<string, any>>({
   columns,
   data,
@@ -42,6 +98,7 @@ export default function EditableDataGrid<T extends Record<string, any>>({
   canToggleActive = true,
   loading = false
 }: EditableDataGridProps<T>) {
+  // Estado da linha sendo editada
   const [editingId, setEditingId] = useState<any>(null);
   const [editedRow, setEditedRow] = useState<Partial<T>>({});
   const [isAddingNew, setIsAddingNew] = useState(false);
@@ -49,7 +106,10 @@ export default function EditableDataGrid<T extends Record<string, any>>({
   const [savingId, setSavingId] = useState<any>(null);
   const inputRefs = useRef<{ [key: string]: HTMLInputElement | HTMLSelectElement | null }>({});
 
-  // Reset when changing rows
+  /**
+   * Limpa estado de edição quando não está a editar
+   * Previne dados residuais entre edições
+   */
   useEffect(() => {
     if (editingId === null && !isAddingNew) {
       setEditedRow({});
@@ -57,6 +117,10 @@ export default function EditableDataGrid<T extends Record<string, any>>({
     }
   }, [editingId, isAddingNew]);
 
+  /**
+   * Inicia edição de uma linha existente
+   * Copia todos os dados da linha para o estado de edição
+   */
   const startEdit = (row: T) => {
     setEditingId(row[idField]);
     setEditedRow({ ...row });
@@ -64,6 +128,14 @@ export default function EditableDataGrid<T extends Record<string, any>>({
     setErrors({});
   };
 
+  /**
+   * Inicia criação de novo registo
+   * Inicializa valores padrão baseados no tipo de campo:
+   * - boolean: true
+   * - number/decimal: 0
+   * - text: ''
+   * - Campo 'ativo' sempre true para novos registos
+   */
   const startAddNew = () => {
     const newRow: Partial<T> = {};
     columns.forEach(col => {
@@ -76,7 +148,7 @@ export default function EditableDataGrid<T extends Record<string, any>>({
       }
     });
     
-    // Set ativo to true by default for new rows
+    // Novos registos ativos por padrão
     if ('ativo' in newRow) {
       newRow['ativo' as keyof T] = true as any;
     }
@@ -86,7 +158,7 @@ export default function EditableDataGrid<T extends Record<string, any>>({
     setEditingId(null);
     setErrors({});
     
-    // Focus first input
+    // Auto-focus no primeiro campo editável após 50ms
     setTimeout(() => {
       const firstEditableCol = columns.find(col => col.editable !== false);
       if (firstEditableCol) {
@@ -102,9 +174,19 @@ export default function EditableDataGrid<T extends Record<string, any>>({
     setErrors({});
   };
 
+  /**
+   * Valida todos os campos da linha sendo editada
+   * 
+   * Validações:
+   * 1. Campos obrigatórios (required=true) não podem estar vazios
+   * 2. Validação customizada via função validate() da coluna
+   * 
+   * @returns true se válido, false se houver erros
+   */
   const validateRow = (): boolean => {
     const newErrors: Record<string, string> = {};
     
+    // Validar campos obrigatórios
     columns.forEach(col => {
       if (col.required && col.editable !== false) {
         const value = editedRow[col.key as keyof T];
@@ -113,6 +195,7 @@ export default function EditableDataGrid<T extends Record<string, any>>({
         }
       }
       
+      // Validação customizada
       if (col.validate) {
         const value = editedRow[col.key as keyof T];
         const error = col.validate(value);
@@ -126,6 +209,17 @@ export default function EditableDataGrid<T extends Record<string, any>>({
     return Object.keys(newErrors).length === 0;
   };
 
+  /**
+   * Grava linha (nova ou editada) após validação
+   * Chama callback onSave fornecido pelo componente pai
+   * 
+   * Processo:
+   * 1. Valida dados
+   * 2. Define estado de salvamento
+   * 3. Chama onSave com dados e flag isNew
+   * 4. Limpa edição se sucesso
+   * 5. Mostra erro se falhar
+   */
   const handleSave = async () => {
     if (!validateRow()) {
       return;
@@ -230,8 +324,8 @@ export default function EditableDataGrid<T extends Record<string, any>>({
             <input
               ref={(el) => { inputRefs.current[column.key] = el; }}
               type="number"
-              value={editValue as number || ''}
-              onChange={(e) => handleCellChange(column.key, e.target.value ? parseInt(e.target.value) : null)}
+              value={(editValue as number | null | undefined) ?? ''}
+              onChange={(e) => handleCellChange(column.key, e.target.value === '' ? null : Number(e.target.value))}
               className={baseInputClass}
             />
           );
@@ -242,8 +336,8 @@ export default function EditableDataGrid<T extends Record<string, any>>({
               ref={(el) => { inputRefs.current[column.key] = el; }}
               type="number"
               step="0.01"
-              value={editValue as number || ''}
-              onChange={(e) => handleCellChange(column.key, e.target.value ? parseFloat(e.target.value) : null)}
+              value={(editValue as number | null | undefined) ?? ''}
+              onChange={(e) => handleCellChange(column.key, e.target.value === '' ? null : Number(e.target.value))}
               className={baseInputClass}
             />
           );

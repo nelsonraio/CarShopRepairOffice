@@ -1,11 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback } from 'react';
 import Link from 'next/link';
 import Sidebar from '../../components/Sidebar';
 import VehiclesTable, { type VehicleData } from '../../components/VehiclesTable';
 import VehicleHistoryModal from '../../components/VehicleHistoryModal';
+import { useFetch, useModal, usePagination } from '@/hooks';
 
+/**
+ * Interface simplificada de Veículo para modal de histórico
+ */
 interface Vehicle {
   id: string;
   plate: string;
@@ -15,16 +19,63 @@ interface Vehicle {
   lastIntervention: string;
 }
 
+/**
+ * Página de Gestão de Veículos
+ * 
+ * Funcionalidades:
+ * - Listagem de veículos cadastrados
+ * - Visualização de detalhes (modal)
+ * - Visualização de histórico de intervenções (modal)
+ * - Eliminação de veículos
+ * - Paginação (20 itens por página)
+ * - Navegação para registo de novo veículo
+ * 
+ * Usa hooks customizados:
+ * - useFetch: Carrega dados da API
+ * - useModal: Controla modais (detalhes e histórico)
+ * - usePagination: Gestão de paginação
+ */
 export default function VeiculosPage() {
-    const [plateModalOpen, setPlateModalOpen] = useState(false);
-    const [plateDetails, setPlateDetails] = useState<VehicleData | null>(null);
+  const ITEMS_PER_PAGE = 20;
 
-    const handlePlateClick = (vehicle: VehicleData) => {
-      setPlateDetails(vehicle);
-      setPlateModalOpen(true);
-    };
+  // Carrega lista de veículos da API
+  const {
+    data: vehiclesData = [],
+    loading,
+    error,
+    refetch, // Função para recarregar dados após eliminação
+  } = useFetch<VehicleData[]>('/api/veiculos');
 
-  // Translations for plate details modal keys
+  // Modal para detalhes da matrícula/veículo
+  const {
+    isOpen: plateModalOpen,
+    selectedItem: plateDetails,
+    select: selectPlateDetails,
+    close: closePlateModal,
+  } = useModal<VehicleData>();
+
+  // Modal para histórico de intervenções
+  const {
+    isOpen: isHistoryModalOpen,
+    selectedItem: selectedVehicle,
+    select: selectHistoryVehicle,
+    close: closeHistoryModal,
+  } = useModal<Vehicle>();
+
+  const filteredVehicles = vehiclesData ?? [];
+
+  // Paginação com reset automático quando dados mudam
+  const {
+    currentPage,
+    totalPages,
+    paginatedItems: paginatedVehicles,
+    prevPage,
+    nextPage,
+  } = usePagination(filteredVehicles, ITEMS_PER_PAGE, [filteredVehicles.length]);
+
+  /**
+   * Mapeamento de chaves para labels em português no modal de detalhes
+   */
   const plateDetailLabels: Record<string, string> = {
     licensePlate: 'Matrícula',
     clientName: 'Cliente',
@@ -35,52 +86,11 @@ export default function VeiculosPage() {
     year: 'Ano',
     lastIntervention: 'Última Intervenção',
   };
-  const [vehicles, setVehicles] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
-  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const ITEMS_PER_PAGE = 20;
-
-
-  const fetchVehicles = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/veiculos');
-      if (response.ok) {
-        const data = await response.json();
-        setVehicles(data);
-      } else {
-        setError('Failed to fetch vehicles');
-      }
-    } catch (err) {
-      setError('Failed to fetch vehicles');
-      console.error('Error fetching vehicles:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchVehicles();
-  }, []);
-
-  // Reset pagination on data load
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [vehicles]);
-
-  const filteredVehicles = vehicles;
-
-  // Pagination
-  const totalPages = Math.ceil(filteredVehicles.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedVehicles = filteredVehicles.slice(startIndex, endIndex);
-
-  const handleViewHistory = (vehicle: VehicleData) => {
+  /**
+   * Abre modal de histórico
+   * Converte VehicleData para formato Vehicle esperado pelo modal
+   */
+  const handleViewHistory = useCallback((vehicle: VehicleData) => {
     const vehicleForModal: Vehicle = {
       id: vehicle.id,
       plate: vehicle.licensePlate,
@@ -89,10 +99,20 @@ export default function VeiculosPage() {
       year: vehicle.year,
       lastIntervention: vehicle.lastIntervention,
     };
-    setSelectedVehicle(vehicleForModal);
-    setIsHistoryModalOpen(true);
-  };
+    selectHistoryVehicle(vehicleForModal);
+  }, [selectHistoryVehicle]);
 
+  /**
+   * Abre modal de detalhes ao clicar na matrícula
+   */
+  const handlePlateClick = useCallback((vehicle: VehicleData) => {
+    selectPlateDetails(vehicle);
+  }, [selectPlateDetails]);
+
+  /**
+   * Elimina veículo e recarrega lista
+   * Confirmação é feita no componente VehiclesTable
+   */
   const handleDelete = async (id: string) => {
 
     try {
@@ -100,12 +120,15 @@ export default function VeiculosPage() {
         method: 'DELETE'
       });
       if (response.ok) {
-        setVehicles(prev => prev.filter(v => v.id !== id));
+        await refetch(); // Recarrega dados após eliminação
       }
     } catch (err) {
       console.error('Failed to delete vehicle:', err);
     }
   };
+
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
 
   return (
     <div className="flex h-screen bg-gray-800">
@@ -164,7 +187,7 @@ export default function VeiculosPage() {
                   </div>
                   <div className="flex justify-end mt-6">
                     <button
-                      onClick={() => setPlateModalOpen(false)}
+                      onClick={closePlateModal}
                       className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
                     >
                       Fechar
@@ -185,7 +208,7 @@ export default function VeiculosPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      onClick={prevPage}
                       disabled={currentPage === 1}
                       className="px-3 py-1 text-sm bg-gray-600 hover:bg-gray-500 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:text-gray-500 text-gray-300 rounded border border-gray-500 transition-colors"
                     >
@@ -195,7 +218,7 @@ export default function VeiculosPage() {
                       Página <span className="font-medium text-gray-200">{currentPage}</span> de <span className="font-medium text-gray-200">{totalPages}</span>
                     </span>
                     <button
-                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      onClick={nextPage}
                       disabled={currentPage === totalPages}
                       className="px-3 py-1 text-sm bg-gray-600 hover:bg-gray-500 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:text-gray-500 text-gray-300 rounded border border-gray-500 transition-colors"
                     >
@@ -210,7 +233,7 @@ export default function VeiculosPage() {
 
       </main>
 
-      <VehicleHistoryModal isOpen={isHistoryModalOpen} onClose={() => setIsHistoryModalOpen(false)} vehicle={selectedVehicle} />
+      <VehicleHistoryModal isOpen={isHistoryModalOpen} onClose={closeHistoryModal} vehicle={selectedVehicle} />
 
     </div>
   );

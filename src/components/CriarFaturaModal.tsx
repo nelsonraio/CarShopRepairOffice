@@ -47,6 +47,80 @@ interface CriarFaturaModalProps {
   oauthToken?: string;
 }
 
+const formatDateSafe = (value: unknown): string => {
+  if (!value) return 'N/A';
+
+  const raw = String(value).trim();
+  if (!raw || raw.toLowerCase() === 'invalid date' || raw.toLowerCase() === 'null') return 'N/A';
+
+  // Remove aspas quando vier serializado como string
+  const unquoted = raw.replace(/^['\"]|['\"]$/g, '');
+
+  // Atalho para formatos baseados em YYYY-MM-DD (com ou sem hora)
+  const leadingIsoDate = unquoted.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (leadingIsoDate) {
+    const [, yyyy, mm, dd] = leadingIsoDate;
+    return `${dd}/${mm}/${yyyy}`;
+  }
+
+  // Suporta timestamp numérico (ms desde epoch)
+  if (/^\d{10,13}$/.test(unquoted)) {
+    const millis = unquoted.length === 10 ? Number(unquoted) * 1000 : Number(unquoted);
+    const parsedTs = new Date(millis);
+    return Number.isNaN(parsedTs.getTime()) ? 'N/A' : parsedTs.toLocaleDateString('pt-PT');
+  }
+
+  // Suporta formato ISO curto: yyyy-mm-dd
+  const isoShortMatch = unquoted.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoShortMatch) {
+    const [, yyyy, mm, dd] = isoShortMatch;
+    const parsedIso = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+    return Number.isNaN(parsedIso.getTime()) ? 'N/A' : parsedIso.toLocaleDateString('pt-PT');
+  }
+
+  // Suporta formato PT: dd/mm/yyyy
+  const ptMatch = unquoted.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (ptMatch) {
+    const [, dd, mm, yyyy] = ptMatch;
+    const parsedPt = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+    return Number.isNaN(parsedPt.getTime()) ? 'N/A' : parsedPt.toLocaleDateString('pt-PT');
+  }
+
+  // Suporta formato: dd-mm-yyyy
+  const dashPtMatch = unquoted.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (dashPtMatch) {
+    const [, dd, mm, yyyy] = dashPtMatch;
+    const parsedPtDash = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+    return Number.isNaN(parsedPtDash.getTime()) ? 'N/A' : parsedPtDash.toLocaleDateString('pt-PT');
+  }
+
+  // Suporta formato: yyyy/mm/dd
+  const slashIsoMatch = unquoted.match(/^(\d{4})\/(\d{2})\/(\d{2})$/);
+  if (slashIsoMatch) {
+    const [, yyyy, mm, dd] = slashIsoMatch;
+    const parsedSlash = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+    return Number.isNaN(parsedSlash.getTime()) ? 'N/A' : parsedSlash.toLocaleDateString('pt-PT');
+  }
+
+  // Suporta formato SQL: yyyy-mm-dd hh:mm:ss
+  const sqlDateTimeMatch = unquoted.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})(?::(\d{2}))?$/);
+  if (sqlDateTimeMatch) {
+    const [, yyyy, mm, dd, hh, mi, ss = '0'] = sqlDateTimeMatch;
+    const parsedSql = new Date(
+      Number(yyyy),
+      Number(mm) - 1,
+      Number(dd),
+      Number(hh),
+      Number(mi),
+      Number(ss)
+    );
+    return Number.isNaN(parsedSql.getTime()) ? 'N/A' : parsedSql.toLocaleDateString('pt-PT');
+  }
+
+  const parsed = new Date(unquoted);
+  return Number.isNaN(parsed.getTime()) ? 'N/A' : parsed.toLocaleDateString('pt-PT');
+};
+
 export default function CriarFaturaModal({ isOpen, onClose, onSuccess, oauthToken }: CriarFaturaModalProps) {
   const [step, setStep] = useState<'selecionar_ordem' | 'preencher_dados'>('selecionar_ordem');
   const [ordensTrabalho, setOrdensTrabalho] = useState<OrdemTrabalho[]>([]);
@@ -368,7 +442,7 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess, oauthToke
                       <div className="text-lg font-bold text-brand-yellow">
                         €{ordem.total_geral.toFixed(2)}
                       </div>
-                      <div className="text-gray-400 text-xs">{new Date(ordem.data_conclusao).toLocaleDateString('pt-PT')}</div>
+                      <div className="text-gray-400 text-xs">{formatDateSafe(ordem.data_conclusao)}</div>
                     </div>
                   </button>
                 ))}

@@ -1,20 +1,175 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import {
+  successResponse,
+  errorResponse,
+  handleDatabaseError,
+  parseNum,
+  mapDbStatusToFrontend,
+  mapFrontendStatusToDb,
+  mapPriority,
+  formatDatePt,
+  parseNum as safeParse,
+  buildDataMap,
+  extractUniqueIds
+} from '@/lib/api-utils';
 
 const prisma = new PrismaClient({
   log: ['error'],
 });
 const prismaAny = prisma as any;
 
+/**
+ * Format a work order item for API response
+ */
+const formatWorkOrderItem = (item: any) => ({
+  id: Number(item.id),
+  tipo_item: item.tipo_item,
+  descricao: item.descricao ?? '',
+  quantidade: Number(item.quantidade) || 0,
+  preco_unitario: Number(item.preco_unitario) || 0,
+  valor_total: Number(item.valor_total) || 0
+});
+
+/**
+ * Format waiting parts from order items
+ */
+const getWaitingParts = (items: any[]) =>
+  (items || [])
+    .filter(item => item.tipo_item === 'peca' && item.aguarda_peca)
+    .map(item => ({
+      id: Number(item.id),
+      descricao: item.descricao ?? '',
+      quantidade: Number(item.quantidade) || 0,
+      valor_total: Number(item.valor_total) || 0
+    }));
+
+/**
+ * Parse work order data from request body
+ */
+const parseWorkOrderData = (body: any) => {
+  const {
+    ref_ordem_trabalho,
+    cliente_id,
+    veiculo_id,
+    mecanico_id,
+    orcamento_id,
+    data_inicio,
+    data_conclusao,
+    estado,
+    kms,
+    descricao_problema,
+    trabalho_realizado,
+    recomendacoes,
+    contacto_nome,
+    contacto_telefone,
+    contacto_email,
+    total_pecas,
+    total_mao_obra,
+    total_desconto,
+    total_imposto,
+    total_geral,
+    items
+  } = body;
+
+  return {
+    ref_ordem_trabalho,
+    cliente_id: parseInt(cliente_id),
+    mecanico_id: mecanico_id ? parseInt(mecanico_id) : null,
+    orcamento_id: orcamento_id ? BigInt(orcamento_id) : null,
+    veiculo_id: veiculo_id ? BigInt(veiculo_id) : null,
+    data_inicio: data_inicio ? new Date(data_inicio) : new Date(),
+    data_conclusao: data_conclusao ? new Date(data_conclusao) : null,
+    estado: estado || 'em_andamento',
+    kms: kms ? parseInt(kms) : null,
+    descricao_problema,
+    trabalho_realizado,
+    recomendacoes,
+    contacto_nome: contacto_nome || null,
+    contacto_telefone: contacto_telefone || null,
+    contacto_email: contacto_email || null,
+    total_pecas: parseNum(total_pecas) || 0,
+    total_mao_obra: parseNum(total_mao_obra) || 0,
+    total_desconto: parseNum(total_desconto) || 0,
+    total_imposto: parseNum(total_imposto) || 0,
+    total_geral: parseNum(total_geral) || 0,
+    items
+  };
+};
+
+/**
+ * Create work order items in database
+ */
+const createWorkOrderItems = async (orderId: bigint, items: any[]) => {
+  if (!items || items.length === 0) return;
+
+  const workOrderItems = items.map((item: any) => ({
+    ordem_trabalho_id: orderId,
+    tipo_item: item.tipo_item || (item.type === 'service' ? 'servico' : 'peca'),
+    servico_id: item.servico_id || (item.servico_id ? parseInt(item.servico_id) : null),
+    peca_id: item.peca_id || (item.peca_id ? parseInt(item.peca_id) : null),
+    descricao: item.descricao || item.name,
+    quantidade: parseNum(item.quantidade || item.quantity) || 1,
+    preco_unitario: parseNum(item.preco_unitario || item.unitPrice) || 0,
+    valor_desconto: parseNum(item.valor_desconto || item.desconto) || 0,
+    valor_imposto: parseNum(item.valor_imposto) || 0,
+    valor_total: parseNum(item.valor_total || item.total) || 0,
+    notas: item.notas || item.notes || null
+  }));
+
+  await prisma.itens_ordem_trabalho.createMany({ data: workOrderItems });
+};
+
+/**
+ * Deduct parts from stock when order is completed
+ */
+const deductPartsFromStock = async (orderId: number) => {
+  const orderItems = await prisma.itens_ordem_trabalho.findMany({
+    where: {
+      ordem_trabalho_id: orderId,
+      tipo_item: 'peca',
+      peca_id: { not: null }
+    },
+    select: { peca_id: true, quantidade: true }
+  });
+
+  // Update stock for each part
+  for (const item of orderItems) {
+    if (item.peca_id && item.quantidade) {
+      try {
+        const current = await prisma.pecas.findUnique({
+          where: { id: BigInt(item.peca_id) },
+          select: { quantidade_stock: true }
+        });
+        
+        const decrement = Math.floor(Number(item.quantidade));
+        let newStock = (current?.quantidade_stock ?? 0) - decrement;
+        if (newStock < 0) newStock = 0;
+
+        await prisma.pecas.update({
+          where: { id: BigInt(item.peca_id) },
+          data: { quantidade_stock: newStock }
+        });
+      } catch (error) {
+        console.error(`Failed to update stock for part ${item.peca_id}:`, error);
+        // Continue processing other parts even if one fails
+      }
+    }
+  }
+};
+
+/**
+ * POST /api/ordens-trabalho - Create new work order
+ */
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const {
       ref_ordem_trabalho,
       cliente_id,
-      veiculo_id,
       mecanico_id,
       orcamento_id,
+      veiculo_id,
       data_inicio,
       data_conclusao,
       estado,
@@ -31,94 +186,67 @@ export async function POST(request: Request) {
       total_imposto,
       total_geral,
       items
-    } = body;
+    } = parseWorkOrderData(body);
 
-    // Create the work order - use any type to handle BigInt issue
-    const ordemTrabalhoData: any = {
-      ref_ordem_trabalho,
-      cliente_id: parseInt(cliente_id),
-      mecanico_id: mecanico_id ? parseInt(mecanico_id) : null,
-      orcamento_id: orcamento_id ? BigInt(orcamento_id) : null,
-      data_inicio: data_inicio ? new Date(data_inicio) : new Date(),
-      data_conclusao: data_conclusao ? new Date(data_conclusao) : null,
-      estado: estado || 'em_andamento',
-      kms: kms ? parseInt(kms) : null,
-      descricao_problema,
-      trabalho_realizado,
-      recomendacoes,
-      contacto_nome: contacto_nome || null,
-      contacto_telefone: contacto_telefone || null,
-      contacto_email: contacto_email || null,
-      total_pecas: parseFloat(total_pecas) || 0,
-      total_mao_obra: parseFloat(total_mao_obra) || 0,
-      total_desconto: parseFloat(total_desconto) || 0,
-      total_imposto: parseFloat(total_imposto) || 0,
-      total_geral: parseFloat(total_geral) || 0
-    };
-    
-    // Only add veiculo_id if provided (required in schema)
-    if (veiculo_id) {
-      ordemTrabalhoData.veiculo_id = BigInt(veiculo_id);
-    }
-
+    // Create work order
     const ordemTrabalho = await prismaAny.ordens_trabalho.create({
-      data: ordemTrabalhoData
-    });
-
-    // Create work order items if provided
-    if (items && items.length > 0) {
-      const workOrderItems = items.map((item: any) => ({
-        ordem_trabalho_id: ordemTrabalho.id,
-        tipo_item: item.tipo_item || (item.type === 'service' ? 'servico' : 'peca'),
-        servico_id: item.servico_id || (item.servico_id ? parseInt(item.servico_id) : null),
-        peca_id: item.peca_id || (item.peca_id ? parseInt(item.peca_id) : null),
-        descricao: item.descricao || item.name,
-        quantidade: parseFloat(item.quantidade || item.quantity) || 1,
-        preco_unitario: parseFloat(item.preco_unitario || item.unitPrice) || 0,
-        valor_desconto: parseFloat(item.valor_desconto || item.desconto) || 0,
-        valor_imposto: parseFloat(item.valor_imposto) || 0,
-        valor_total: parseFloat(item.valor_total || item.total) || 0,
-        notas: item.notas || item.notes || null
-      }));
-
-      await prisma.itens_ordem_trabalho.createMany({
-        data: workOrderItems
-      });
-    }
-
-    return NextResponse.json({
-      success: true,
-      ordem_trabalho: {
-        id: Number(ordemTrabalho.id),
-        ref_ordem_trabalho: ordemTrabalho.ref_ordem_trabalho
+      data: {
+        ref_ordem_trabalho,
+        cliente_id,
+        mecanico_id,
+        orcamento_id,
+        veiculo_id,
+        data_inicio,
+        data_conclusao,
+        estado,
+        kms,
+        descricao_problema,
+        trabalho_realizado,
+        recomendacoes,
+        contacto_nome,
+        contacto_telefone,
+        contacto_email,
+        total_pecas,
+        total_mao_obra,
+        total_desconto,
+        total_imposto,
+        total_geral
       }
     });
 
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
+    // Create work order items
+    await createWorkOrderItems(ordemTrabalho.id, items);
 
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
+    return successResponse(
+      {
+        success: true,
+        ordem_trabalho: {
+          id: Number(ordemTrabalho.id),
+          ref_ordem_trabalho: ordemTrabalho.ref_ordem_trabalho
+        }
+      },
+      201
+    );
+  } catch (error) {
     console.error('Error creating work order:', error);
-    return NextResponse.json({ error: 'Failed to create work order' }, { status: 500 });
+    if (error instanceof Error) {
+      return handleDatabaseError(error);
+    }
+    return errorResponse('Failed to create work order', 500);
   }
 }
 
+/**
+ * GET /api/ordens-trabalho - List work orders or get single by ID
+ */
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
-    // If ID is provided, fetch single work order with items
+    // Single work order lookup
     if (id) {
-      const ordemTrabalho = await prismaAny.ordens_trabalho.findUnique({
+      const order = await prismaAny.ordens_trabalho.findUnique({
         where: { ref_ordem_trabalho: id },
         include: {
           mecanico: true,
@@ -133,99 +261,65 @@ export async function GET(request: Request) {
               aguarda_peca: true
             }
           },
-          orcamento: {
-            include: { itens_orcamento: true }
-          }
-        },
+          orcamento: { include: { itens_orcamento: true } }
+        }
       });
 
-      if (!ordemTrabalho) {
-        return NextResponse.json({ error: 'Work order not found' }, { status: 404 });
+      if (!order) {
+        return errorResponse('Work order not found', 404);
       }
 
-      const cliente = await prisma.clientes.findUnique({
-        where: { id: ordemTrabalho.cliente_id },
-      });
+      const [cliente, veiculo] = await Promise.all([
+        prisma.clientes.findUnique({ where: { id: order.cliente_id } }),
+        order.veiculo_id
+          ? prisma.veiculos.findUnique({ where: { id: order.veiculo_id } })
+          : Promise.resolve(null)
+      ]);
 
-      const veiculo = ordemTrabalho.veiculo_id
-        ? await prisma.veiculos.findUnique({
-            where: { id: ordemTrabalho.veiculo_id },
-          })
-        : null;
+      const waitingParts = getWaitingParts(order.itens_ordem_trabalho);
 
-      // Convert BigInt fields to strings for JSON serialization
-      // Get waiting parts from items marked as awaiting
-      const waitingPartsData = ordemTrabalho.itens_ordem_trabalho
-        ?.filter((item: any) => item.tipo_item === 'peca' && item.aguarda_peca)
-        .map((item: any) => ({
-          id: Number(item.id),
-          descricao: item.descricao ?? '',
-          quantidade: Number(item.quantidade) || 0,
-          valor_total: Number(item.valor_total) || 0
-        })) ?? [];
-
-      // construct object shape similar to front-end WorkOrder
-      const responseData: any = {
-        id: String(ordemTrabalho.id),
+      const responseData = {
+        id: String(order.id),
         client: cliente?.nome ?? '',
         vehicle: veiculo ? `${veiculo.marca} ${veiculo.modelo} | ${veiculo.matricula}` : '',
-        mechanic: ordemTrabalho.mecanico?.nome ?? '',
-        openDate: ordemTrabalho.data_inicio ? ordemTrabalho.data_inicio.toLocaleDateString('pt-PT') : '',
-        closeDate: ordemTrabalho.data_conclusao ? ordemTrabalho.data_conclusao.toLocaleDateString('pt-PT') : '',
-        status: mapStatus(ordemTrabalho.estado),
-        priority: mapPriority(ordemTrabalho.prioridade ?? null),
-        problem: ordemTrabalho.descricao_problema ?? '',
-        waitingParts: waitingPartsData,
-        itens_ordem_trabalho: ordemTrabalho.itens_ordem_trabalho?.map((item: any) => ({
-          id: Number(item.id),
-          tipo_item: item.tipo_item,
-          descricao: item.descricao ?? '',
-          quantidade: Number(item.quantidade) || 0,
-          preco_unitario: Number(item.preco_unitario) || 0,
-          valor_total: Number(item.valor_total) || 0
-        })) ?? [],
-        orcamento: ordemTrabalho.orcamento ? {
-          id: String(ordemTrabalho.orcamento.id),
-          ref_orcamento: ordemTrabalho.orcamento.ref_orcamento,
-          itens_orcamento: ordemTrabalho.orcamento.itens_orcamento?.map((item: any) => ({
+        mechanic: order.mecanico?.nome ?? '',
+        openDate: formatDatePt(order.data_inicio),
+        closeDate: formatDatePt(order.data_conclusao),
+        status: mapDbStatusToFrontend(order.estado),
+        priority: mapPriority(order.prioridade ?? null),
+        problem: order.descricao_problema ?? '',
+        waitingParts,
+        itens_ordem_trabalho: (order.itens_ordem_trabalho || []).map(formatWorkOrderItem),
+        orcamento: order.orcamento ? {
+          id: String(order.orcamento.id),
+          ref_orcamento: order.orcamento.ref_orcamento,
+          itens_orcamento: (order.orcamento.itens_orcamento || []).map((item: any) => ({
             id: String(item.id),
+            orcamento_id: String(item.orcamento_id),
             descricao: item.descricao ?? '',
             quantidade: Number(item.quantidade) || 0,
             valor_total: Number(item.valor_total) || 0,
+            servico_id: item.servico_id ? String(item.servico_id) : null,
+            peca_id: item.peca_id ? String(item.peca_id) : null
           }))
-        } : undefined,
+        } : undefined
       };
 
-      // include orcamento details if present
-      if (ordemTrabalho.orcamento) {
-        responseData.orcamento = {
-          id: String(ordemTrabalho.orcamento.id),
-          ref_orcamento: ordemTrabalho.orcamento.ref_orcamento,
-          itens_orcamento: ordemTrabalho.orcamento.itens_orcamento?.map((item: any) => ({
-            ...item,
-            id: String(item.id),
-            orcamento_id: String(item.orcamento_id),
-            servico_id: item.servico_id ? String(item.servico_id) : null,
-            peca_id: item.peca_id ? String(item.peca_id) : null,
-          }))
-        };
-      }
-
-      // Use JSON.parse/stringify to handle any remaining BigInt values
+      // Handle remaining BigInt values
       const jsonString = JSON.stringify(responseData, (key, value) =>
         typeof value === 'bigint' ? value.toString() : value
       );
 
       return new Response(jsonString, {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    // Otherwise, fetch all work orders
-    const ordensTrabalho = await prismaAny.ordens_trabalho.findMany({
+    // List all work orders
+    const orders = await prismaAny.ordens_trabalho.findMany({
       orderBy: { criado_em: 'desc' },
       include: {
-        mecanico: true, // Include the related mechanic's data
+        mecanico: true,
         itens_ordem_trabalho: {
           select: {
             id: true,
@@ -237,320 +331,211 @@ export async function GET(request: Request) {
             aguarda_peca: true
           }
         }
-      },
+      }
     });
 
-    const clienteIds = Array.from(new Set((ordensTrabalho as any[])
-      .map((o: any) => o.cliente_id)
-      .filter((v: any): v is number => v != null))) as number[];
-    const veiculoIds = Array.from(new Set((ordensTrabalho as any[])
-      .map((o: any) => o.veiculo_id)
-      .filter((v: any): v is bigint => v != null))) as bigint[];
+    // Batch load related entities
+    const clienteIds = extractUniqueIds(orders, 'cliente_id');
+    const veiculoIds = extractUniqueIds(orders, 'veiculo_id').filter(
+      id => typeof id === 'bigint' || typeof id === 'number'
+    );
+    const mecanicoIds = extractUniqueIds(orders, 'mecanico_id');
 
-    const [clientes, veiculos] = await Promise.all([
-      clienteIds.length ? prisma.clientes.findMany({ where: { id: { in: clienteIds } } }) : Promise.resolve([]),
-      veiculoIds.length ? prisma.veiculos.findMany({ where: { id: { in: veiculoIds } } }) : Promise.resolve([]),
+    const [clientes, veiculos, mecanicos] = await Promise.all([
+      clienteIds.length
+        ? prisma.clientes.findMany({ where: { id: { in: clienteIds as number[] } } })
+        : Promise.resolve([]),
+      veiculoIds.length
+        ? prisma.veiculos.findMany({ where: { id: { in: veiculoIds.map(id => BigInt(id)) } } })
+        : Promise.resolve([]),
+      mecanicoIds.length
+        ? prisma.mecanicos.findMany({ where: { id: { in: mecanicoIds as number[] } } })
+        : Promise.resolve([])
     ]);
 
-    const clienteMap = new Map<number, typeof clientes[number]>(clientes.map((c: typeof clientes[number]) => [c.id, c]));
-    const veiculoMap = new Map<number, typeof veiculos[number]>(veiculos.map((v: typeof veiculos[number]) => [Number(v.id), v]));
+    const clientMap = buildDataMap(clientes, 'id');
+    const veiculoMap = buildDataMap(
+      veiculos.map(v => ({ ...v, id: Number(v.id) })),
+      'id'
+    );
+    const mecanicoMap = buildDataMap(mecanicos, 'id');
 
-    // Buscar todos os mecânicos se necessário
-    const mecanicoIds = Array.from(new Set((ordensTrabalho as any[])
-      .map((o: any) => o.mecanico_id)
-      .filter((v: any): v is number => v != null))) as number[];
-    const mecanicos = mecanicoIds.length ? await prisma.mecanicos.findMany({ where: { id: { in: mecanicoIds } } }) : [];
-    const mecanicoMap = new Map<number, typeof mecanicos[number]>(mecanicos.map((m: typeof mecanicos[number]) => [m.id, m]));
+    // Transform orders for response
+    const transformedOrders = orders.map((order: any) => {
+      const cliente = clientMap.get(order.cliente_id);
+      const veiculo = veiculoMap.get(Number(order.veiculo_id));
+      const mecanico = mecanicoMap.get(order.mecanico_id) || order.mecanico;
 
-    const transformedOrdens = (ordensTrabalho as any[]).map((ordem: any) => ({
-      id: ordem.ref_ordem_trabalho,
-      client: clienteMap.get(ordem.cliente_id)?.nome ?? '',
-      contacto_nome: ordem.contacto_nome ?? null,
-      contacto_telefone: ordem.contacto_telefone ?? clienteMap.get(ordem.cliente_id)?.telefone ?? null,
-      contacto_email: ordem.contacto_email ?? clienteMap.get(ordem.cliente_id)?.email ?? null,
-      vehicle: `${veiculoMap.get(Number(ordem.veiculo_id))?.marca ?? ''} ${veiculoMap.get(Number(ordem.veiculo_id))?.modelo ?? ''} | ${veiculoMap.get(Number(ordem.veiculo_id))?.matricula ?? ''}`,
-      mechanic: ordem.mecanico?.nome ?? mecanicoMap.get(ordem.mecanico_id)?.nome ?? '',
-      mecanico_nome: ordem.mecanico?.nome ?? mecanicoMap.get(ordem.mecanico_id)?.nome ?? '',
-      openDate: ordem.data_inicio ? ordem.data_inicio.toLocaleDateString('pt-PT') : '',
-      closeDate: ordem.data_conclusao ? ordem.data_conclusao.toLocaleDateString('pt-PT') : '',
-      total: Number(ordem.total_geral) || 0,
-      status: mapStatus(ordem.estado),
-      priority: mapPriority(ordem.prioridade ?? null),
-      problem: ordem.descricao_problema ?? '',
-      waitingParts: ordem.itens_ordem_trabalho
-        ?.filter((item: any) => item.tipo_item === 'peca' && item.aguarda_peca)
-        .map((item: any) => ({
-          id: Number(item.id),
-          descricao: item.descricao ?? '',
-          quantidade: Number(item.quantidade) || 0,
-          valor_total: Number(item.valor_total) || 0
-        })) ?? [],
-      items: ordem.itens_ordem_trabalho?.map((item: any) => ({
-        id: Number(item.id),
-        tipo_item: item.tipo_item,
-        descricao: item.descricao ?? '',
-        quantidade: Number(item.quantidade) || 0,
-        preco_unitario: Number(item.preco_unitario) || 0,
-        valor_total: Number(item.valor_total) || 0
-      })) ?? [],
-    }));
+      return {
+        id: order.ref_ordem_trabalho,
+        client: cliente?.nome ?? '',
+        contacto_nome: order.contacto_nome ?? null,
+        contacto_telefone: order.contacto_telefone ?? cliente?.telefone ?? null,
+        contacto_email: order.contacto_email ?? cliente?.email ?? null,
+        vehicle: `${veiculo?.marca ?? ''} ${veiculo?.modelo ?? ''} | ${veiculo?.matricula ?? ''}`,
+        mechanic: mecanico?.nome ?? '',
+        mecanico_nome: mecanico?.nome ?? '',
+        openDate: formatDatePt(order.data_inicio),
+        closeDate: formatDatePt(order.data_conclusao),
+        total: Number(order.total_geral) || 0,
+        status: mapDbStatusToFrontend(order.estado),
+        priority: mapPriority(order.prioridade ?? null),
+        problem: order.descricao_problema ?? '',
+        waitingParts: getWaitingParts(order.itens_ordem_trabalho),
+        items: (order.itens_ordem_trabalho || []).map(formatWorkOrderItem)
+      };
+    });
 
-    return NextResponse.json(transformedOrdens);
+    return successResponse(transformedOrders);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
+    console.error('Error fetching work orders:', error);
+    if (error instanceof Error) {
+      return handleDatabaseError(error);
     }
-    console.error('Error fetching ordens_trabalho:', error);
-    return NextResponse.json({ error: 'Failed to fetch ordens_trabalho' }, { status: 500 });
+    return errorResponse('Failed to fetch work orders', 500);
   }
 }
 
-function mapStatus(status: string | null): 'Em Andamento' | 'Aguarda Peças' | 'Concluído' | 'Entregue' | 'Cancelado' | 'Em Aprovação' | 'Aprovado' {
-  switch (status) {
-    case 'em_aprovacao': return 'Em Aprovação';
-    case 'aprovado': return 'Aprovado';
-    case 'aguarda_peca': return 'Aguarda Peças';
-    case 'em_andamento': return 'Em Andamento';
-    case 'concluido': return 'Concluído';
-    case 'entregue': return 'Entregue';
-    case 'cancelado': return 'Cancelado';
-    default: return 'Em Andamento';
-  }
-}
-
-function mapPriority(priority: string | null): 'Baixa' | 'Normal' | 'Alta' | 'Urgente' {
-  switch (priority) {
-    case 'baixa': return 'Baixa';
-    case 'alta': return 'Alta';
-    case 'urgente': return 'Urgente';
-    default: return 'Normal';
-  }
-}
-
+/**
+ * DELETE /api/ordens-trabalho - Delete work order
+ */
 export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return NextResponse.json({ error: 'Work order ID is required' }, { status: 400 });
+      return errorResponse('Work order ID is required', 400);
     }
 
-    // First, get the work order to find its internal ID
-    const ordemTrabalho = await prisma.ordens_trabalho.findUnique({
+    const order = await prisma.ordens_trabalho.findUnique({
       where: { ref_ordem_trabalho: id }
     });
 
-    if (!ordemTrabalho) {
-      return NextResponse.json({ error: 'Work order not found' }, { status: 404 });
+    if (!order) {
+      return errorResponse('Work order not found', 404);
     }
 
-    // Delete work order items first due to foreign key constraint
+    // Delete work order items first (foreign key constraint)
     await prisma.itens_ordem_trabalho.deleteMany({
-      where: { ordem_trabalho_id: Number(ordemTrabalho.id) }
+      where: { ordem_trabalho_id: Number(order.id) }
     });
 
-    // Delete the work order
+    // Delete work order
     await prisma.ordens_trabalho.delete({
       where: { ref_ordem_trabalho: id }
     });
 
-    return NextResponse.json({ success: true });
-
+    return successResponse({ success: true });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
     console.error('Error deleting work order:', error);
-    return NextResponse.json({ error: 'Failed to delete work order' }, { status: 500 });
+    if (error instanceof Error) {
+      return handleDatabaseError(error);
+    }
+    return errorResponse('Failed to delete work order', 500);
   }
 }
 
+/**
+ * PATCH /api/ordens-trabalho - Update work order status and details
+ */
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
-    const { id, estado, data_conclusao, waitingParts, selectedPartIds } = body;
+    const { id, estado, data_conclusao, selectedPartIds } = body;
 
     if (!id) {
-      return NextResponse.json({ error: 'Work order ID is required' }, { status: 400 });
+      return errorResponse('Work order ID is required', 400);
+    }
+
+    const order = await prisma.ordens_trabalho.findUnique({
+      where: { ref_ordem_trabalho: id }
+    });
+
+    if (!order) {
+      return errorResponse('Work order not found', 404);
     }
 
     // Map frontend status to database status
-    // Database valid values: 'pendente', 'em_andamento', 'concluido', 'cancelado', 'faturado'
-    const statusMap: Record<string, string> = {
-      'Em Aprovação': 'em_aprovacao',
-      'Aprovado': 'aprovado',
-      'Aguarda Peças': 'aguarda_peca',
-      'Em Andamento': 'em_andamento',
-      'Concluído': 'concluido',
-      'Entregue': 'entregue',
-      'Cancelado': 'cancelado'
-    };
-
-    const dbEstado = estado ? statusMap[estado] || estado : undefined;
+    const dbStatus = estado ? mapFrontendStatusToDb(estado) : undefined;
 
     // Build update data
     const updateData: any = {};
-    
-    if (dbEstado) {
-      updateData.estado = dbEstado;
-      
-      // Auto-stamp conclusion date when status changes to 'concluido'
-      if (dbEstado === 'concluido' && !data_conclusao) {
+
+    if (dbStatus) {
+      updateData.estado = dbStatus;
+
+      // Auto-stamp conclusion date when moving to 'concluido'
+      if (dbStatus === 'concluido' && !data_conclusao) {
         updateData.data_conclusao = new Date();
       }
-      // Clear conclusion date when reverting to states before 'concluido'
-      else if ((dbEstado === 'em_andamento' || dbEstado === 'aguarda_peca') && !data_conclusao) {
+      // Clear conclusion date when reverting from 'concluido'
+      else if ((dbStatus === 'em_andamento' || dbStatus === 'aguarda_peca') && !data_conclusao) {
         updateData.data_conclusao = null;
       }
     }
-    
+
     if (data_conclusao && data_conclusao.trim()) {
       updateData.data_conclusao = new Date(data_conclusao);
     }
 
-    // Get the work order to find its internal ID
-    const ordemTrabalho = await prisma.ordens_trabalho.findUnique({
-      where: { ref_ordem_trabalho: id }
-    });
-
-    if (!ordemTrabalho) {
-      return NextResponse.json({ error: 'Work order not found' }, { status: 404 });
-    }
-
-    // Update the work order
-    const updatedOrder = await prisma.ordens_trabalho.update({
+    // Update work order
+    const updated = await prisma.ordens_trabalho.update({
       where: { ref_ordem_trabalho: id },
       data: updateData
     });
 
-    if (dbEstado === 'concluido' || dbEstado === 'em_andamento') {
+    // Clear parts waiting flag for certain statuses
+    if (dbStatus === 'concluido' || dbStatus === 'em_andamento') {
       await prisma.itens_ordem_trabalho.updateMany({
         where: {
-          ordem_trabalho_id: Number(ordemTrabalho.id),
+          ordem_trabalho_id: Number(order.id),
           tipo_item: 'peca'
         },
         data: { aguarda_peca: false }
       });
     }
 
-    // If changing to "concluido" (and wasn't already concluido), deduct parts from stock
-    if (dbEstado === 'concluido' && ordemTrabalho.estado !== 'concluido') {
-      const itensOrdem = await prisma.itens_ordem_trabalho.findMany({
-        where: {
-          ordem_trabalho_id: Number(ordemTrabalho.id),
-          tipo_item: 'peca',
-          peca_id: { not: null }
-        },
-        select: {
-          peca_id: true,
-          quantidade: true
-        }
-      });
-
-      // Update stock for each part used
-      for (const item of itensOrdem) {
-        if (item.peca_id && item.quantidade) {
-          try {
-            // clamp stock so it never goes negative
-            const current = await prisma.pecas.findUnique({
-              where: { id: BigInt(item.peca_id) },
-              select: { quantidade_stock: true }
-            });
-            const decrement = Math.floor(Number(item.quantidade));
-            let newStock = (current?.quantidade_stock ?? 0) - decrement;
-            if (newStock < 0) newStock = 0;
-
-            await prisma.pecas.update({
-              where: { id: BigInt(item.peca_id) },
-              data: {
-                quantidade_stock: newStock
-              }
-            });
-          } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-            console.error(`Failed to update stock for part ${item.peca_id}:`, error);
-            // Continue processing other parts even if one fails
-          }
-        }
-      }
+    // Deduct parts from stock when changing to 'concluido'
+    if (dbStatus === 'concluido' && order.estado !== 'concluido') {
+      await deductPartsFromStock(Number(order.id));
     }
 
-    // If changing to "Aguarda Peças"
+    // Handle "Aguarda Peças" (waiting for parts) status
     if (estado === 'Aguarda Peças') {
-      // First, reset all parts to not waiting
+      // Reset all parts to not waiting
       await prisma.itens_ordem_trabalho.updateMany({
-        where: { 
-          ordem_trabalho_id: Number(ordemTrabalho.id),
+        where: {
+          ordem_trabalho_id: Number(order.id),
           tipo_item: 'peca'
         },
         data: { aguarda_peca: false }
       });
 
-      // Check if selectedPartIds are provided
+      // Mark selected parts as waiting
       if (selectedPartIds && Array.isArray(selectedPartIds) && selectedPartIds.length > 0) {
-        try {
-          // Convert IDs to number for the database query
-          const numericIds = selectedPartIds.map((id: any) => {
-            const numId = typeof id === 'string' ? parseInt(id, 10) : Number(id);
-            return isNaN(numId) ? null : numId;
-          }).filter((id: any): id is number => id !== null);
+        const numericIds = selectedPartIds
+          .map((id: any) => {
+            const num = typeof id === 'string' ? parseInt(id, 10) : Number(id);
+            return isNaN(num) ? null : num;
+          })
+          .filter((id: any): id is number => id !== null);
 
-          if (numericIds.length > 0) {
-            await prisma.itens_ordem_trabalho.updateMany({
-              where: {
-                id: { in: numericIds },
-                ordem_trabalho_id: Number(ordemTrabalho.id),
-                tipo_item: 'peca'
-              },
-              data: { aguarda_peca: true }
-            });
-          }
-        } catch (err) {
-          const errorMessage = err instanceof Error ? err.message : String(err);
-          const isDbOffline =
-            errorMessage.includes("reach database server") ||
-            errorMessage.includes("ECONNREFUSED");
-
-          if (isDbOffline) {
-            return NextResponse.json(
-              { error: "Database unavailable. Please start the database server and try again." },
-              { status: 503 }
-            );
-          }
-          console.error('Error updating parts:', err);
+        if (numericIds.length > 0) {
+          await prisma.itens_ordem_trabalho.updateMany({
+            where: {
+              id: { in: numericIds },
+              ordem_trabalho_id: Number(order.id),
+              tipo_item: 'peca'
+            },
+            data: { aguarda_peca: true }
+          });
         }
       } else {
-        // If no specific parts selected, mark ALL parts as waiting
+        // Mark all parts as waiting if none specified
         await prisma.itens_ordem_trabalho.updateMany({
-          where: { 
-            ordem_trabalho_id: Number(ordemTrabalho.id),
+          where: {
+            ordem_trabalho_id: Number(order.id),
             tipo_item: 'peca'
           },
           data: { aguarda_peca: true }
@@ -558,29 +543,18 @@ export async function PATCH(request: Request) {
       }
     }
 
-    return NextResponse.json({ 
-      success: true, 
+    return successResponse({
+      success: true,
       ordem_trabalho: {
-        id: updatedOrder.ref_ordem_trabalho,
-        estado: updatedOrder.estado
+        id: updated.ref_ordem_trabalho,
+        estado: updated.estado
       }
     });
-
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
     console.error('Error updating work order:', error);
-    return NextResponse.json({ error: 'Failed to update work order' }, { status: 500 });
+    if (error instanceof Error) {
+      return handleDatabaseError(error);
+    }
+    return errorResponse('Failed to update work order', 500);
   }
 }
-
-

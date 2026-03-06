@@ -1,11 +1,19 @@
-import { NextResponse } from 'next/server';
+import { successResponse, handleDatabaseError, serializeBigInt } from '@/lib/api-utils';
 import { PrismaClient } from '@prisma/client';
 
+/**
+ * Initialize Prisma Client for database operations
+ */
 // @ts-ignore
 const prisma = new PrismaClient({
   log: ['error'],
 });
 
+/**
+ * GET: Fetch all service categories or active only
+ * @param request - HTTP request
+ * @returns JSON array of service categories or error response
+ */
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -22,29 +30,19 @@ export async function GET(request: Request) {
     const categorias = await prisma.categorias_servico.findMany(query);
 
     // Serialize BigInt fields
-    const serializedCategorias = categorias.map((cat: typeof categorias[number]) => ({
-      ...cat,
-      id: Number(cat.id)
-    }));
+    const serializedCategorias = categorias.map(serializeBigInt);
 
-    return NextResponse.json(serializedCategorias);
+    return successResponse(serializedCategorias);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error fetching categorias servico:', error);
-    return NextResponse.json({ error: 'Failed to fetch categorias servico' }, { status: 500 });
+    return handleDatabaseError(error as Error);
   }
 }
 
+/**
+ * POST: Create new service category
+ * @param request - HTTP request with category data
+ * @returns Created category or error response
+ */
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -59,26 +57,11 @@ export async function POST(request: Request) {
     });
 
     // Serialize BigInt fields
-    const serialized = {
-      ...categoria,
-      id: Number(categoria.id)
-    };
+    const serialized = serializeBigInt(categoria);
 
-    return NextResponse.json(serialized);
+    return successResponse(serialized, 201);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error creating categoria servico:', error);
-    return NextResponse.json({ error: 'Failed to create categoria servico' }, { status: 500 });
+    return handleDatabaseError(error as Error);
   }
 }
 

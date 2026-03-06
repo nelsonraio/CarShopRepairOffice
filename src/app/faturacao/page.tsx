@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import CriarFaturaModal from "@/components/CriarFaturaModal";
+import { useFetch, usePagination, useFilters, filterPredicates } from "@/hooks";
 
 interface Invoice {
   id: number;
@@ -28,6 +29,123 @@ interface Invoice {
 
 
 const ITEMS_PER_PAGE = 20;
+
+const parseDateSafe = (value: unknown): Date | null => {
+  if (!value) return null;
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  // Se é um objeto (mas não Date), tenta extrair propriedades comuns de data
+  if (typeof value === 'object' && value !== null) {
+    const obj = value as any;
+    
+    // Tenta chamar toISOString() se existir
+    if (typeof obj.toISOString === 'function') {
+      try {
+        const isoStr = obj.toISOString();
+        const parsed = new Date(isoStr);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+      } catch (e) {
+        // Ignora erro e continua
+      }
+    }
+    
+    // Tenta propriedades comuns: $date, _seconds, seconds, value
+    const dateValue = obj.$date || obj._seconds || obj.seconds || obj.value || obj.date;
+    if (dateValue) {
+      return parseDateSafe(dateValue); // Recursão
+    }
+    
+    // Se tem getTime() como método, pode ser um Date-like object
+    if (typeof obj.getTime === 'function') {
+      try {
+        const time = obj.getTime();
+        const parsed = new Date(time);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+      } catch (e) {
+        // Ignora erro
+      }
+    }
+  }
+
+  const raw = String(value).trim();
+  if (!raw || raw.toLowerCase() === 'invalid date' || raw.toLowerCase() === 'null' || raw === '[object Object]') return null;
+
+  // Remove aspas em volta quando o backend envia string serializada (ex: "2026-03-06")
+  const unquoted = raw.replace(/^['\"]|['\"]$/g, '');
+
+  // Prioridade 1: ISO 8601 completo (ex: "2026-03-06T10:30:00.000Z" ou "2024-01-15T00:00:00.000")
+  // Este é o formato que o JavaScript usa ao serializar Date para JSON
+  const isoFullMatch = unquoted.match(/^(\d{4})-(\d{2})-(\d{2})T/);
+  if (isoFullMatch) {
+    const parsed = new Date(unquoted);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  // Prioridade 2: YYYY-MM-DD (com ou sem hora)
+  const leadingIsoDate = unquoted.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (leadingIsoDate) {
+    const [, yyyy, mm, dd] = leadingIsoDate;
+    const parsedLeadIso = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+    return Number.isNaN(parsedLeadIso.getTime()) ? null : parsedLeadIso;
+  }
+
+  // Suporta timestamp numérico (ms desde epoch)
+  if (/^\d{10,13}$/.test(unquoted)) {
+    const millis = unquoted.length === 10 ? Number(unquoted) * 1000 : Number(unquoted);
+    const parsedTs = new Date(millis);
+    return Number.isNaN(parsedTs.getTime()) ? null : parsedTs;
+  }
+
+  // Suporta formato PT: dd/mm/yyyy
+  const ptMatch = unquoted.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (ptMatch) {
+    const [, dd, mm, yyyy] = ptMatch;
+    const parsed = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  // Suporta formato: dd-mm-yyyy
+  const dashPtMatch = unquoted.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (dashPtMatch) {
+    const [, dd, mm, yyyy] = dashPtMatch;
+    const parsed = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  // Suporta formato: yyyy/mm/dd
+  const slashIsoMatch = unquoted.match(/^(\d{4})\/(\d{2})\/(\d{2})$/);
+  if (slashIsoMatch) {
+    const [, yyyy, mm, dd] = slashIsoMatch;
+    const parsed = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  // Suporta formato SQL: yyyy-mm-dd hh:mm:ss
+  const sqlDateTimeMatch = unquoted.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})(?::(\d{2}))?$/);
+  if (sqlDateTimeMatch) {
+    const [, yyyy, mm, dd, hh, mi, ss = '0'] = sqlDateTimeMatch;
+    const parsed = new Date(
+      Number(yyyy),
+      Number(mm) - 1,
+      Number(dd),
+      Number(hh),
+      Number(mi),
+      Number(ss)
+    );
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  const parsed = new Date(unquoted);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const formatDateSafe = (value: unknown): string => {
+  const parsed = parseDateSafe(value);
+  return parsed ? parsed.toLocaleDateString('pt-PT') : 'N/A';
+};
 
 export default function FaturacaoPage() {
     const normalizarEstado = (estado: string): Invoice['estado'] => {
@@ -92,15 +210,31 @@ export default function FaturacaoPage() {
     const handleOAuth2Page = () => {
       window.open('https://app7.toconline.pt/oauth/authorize?client_id=pt999999990_c101423-6604ef0f5744561b&redirect_uri=https://oauth.pstmn.io/v1/callback&response_type=code&scope=commercial', '_blank');
     };
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [dateFilter, setDateFilter] = useState("todos");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+
+    // Data fetching
+    const { data: rawData = {}, loading, refetch } = useFetch<any>('/api/faturas');
+    const invoices = (Array.isArray(rawData) ? rawData : (rawData?.faturas || rawData?.data || [])) || [];
+
+    // Filtering (search + status)
+    const filterConfig = {
+      search: filterPredicates.search(['cliente_nome', 'cliente_nif', 'numero_fatura', 'ordem_trabalho_ref', 'veiculo_matricula']),
+      status: filterPredicates.exact('estado'),
+    };
+    const { filters, setFilter } = useFilters(invoices, filterConfig);
+
+    // Date filtering (manual, as it's complex with multiple date range options)
+    // Pagination
+    const { currentPage, totalPages, paginatedItems: paginatedInvoices, nextPage, prevPage } = 
+      usePagination(invoices, ITEMS_PER_PAGE, [filters.search, filters.status]);
+
+    // Keep additional filters as useState (date range and modal)
+    const [searchTerm, setSearchTerm] = useState("");
+    const [statusFilter, setStatusFilter] = useState("");
+    const [dateFilter, setDateFilter] = useState("todos");
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isLoadingToken, setIsLoadingToken] = useState(false);
   const [oauthToken, setOauthToken] = useState<string>("");
   const [tokenAge, setTokenAge] = useState<number>(0); // idade do token em minutos
   const [showTokenModal, setShowTokenModal] = useState(false);
@@ -177,7 +311,7 @@ export default function FaturacaoPage() {
     }
 
     try {
-      setLoading(true);
+      setIsLoadingToken(true);
       const res = await fetch('/api/fatura-simplificada', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -213,14 +347,9 @@ export default function FaturacaoPage() {
           body: JSON.stringify({ token: newToken })
         });
         const jsonFaturas = await resFaturas.json();
-        const responseLocal = await fetch('/api/faturas');
-        const dataLocal = await responseLocal.json();
-        let locais = dataLocal.success ? dataLocal.data : [];
-        let externas = [];
-        if (jsonFaturas.success && Array.isArray(jsonFaturas.data?.data)) {
-          externas = jsonFaturas.data.data;
-        }
-        setInvoices(combinarFaturas(locais, externas));
+        
+        // Refresh invoices after token update
+        await refetch();
         alert('✅ Token atualizado com sucesso!');
       } else {
         const errorMsg = data.error || data.data?.error || 'Falha desconhecida';
@@ -239,35 +368,13 @@ export default function FaturacaoPage() {
     } catch (err) {
       alert('❌ Erro ao processar: ' + (err instanceof Error ? err.message : 'Erro desconhecido'));
     } finally {
-      setLoading(false);
+      setIsLoadingToken(false);
     }
   };
 
   // Busca faturas locais e externas e une os dados
   const carregarFaturasCombinadas = async () => {
-    try {
-      setLoading(true);
-      // Buscar faturas locais
-      const responseLocal = await fetch('/api/faturas');
-      const dataLocal = await responseLocal.json();
-      let locais = dataLocal.success ? dataLocal.data : [];
-
-      // Buscar token OAuth2 salvo (ajuste conforme sua lógica de autenticação)
-      const token = typeof window !== 'undefined' ? localStorage.getItem('toconline_access_token') : '';
-      let externas = [];
-      if (token) {
-        const responseExt = await fetch(`/api/faturas-externas?token=${token}`);
-        const dataExt = await responseExt.json();
-        if (dataExt.success && Array.isArray(dataExt.data?.data)) {
-          externas = dataExt.data.data;
-        }
-      }
-      setInvoices(combinarFaturas(locais, externas));
-    } catch (error) {
-      console.error('Erro ao carregar faturas:', error);
-    } finally {
-      setLoading(false);
-    }
+    await refetch();
   };
 
   // Fazer download de PDF da fatura
@@ -368,17 +475,9 @@ export default function FaturacaoPage() {
       if (response.ok && data.success) {
         console.log('[Emitir Recibo] Sucesso:', data);
         
-        // Atualizar a grelha imediatamente
-        setInvoices(prev => 
-          prev.map(inv => 
-            inv.id === faturalId 
-              ? { ...inv, estado: 'paga' } 
-              : inv
-          )
-        );
+        // Refresh data after emitting receipt
+        await refetch();
         
-        // Depois recarregar para garantir sincronização
-        setTimeout(() => carregarFaturasCombinadas(), 500);
         alert(`✅ Recibo emitido com sucesso!\nRecibo ID: ${data.data?.recibo_id || 'N/A'}\n\nUse o ícone do recibo para abrir o PDF.`);
       } else {
         const errorMsg = data?.error || 'Falha ao emitir recibo';
@@ -404,7 +503,7 @@ export default function FaturacaoPage() {
         });
 
         if (response.ok) {
-          carregarFaturasCombinadas();
+          await refetch();
           alert('Fatura anulada com sucesso!');
         }
       } catch (error) {
@@ -418,7 +517,7 @@ export default function FaturacaoPage() {
     return invoice.numero_fatura_toconline || invoice.numero_fatura;
   };
 
-  const filteredInvoices = invoices.filter(invoice => {
+  const filteredInvoices = invoices.filter((invoice: Invoice) => {
     const numeroExibicao = getNumeroFaturaExibicao(invoice).toLowerCase();
     const matchesSearch = searchTerm === "" ||
       (invoice.cliente_nome?.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -433,11 +532,8 @@ export default function FaturacaoPage() {
     const matchesDate = (() => {
       if (dateFilter === "todos") return true;
 
-      // Parse date from ISO format or DD/MM/YYYY format
-      let invoiceDate: Date;
-      if (invoice.data_emissao) {
-        invoiceDate = new Date(invoice.data_emissao);
-      } else {
+      const invoiceDate = parseDateSafe(invoice.data_emissao);
+      if (!invoiceDate) {
         return true;
       }
 
@@ -467,7 +563,7 @@ export default function FaturacaoPage() {
 
   // Calcular totais para os stats
   // Total faturado: todas as faturas (independente do status) com os filtros de pesquisa e data
-  const invoicesForStats = invoices.filter(invoice => {
+  const invoicesForStats = invoices.filter((invoice: Invoice) => {
     const numeroExibicao = getNumeroFaturaExibicao(invoice).toLowerCase();
     const matchesSearch = searchTerm === "" ||
       (invoice.cliente_nome?.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -479,10 +575,8 @@ export default function FaturacaoPage() {
     const matchesDate = (() => {
       if (dateFilter === "todos") return true;
 
-      let invoiceDate: Date;
-      if (invoice.data_emissao) {
-        invoiceDate = new Date(invoice.data_emissao);
-      } else {
+      const invoiceDate = parseDateSafe(invoice.data_emissao);
+      if (!invoiceDate) {
         return true;
       }
 
@@ -511,23 +605,12 @@ export default function FaturacaoPage() {
   });
 
   const totalFaturado = invoicesForStats
-    .filter(inv => inv.estado === 'paga')
-    .reduce((sum, inv) => sum + inv.valor_total, 0);
+    .filter((inv: Invoice) => inv.estado === 'paga')
+    .reduce((sum: number, inv: Invoice) => sum + inv.valor_total, 0);
   const totalPendente = invoicesForStats
-    .filter(inv => inv.estado === 'pendente')
-    .reduce((sum, inv) => sum + inv.valor_total, 0);
-  const countPendente = invoicesForStats.filter(inv => inv.estado === 'pendente').length;
-
-  // Paginação
-  const totalPages = Math.ceil(filteredInvoices.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedInvoices = filteredInvoices.slice(startIndex, endIndex);
-
-  // Reset página quando filtros mudam
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, statusFilter, dateFilter, startDate, endDate]);
+    .filter((inv: Invoice) => inv.estado === 'pendente')
+    .reduce((sum: number, inv: Invoice) => sum + inv.valor_total, 0);
+  const countPendente = invoicesForStats.filter((inv: Invoice) => inv.estado === 'pendente').length;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -724,7 +807,7 @@ export default function FaturacaoPage() {
                         </td>
                       </tr>
                     ) : (
-                      paginatedInvoices.map((invoice) => (
+                      (paginatedInvoices as Invoice[]).map((invoice: Invoice) => (
                         <tr key={invoice.id} className="hover:bg-gray-600 transition-colors">
                           <td className="px-6 py-4 font-medium text-gray-200 font-mono" title={`ID Local: ${invoice.id} | TOConline ID: ${invoice.toconline_id || 'N/A'} | Recibo: ${invoice.recibo_toconline_id || 'N/A'}`}>
                             <div>{getNumeroFaturaExibicao(invoice)}</div>
@@ -751,10 +834,10 @@ export default function FaturacaoPage() {
                             <div className="text-xs text-gray-500">NIF: {invoice.cliente_nif}</div>
                           </td>
                           <td className="px-6 py-4">
-                            {invoice.data_emissao ? new Date(invoice.data_emissao).toLocaleDateString('pt-PT') : 'N/A'}
+                            {formatDateSafe(invoice.data_emissao)}
                           </td>
                           <td className="px-6 py-4">
-                            {invoice.data_vencimento ? new Date(invoice.data_vencimento).toLocaleDateString('pt-PT') : 'N/A'}
+                            {formatDateSafe(invoice.data_vencimento)}
                           </td>
                           <td className="px-6 py-4 text-right font-medium text-gray-200">€{invoice.valor_total.toFixed(2)}</td>
                           <td className="px-6 py-4 text-center">
@@ -823,12 +906,12 @@ export default function FaturacaoPage() {
                   <div className="flex-1 flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-400">
-                        A mostrar <span className="font-medium text-gray-200">{startIndex + 1}</span> a <span className="font-medium text-gray-200">{Math.min(endIndex, filteredInvoices.length)}</span> de <span className="font-medium text-gray-200">{filteredInvoices.length}</span> faturas
+                        <span className="font-medium text-gray-200">{filteredInvoices.length}</span> faturas encontradas
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        onClick={prevPage}
                         disabled={currentPage === 1}
                         className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-600 text-gray-300 rounded border border-gray-600 transition-colors"
                       >
@@ -838,7 +921,7 @@ export default function FaturacaoPage() {
                         Página <span className="font-medium text-gray-200">{currentPage}</span> de <span className="font-medium text-gray-200">{totalPages}</span>
                       </span>
                       <button
-                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        onClick={nextPage}
                         disabled={currentPage === totalPages}
                         className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-600 text-gray-300 rounded border border-gray-600 transition-colors"
                       >

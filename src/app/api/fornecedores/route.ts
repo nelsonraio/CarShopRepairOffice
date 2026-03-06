@@ -1,11 +1,13 @@
-import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { successResponse, handleDatabaseError } from '@/lib/api-utils';
 
-// @ts-ignore
-const prisma = new PrismaClient({
-  log: ['error'],
-});
+const prisma = new PrismaClient({ log: ['error'] });
 
+/**
+ * GET: Lista fornecedores ativos ou todos
+ * Query params:
+ *   - all=true: lista todos (incluindo inativos)
+ */
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -16,56 +18,39 @@ export async function GET(request: Request) {
       orderBy: { nome: 'asc' }
     });
 
-    return NextResponse.json(fornecedores);
+    return successResponse(fornecedores);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error fetching fornecedores:', error);
-    return NextResponse.json({ error: 'Failed to fetch fornecedores' }, { status: 500 });
+    return handleDatabaseError(error as Error);
   }
 }
 
+/**
+ * POST: Cria novo fornecedor
+ */
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    
+    const { nome, pessoa_contato, email, telefone, nif, endereco, termos_pagamento, ativo } = await request.json();
+
+    if (!nome || nome.trim().length === 0) {
+      return successResponse({ error: 'Nome do fornecedor é obrigatório' }, 400);
+    }
+
     const fornecedor = await prisma.fornecedores.create({
       data: {
-        nome: body.nome,
-        pessoa_contato: body.pessoa_contato || null,
-        email: body.email || null,
-        telefone: body.telefone || null,
-        nif: body.nif || null,
-        endereco: body.endereco || null,
-        termos_pagamento: body.termos_pagamento || null,
-        ativo: body.ativo !== undefined ? body.ativo : true
+        nome,
+        pessoa_contato: pessoa_contato || null,
+        email: email || null,
+        telefone: telefone || null,
+        nif: nif || null,
+        endereco: endereco || null,
+        termos_pagamento: termos_pagamento || null,
+        ativo: ativo !== undefined ? ativo : true
       }
     });
 
-    return NextResponse.json(fornecedor);
+    return successResponse(fornecedor, 201);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error creating fornecedor:', error);
-    return NextResponse.json({ error: 'Failed to create fornecedor' }, { status: 500 });
+    return handleDatabaseError(error as Error);
   }
 }
 

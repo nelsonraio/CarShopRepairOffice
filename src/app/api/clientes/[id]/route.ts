@@ -198,22 +198,64 @@ export async function PUT(
 
     const body = await request.json();
 
-    // Update client
-    const perfilMap: Record<string, string> = {
-      'TVDE Interno': 'TVDE_Interno',
-      'TVDE Externo': 'TVDE_Externo'
+    // Normaliza o perfil para os valores válidos do enum `clientes_perfil`.
+    const normalizePerfil = (rawPerfil: unknown): 'Normal' | 'TVDE_Interno' | 'TVDE_Externo' | 'Empresa' => {
+      const perfil = String(rawPerfil ?? '').trim();
+
+      const perfilMap: Record<string, 'Normal' | 'TVDE_Interno' | 'TVDE_Externo' | 'Empresa'> = {
+        'normal': 'Normal',
+        'tvde interno': 'TVDE_Interno',
+        'tvde_interno': 'TVDE_Interno',
+        'tvde externo': 'TVDE_Externo',
+        'tvde_externo': 'TVDE_Externo',
+        'empresa': 'Empresa'
+      };
+
+      const key = perfil.toLowerCase();
+      return perfilMap[key] || 'Normal';
     };
+
+    const perfilNormalizado = normalizePerfil(body.perfil);
+
+    // Verifica se o NIF já existe em outro registo
+    if (body.nif && body.nif.trim()) {
+      const clienteComNif = await prisma.clientes.findFirst({
+        where: {
+          nif: body.nif.trim(),
+          NOT: { id: clientId } // Exclude current client
+        }
+      });
+
+      if (clienteComNif) {
+        return NextResponse.json(
+          { error: 'NIF já existe noutro cliente' },
+          { status: 409 }
+        );
+      }
+    }
+
+    // Constrói objeto de dados apenas com campos fornecidos
+    const updateData: any = {};
+    if (body.nome !== undefined && body.nome !== null) {
+      updateData.nome = body.nome;
+    }
+    if (body.email !== undefined && body.email !== null) {
+      updateData.email = body.email;
+    }
+    if (body.telefone !== undefined && body.telefone !== null) {
+      updateData.telefone = body.telefone;
+    }
+    if (body.nif !== undefined && body.nif !== null) {
+      updateData.nif = body.nif.trim();
+    }
+    if (body.endereco !== undefined && body.endereco !== null) {
+      updateData.endereco = body.endereco;
+    }
+    updateData.perfil = perfilNormalizado; // Perfil sempre normalizado para código do enum
 
     const cliente = await prisma.clientes.update({
       where: { id: clientId },
-      data: {
-        nome: body.nome,
-        email: body.email,
-        telefone: body.telefone,
-        nif: body.nif,
-        endereco: body.endereco,
-        perfil: perfilMap[body.perfil as string] || body.perfil
-      }
+      data: updateData
     });
 
     // Transform and return updated client

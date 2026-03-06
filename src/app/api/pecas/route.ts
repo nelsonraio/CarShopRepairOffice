@@ -1,113 +1,92 @@
-import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { successResponse, handleDatabaseError } from '@/lib/api-utils';
 
-// @ts-ignore
-const prisma = new PrismaClient({
-  log: ['error'],
+const prisma = new PrismaClient({ log: ['error'] });
+
+/**
+ * Formata peça com dados de fornecedor para retorno na API
+ */
+const formatPecaResponse = (peca: any, fornecedorNome: string | null = null) => ({
+  id: peca.id,
+  referencia: peca.referencia,
+  nome: peca.nome,
+  descricao: peca.descricao,
+  categoria: peca.categoria,
+  quantidade_stock: peca.quantidade_stock,
+  nivel_stock_minimo: peca.nivel_stock_minimo,
+  preco_venda: peca.preco_venda,
+  ativo: peca.ativo,
+  fornecedor_id: peca.fornecedor_id,
+  fornecedor_nome: fornecedorNome,
+  margem_lucro: peca.margem_lucro ? Number(peca.margem_lucro) : null,
+  veiculos_compativeis: peca.veiculos_compativeis,
+  notas: peca.notas
 });
 
+/**
+ * Busca nomes de fornecedores por ID
+ */
+const carregarFornecedores = async (fornecedorIds: number[]) => {
+  if (fornecedorIds.length === 0) return new Map();
+  
+  const fornecedores = await prisma.fornecedores.findMany({
+    where: { id: { in: fornecedorIds } },
+    select: { id: true, nome: true }
+  });
+  
+  const map = new Map();
+  fornecedores.forEach(f => map.set(f.id, f.nome));
+  return map;
+};
+
+/**
+ * GET: Lista todas as peças ativas
+ */
 export async function GET() {
   try {
     const pecas = await prisma.pecas.findMany({
-      where: {
-        ativo: true
-      },
+      where: { ativo: true },
       orderBy: { nome: 'asc' }
     });
 
-    // Get all supplier IDs that are used in the parts
-    const fornecedorIds = [...new Set(pecas.map((p: typeof pecas[number]) => p.fornecedor_id).filter(Boolean))];
-    
-    // Fetch suppliers if there are any
-    const fornecedoresMap = new Map();
-    if (fornecedorIds.length > 0) {
-      const fornecedores = await prisma.fornecedores.findMany({
-        where: {
-          id: { in: fornecedorIds as number[] }
-        },
-        select: {
-          id: true,
-          nome: true
-        }
-      });
-      fornecedores.forEach((f: typeof fornecedores[number]) => fornecedoresMap.set(f.id, f.nome));
-    }
+    // Extrair IDs únicos de fornecedores
+    const fornecedorIds = [...new Set(pecas.map(p => p.fornecedor_id).filter((id): id is number => id !== null))];
+    const fornecedoresMap = await carregarFornecedores(fornecedorIds);
 
-    // Convert BigInt id to string for JSON serialization
-    const serializedPecas = pecas.map((peca: typeof pecas[number]) => ({
-      id: String(peca.id),
-      referencia: peca.referencia,
-      nome: peca.nome,
-      descricao: peca.descricao,
-      categoria: peca.categoria,
-      quantidade_stock: peca.quantidade_stock,
-      nivel_stock_minimo: peca.nivel_stock_minimo,
-      preco_venda: peca.preco_venda,
-      ativo: peca.ativo,
-      fornecedor_id: peca.fornecedor_id,
-      fornecedor_nome: peca.fornecedor_id ? fornecedoresMap.get(peca.fornecedor_id) || null : null,
-      margem_lucro: peca.margem_lucro ? Number(peca.margem_lucro) : null,
-      veiculos_compativeis: peca.veiculos_compativeis,
-      notas: peca.notas
-    }));
+    // Formatar resposta
+    const resultado = pecas.map(peca => 
+      formatPecaResponse(peca, fornecedoresMap.get(peca.fornecedor_id))
+    );
 
-    return NextResponse.json(serializedPecas);
+    return successResponse(resultado);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error fetching pecas:', error);
-    return NextResponse.json({ error: 'Failed to fetch pecas' }, { status: 500 });
+    return handleDatabaseError(error as Error);
   }
 }
 
+/**
+ * POST: Cria nova peça
+ */
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    
-    const {
-      nome,
-      referencia,
-      categoria,
-      stock,
-      minStock,
-      price,
-      fornecedor_id,
-      supplierName,
-      descricao,
-      margem_lucro,
-      notas
-    } = body;
+    const { nome, referencia, categoria, stock, minStock, price, fornecedor_id, descricao, margem_lucro, notas } = await request.json();
 
-    // Ensure stock values are not negative
-    if (stock !== undefined && stock < 0) {
-      return NextResponse.json({ error: 'O stock não pode ser negativo' }, { status: 400 });
+    // Validações
+    if (!nome || !referencia) {
+      return successResponse({ error: 'Nome e referência são obrigatórios' }, 400);
     }
-    if (minStock !== undefined && minStock < 0) {
-      return NextResponse.json({ error: 'O stock mínimo não pode ser negativo' }, { status: 400 });
+    if ((stock ?? 0) < 0 || (minStock ?? 0) < 0) {
+      return successResponse({ error: 'Stock não pode ser negativo' }, 400);
     }
 
-    // Check if reference already exists
-    const existingPeca = await prisma.pecas.findUnique({
-      where: { referencia }
-    });
-
-    if (existingPeca) {
-      return NextResponse.json(
-        { error: 'Já existe uma peça com esta referência' },
-        { status: 400 }
-      );
+    // Verificar duplicata
+    const existente = await prisma.pecas.findUnique({ where: { referencia } });
+    if (existente) {
+      return successResponse({ error: 'Já existe referência com este valor' }, 400);
     }
 
-    const newPeca = await prisma.pecas.create({
+    // Criar peça
+    const peca = await prisma.pecas.create({
       data: {
         nome,
         referencia,
@@ -115,7 +94,7 @@ export async function POST(request: Request) {
         quantidade_stock: stock,
         nivel_stock_minimo: minStock,
         preco_venda: price,
-        custo_unitario: 0, // Default to 0, can be updated later
+        custo_unitario: 0,
         descricao: descricao || null,
         ativo: true,
         fornecedor_id: fornecedor_id || null,
@@ -124,7 +103,7 @@ export async function POST(request: Request) {
       }
     });
 
-    // Get the supplier name if fornecedor_id was provided
+    // Buscar nome do fornecedor se atribuído
     let fornecedorNome = null;
     if (fornecedor_id) {
       const fornecedor = await prisma.fornecedores.findUnique({
@@ -134,96 +113,42 @@ export async function POST(request: Request) {
       fornecedorNome = fornecedor?.nome || null;
     }
 
-    return NextResponse.json({
-      id: String(newPeca.id),
-      nome: newPeca.nome,
-      referencia: newPeca.referencia,
-      descricao: newPeca.descricao,
-      categoria: newPeca.categoria,
-      stock: newPeca.quantidade_stock,
-      minStock: newPeca.nivel_stock_minimo,
-      price: newPeca.preco_venda,
-      fornecedor_id: newPeca.fornecedor_id,
-      fornecedor_nome: fornecedorNome,
-      supplierName: fornecedorNome,
-      stockStatus: (newPeca.quantidade_stock ?? 0) === 0 ? 'esgotado' : 
-                   (newPeca.quantidade_stock ?? 0) <= (newPeca.nivel_stock_minimo ?? 0) ? 'baixo_stock' : 'em_stock',
-      margem_lucro: newPeca.margem_lucro ? Number(newPeca.margem_lucro) : null,
-      notas: newPeca.notas
-    }, { status: 201 });
+    return successResponse(formatPecaResponse(peca, fornecedorNome), 201);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error creating peca:', error);
-    return NextResponse.json(
-      { error: 'Falha ao criar peça' },
-      { status: 500 }
-    );
+    return handleDatabaseError(error as Error);
   }
 }
 
+/**
+ * PUT: Atualiza peça existente
+ */
 export async function PUT(request: Request) {
   try {
-    const body = await request.json();
-    
-    const {
-      id,
-      nome,
-      referencia,
-      categoria,
-      stock,
-      minStock,
-      price,
-      fornecedor_id,
-      supplierName,
-      margem_lucro,
-      notas
-    } = body;
+    const { id, nome, referencia, categoria, stock, minStock, price, fornecedor_id, margem_lucro, notas } = await request.json();
 
-    // Prevent negative stock adjustments
-    if (stock !== undefined && stock < 0) {
-      return NextResponse.json({ error: 'O stock não pode ser negativo' }, { status: 400 });
+    if (!id) {
+      return successResponse({ error: 'ID de peça é obrigatório' }, 400);
     }
-    if (minStock !== undefined && minStock < 0) {
-      return NextResponse.json({ error: 'O stock mínimo não pode ser negativo' }, { status: 400 });
+    if ((stock ?? 0) < 0 || (minStock ?? 0) < 0) {
+      return successResponse({ error: 'Stock não pode ser negativo' }, 400);
     }
 
-    // Check if the part exists
-    const existingPeca = await prisma.pecas.findUnique({
-      where: { id: parseInt(id) }
-    });
-
-    if (!existingPeca) {
-      return NextResponse.json(
-        { error: 'Peça não encontrada' },
-        { status: 404 }
-      );
+    // Verificar se peça existe
+    const existente = await prisma.pecas.findUnique({ where: { id: parseInt(id) } });
+    if (!existente) {
+      return successResponse({ error: 'Peça não encontrada' }, 404);
     }
 
-    // Check if reference already exists for another part
-    if (referencia !== existingPeca.referencia) {
-      const duplicatePeca = await prisma.pecas.findUnique({
-        where: { referencia }
-      });
-
-      if (duplicatePeca) {
-        return NextResponse.json(
-          { error: 'Já existe uma peça com esta referência' },
-          { status: 400 }
-        );
+    // Verificar duplicata de referência
+    if (referencia !== existente.referencia) {
+      const duplicada = await prisma.pecas.findUnique({ where: { referencia } });
+      if (duplicada) {
+        return successResponse({ error: 'Referência já existe' }, 400);
       }
     }
 
-    const updatedPeca = await prisma.pecas.update({
+    // Atualizar peça
+    const peca = await prisma.pecas.update({
       where: { id: parseInt(id) },
       data: {
         nome,
@@ -238,49 +163,18 @@ export async function PUT(request: Request) {
       }
     });
 
-    // Get the supplier name if fornecedor_id was provided
+    // Buscar fornecedor se atribuído
     let fornecedorNome = null;
     if (fornecedor_id) {
       const fornecedor = await prisma.fornecedores.findUnique({
         where: { id: fornecedor_id },
         select: { nome: true }
       });
-      fornecedorNome = fornecedor?.nome || supplierName || null;
+      fornecedorNome = fornecedor?.nome || null;
     }
 
-    return NextResponse.json({
-      id: String(updatedPeca.id),
-      nome: updatedPeca.nome,
-      referencia: updatedPeca.referencia,
-      descricao: updatedPeca.descricao,
-      categoria: updatedPeca.categoria,
-      quantidade_stock: updatedPeca.quantidade_stock,
-      nivel_stock_minimo: updatedPeca.nivel_stock_minimo,
-      preco_venda: updatedPeca.preco_venda,
-      fornecedor_id: updatedPeca.fornecedor_id,
-      fornecedor_nome: fornecedorNome,
-      supplierName: fornecedorNome,
-      stockStatus: (updatedPeca.quantidade_stock ?? 0) === 0 ? 'esgotado' : 
-                   (updatedPeca.quantidade_stock ?? 0) <= (updatedPeca.nivel_stock_minimo ?? 0) ? 'baixo_stock' : 'em_stock',
-      margem_lucro: updatedPeca.margem_lucro ? Number(updatedPeca.margem_lucro) : null,
-      notas: updatedPeca.notas
-    });
+    return successResponse(formatPecaResponse(peca, fornecedorNome));
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error updating peca:', error);
-    return NextResponse.json(
-      { error: 'Falha ao atualizar peça' },
-      { status: 500 }
-    );
+    return handleDatabaseError(error as Error);
   }
 }

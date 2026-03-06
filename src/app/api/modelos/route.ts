@@ -1,11 +1,19 @@
-import { NextResponse } from 'next/server';
+import { successResponse, handleDatabaseError } from '@/lib/api-utils';
 import { PrismaClient } from '@prisma/client';
 
+/**
+ * Initialize Prisma Client for database operations
+ */
 // @ts-ignore
 const prisma = new PrismaClient({
   log: ['error'],
 });
 
+/**
+ * GET: Fetch all models or models by brand
+ * @param request - HTTP request
+ * @returns JSON array of models or error response
+ */
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -31,24 +39,17 @@ export async function GET(request: Request) {
       orderBy: { nome: 'asc' }
     });
 
-    return NextResponse.json(modelos);
+    return successResponse(modelos);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error fetching modelos:', error);
-    return NextResponse.json({ error: 'Failed to fetch modelos' }, { status: 500 });
+    return handleDatabaseError(error as Error);
   }
 }
 
+/**
+ * POST: Create new model
+ * @param request - HTTP request with model data
+ * @returns Created model or error response
+ */
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -70,21 +71,9 @@ export async function POST(request: Request) {
       }
     });
 
-    return NextResponse.json(modelo);
+    return successResponse(modelo, 201);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error creating modelo:', error);
-    return NextResponse.json({ error: 'Failed to create modelo' }, { status: 500 });
+    return handleDatabaseError(error as Error);
   }
 }
 

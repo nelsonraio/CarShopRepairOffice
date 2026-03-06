@@ -119,7 +119,7 @@ export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTi
 
   const handleCreateBudget = () => {
     // Navigate to new budget page with appointment ID
-    router.push(`/orcamentos/novo?agendamento_id=${card.id}`);
+    router.push(`/orcamentos/novo?agendamento_id=${card.id}&from=kanban`);
     onClose();
   };
 
