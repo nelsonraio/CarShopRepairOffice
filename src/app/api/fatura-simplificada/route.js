@@ -7,7 +7,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://api7.toconline.pt'
 const CLIENT_ID = process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID || 'pt999999990_c101423-6604ef0f5744561b';
 const CLIENT_SECRET = process.env.OAUTH_CLIENT_SECRET || '8f753cea78d995b5b6c877933495bf2b';
 const OAUTH_URL = process.env.NEXT_PUBLIC_OAUTH_URL || 'https://app7.toconline.pt/oauth';
-const REDIRECT_URI = 'https://oauth.pstmn.io/v1/callback';
+const REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI || 'https://pond-computer-hear-initiatives.trycloudflare.com/callbackr';
 const SCOPE = 'commercial';
 
 async function getOAuthToken(code) {

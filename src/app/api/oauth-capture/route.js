@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 export async function GET(req) {
   try {
     const clientId = process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID || 'pt999999990_c101423-6604ef0f5744561b';
-    const redirectUri = process.env.NEXT_PUBLIC_REDIRECT_URI || 'http://localhost:3000/oauth-callback';
+    const redirectUri = process.env.NEXT_PUBLIC_REDIRECT_URI || 'https://pond-computer-hear-initiatives.trycloudflare.com/callbackr';
     
     console.log('🔐 Capturando authorization code...');
     console.log('   CLIENT_ID:', clientId);

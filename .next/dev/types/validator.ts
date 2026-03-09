@@ -83,6 +83,24 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../../src/app/callback/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/callback">> = Specific
+  const handler = {} as typeof import("../../../src/app/callback/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../src/app/callbackr/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/callbackr">> = Specific
+  const handler = {} as typeof import("../../../src/app/callbackr/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../../src/app/clientes/[id]/edit/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/clientes/[id]/edit">> = Specific
@@ -384,6 +402,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/balanco">> = Specific
   const handler = {} as typeof import("../../../src/app/api/balanco/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../src/app/api/callback/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/callback">> = Specific
+  const handler = {} as typeof import("../../../src/app/api/callback/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check

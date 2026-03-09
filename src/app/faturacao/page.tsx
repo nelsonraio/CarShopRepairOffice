@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import CriarFaturaModal from "@/components/CriarFaturaModal";
 import { useFetch, usePagination, useFilters, filterPredicates } from "@/hooks";
@@ -206,14 +207,10 @@ export default function FaturacaoPage() {
       return combinadas;
     };
 
-    // Função para abrir OAuth2 e instruir usuário
-    const handleOAuth2Page = () => {
-      window.open('https://app7.toconline.pt/oauth/authorize?client_id=pt999999990_c101423-6604ef0f5744561b&redirect_uri=https://oauth.pstmn.io/v1/callback&response_type=code&scope=commercial', '_blank');
-    };
-
     // Data fetching
     const { data: rawData = {}, loading, refetch } = useFetch<any>('/api/faturas');
     const invoices = (Array.isArray(rawData) ? rawData : (rawData?.faturas || rawData?.data || [])) || [];
+    const searchParams = useSearchParams();
 
     // Filtering (search + status)
     const filterConfig = {
@@ -234,15 +231,59 @@ export default function FaturacaoPage() {
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isLoadingToken, setIsLoadingToken] = useState(false);
-  const [oauthToken, setOauthToken] = useState<string>("");
-  const [tokenAge, setTokenAge] = useState<number>(0); // idade do token em minutos
-  const [showTokenModal, setShowTokenModal] = useState(false);
-  const [tempAuthCode, setTempAuthCode] = useState("");
+    const [oauthToken, setOauthToken] = useState<string>("");
+    const [authStatus, setAuthStatus] = useState<'success' | 'error' | 'pending' | null>(null);
+    const [authReasonMsg, setAuthReasonMsg] = useState<string>('');
+    const [showAuthToast, setShowAuthToast] = useState(false);
+
+    const TOCONLINE_REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI || 'https://pond-computer-hear-initiatives.trycloudflare.com/callbackr';
+
+    const iniciarFluxoOAuth = () => {
+      const clientId = process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID || 'pt999999990_c101423-6604ef0f5744561b';
+      const authUrl =
+        'https://app7.toconline.pt/oauth/auth?' +
+        new URLSearchParams({
+          client_id: clientId,
+          redirect_uri: TOCONLINE_REDIRECT_URI,
+          response_type: 'code',
+          scope: 'commercial'
+        }).toString();
+
+      setAuthStatus('pending');
+      window.location.assign(authUrl);
+    };
 
   // Carregar faturas da API
   useEffect(() => {
     carregarFaturasCombinadas();
+
+    const authParam = searchParams.get('auth');
+    const authReasonParam = searchParams.get('reason');
+    const authReasonLocal = typeof window !== 'undefined' ? localStorage.getItem('toconline_auth_error_reason') : null;
+    const authReason = authReasonParam || authReasonLocal;
+    if (authParam === 'success') {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('toconline_auth_error_reason');
+        sessionStorage.removeItem('toconline_oauth_retry_once');
+      }
+      setAuthReasonMsg('');
+      setAuthStatus('success');
+    } else if (authParam === 'error') {
+      if (!authReason && typeof window !== 'undefined') {
+        const alreadyRetried = sessionStorage.getItem('toconline_oauth_retry_once') === '1';
+        if (!alreadyRetried) {
+          sessionStorage.setItem('toconline_oauth_retry_once', '1');
+          iniciarFluxoOAuth();
+          return;
+        }
+      }
+
+      const reason = authReason ? ` Erro: ${authReason}` : '';
+      setAuthReasonMsg(authReason || '');
+      console.warn('Falha autenticacao TOConline.' + reason);
+      setAuthStatus('error');
+    }
+
     // Carregar token do localStorage se existir e verificar validade
     const tokenSalvo = typeof window !== 'undefined' ? localStorage.getItem('toconline_access_token') : null;
     const tokenTimestamp = typeof window !== 'undefined' ? localStorage.getItem('toconline_token_timestamp') : null;
@@ -261,6 +302,7 @@ export default function FaturacaoPage() {
       if (tokenAge < oneHour) {
         // Token ainda deve ser válido (menos de 1 hora)
         setOauthToken(tokenSalvo);
+        setAuthStatus('success');
         console.log(`✅ Token carregado (idade: ${Math.floor(tokenAge / 1000 / 60)} minutos)`);
       } else {
         // Token provavelmente expirado
@@ -268,109 +310,35 @@ export default function FaturacaoPage() {
         localStorage.removeItem('toconline_access_token');
         localStorage.removeItem('toconline_token_timestamp');
         setOauthToken('');
+        if (authParam !== 'error') {
+          iniciarFluxoOAuth();
+        }
       }
     } else if (tokenSalvo && !tokenTimestamp) {
       // Token sem timestamp - assumir como expirado
       console.warn('⚠️ Token sem timestamp encontrado - removendo por segurança');
       localStorage.removeItem('toconline_access_token');
       setOauthToken('');
+      if (authParam !== 'error') {
+        iniciarFluxoOAuth();
+      }
+    } else if (!tokenSalvo && authParam !== 'error') {
+      iniciarFluxoOAuth();
     }
-  }, []);
+  }, [searchParams]);
 
-  // Atualizar idade do token a cada minuto
+  // Mostrar toast de autenticacao por 5 segundos (sucesso/erro)
   useEffect(() => {
-    if (!oauthToken) {
-      setTokenAge(0);
-      return;
-    }
+    if (authStatus !== 'success' && authStatus !== 'error') return;
 
-    const updateTokenAge = () => {
-      const tokenTimestamp = typeof window !== 'undefined' ? localStorage.getItem('toconline_token_timestamp') : null;
-      if (tokenTimestamp) {
-        const age = Math.floor((Date.now() - parseInt(tokenTimestamp)) / 1000 / 60); // idade em minutos
-        setTokenAge(age);
-        
-        // Se mais de 55 minutos, avisar que token vai expirar
-        if (age >= 55 && age < 60) {
-          console.warn('⚠️ Token irá expirar em breve! Renove agora para evitar interrupções.');
-        }
-      }
-    };
+    setShowAuthToast(true);
+    const timeoutMs = authStatus === 'success' ? 2000 : 5000;
+    const timer = setTimeout(() => {
+      setShowAuthToast(false);
+    }, timeoutMs);
 
-    updateTokenAge(); // executar imediatamente
-    const interval = setInterval(updateTokenAge, 60000); // atualizar a cada minuto
-
-    return () => clearInterval(interval);
-  }, [oauthToken]);
-
-  // Obter novo token OAuth2
-  const handleObtainNewToken = async () => {
-    if (!tempAuthCode.trim()) {
-      alert('Por favor, insira o código de autorização');
-      return;
-    }
-
-    try {
-      setIsLoadingToken(true);
-      const res = await fetch('/api/fatura-simplificada', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ payload: {}, authCode: tempAuthCode.trim() })
-      });
-      const data = await res.json();
-
-      if (data.success && data.data?.access_token) {
-        const newToken = data.data.access_token;
-        console.log('🔐 Token obtido com sucesso:');
-        console.log('   Comprimento:', newToken.length);
-        console.log('   Primeiros 20 chars:', newToken.substring(0, 20) + '...');
-        console.log('   Últimos 10 chars:', '...' + newToken.substring(newToken.length - 10));
-        
-        localStorage.setItem('toconline_access_token', newToken);
-        localStorage.setItem('toconline_token_timestamp', Date.now().toString());
-        
-        // Verificar se foi salvo corretamente
-        const tokenVerify = localStorage.getItem('toconline_access_token');
-        console.log('✅ Token verificado no localStorage:');
-        console.log('   Comprimento salvo:', tokenVerify?.length);
-        console.log('   Primeiros 20 chars:', tokenVerify?.substring(0, 20) + '...');
-        console.log('   Tokens iguais?', newToken === tokenVerify);
-        
-        setOauthToken(newToken);
-        setTempAuthCode('');
-        setShowTokenModal(false);
-        
-        // Recarregar faturas com novo token (usando POST em vez de query string)
-        const resFaturas = await fetch(`/api/faturas-externas`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: newToken })
-        });
-        const jsonFaturas = await resFaturas.json();
-        
-        // Refresh invoices after token update
-        await refetch();
-        alert('✅ Token atualizado com sucesso!');
-      } else {
-        const errorMsg = data.error || data.data?.error || 'Falha desconhecida';
-        
-        // Mensagens personalizadas
-        if (errorMsg.includes('unauthorized_client')) {
-          alert('❌ Cliente não autorizado.\n\nVerifique:\n1. Se as credenciais estão corretas\n2. Se a aplicação está autorizada no TOConline');
-        } else if (errorMsg.includes('invalid_grant') || errorMsg.includes('expirado')) {
-          alert('❌ Código de autorização expirado!\n\nOs códigos OAuth expiram em poucos minutos.\n\nPor favor:\n1. Clique novamente em "Abrir URL de Autorização"\n2. Faça login novamente\n3. Cole o NOVO código rapidamente');
-        } else if (errorMsg.includes('invalid_request')) {
-          alert('❌ Requisição inválida.\n\nVerifique se todos os parâmetros estão corretos.');
-        } else {
-          alert('❌ Erro ao obter token:\n\n' + errorMsg);
-        }
-      }
-    } catch (err) {
-      alert('❌ Erro ao processar: ' + (err instanceof Error ? err.message : 'Erro desconhecido'));
-    } finally {
-      setIsLoadingToken(false);
-    }
-  };
+    return () => clearTimeout(timer);
+  }, [authStatus, authReasonMsg]);
 
   // Busca faturas locais e externas e une os dados
   const carregarFaturasCombinadas = async () => {
@@ -380,7 +348,7 @@ export default function FaturacaoPage() {
   // Fazer download de PDF da fatura
   const handleDownloadPDF = async (faturaId: number, numeroFatura: string) => {
     if (!oauthToken) {
-      alert('⚠️ Token OAuth2 não configurado. Por favor, clique no botão "Autenticar" no topo da página.');
+      alert('⚠️ Token OAuth2 não configurado. Aguarde a autenticação automática e tente novamente.');
       return;
     }
 
@@ -409,7 +377,7 @@ export default function FaturacaoPage() {
   // Fazer download de PDF do recibo
   const handleDownloadRecibo = async (faturaId: number, numeroFatura: string) => {
     if (!oauthToken) {
-      alert('⚠️ Token OAuth2 não configurado. Por favor, clique no botão "Autenticar" no topo da página.');
+      alert('⚠️ Token OAuth2 não configurado. Aguarde a autenticação automática e tente novamente.');
       return;
     }
 
@@ -448,7 +416,7 @@ export default function FaturacaoPage() {
   // Emitir recibo no TOConline e marcar fatura como paga
   const handleEmitirRecibo = async (faturalId: number, numeroFatura: string) => {
     if (!oauthToken) {
-      alert('⚠️ Token OAuth2 não configurado. Por favor, clique no botão "Autenticar" no topo da página.');
+      alert('⚠️ Token OAuth2 não configurado. Aguarde a autenticação automática e tente novamente.');
       return;
     }
 
@@ -651,6 +619,22 @@ export default function FaturacaoPage() {
       <Sidebar activePage="faturacao" />
 
       <main className="flex-1 relative overflow-y-auto focus:outline-none p-8">
+        {showAuthToast && authStatus === 'success' && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+            <div className="w-[90vw] max-w-md border border-green-700 bg-green-900 text-green-200 px-6 py-4 shadow-2xl text-base font-medium text-center">
+              TOConline autenticado com sucesso.
+            </div>
+          </div>
+        )}
+
+        {showAuthToast && authStatus === 'error' && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+            <div className="w-[90vw] max-w-md border border-red-700 bg-red-900 text-red-200 px-6 py-4 shadow-2xl text-base font-medium text-center">
+              TOConline autenticacao falhou.{authReasonMsg ? ` Motivo: ${authReasonMsg}` : ''}
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
@@ -658,34 +642,6 @@ export default function FaturacaoPage() {
             <p className="mt-1 text-gray-400">Gestão de faturas TOConline</p>
           </div>
           <div className="flex gap-3 items-center">
-            {/* Botão de Status do Token */}
-            <button
-              onClick={() => setShowTokenModal(true)}
-              className={`px-4 py-2 rounded-none flex items-center gap-2 transition-colors border ${
-                oauthToken
-                  ? 'bg-green-900 text-green-200 border-green-700 hover:bg-green-800'
-                  : 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
-              }`}
-              title={oauthToken ? `Token ativo (${tokenAge} min)` : 'Clique para autenticar'}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-              </svg>
-              {oauthToken ? (
-                <span>
-                  ✓ Autenticado
-                  {tokenAge > 0 && tokenAge < 60 && (
-                    <span className="text-xs ml-1">({tokenAge} min)</span>
-                  )}
-                  {tokenAge >= 55 && (
-                    <span className="text-yellow-300 text-xs ml-1">⚠️</span>
-                  )}
-                </span>
-              ) : (
-                'Autenticar'
-              )}
-            </button>
-            
             {/* Botão Gerar Fatura */}
             <button
               onClick={() => setIsModalOpen(true)}
@@ -944,90 +900,6 @@ export default function FaturacaoPage() {
         oauthToken={oauthToken}
       />
 
-      {/* Modal de Autenticação OAuth2 */}
-      {showTokenModal && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-gray-800 border border-gray-600 w-full max-w-md mx-4 shadow-2xl p-6 rounded-none">
-            <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-700">
-              <h3 className="text-lg font-bold text-gray-100">Autenticação TOConline</h3>
-              <button
-                onClick={() => {
-                  setShowTokenModal(false);
-                  setTempAuthCode('');
-                }}
-                className="text-gray-400 hover:text-gray-200 transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {/* Status do Token */}
-              <div className="p-3 rounded-none border" style={{
-                borderColor: oauthToken ? '#10b981' : '#ef4444',
-                backgroundColor: oauthToken ? '#065f46' : '#7f1d1d'
-              }}>
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${oauthToken ? 'bg-green-400' : 'bg-red-400'}`}></div>
-                  <div className="flex-1 text-sm" style={{color: oauthToken ? '#d1fae5' : '#fee2e2'}}>
-                    {oauthToken ? (
-                      <>✓ Token Ativo {tokenAge > 0 && `(${tokenAge} min)`}</>
-                    ) : (
-                      '✗ Sem Token - Autenticação necessária'
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Botão para abrir OAuth2 */}
-              <button
-                onClick={handleOAuth2Page}
-                className="w-full px-4 py-2 bg-blue-900 text-blue-200 hover:bg-blue-800 transition-colors rounded-none border border-blue-700 font-medium flex items-center justify-center gap-2"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                </svg>
-                1. Abrir Autorização TOConline
-              </button>
-
-              {/* Input do Código */}
-              <div>
-                <label className="block text-sm text-gray-300 mb-1 font-medium">2. Cole o código aqui:</label>
-                <input
-                  type="text"
-                  value={tempAuthCode}
-                  onChange={(e) => setTempAuthCode(e.target.value)}
-                  placeholder="Código de autorização"
-                  className="w-full px-3 py-2 bg-gray-900 border border-gray-600 text-white rounded-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-600 font-mono text-sm"
-                />
-                <p className="text-xs text-gray-500 mt-1">⚠️ Cole rapidamente - códigos expiram em poucos minutos</p>
-              </div>
-
-              {/* Botões de Ação */}
-              <div className="flex gap-3 pt-2">
-                <button
-                  onClick={() => {
-                    setShowTokenModal(false);
-                    setTempAuthCode('');
-                  }}
-                  className="flex-1 px-4 py-2 bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors rounded-none border border-gray-600"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleObtainNewToken}
-                  disabled={!tempAuthCode.trim() || loading}
-                  className="flex-1 px-4 py-2 bg-brand-yellow text-gray-900 font-bold hover:bg-brand-yellow-dark transition-colors rounded-none disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'A processar...' : '3. Processar'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
