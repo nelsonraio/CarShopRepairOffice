@@ -54,6 +54,8 @@ export async function GET() {
       cliente_email: agendamento.cliente.email || null,
       veiculo_matricula: agendamento.matricula || 'N/A',
       veiculo_modelo: agendamento.modelo || agendamento.marca || 'N/A',
+      veiculo_marca: agendamento.marca || '',
+      veiculo_ano: agendamento.ano || '',
       prioridade: agendamento.prioridade || 'normal',
       estado: agendamento.estado || 'agendado',
       titulo: agendamento.titulo,

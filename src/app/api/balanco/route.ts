@@ -13,26 +13,21 @@ const prisma = new PrismaClient();
 const prismaAny = prisma as any;
 
 /**
- * Calculate actual part cost by removing profit margin
- * Formula: real_price = price_with_margin / (1 + margin_percent/100)
- */
-const calculateRealPartCost = (priceWithMargin: number, marginPercent: number): number => {
-  if (marginPercent <= 0) return priceWithMargin;
-  return priceWithMargin / (1 + marginPercent / 100);
-};
-
-/**
  * Build balance data for a completed work order
+ * Uses base part prices (preco_venda) without any profit margin
  */
-const buildBalanceData = (order: any, profileMargin: number) => {
-  // Calculate real cost of parts without profit margin
+const buildBalanceData = (order: any, pecasMap: Map<number, number>) => {
+  // Calculate real cost of parts using preco_venda (base price, no margin)
   let gastoPecasReal = 0;
   if (order.itens_ordem_trabalho?.length > 0) {
     gastoPecasReal = order.itens_ordem_trabalho.reduce((sum: number, item: any) => {
-      const priceWithMargin = parseNum(item.preco_unitario);
       const quantity = parseNum(item.quantidade) || 1;
-      const realPrice = calculateRealPartCost(priceWithMargin, profileMargin);
-      return sum + (realPrice * quantity);
+      if (item.peca_id && pecasMap.has(item.peca_id)) {
+        // Use base price from pecas table (no margin)
+        return sum + (pecasMap.get(item.peca_id)! * quantity);
+      }
+      // No linked part — use stored price as fallback
+      return sum + (parseNum(item.preco_unitario) * quantity);
     }, 0);
   }
 
@@ -77,30 +72,29 @@ export async function GET(request: Request) {
       prismaAny.ordens_trabalho.count({ where: { estado: 'concluido' } })
     ]);
 
-    // Extract unique profile names for batch lookup
-    const profileNames = new Set<string>();
+    // Extract unique peca_ids for batch lookup of base prices
+    const pecaIds = new Set<number>();
     ordensTrabalho.forEach((ordem: any) => {
-      if (ordem.veiculo?.cliente?.perfil) {
-        profileNames.add(ordem.veiculo.cliente.perfil);
-      }
+      ordem.itens_ordem_trabalho?.forEach((item: any) => {
+        if (item.peca_id) pecaIds.add(item.peca_id);
+      });
     });
 
-    // Fetch all client profiles and build margin map
-    const profilesMap = new Map<string, number>();
-    if (profileNames.size > 0) {
-      const profiles = await prismaAny.perfis_clientes.findMany({
-        where: { nome: { in: Array.from(profileNames) } }
+    // Fetch base prices (preco_venda) for all referenced parts
+    const pecasMap = new Map<number, number>();
+    if (pecaIds.size > 0) {
+      const pecas = await prismaAny.pecas.findMany({
+        where: { id: { in: Array.from(pecaIds) } },
+        select: { id: true, preco_venda: true }
       });
-      profiles.forEach((profile: any) => {
-        profilesMap.set(profile.nome, parseNum(profile.perclucro));
+      pecas.forEach((peca: any) => {
+        pecasMap.set(Number(peca.id), parseNum(peca.preco_venda));
       });
     }
 
     // Transform work orders into balance data
     const balanceData = ordensTrabalho.map((ordem: any) => {
-      const clientProfile = ordem.veiculo?.cliente?.perfil || 'Normal';
-      const marginPercent = profilesMap.get(clientProfile) || 0;
-      return buildBalanceData(ordem, marginPercent);
+      return buildBalanceData(ordem, pecasMap);
     });
 
     // Calculate pagination info

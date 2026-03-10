@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Sidebar from '../../../components/Sidebar';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -78,13 +79,10 @@ const NewBudgetPage = () => {
     email: ''
   });
   const [quilometragem, setQuilometragem] = useState<number | ''>('');
-  const [formData, setFormData] = useState({
-    matricula: '',
-    marca: '',
-    modelo: '',
-    ano: '',
-    cliente: ''
-  });
+  const [perfilLucro, setPerfilLucro] = useState<number>(0);
+
+  const searchParams = useSearchParams();
+  const [formData, setFormData] = useState({ matricula: '', marca: '', modelo: '', ano: '', cliente: '' });
 
   useEffect(() => {
     const newTotal = budgetItems.reduce((sum, item) => sum + item.total, 0);
@@ -96,22 +94,42 @@ const NewBudgetPage = () => {
     fetchParts();
   }, []);
 
-  // Detectar query parameters ao carregar a página
+  // Detectar query parameters ao carregar a página (reage a mudanças de searchParams)
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const matricula = params.get('matricula');
-    const cliente = params.get('cliente');
+    const matricula = searchParams.get('matricula');
+    const cliente = searchParams.get('cliente');
+    const marca = searchParams.get('marca');
+    const modelo = searchParams.get('modelo');
+    const ano = searchParams.get('ano');
+
+    console.log('🔍 URL Params (searchParams):', { matricula, marca, modelo, ano, cliente });
 
     if (matricula) {
-      console.log('Found matricula in URL:', matricula);
-      setFormData(prev => ({ ...prev, matricula }));
-      searchVehicleByLicensePlate(matricula);
+      const newFormData = {
+        matricula,
+        marca: marca || '',
+        modelo: modelo || '',
+        ano: ano || '',
+        cliente: cliente || ''
+      };
+      
+      console.log('📝 Setting formData:', newFormData);
+      setFormData(newFormData);
+      
+      if (marca && modelo) {
+        console.log('✅ Marca e modelo presentes nos URL params - marcando como auto-preenchido');
+        setIsVehicleAutoFilled(true);
+        // Ainda assim pesquisar o veículo para obter o ID e selecionar o cliente
+        searchVehicleByLicensePlateKeepData(matricula, { marca, modelo, ano: ano || '' });
+      } else {
+        console.log('⚠️ Dados incompletos, buscando via API...');
+        searchVehicleByLicensePlate(matricula);
+      }
     }
 
     if (cliente) {
       console.log('Found cliente in URL:', cliente);
       setClientSearch(cliente);
-      // Buscar e selecionar cliente automaticamente
       const loadClient = async () => {
         const clients = await searchClients(cliente);
         if (clients && clients.length > 0) {
@@ -121,7 +139,8 @@ const NewBudgetPage = () => {
       };
       loadClient();
     }
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const fetchServices = async () => {
     try {
@@ -185,7 +204,8 @@ const NewBudgetPage = () => {
         name: part.nome,
         type: 'part' as const,
         price: parseFloat(part.preco_venda) || 0,
-        unit: 'un'
+        unit: 'un',
+        margem_lucro: typeof part.margem_lucro === 'number' ? part.margem_lucro : (part.margem_lucro ? Number(part.margem_lucro) : 0)
       }));
 
       const combinedResults = [...formattedServices, ...formattedParts];
@@ -212,18 +232,28 @@ const NewBudgetPage = () => {
 
 
 
-  // Margem de lucro para peças (55%)
-  const PARTS_MARKUP = 1.55;
+  // Margem de lucro: prioridade peça > perfil cliente > fallback 55%
+  const PARTS_MARKUP_DEFAULT = 1.55;
 
   const addItemToBudget = (item: CatalogItem) => {
     let finalPrice = item.price;
     if (item.type === 'part') {
-      // Procurar a peça pelo id
-      const foundPart = parts.find(p => p.id === item.id);
-      if (foundPart && foundPart.margem_lucro && foundPart.margem_lucro > 0) {
-        finalPrice = item.price * (1 + foundPart.margem_lucro / 100);
+      // Procurar a peça pelo id (usar String para evitar mismatch number vs string)
+      const foundPart = parts.find(p => String(p.id) === String(item.id));
+      // Também verificar margem diretamente no item (vem da pesquisa)
+      const margemPeca = (foundPart?.margem_lucro && foundPart.margem_lucro > 0)
+        ? foundPart.margem_lucro
+        : (item.margem_lucro && item.margem_lucro > 0 ? item.margem_lucro : 0);
+
+      if (margemPeca > 0) {
+        // 1. Margem da peça (prioridade)
+        finalPrice = item.price * (1 + margemPeca / 100);
+      } else if (perfilLucro > 0) {
+        // 2. Margem do perfil do cliente
+        finalPrice = item.price * (1 + perfilLucro / 100);
       } else {
-        finalPrice = item.price * PARTS_MARKUP;
+        // 3. Fallback 55%
+        finalPrice = item.price * PARTS_MARKUP_DEFAULT;
       }
     }
     const newItem: BudgetItem = {
@@ -301,6 +331,15 @@ const NewBudgetPage = () => {
     fetchClientVehicles(client.id.toString());
     generateNextBudgetId();
     setAlternateContact({ nome: '', telefone: '', email: '' });
+
+    // Buscar margem de lucro do perfil do cliente
+    fetch('/api/perfis-clientes')
+      .then(res => res.ok ? res.json() : [])
+      .then(perfis => {
+        const perfil = perfis.find((p: any) => p.nome === client.perfil);
+        setPerfilLucro(perfil ? Number(perfil.perclucro) || 0 : 0);
+      })
+      .catch(() => setPerfilLucro(0));
   };
 
 
@@ -330,6 +369,40 @@ const NewBudgetPage = () => {
   };
 
   const searchVehicleByLicensePlate = async (licensePlate: string) => {
+    console.log('🔎 searchVehicleByLicensePlate chamada com:', licensePlate);
+    try {
+      const response = await fetch(`/api/veiculos/search?matricula=${encodeURIComponent(licensePlate)}`);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('📦 Resposta da API:', data);
+        if (data.found) {
+          const vehicle = data.vehicle;
+          const client = data.client;
+          console.log('✅ Veículo encontrado:', { marca: vehicle.marca, modelo: vehicle.modelo, ano: vehicle.ano });
+          setFormData(prev => ({
+            ...prev,
+            marca: vehicle.marca || prev.marca || '',
+            modelo: vehicle.modelo || prev.modelo || '',
+            ano: vehicle.ano || prev.ano || ''
+          }));
+          setQuilometragem(vehicle.quilometragem ? vehicle.quilometragem : '');
+          setIsVehicleAutoFilled(true);
+          setSelectedVehicle(vehicle.id);
+          selectClient(client);
+        } else {
+          console.log('⚠️ Veículo não encontrado na BD, mantendo dados existentes');
+          setQuilometragem('');
+          setSelectedVehicle('');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to search vehicle:', error);
+    }
+  };
+
+  // Versão que pesquisa o veículo mas preserva marca/modelo/ano dos URL params
+  const searchVehicleByLicensePlateKeepData = async (licensePlate: string, urlData: { marca: string; modelo: string; ano: string }) => {
+    console.log('🔎 searchVehicleByLicensePlateKeepData chamada com:', licensePlate, urlData);
     try {
       const response = await fetch(`/api/veiculos/search?matricula=${encodeURIComponent(licensePlate)}`);
       if (response.ok) {
@@ -337,30 +410,27 @@ const NewBudgetPage = () => {
         if (data.found) {
           const vehicle = data.vehicle;
           const client = data.client;
+          console.log('✅ Veículo encontrado na BD, usando ID e cliente, mantendo dados URL');
+          setSelectedVehicle(vehicle.id);
+          setQuilometragem(vehicle.quilometragem ? vehicle.quilometragem : '');
+          // Preservar marca/modelo/ano dos URL params
           setFormData(prev => ({
             ...prev,
-            marca: vehicle.marca || '',
-            modelo: vehicle.modelo || '',
-            ano: vehicle.ano || ''
+            marca: urlData.marca || vehicle.marca || prev.marca || '',
+            modelo: urlData.modelo || vehicle.modelo || prev.modelo || '',
+            ano: urlData.ano || vehicle.ano || prev.ano || ''
           }));
-          setQuilometragem(vehicle.quilometragem ? vehicle.quilometragem : '');
           setIsVehicleAutoFilled(true);
-          setSelectedVehicle(vehicle.id);
-          // Select client associated with the vehicle
           selectClient(client);
         } else {
-          // Vehicle not found, clear auto-filled data
+          console.log('⚠️ Veículo não existe na BD - mantendo dados dos URL params');
+          // Manter marca/modelo/ano dos URL params
           setFormData(prev => ({
             ...prev,
-            marca: '',
-            modelo: '',
-            ano: ''
+            marca: urlData.marca || prev.marca,
+            modelo: urlData.modelo || prev.modelo,
+            ano: urlData.ano || prev.ano
           }));
-          setQuilometragem('');
-          setIsVehicleAutoFilled(false);
-          setSelectedVehicle('');
-          setSelectedClient(null);
-          setClientSearch('');
         }
       }
     } catch (error) {
@@ -472,8 +542,7 @@ const NewBudgetPage = () => {
       if (response.ok) {
         await response.json();
         alert(`Orçamento ${budgetId} criado com sucesso!\nTotal: €${total.toFixed(2)}\nItens: ${budgetItems.length}`);
-        const params = new URLSearchParams(window.location.search);
-        const origem = params.get('from');
+        const origem = searchParams.get('from');
         router.push(origem === 'kanban' ? '/kanban' : '/orcamentos');
       } else {
         const error = await response.json();

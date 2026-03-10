@@ -31,14 +31,19 @@ interface ApiErrorResponse {
  * @param obj - Objeto, array, ou valor primitivo
  * @returns Objeto com BigInts convertidos para Number
  */
-export const serializeBigInt = (obj: any): any => {
+export const serializeBigInt = (obj: unknown): unknown => {
   if (typeof obj === 'bigint') return Number(obj);
+  if (obj instanceof Date) return obj.toISOString();
+  if (typeof obj === 'object' && obj !== null && 'toFixed' in obj) return Number(obj);
   if (Array.isArray(obj)) return obj.map(serializeBigInt);
   if (obj !== null && typeof obj === 'object') {
-    return Object.entries(obj).reduce((acc, [key, value]) => ({
-      ...acc,
-      [key]: serializeBigInt(value)
-    }), {});
+    return Object.entries(obj as Record<string, unknown>).reduce<Record<string, unknown>>(
+      (acc, [key, value]) => ({
+        ...acc,
+        [key]: serializeBigInt(value)
+      }),
+      {}
+    );
   }
   return obj;
 };
@@ -51,7 +56,7 @@ export const serializeBigInt = (obj: any): any => {
  * @param status - HTTP status code (padrão: 200)
  * @returns NextResponse com JSON serializado
  */
-export const successResponse = (data: any, status = 200) => {
+export const successResponse = (data: unknown, status = 200) => {
   return NextResponse.json(serializeBigInt(data), { status });
 };
 
@@ -221,27 +226,34 @@ export const calculateDaysDelay = (expectedDate: Date | null, realDate: Date | n
 };
 
 // Parse numeric fields safely
-export const parseNum = (value: any): number => {
-  const parsed = parseFloat(value);
+export const parseNum = (value: unknown): number => {
+  const parsed = parseFloat(String(value));
   return isNaN(parsed) ? 0 : parsed;
 };
 
 // Build relational data maps for batch lookups
-export const buildDataMap = <T extends Record<string, any>>(
+export const buildDataMap = <K extends PropertyKey, T extends Record<string, unknown>>(
   data: T[],
   keyField: keyof T
-): Map<any, T> => {
-  return new Map(data.map(item => [item[keyField], item]));
+): Map<K, T> => {
+  return new Map(
+    data
+      .map((item) => {
+        const key = item[keyField];
+        return key != null ? [key as K, item] : null;
+      })
+      .filter((entry): entry is [K, T] => entry !== null)
+  );
 };
 
 // Extract unique IDs from array of objects
-export const extractUniqueIds = <T extends Record<string, any>>(
+export const extractUniqueIds = <T extends Record<string, unknown>>(
   data: T[],
   field: keyof T
-): any[] => {
+): Array<NonNullable<T[keyof T]>> => {
   return Array.from(new Set(
     data
       .map(item => item[field])
-      .filter(v => v != null)
+      .filter((v): v is NonNullable<T[keyof T]> => v != null)
   ));
 };

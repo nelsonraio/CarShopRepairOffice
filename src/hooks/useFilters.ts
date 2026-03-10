@@ -5,9 +5,7 @@
  */
 import { useState, useCallback, useMemo } from 'react';
 
-interface FilterConfig {
-  [key: string]: (item: any, filterValue: string) => boolean;
-}
+type FilterConfig = Record<string, (item: any, filterValue: string) => boolean>;
 
 interface UseFiltersResult<T> {
   filters: Record<string, string>;
@@ -65,11 +63,12 @@ export const filterPredicates = {
   /**
    * Search in multiple string fields
    */
-  search: (fields: string[]) => (item: any, searchTerm: string) => {
+  search: <T extends object>(fields: Array<keyof T & string>) => (item: T, searchTerm: string) => {
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
+    const record = item as Record<string, unknown>;
     return fields.some((field) => {
-      const value = item[field];
+      const value = record[field];
       return typeof value === 'string' && value.toLowerCase().includes(term);
     });
   },
@@ -77,17 +76,19 @@ export const filterPredicates = {
   /**
    * Exact match on a field
    */
-  exact: (field: string) => (item: any, value: string) => {
+  exact: <T extends object>(field: keyof T & string) => (item: T, value: string) => {
     if (!value) return true;
-    return String(item[field]) === value;
+    const record = item as Record<string, unknown>;
+    return String(record[field]) === value;
   },
 
   /**
    * Includes on a field (for arrays or string checking)
    */
-  includes: (field: string) => (item: any, value: string) => {
+  includes: <T extends object>(field: keyof T & string) => (item: T, value: string) => {
     if (!value) return true;
-    const fieldValue = item[field];
+    const record = item as Record<string, unknown>;
+    const fieldValue = record[field];
     if (Array.isArray(fieldValue)) {
       return fieldValue.includes(value);
     }
@@ -97,9 +98,10 @@ export const filterPredicates = {
   /**
    * Date range filter
    */
-  dateRange: (field: string) => (item: any, range: string) => {
+  dateRange: <T extends object>(field: keyof T & string) => (item: T, range: string) => {
     if (!range || range === 'todos') return true;
-    const itemDate = new Date(item[field]);
+    const record = item as Record<string, unknown>;
+    const itemDate = new Date(String(record[field]));
     const today = new Date();
 
     switch (range) {
@@ -119,9 +121,10 @@ export const filterPredicates = {
   /**
    * Numeric range filter
    */
-  numericRange: (field: string, min?: number, max?: number) => (item: any, value: string) => {
+  numericRange: <T extends object>(field: keyof T & string, min?: number, max?: number) => (item: T, value: string) => {
     if (!value) return true;
-    const itemValue = Number(item[field]);
+    const record = item as Record<string, unknown>;
+    const itemValue = Number(record[field]);
     const filterValue = Number(value);
 
     if (min !== undefined && itemValue < min) return false;

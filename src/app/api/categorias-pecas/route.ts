@@ -1,34 +1,41 @@
 import { successResponse, handleDatabaseError } from '@/lib/api-utils';
 import { PrismaClient } from '@prisma/client';
 
-/**
- * Initialize Prisma Client for database operations
- */
 // @ts-ignore
 const prisma = new PrismaClient({
   log: ['error'],
 });
 
 /**
- * GET: Fetch all unique part categories from database
- * @returns JSON array of unique categories or error response
+ * GET: Fetch all active part categories from categorias_peca table
  */
 export async function GET() {
   try {
-    // Fetch all unique categories from pecas table
-    const pecas = await prisma.pecas.findMany({
-      select: { categoria: true },
+    const categorias = await prisma.categorias_peca.findMany({
       where: { ativo: true },
-      distinct: ['categoria'],
-      orderBy: { categoria: 'asc' }
+      orderBy: { nome: 'asc' },
+      select: { id: true, nome: true, descricao: true }
     });
 
-    const categorias = pecas
-      .map((p: typeof pecas[number]) => p.categoria)
-      .filter((c: string | null | undefined) => c && c.trim() !== '') // Remove null and empty values
-      .sort();
+    return successResponse(categorias.map((c: any) => c.nome));
+  } catch (error) {
+    return handleDatabaseError(error as Error);
+  }
+}
 
-    return successResponse(categorias);
+/**
+ * POST: Create a new part category
+ */
+export async function POST(request: Request) {
+  try {
+    const { nome, descricao } = await request.json();
+    if (!nome || typeof nome !== 'string' || nome.trim() === '') {
+      return Response.json({ error: 'Nome é obrigatório' }, { status: 400 });
+    }
+    const categoria = await prisma.categorias_peca.create({
+      data: { nome: nome.trim(), descricao: descricao || null }
+    });
+    return successResponse(categoria);
   } catch (error) {
     return handleDatabaseError(error as Error);
   }

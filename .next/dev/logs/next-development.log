@@ -1,1 +1,115 @@
-[00:00:02.054] Server  LOG     ✓ Ready in 1524ms
+[00:00:01.932] Server  LOG     ✓ Ready in 1433ms
+[00:00:09.782] Server  WARN    ⚠ Cross origin request detected from pond-computer-hear-initiatives.trycloudflare.com to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+[00:01:26.824] Browser LOG     🔍 URL Params (searchParams): {"ano":null,"cliente":null,"marca":null,"matricula":null,"modelo":null}
+[00:01:26.824] Browser LOG     [2;38;2;124;124;124m%s[0m 🔍 URL Params (searchParams): {"ano":null,"cliente":null,"marca":null,"matricula":null,"modelo":null}
+[00:01:30.545] Browser LOG     🔎 searchVehicleByLicensePlate chamada com: CC-CC-CC
+[00:01:30.890] Browser LOG     📦 Resposta da API: {"client":{"email":null,"endereco":null,"id":"12","nif":"999999990","nome":"Ze da esquina","perfil":"Normal","telefone":""},"found":true,"vehicle":{"ano":1202,"id":"8","marca":"Renault","matricula":"CC-CC-CC","modelo":"208"}}
+[00:01:30.891] Browser LOG     ✅ Veículo encontrado: {"ano":1202,"marca":"Renault","modelo":"208"}
+[00:02:15.652] Browser LOG     🔍 URL Params (searchParams): {"ano":null,"cliente":null,"marca":null,"matricula":null,"modelo":null}
+[00:02:15.652] Browser LOG     [2;38;2;124;124;124m%s[0m 🔍 URL Params (searchParams): {"ano":null,"cliente":null,"marca":null,"matricula":null,"modelo":null}
+[00:02:18.335] Browser LOG     🔎 searchVehicleByLicensePlate chamada com: CC-CC-CC
+[00:02:18.335] Browser LOG     📦 Resposta da API: {"client":{"email":null,"endereco":null,"id":"12","nif":"999999990","nome":"Ze da esquina","perfil":"Normal","telefone":""},"found":true,"vehicle":{"ano":1202,"id":"8","marca":"Renault","matricula":"CC-CC-CC","modelo":"208"}}
+[00:02:18.336] Browser LOG     ✅ Veículo encontrado: {"ano":1202,"marca":"Renault","modelo":"208"}
+[00:03:47.462] Browser LOG     📋 Token carregado do localStorage:
+[00:03:47.462] Browser LOG        Comprimento: 81
+[00:03:47.462] Browser LOG        Primeiros 20 chars: 7-101423-2965119-71b...
+[00:03:47.463] Browser LOG        Últimos 10 chars: ...7091775f94
+[00:03:47.463] Browser LOG        Idade (ms): 7688025
+[00:03:47.463] Browser LOG        Idade (minutos): 128
+[00:03:47.463] Browser WARN    ⚠️ Token encontrado mas pode estar expirado (idade: 128 minutos)
+[00:03:48.834] Server  LOG     🔄 Trocando código de autorização por access_token...
+[00:03:48.837] Server  LOG     🔐 Tentando obter token com:
+[00:03:48.838] Server  LOG        CLIENT_ID: "pt999999990_c101423-6604ef0f5744561b"
+[00:03:48.838] Server  LOG        REDIRECT_URI: "https://pond-computer-hear-initiatives.trycloudflare.com/callbackr"
+[00:03:48.840] Server  LOG        Code length: 64
+[00:03:48.840] Server  LOG        Auth header: "Basic cHQ5OTk5OTk5OTBfYzEw..."
+[00:03:48.841] Server  LOG     📤 Body params: "grant_type=authorization_code&code=593cda4b302b51bda96dce84979b3a2131404d5d3c8e4853fd9872956fabb72e&redirect_uri=https%3A%2F%2Fpond-computer-hear-initiatives.trycloudflare.com%2Fcallbackr&scope=commercial"
+[00:03:48.953] Server  LOG     📡 Resposta TOConline: {}
+[00:03:50.037] Browser LOG     📋 Token carregado do localStorage:
+[00:03:50.037] Browser LOG        Comprimento: 81
+[00:03:50.037] Browser LOG        Primeiros 20 chars: 7-101423-2965119-11e...
+[00:03:50.037] Browser LOG        Últimos 10 chars: ...30f4fd8ed4
+[00:03:50.037] Browser LOG        Idade (ms): 618
+[00:03:50.037] Browser LOG        Idade (minutos): 0
+[00:03:50.037] Browser LOG     ✅ Token carregado (idade: 0 minutos)
+[00:03:54.481] Server  LOG     📊 [Ordens para faturar] Totais:
+[00:03:54.482] Server  LOG        Ordens sem fatura_id: 0
+[00:03:54.483] Server  LOG        Após filtro de estado: 0
+[00:03:54.483] Server  LOG        Excluídas por já faturadas: 0
+[00:03:54.484] Server  LOG        Resultado final: 0
+[00:04:03.582] Browser LOG     🔍 URL Params (searchParams): {"ano":null,"cliente":null,"marca":null,"matricula":null,"modelo":null}
+[00:04:03.583] Browser LOG     [2;38;2;124;124;124m%s[0m 🔍 URL Params (searchParams): {"ano":null,"cliente":null,"marca":null,"matricula":null,"modelo":null}
+[00:04:07.103] Browser LOG     🔎 searchVehicleByLicensePlate chamada com: 33-IX-44
+[00:04:07.273] Browser LOG     📦 Resposta da API: {"client":{"email":null,"endereco":null,"id":"11","nif":null,"nome":"Cliente Genérico TVDE Externo","perfil":"TVDE_Externo","telefone":""},"found":true,"vehicle":{"ano":2020,"id":"7","marca":"Renault","matricula":"33-IX-44","modelo":"Captur"}}
+[00:04:07.273] Browser LOG     ✅ Veículo encontrado: {"ano":2020,"marca":"Renault","modelo":"Captur"}
+[00:04:37.978] Browser LOG     🔍 URL Params (searchParams): {"ano":null,"cliente":null,"marca":null,"matricula":null,"modelo":null}
+[00:04:37.979] Browser LOG     [2;38;2;124;124;124m%s[0m 🔍 URL Params (searchParams): {"ano":null,"cliente":null,"marca":null,"matricula":null,"modelo":null}
+[00:04:40.815] Browser LOG     🔎 searchVehicleByLicensePlate chamada com: 33-IX-44
+[00:04:40.815] Browser LOG     📦 Resposta da API: {"client":{"email":null,"endereco":null,"id":"11","nif":null,"nome":"Cliente Genérico TVDE Externo","perfil":"TVDE_Externo","telefone":""},"found":true,"vehicle":{"ano":2020,"id":"7","marca":"Renault","matricula":"33-IX-44","modelo":"Captur"}}
+[00:04:40.815] Browser LOG     ✅ Veículo encontrado: {"ano":2020,"marca":"Renault","modelo":"Captur"}
+[00:05:23.541] Browser LOG     Drag started: {"card":{"cliente_nome":"Cliente Genérico TVDE Externo","contacto_email":null,"contacto_nome":"nelson raio","contacto_telefone":"961376093","data_emissao":"2026-03-09T00:00:00.000Z","estado":"em_aprovacao","id":"11","itens_count":1,"itens_orcamento":[{"criado_em":"2026-03-09T23:56:49.000Z","descricao":"Bateria 12V 70AH","id":27,"notas":null,"orcamento_id":11,"peca_id":22,"percentual_desconto":0,"percentual_imposto":23,"preco_unitario":11,"quantidade":1,"servico_id":null,"tipo_item":"peca","valor_desconto":0,"valor_imposto":0,"valor_total":11}],"mechanic":"N/A","model":"Renault Captur","plate":"33-IX-44","prioridade":"normal","proc":"OR-2026-TVDE0001","total_geral":11},"fromColumnId":"em_aprovacao"}
+[00:05:24.737] Browser LOG     === Document Drop Event ===
+[00:05:24.737] Browser LOG     isInsideColumn: true
+[00:05:24.737] Browser LOG     draggedCard: {"card":{"cliente_nome":"Cliente Genérico TVDE Externo","contacto_email":null,"contacto_nome":"nelson raio","contacto_telefone":"961376093","data_emissao":"2026-03-09T00:00:00.000Z","estado":"em_aprovacao","id":"11","itens_count":1,"itens_orcamento":[{"criado_em":"2026-03-09T23:56:49.000Z","descricao":"Bateria 12V 70AH","id":27,"notas":null,"orcamento_id":11,"peca_id":22,"percentual_desconto":0,"percentual_imposto":23,"preco_unitario":11,"quantidade":1,"servico_id":null,"tipo_item":"peca","valor_desconto":0,"valor_imposto":0,"valor_total":11}],"mechanic":"N/A","model":"Renault Captur","plate":"33-IX-44","prioridade":"normal","proc":"OR-2026-TVDE0001","total_geral":11},"fromColumnId":"em_aprovacao"}
+[00:05:24.737] Browser LOG     target: kanban-column-content space-y-3 transition-all 
+[00:05:24.737] Browser LOG     ⚠ Não foi drop fora ou draggedCard é null
+[00:05:30.622] Browser LOG     Drag started: {"card":{"cliente_nome":"Cliente Genérico TVDE Externo","contacto_email":null,"contacto_nome":"nelson raio","contacto_telefone":"961376093","data_emissao":"2026-03-09T00:00:00.000Z","estado":"em_andamento","id":"11","itens_count":1,"itens_orcamento":[{"criado_em":"2026-03-09T23:56:49.000Z","descricao":"Bateria 12V 70AH","id":27,"notas":null,"orcamento_id":11,"peca_id":22,"percentual_desconto":0,"percentual_imposto":23,"preco_unitario":11,"quantidade":1,"servico_id":null,"tipo_item":"peca","valor_desconto":0,"valor_imposto":0,"valor_total":11}],"mechanic":"N/A","model":"Renault Captur","plate":"33-IX-44","prioridade":"normal","proc":"OT-2026-TVDE0001","total_geral":11},"fromColumnId":"em_andamento"}
+[00:05:31.623] Browser LOG     === Document Drop Event ===
+[00:05:31.623] Browser LOG     isInsideColumn: true
+[00:05:31.623] Browser LOG     draggedCard: {"card":{"cliente_nome":"Cliente Genérico TVDE Externo","contacto_email":null,"contacto_nome":"nelson raio","contacto_telefone":"961376093","data_emissao":"2026-03-09T00:00:00.000Z","estado":"em_andamento","id":"11","itens_count":1,"itens_orcamento":[{"criado_em":"2026-03-09T23:56:49.000Z","descricao":"Bateria 12V 70AH","id":27,"notas":null,"orcamento_id":11,"peca_id":22,"percentual_desconto":0,"percentual_imposto":23,"preco_unitario":11,"quantidade":1,"servico_id":null,"tipo_item":"peca","valor_desconto":0,"valor_imposto":0,"valor_total":11}],"mechanic":"N/A","model":"Renault Captur","plate":"33-IX-44","prioridade":"normal","proc":"OT-2026-TVDE0001","total_geral":11},"fromColumnId":"em_andamento"}
+[00:05:31.623] Browser LOG     target: kanban-column-content space-y-3 transition-all 
+[00:05:31.623] Browser LOG     ⚠ Não foi drop fora ou draggedCard é null
+[00:05:33.388] Browser LOG     DEBUG - Card data: {"estado":"concluido","hasWaitingParts":false,"ref":"OT-2026-TVDE0001","waitingParts":[]}
+[00:05:33.389] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Albano Abrantes","ref":"OT-2026-TVDE0001"}
+[00:09:33.029] Browser LOG     🔍 URL Params (searchParams): {"ano":null,"cliente":null,"marca":null,"matricula":null,"modelo":null}
+[00:09:33.029] Browser LOG     [2;38;2;124;124;124m%s[0m 🔍 URL Params (searchParams): {"ano":null,"cliente":null,"marca":null,"matricula":null,"modelo":null}
+[00:09:37.372] Browser LOG     🔎 searchVehicleByLicensePlate chamada com: 33-IX-44
+[00:09:37.708] Browser LOG     📦 Resposta da API: {"client":{"email":null,"endereco":null,"id":"11","nif":null,"nome":"Cliente Genérico TVDE Externo","perfil":"TVDE_Externo","telefone":""},"found":true,"vehicle":{"ano":2020,"id":"7","marca":"Renault","matricula":"33-IX-44","modelo":"Captur"}}
+[00:09:37.708] Browser LOG     ✅ Veículo encontrado: {"ano":2020,"marca":"Renault","modelo":"Captur"}
+[00:10:00.321] Server  ERROR   Database error: PrismaClientKnownRequestError: 
+Invalid `prismaAny.orcamentos.create()` invocation in
+C:\laragon\www\CarShopRepairOffice\.next\dev\server\chunks\[root-of-the-server]__26f851e2._.js:292:54
+
+  289     }, 400);
+  290 }
+  291 // Create the budget
+→ 292 const orcamento = await prismaAny.orcamentos.create(
+Unique constraint failed on the constraint: `numero_orcamento`
+[00:10:25.185] Browser LOG     Drag started: {"card":{"cliente_nome":"Cliente Genérico TVDE Externo","contacto_email":null,"contacto_nome":"nelson raio","contacto_telefone":"961376093","data_emissao":"2026-03-10T00:00:00.000Z","estado":"em_aprovacao","id":"12","itens_count":1,"itens_orcamento":[{"criado_em":"2026-03-10T00:01:36.000Z","descricao":"Bateria 12V 70AH","id":28,"notas":null,"orcamento_id":12,"peca_id":22,"percentual_desconto":0,"percentual_imposto":23,"preco_unitario":12,"quantidade":1,"servico_id":null,"tipo_item":"peca","valor_desconto":0,"valor_imposto":0,"valor_total":12}],"mechanic":"N/A","model":"Renault Captur","plate":"33-IX-44","prioridade":"normal","proc":"OR-2026-TVDE0001","total_geral":12},"fromColumnId":"em_aprovacao"}
+[00:10:25.880] Browser LOG     === Document Drop Event ===
+[00:10:25.880] Browser LOG     isInsideColumn: true
+[00:10:25.880] Browser LOG     draggedCard: {"card":{"cliente_nome":"Cliente Genérico TVDE Externo","contacto_email":null,"contacto_nome":"nelson raio","contacto_telefone":"961376093","data_emissao":"2026-03-10T00:00:00.000Z","estado":"em_aprovacao","id":"12","itens_count":1,"itens_orcamento":[{"criado_em":"2026-03-10T00:01:36.000Z","descricao":"Bateria 12V 70AH","id":28,"notas":null,"orcamento_id":12,"peca_id":22,"percentual_desconto":0,"percentual_imposto":23,"preco_unitario":12,"quantidade":1,"servico_id":null,"tipo_item":"peca","valor_desconto":0,"valor_imposto":0,"valor_total":12}],"mechanic":"N/A","model":"Renault Captur","plate":"33-IX-44","prioridade":"normal","proc":"OR-2026-TVDE0001","total_geral":12},"fromColumnId":"em_aprovacao"}
+[00:10:25.880] Browser LOG     target: kanban-column-content space-y-3 transition-all 
+[00:10:25.880] Browser LOG     ⚠ Não foi drop fora ou draggedCard é null
+[00:10:30.070] Browser LOG     Drag started: {"card":{"cliente_nome":"Cliente Genérico TVDE Externo","contacto_email":null,"contacto_nome":"nelson raio","contacto_telefone":"961376093","data_emissao":"2026-03-10T00:00:00.000Z","estado":"em_andamento","id":"12","itens_count":1,"itens_orcamento":[{"criado_em":"2026-03-10T00:01:36.000Z","descricao":"Bateria 12V 70AH","id":28,"notas":null,"orcamento_id":12,"peca_id":22,"percentual_desconto":0,"percentual_imposto":23,"preco_unitario":12,"quantidade":1,"servico_id":null,"tipo_item":"peca","valor_desconto":0,"valor_imposto":0,"valor_total":12}],"mechanic":"N/A","model":"Renault Captur","plate":"33-IX-44","prioridade":"normal","proc":"OT-2026-TVDE0001","total_geral":12},"fromColumnId":"em_andamento"}
+[00:10:30.516] Browser LOG     === Document Drop Event ===
+[00:10:30.516] Browser LOG     isInsideColumn: true
+[00:10:30.516] Browser LOG     draggedCard: {"card":{"cliente_nome":"Cliente Genérico TVDE Externo","contacto_email":null,"contacto_nome":"nelson raio","contacto_telefone":"961376093","data_emissao":"2026-03-10T00:00:00.000Z","estado":"em_andamento","id":"12","itens_count":1,"itens_orcamento":[{"criado_em":"2026-03-10T00:01:36.000Z","descricao":"Bateria 12V 70AH","id":28,"notas":null,"orcamento_id":12,"peca_id":22,"percentual_desconto":0,"percentual_imposto":23,"preco_unitario":12,"quantidade":1,"servico_id":null,"tipo_item":"peca","valor_desconto":0,"valor_imposto":0,"valor_total":12}],"mechanic":"N/A","model":"Renault Captur","plate":"33-IX-44","prioridade":"normal","proc":"OT-2026-TVDE0001","total_geral":12},"fromColumnId":"em_andamento"}
+[00:10:30.516] Browser LOG     target: kanban-column-content space-y-3 transition-all 
+[00:10:30.516] Browser LOG     ⚠ Não foi drop fora ou draggedCard é null
+[00:10:32.186] Browser LOG     DEBUG - Card data: {"estado":"concluido","hasWaitingParts":false,"ref":"OT-2026-TVDE0001","waitingParts":[]}
+[00:10:32.186] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Albano Abrantes","ref":"OT-2026-TVDE0001"}
+[00:10:44.301] Browser LOG     Exporting balance data...
+[00:12:04.492] Server  LOG     ✓ Compiled in 249ms
+[00:16:21.367] Browser LOG     📋 Token carregado do localStorage:
+[00:16:21.367] Browser LOG        Comprimento: 81
+[00:16:21.367] Browser LOG        Primeiros 20 chars: 7-101423-2965119-11e...
+[00:16:21.367] Browser LOG        Últimos 10 chars: ...30f4fd8ed4
+[00:16:21.367] Browser LOG        Idade (ms): 752256
+[00:16:21.367] Browser LOG        Idade (minutos): 12
+[00:16:21.367] Browser LOG     ✅ Token carregado (idade: 12 minutos)
+[00:16:21.367] Browser LOG     [2;38;2;124;124;124m%s[0m 📋 Token carregado do localStorage:
+[00:16:21.367] Browser LOG     [2;38;2;124;124;124m%s[0m    Comprimento: 81
+[00:16:21.367] Browser LOG     [2;38;2;124;124;124m%s[0m    Primeiros 20 chars: 7-101423-2965119-11e...
+[00:16:21.367] Browser LOG     [2;38;2;124;124;124m%s[0m    Últimos 10 chars: ...30f4fd8ed4
+[00:16:21.367] Browser LOG     [2;38;2;124;124;124m%s[0m    Idade (ms): 752259
+[00:16:21.367] Browser LOG     [2;38;2;124;124;124m%s[0m    Idade (minutos): 12
+[00:16:21.367] Browser LOG     [2;38;2;124;124;124m%s[0m ✅ Token carregado (idade: 12 minutos)
+[00:20:26.012] Server  LOG     ✓ Compiled in 219ms
+[00:22:57.885] Browser ERROR   unhandledRejection: TypeError: waitingParts.split is not a function
+[00:23:31.232] Server  LOG     ✓ Compiled in 230ms
+[00:26:02.791] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-TVDE0001","waitingParts":[]}
+[00:26:02.791] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Albano Abrantes","ref":"OT-2026-TVDE0001"}
+[00:26:02.910] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-TVDE0001","waitingParts":[]}
+[00:26:02.910] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Albano Abrantes","ref":"OT-2026-TVDE0001"}

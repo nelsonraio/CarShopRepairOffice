@@ -37,14 +37,14 @@ const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart 
     name: '',
     reference: '',
     category: '',
-    stock: 0,
-    minStock: 0,
-    price: 0,
+    stock: '',
+    minStock: '',
+    price: '',
     supplier: '',
     supplierId: '',
     supplierName: '',
     stockStatus: 'em_stock' as 'em_stock' | 'baixo_stock' | 'esgotado',
-    margem_lucro: 0,
+    margem_lucro: '',
     notas: ''
   });
 
@@ -93,6 +93,10 @@ const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart 
     
     onAddPart({
       ...formData,
+      stock: Number(formData.stock) || 0,
+      minStock: Number(formData.minStock) || 0,
+      price: Number(formData.price) || 0,
+      margem_lucro: Number(formData.margem_lucro) || 0,
       supplier: supplierName,
       supplierId: formData.supplierId,
       supplierName: supplierName
@@ -102,14 +106,14 @@ const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart 
       name: '',
       reference: '',
       category: '',
-      stock: 0,
-      minStock: 0,
-      price: 0,
+      stock: '',
+      minStock: '',
+      price: '',
       supplier: '',
       supplierId: '',
       supplierName: '',
       stockStatus: 'em_stock',
-      margem_lucro: 0,
+      margem_lucro: '',
       notas: ''
     });
     onClose();
@@ -119,7 +123,7 @@ const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart 
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'stock' || name === 'minStock' || name === 'price' || name === 'margem_lucro' ? Number(value) : value
+      [name]: value
     }));
   };
 

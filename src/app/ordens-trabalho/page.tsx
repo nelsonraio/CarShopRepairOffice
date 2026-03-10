@@ -11,7 +11,7 @@ interface WorkOrder {
   mechanic: string;
   openDate: string;
   closeDate: string;
-  status: 'Em Andamento' | 'Aguardando Peças' | 'Concluída' | 'Cancelada';
+  status: 'Em Andamento' | 'Aguardando Peças' | 'Concluída' | 'Entregue' | 'Cancelada';
   priority: 'Baixa' | 'Normal' | 'Alta' | 'Urgente';
   problem: string;
   waitingParts: string;
@@ -172,8 +172,9 @@ const WorkOrdersPage = () => {
     if (!selectedWorkOrder) return;
 
     // Get selected part IDs from workOrderItems
+    const waitingPartsStr = typeof waitingParts === 'string' ? waitingParts : '';
     const selectedPartIds = workOrderItems
-      .filter(item => item.tipo_item === 'peca' && waitingParts.split('\n').map(p => p.trim()).includes(item.descricao))
+      .filter(item => item.tipo_item === 'peca' && waitingPartsStr.split('\n').map(p => p.trim()).includes(item.descricao))
       .map(item => String(item.id));
 
     if (newStatus === 'Aguardando Peças' && selectedPartIds.length === 0) {
@@ -185,7 +186,7 @@ const WorkOrdersPage = () => {
     const updatedOrder: WorkOrder = {
       ...selectedWorkOrder,
       status: newStatus as WorkOrder['status'],
-      closeDate: newStatus === 'Concluída' ? completionDate : (selectedWorkOrder.closeDate || ''),
+      closeDate: (newStatus === 'Concluída' || newStatus === 'Entregue') ? completionDate : (selectedWorkOrder.closeDate || ''),
       waitingParts: newStatus === 'Aguardando Peças' ? (waitingParts || '') : (selectedWorkOrder.waitingParts || '')
     };
 
@@ -199,7 +200,7 @@ const WorkOrdersPage = () => {
         body: JSON.stringify({
           id: selectedWorkOrder.id,
           estado: newStatus,
-          data_conclusao: newStatus === 'Concluída' ? completionDate : null,
+          data_conclusao: (newStatus === 'Concluída' || newStatus === 'Entregue') ? completionDate : null,
           waitingParts: newStatus === 'Aguardando Peças' ? waitingParts : null,
           selectedPartIds: newStatus === 'Aguardando Peças' ? selectedPartIds : []
         })
@@ -225,6 +226,7 @@ const WorkOrdersPage = () => {
       case 'Em Andamento': return 'text-yellow-400 bg-yellow-900/30 border border-yellow-900';
       case 'Aguardando Peças': return 'text-orange-400 bg-orange-900/30 border border-orange-900';
       case 'Concluída': return 'text-green-400 bg-green-900/30 border border-green-900';
+      case 'Entregue': return 'text-blue-400 bg-blue-900/30 border border-blue-900';
       case 'Cancelada': return 'text-red-400 bg-red-900/30 border border-red-900';
       default: return 'text-gray-400 bg-gray-800 border border-gray-700';
     }
@@ -425,6 +427,7 @@ const WorkOrdersPage = () => {
                 <option value="Em Andamento">Em Andamento</option>
                 <option value="Aguardando Peças">Aguardando Peças</option>
                 <option value="Concluída">Concluída</option>
+                <option value="Entregue">Entregue</option>
                 <option value="Cancelada">Cancelada</option>
               </select>
             </div>
@@ -654,11 +657,12 @@ const WorkOrdersPage = () => {
                 <option value="Em Andamento">Em Andamento</option>
                 <option value="Aguardando Peças">Aguardando Peças</option>
                 <option value="Concluída">Concluída</option>
+                <option value="Entregue">Entregue</option>
                 <option value="Cancelada">Cancelada</option>
               </select>
             </div>
 
-            {newStatus === 'Concluída' && (
+            {(newStatus === 'Concluída' || newStatus === 'Entregue') && (
               <div className="mb-4">
                 <label className="block text-gray-400 mb-2 text-sm">Data de Conclusão</label>
                 <input 

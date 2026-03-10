@@ -8,7 +8,7 @@ import { useState, useEffect, useCallback } from 'react';
 interface UseFetchOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   headers?: Record<string, string>;
-  body?: any;
+  body?: unknown;
   skip?: boolean; // Skip fetching on mount
 }
 
@@ -25,7 +25,7 @@ interface UseFetchResult<T> {
  * @param options - Fetch options (method, headers, body, skip)
  * @returns Object with data, loading, error, and refetch function
  */
-export function useFetch<T = any>(
+export function useFetch<T = unknown>(
   url: string,
   options: UseFetchOptions = {}
 ): UseFetchResult<T> {
@@ -60,7 +60,7 @@ export function useFetch<T = any>(
         throw new Error(`Failed to fetch from ${url}`);
       }
 
-      const result = await response.json();
+      const result = (await response.json()) as T;
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -73,7 +73,7 @@ export function useFetch<T = any>(
     if (!options.skip) {
       fetchData();
     }
-  }, []);
+  }, [fetchData, options.skip]);
 
   return { data, loading, error, refetch: fetchData };
 }
@@ -81,7 +81,7 @@ export function useFetch<T = any>(
 /**
  * Custom hook for mutations (POST, PUT, DELETE)
  */
-export function useMutation<T = any>(
+export function useMutation<T = unknown>(
   url: string,
   options: { method?: 'POST' | 'PUT' | 'DELETE' } = {}
 ) {
@@ -89,7 +89,7 @@ export function useMutation<T = any>(
   const [error, setError] = useState<string | null>(null);
 
   const mutate = useCallback(
-    async (body?: any) => {
+    async (body?: unknown): Promise<T> => {
       try {
         setLoading(true);
         setError(null);
@@ -104,7 +104,7 @@ export function useMutation<T = any>(
           throw new Error(`Mutation failed on ${url}`);
         }
 
-        return await response.json();
+        return (await response.json()) as T;
       } catch (err) {
         const message = err instanceof Error ? err.message : 'An error occurred';
         setError(message);

@@ -53,6 +53,14 @@ model cartoes_kanban {
   atualizado_por    Int?
 }
 
+model categorias_peca {
+  id        BigInt    @id @unique(map: "categorias_peca_id") @default(autoincrement()) @db.UnsignedBigInt
+  nome      String    @unique(map: "categorias_peca_nome") @db.VarChar(100)
+  descricao String?   @db.Text
+  ativo     Boolean?  @default(true)
+  criado_em DateTime? @default(now()) @db.Timestamp(0)
+}
+
 model categorias_servico {
   id               BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
   nome             String    @db.VarChar(100)

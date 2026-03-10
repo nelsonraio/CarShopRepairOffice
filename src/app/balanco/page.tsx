@@ -91,8 +91,31 @@ export default function BalancoPage() {
   const endIndex = startIndex + ITEMS_PER_PAGE;
 
   const handleExport = () => {
-    // In a real app, this would export the data
-    console.log("Exporting balance data...");
+    if (filteredProcesses.length === 0) return;
+
+    const headers = ['ID', 'Matrícula', 'Cliente', 'Data Conclusão', 'Valor Entrada (€)', 'Gasto Peças (€)', 'Mão de Obra (€)', 'Lucro (€)'];
+    const rows = filteredProcesses.map(p => [
+      p.id,
+      p.matricula,
+      `"${(p.cliente || '').replace(/"/g, '""')}"`,
+      p.dataConclusao,
+      p.valorEntrada.toFixed(2),
+      p.gastoPecas.toFixed(2),
+      p.maoObra.toFixed(2),
+      p.lucro.toFixed(2)
+    ].join(';'));
+
+    const totalsRow = ['', '', 'TOTAIS', '', totals.totalEntradas.toFixed(2), totals.totalSaidas.toFixed(2), '', totals.lucro.toFixed(2)].join(';');
+
+    const bom = '\uFEFF';
+    const csv = bom + [headers.join(';'), ...rows, '', totalsRow].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `balanco_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (

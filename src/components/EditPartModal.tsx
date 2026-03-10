@@ -38,14 +38,14 @@ const EditPartModal: React.FC<EditPartModalProps> = ({ isOpen, onClose, onEdit, 
     name: '',
     reference: '',
     category: '',
-    stock: 0,
-    minStock: 0,
-    price: 0,
+    stock: '',
+    minStock: '',
+    price: '',
     supplier: '',
     supplierId: '',
     supplierName: '',
     stockStatus: 'em_stock' as 'em_stock' | 'baixo_stock' | 'esgotado',
-    margem_lucro: 0,
+    margem_lucro: '',
     notas: ''
   });
 
@@ -56,14 +56,14 @@ const EditPartModal: React.FC<EditPartModalProps> = ({ isOpen, onClose, onEdit, 
         name: part.name || '',
         reference: part.reference || '',
         category: part.category || '',
-        stock: part.stock || 0,
-        minStock: part.minStock || 0,
-        price: part.price || 0,
+        stock: String(part.stock ?? 0),
+        minStock: String(part.minStock ?? 0),
+        price: String(part.price ?? 0),
         supplier: part.supplier || '',
         supplierId: part.supplierId || '',
         supplierName: part.supplierName || '',
         stockStatus: part.stockStatus || 'em_stock',
-        margem_lucro: part.margem_lucro || 0,
+        margem_lucro: String(part.margem_lucro ?? 0),
         notas: part.notas || ''
       });
     }
@@ -119,14 +119,14 @@ const EditPartModal: React.FC<EditPartModalProps> = ({ isOpen, onClose, onEdit, 
       name: formData.name,
       reference: formData.reference,
       category: formData.category,
-      stock: formData.stock,
-      minStock: formData.minStock,
-      price: formData.price,
+      stock: Number(formData.stock) || 0,
+      minStock: Number(formData.minStock) || 0,
+      price: Number(formData.price) || 0,
       supplier: supplierName,
       supplierId: formData.supplierId,
       supplierName: supplierName,
       stockStatus: formData.stockStatus,
-      margem_lucro: formData.margem_lucro,
+      margem_lucro: Number(formData.margem_lucro) || 0,
       notas: formData.notas
     };
     
@@ -138,7 +138,7 @@ const EditPartModal: React.FC<EditPartModalProps> = ({ isOpen, onClose, onEdit, 
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'stock' || name === 'minStock' || name === 'price' || name === 'margem_lucro' ? Number(value) : value
+      [name]: value
     }));
   };
 

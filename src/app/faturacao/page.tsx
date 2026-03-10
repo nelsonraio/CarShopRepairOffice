@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import CriarFaturaModal from "@/components/CriarFaturaModal";
-import { useFetch, usePagination, useFilters, filterPredicates } from "@/hooks";
+import { useFetch, usePagination } from "@/hooks";
 
 interface Invoice {
   id: number;
@@ -26,6 +26,20 @@ interface Invoice {
   recibo_toconline_id?: string | null;
 }
 
+type RawData = {
+  faturas?: Invoice[];
+  data?: Invoice[];
+};
+
+type EmitirReciboResponse = {
+  success?: boolean;
+  error?: string;
+  details?: unknown;
+  data?: {
+    recibo_id?: string | number;
+  };
+};
+
 
 
 
@@ -40,7 +54,10 @@ const parseDateSafe = (value: unknown): Date | null => {
 
   // Se é um objeto (mas não Date), tenta extrair propriedades comuns de data
   if (typeof value === 'object' && value !== null) {
-    const obj = value as any;
+    const obj = value as Record<string, unknown> & {
+      toISOString?: () => string;
+      getTime?: () => number;
+    };
     
     // Tenta chamar toISOString() se existir
     if (typeof obj.toISOString === 'function') {
@@ -48,7 +65,7 @@ const parseDateSafe = (value: unknown): Date | null => {
         const isoStr = obj.toISOString();
         const parsed = new Date(isoStr);
         return Number.isNaN(parsed.getTime()) ? null : parsed;
-      } catch (e) {
+      } catch {
         // Ignora erro e continua
       }
     }
@@ -65,7 +82,7 @@ const parseDateSafe = (value: unknown): Date | null => {
         const time = obj.getTime();
         const parsed = new Date(time);
         return Number.isNaN(parsed.getTime()) ? null : parsed;
-      } catch (e) {
+      } catch {
         // Ignora erro
       }
     }
@@ -156,73 +173,31 @@ export default function FaturacaoPage() {
       return 'pendente';
     };
 
-    const mapearExternaParaInvoice = (f: any): Invoice => ({
-      id: Number(f.id) || 0,
-      numero_fatura: f.attributes.document_number || '',
-      numero_fatura_toconline: f.attributes.document_number || '',
-      cliente_id: 0,
-      cliente_nome: f.attributes.customer_business_name || '',
-      cliente_nif: f.attributes.customer_tax_registration_number || '',
-      data_emissao: f.attributes.date || '',
-      data_vencimento: f.attributes.due_date || '',
-      valor_total: Number(f.attributes.total_amount) || 0,
-      estado: normalizarEstado(f.attributes.status || 'pendente'),
-      notas: f.attributes.notes || '',
-      toconline_id: String(f.id) // ID do TOConline
-    });
+    const mapearExternaParaInvoice = (f: Record<string, unknown>): Invoice => {
+      const attributes = (f.attributes || {}) as Record<string, unknown>;
 
-    const combinarFaturas = (locais: any[], externasRaw: any[]): Invoice[] => {
-      const externas = externasRaw.map(mapearExternaParaInvoice);
-      const externasPorToconlineId = new Map<string, Invoice>();
-      const usadasExternas = new Set<string>();
-
-      for (const externa of externas) {
-        if (externa.toconline_id) {
-          externasPorToconlineId.set(externa.toconline_id, externa);
-        }
-      }
-
-      const combinadas: Invoice[] = [];
-
-      for (const local of locais as Invoice[]) {
-        const externa = local.toconline_id ? externasPorToconlineId.get(local.toconline_id) : undefined;
-
-        if (externa && externa.toconline_id) {
-          usadasExternas.add(externa.toconline_id);
-          combinadas.push({
-            ...local,
-            numero_fatura_toconline: externa.numero_fatura_toconline ?? externa.numero_fatura ?? local.numero_fatura,
-          });
-        } else {
-          combinadas.push(local);
-        }
-      }
-
-      for (const externa of externas) {
-        if (!externa.toconline_id || !usadasExternas.has(externa.toconline_id)) {
-          combinadas.push(externa);
-        }
-      }
-
-      return combinadas;
+      return {
+        id: Number(f.id) || 0,
+        numero_fatura: String(attributes.document_number || ''),
+        numero_fatura_toconline: String(attributes.document_number || ''),
+        cliente_id: 0,
+        cliente_nome: String(attributes.customer_business_name || ''),
+        cliente_nif: String(attributes.customer_tax_registration_number || ''),
+        data_emissao: String(attributes.date || ''),
+        data_vencimento: String(attributes.due_date || ''),
+        valor_total: Number(attributes.total_amount) || 0,
+        estado: normalizarEstado(String(attributes.status || 'pendente')),
+        notas: String(attributes.notes || ''),
+        toconline_id: String(f.id) // ID do TOConline
+      };
     };
 
     // Data fetching
-    const { data: rawData = {}, loading, refetch } = useFetch<any>('/api/faturas');
-    const invoices = (Array.isArray(rawData) ? rawData : (rawData?.faturas || rawData?.data || [])) || [];
+    const { data: rawData = {}, loading, refetch } = useFetch<Invoice[] | RawData>('/api/faturas');
+    const invoices = Array.isArray(rawData)
+      ? rawData
+      : ((rawData as RawData)?.faturas || (rawData as RawData)?.data || []);
     const searchParams = useSearchParams();
-
-    // Filtering (search + status)
-    const filterConfig = {
-      search: filterPredicates.search(['cliente_nome', 'cliente_nif', 'numero_fatura', 'ordem_trabalho_ref', 'veiculo_matricula']),
-      status: filterPredicates.exact('estado'),
-    };
-    const { filters, setFilter } = useFilters(invoices, filterConfig);
-
-    // Date filtering (manual, as it's complex with multiple date range options)
-    // Pagination
-    const { currentPage, totalPages, paginatedItems: paginatedInvoices, nextPage, prevPage } = 
-      usePagination(invoices, ITEMS_PER_PAGE, [filters.search, filters.status]);
 
     // Keep additional filters as useState (date range and modal)
     const [searchTerm, setSearchTerm] = useState("");
@@ -238,7 +213,7 @@ export default function FaturacaoPage() {
 
     const TOCONLINE_REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI || 'https://pond-computer-hear-initiatives.trycloudflare.com/callbackr';
 
-    const iniciarFluxoOAuth = () => {
+    const iniciarFluxoOAuth = useCallback(() => {
       const clientId = process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID || 'pt999999990_c101423-6604ef0f5744561b';
       const authUrl =
         'https://app7.toconline.pt/oauth/auth?' +
@@ -251,7 +226,11 @@ export default function FaturacaoPage() {
 
       setAuthStatus('pending');
       window.location.assign(authUrl);
-    };
+    }, [TOCONLINE_REDIRECT_URI]);
+
+  const carregarFaturasCombinadas = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
 
   // Carregar faturas da API
   useEffect(() => {
@@ -325,7 +304,7 @@ export default function FaturacaoPage() {
     } else if (!tokenSalvo && authParam !== 'error') {
       iniciarFluxoOAuth();
     }
-  }, [searchParams]);
+  }, [searchParams, iniciarFluxoOAuth, carregarFaturasCombinadas]);
 
   // Mostrar toast de autenticacao por 5 segundos (sucesso/erro)
   useEffect(() => {
@@ -340,13 +319,8 @@ export default function FaturacaoPage() {
     return () => clearTimeout(timer);
   }, [authStatus, authReasonMsg]);
 
-  // Busca faturas locais e externas e une os dados
-  const carregarFaturasCombinadas = async () => {
-    await refetch();
-  };
-
   // Fazer download de PDF da fatura
-  const handleDownloadPDF = async (faturaId: number, numeroFatura: string) => {
+  const handleDownloadPDF = async (faturaId: number, _numeroFatura: string) => {
     if (!oauthToken) {
       alert('⚠️ Token OAuth2 não configurado. Aguarde a autenticação automática e tente novamente.');
       return;
@@ -375,7 +349,7 @@ export default function FaturacaoPage() {
   };
 
   // Fazer download de PDF do recibo
-  const handleDownloadRecibo = async (faturaId: number, numeroFatura: string) => {
+  const handleDownloadRecibo = async (faturaId: number, _numeroFatura: string) => {
     if (!oauthToken) {
       alert('⚠️ Token OAuth2 não configurado. Aguarde a autenticação automática e tente novamente.');
       return;
@@ -438,7 +412,7 @@ export default function FaturacaoPage() {
         body: JSON.stringify({ token: oauthToken })
       });
 
-      const data = await response.json() as any;
+      const data: EmitirReciboResponse = await response.json();
 
       if (response.ok && data.success) {
         console.log('[Emitir Recibo] Sucesso:', data);
@@ -461,25 +435,6 @@ export default function FaturacaoPage() {
       console.error('[Emitir Recibo] Exception:', error);
     }
   };
-
-  // Anular fatura
-  const handleAnularFatura = async (faturalId: number, numeroFatura: string) => {
-    if (confirm(`Tem a certeza que deseja anular a fatura ${numeroFatura}?`)) {
-      try {
-        const response = await fetch(`/api/faturas/${faturalId}`, {
-          method: 'DELETE'
-        });
-
-        if (response.ok) {
-          await refetch();
-          alert('Fatura anulada com sucesso!');
-        }
-      } catch (error) {
-        alert('Erro ao anular fatura');
-        console.error(error);
-      }
-    }
-  }
 
   const getNumeroFaturaExibicao = (invoice: Invoice) => {
     return invoice.numero_fatura_toconline || invoice.numero_fatura;
@@ -528,6 +483,10 @@ export default function FaturacaoPage() {
 
     return matchesSearch && matchesStatus && matchesDate;
   });
+
+  // Pagination on filtered data
+  const { currentPage, totalPages, paginatedItems: paginatedInvoices, nextPage, prevPage } = 
+    usePagination(filteredInvoices, ITEMS_PER_PAGE, [searchTerm, statusFilter, dateFilter, startDate, endDate]);
 
   // Calcular totais para os stats
   // Total faturado: todas as faturas (independente do status) com os filtros de pesquisa e data

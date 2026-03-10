@@ -1,5 +1,4 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import {
   successResponse,
   errorResponse,
@@ -9,7 +8,6 @@ import {
   mapFrontendStatusToDb,
   mapPriority,
   formatDatePt,
-  parseNum as safeParse,
   buildDataMap,
   extractUniqueIds
 } from '@/lib/api-utils';
@@ -17,12 +15,57 @@ import {
 const prisma = new PrismaClient({
   log: ['error'],
 });
-const prismaAny = prisma as any;
+
+type WorkOrderItemLike = {
+  id?: number | bigint;
+  tipo_item?: string;
+  descricao?: string | null;
+  quantidade?: number | string | Prisma.Decimal | null;
+  preco_unitario?: number | string | Prisma.Decimal | null;
+  valor_total?: number | string | Prisma.Decimal | null;
+  aguarda_peca?: boolean | null;
+  type?: string;
+  servico_id?: number | string | null;
+  peca_id?: number | string | null;
+  name?: string;
+  quantity?: number | string | null;
+  unitPrice?: number | string | null;
+  desconto?: number | string | null;
+  valor_desconto?: number | string | Prisma.Decimal | null;
+  valor_imposto?: number | string | Prisma.Decimal | null;
+  total?: number | string | null;
+  notas?: string | null;
+  notes?: string | null;
+};
+
+type WorkOrderRequestBody = {
+  ref_ordem_trabalho: string;
+  cliente_id: number | string;
+  veiculo_id?: number | string | null;
+  mecanico_id?: number | string | null;
+  orcamento_id?: number | string | null;
+  data_inicio?: string | null;
+  data_conclusao?: string | null;
+  estado?: string | null;
+  kms?: number | string | null;
+  descricao_problema?: string | null;
+  trabalho_realizado?: string | null;
+  recomendacoes?: string | null;
+  contacto_nome?: string | null;
+  contacto_telefone?: string | null;
+  contacto_email?: string | null;
+  total_pecas?: number | string | null;
+  total_mao_obra?: number | string | null;
+  total_desconto?: number | string | null;
+  total_imposto?: number | string | null;
+  total_geral?: number | string | null;
+  items?: WorkOrderItemLike[];
+};
 
 /**
  * Format a work order item for API response
  */
-const formatWorkOrderItem = (item: any) => ({
+const formatWorkOrderItem = (item: WorkOrderItemLike) => ({
   id: Number(item.id),
   tipo_item: item.tipo_item,
   descricao: item.descricao ?? '',
@@ -34,7 +77,7 @@ const formatWorkOrderItem = (item: any) => ({
 /**
  * Format waiting parts from order items
  */
-const getWaitingParts = (items: any[]) =>
+const getWaitingParts = (items: WorkOrderItemLike[]) =>
   (items || [])
     .filter(item => item.tipo_item === 'peca' && item.aguarda_peca)
     .map(item => ({
@@ -47,7 +90,7 @@ const getWaitingParts = (items: any[]) =>
 /**
  * Parse work order data from request body
  */
-const parseWorkOrderData = (body: any) => {
+const parseWorkOrderData = (body: WorkOrderRequestBody) => {
   const {
     ref_ordem_trabalho,
     cliente_id,
@@ -74,17 +117,17 @@ const parseWorkOrderData = (body: any) => {
 
   return {
     ref_ordem_trabalho,
-    cliente_id: parseInt(cliente_id),
-    mecanico_id: mecanico_id ? parseInt(mecanico_id) : null,
+    cliente_id: typeof cliente_id === 'number' ? cliente_id : parseInt(cliente_id),
+    mecanico_id: mecanico_id ? (typeof mecanico_id === 'number' ? mecanico_id : parseInt(String(mecanico_id))) : null,
     orcamento_id: orcamento_id ? BigInt(orcamento_id) : null,
-    veiculo_id: veiculo_id ? BigInt(veiculo_id) : null,
+    veiculo_id: BigInt(veiculo_id || 0),
     data_inicio: data_inicio ? new Date(data_inicio) : new Date(),
     data_conclusao: data_conclusao ? new Date(data_conclusao) : null,
     estado: estado || 'em_andamento',
-    kms: kms ? parseInt(kms) : null,
-    descricao_problema,
-    trabalho_realizado,
-    recomendacoes,
+    kms: kms ? (typeof kms === 'number' ? kms : parseInt(String(kms))) : null,
+    descricao_problema: descricao_problema ?? null,
+    trabalho_realizado: trabalho_realizado ?? null,
+    recomendacoes: recomendacoes ?? null,
     contacto_nome: contacto_nome || null,
     contacto_telefone: contacto_telefone || null,
     contacto_email: contacto_email || null,
@@ -100,15 +143,15 @@ const parseWorkOrderData = (body: any) => {
 /**
  * Create work order items in database
  */
-const createWorkOrderItems = async (orderId: bigint, items: any[]) => {
+const createWorkOrderItems = async (orderId: bigint, items: WorkOrderItemLike[]) => {
   if (!items || items.length === 0) return;
 
-  const workOrderItems = items.map((item: any) => ({
+  const workOrderItems = items.map((item) => ({
     ordem_trabalho_id: orderId,
     tipo_item: item.tipo_item || (item.type === 'service' ? 'servico' : 'peca'),
-    servico_id: item.servico_id || (item.servico_id ? parseInt(item.servico_id) : null),
-    peca_id: item.peca_id || (item.peca_id ? parseInt(item.peca_id) : null),
-    descricao: item.descricao || item.name,
+    servico_id: item.servico_id ? parseInt(String(item.servico_id), 10) : null,
+    peca_id: item.peca_id ? parseInt(String(item.peca_id), 10) : null,
+    descricao: item.descricao || item.name || '',
     quantidade: parseNum(item.quantidade || item.quantity) || 1,
     preco_unitario: parseNum(item.preco_unitario || item.unitPrice) || 0,
     valor_desconto: parseNum(item.valor_desconto || item.desconto) || 0,
@@ -189,13 +232,13 @@ export async function POST(request: Request) {
     } = parseWorkOrderData(body);
 
     // Create work order
-    const ordemTrabalho = await prismaAny.ordens_trabalho.create({
+    const ordemTrabalho = await prisma.ordens_trabalho.create({
       data: {
         ref_ordem_trabalho,
         cliente_id,
-        mecanico_id,
-        orcamento_id,
-        veiculo_id,
+        mecanico_id: mecanico_id,
+        orcamento_id: orcamento_id,
+        veiculo_id: veiculo_id,
         data_inicio,
         data_conclusao,
         estado,
@@ -215,7 +258,7 @@ export async function POST(request: Request) {
     });
 
     // Create work order items
-    await createWorkOrderItems(ordemTrabalho.id, items);
+    await createWorkOrderItems(ordemTrabalho.id, items || []);
 
     return successResponse(
       {
@@ -246,7 +289,7 @@ export async function GET(request: Request) {
 
     // Single work order lookup
     if (id) {
-      const order = await prismaAny.ordens_trabalho.findUnique({
+      const order = await prisma.ordens_trabalho.findUnique({
         where: { ref_ordem_trabalho: id },
         include: {
           mecanico: true,
@@ -293,7 +336,15 @@ export async function GET(request: Request) {
         orcamento: order.orcamento ? {
           id: String(order.orcamento.id),
           ref_orcamento: order.orcamento.ref_orcamento,
-          itens_orcamento: (order.orcamento.itens_orcamento || []).map((item: any) => ({
+          itens_orcamento: (order.orcamento.itens_orcamento || []).map((item: {
+            id: number | bigint;
+            orcamento_id: number | bigint;
+            descricao?: string | null;
+            quantidade?: number | string | Prisma.Decimal | null;
+            valor_total?: number | string | Prisma.Decimal | null;
+            servico_id?: number | bigint | null;
+            peca_id?: number | bigint | null;
+          }) => ({
             id: String(item.id),
             orcamento_id: String(item.orcamento_id),
             descricao: item.descricao ?? '',
@@ -316,7 +367,7 @@ export async function GET(request: Request) {
     }
 
     // List all work orders
-    const orders = await prismaAny.ordens_trabalho.findMany({
+    const orders = await prisma.ordens_trabalho.findMany({
       orderBy: { criado_em: 'desc' },
       include: {
         mecanico: true,
@@ -361,10 +412,11 @@ export async function GET(request: Request) {
     const mecanicoMap = buildDataMap(mecanicos, 'id');
 
     // Transform orders for response
-    const transformedOrders = orders.map((order: any) => {
+    const transformedOrders = orders.map((order) => {
       const cliente = clientMap.get(order.cliente_id);
       const veiculo = veiculoMap.get(Number(order.veiculo_id));
-      const mecanico = mecanicoMap.get(order.mecanico_id) || order.mecanico;
+      const mecanicoFromMap = order.mecanico_id != null ? mecanicoMap.get(order.mecanico_id) : undefined;
+      const mecanico = mecanicoFromMap || order.mecanico;
 
       return {
         id: order.ref_ordem_trabalho,
@@ -460,7 +512,7 @@ export async function PATCH(request: Request) {
     const dbStatus = estado ? mapFrontendStatusToDb(estado) : undefined;
 
     // Build update data
-    const updateData: any = {};
+    const updateData: Prisma.ordens_trabalhoUpdateInput = {};
 
     if (dbStatus) {
       updateData.estado = dbStatus;
@@ -515,11 +567,11 @@ export async function PATCH(request: Request) {
       // Mark selected parts as waiting
       if (selectedPartIds && Array.isArray(selectedPartIds) && selectedPartIds.length > 0) {
         const numericIds = selectedPartIds
-          .map((id: any) => {
+          .map((id: unknown) => {
             const num = typeof id === 'string' ? parseInt(id, 10) : Number(id);
             return isNaN(num) ? null : num;
           })
-          .filter((id: any): id is number => id !== null);
+          .filter((id: number | null): id is number => id !== null);
 
         if (numericIds.length > 0) {
           await prisma.itens_ordem_trabalho.updateMany({

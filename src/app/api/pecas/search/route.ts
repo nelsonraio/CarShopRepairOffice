@@ -25,7 +25,8 @@ export async function GET(request: Request) {
       select: {
         id: true,
         nome: true,
-        preco_venda: true
+        preco_venda: true,
+        margem_lucro: true
       },
       orderBy: { nome: 'asc' },
       take: 10
@@ -35,7 +36,8 @@ export async function GET(request: Request) {
     const serializedPecas = pecas.map((peca: typeof pecas[number]) => ({
       id: String(peca.id),
       nome: peca.nome,
-      preco_venda: peca.preco_venda ? peca.preco_venda.toNumber() : 0
+      preco_venda: peca.preco_venda ? peca.preco_venda.toNumber() : 0,
+      margem_lucro: peca.margem_lucro ? Number(peca.margem_lucro) : 0
     }));
 
     return NextResponse.json(serializedPecas);

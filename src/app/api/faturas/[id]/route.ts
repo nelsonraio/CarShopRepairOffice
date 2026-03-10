@@ -1,40 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
 const prisma = new PrismaClient();
-
-// Configurações OAuth TOConline
-const CLIENT_ID = process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID || 'pt999999990_c101423-6604ef0f5744561b';
-const CLIENT_SECRET = process.env.OAUTH_CLIENT_SECRET || '8f753cea78d995b5b6c877933495bf2b';
-const OAUTH_URL = process.env.NEXT_PUBLIC_OAUTH_URL || 'https://app7.toconline.pt/oauth';
-const REDIRECT_URI = 'https://oauth.pstmn.io/v1/callback';
-const SCOPE = 'commercial';
-
-async function getOAuthToken(code: string) {
-  const basicAuth = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
-  
-  const res = await fetch(`${OAUTH_URL}/token`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Accept': 'application/json',
-      'Authorization': `Basic ${basicAuth}`
-    },
-    body: new URLSearchParams({
-      grant_type: 'authorization_code',
-      code,
-      redirect_uri: REDIRECT_URI,
-      scope: SCOPE
-    })
-  });
-  
-  const json = await res.json();
-  
-  if (!json.access_token) {
-    throw new Error('Falha ao obter access_token: ' + JSON.stringify(json));
-  }
-  return json.access_token;
-}
 
 
 // Simula API da TOQ Online - Obter Fatura por ID
@@ -99,7 +66,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const { id } = await params;
     const body = await req.json();
 
-    const updateData: any = { atualizado_em: new Date() };
+    const updateData: Prisma.faturasUpdateInput = { atualizado_em: new Date() };
     if (body.estado !== undefined) updateData.estado = body.estado;
     if (body.valor_pago !== undefined) updateData.valor_pago = parseFloat(body.valor_pago);
     if (body.notas !== undefined) updateData.notas = body.notas;
@@ -152,7 +119,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const { id } = await params;
     const body = await req.json();
 
-    const updateData: any = { atualizado_em: new Date() };
+    const updateData: Prisma.faturasUpdateInput = { atualizado_em: new Date() };
     if (body.estado !== undefined) updateData.estado = body.estado;
     if (body.valor_pago !== undefined) updateData.valor_pago = parseFloat(body.valor_pago);
     if (body.notas !== undefined) updateData.notas = body.notas;
@@ -266,7 +233,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 // Simula API da TOQ Online - Eliminar Fatura (Anular)
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
 

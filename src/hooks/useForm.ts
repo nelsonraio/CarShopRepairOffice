@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
  * Hook generalizado para gerenciar estado de formulário
  * Reduz boilerplate e unifica padrão de formulários em toda a app
  */
-export const useForm = <T extends Record<string, any>>(
+export const useForm = <T extends Record<string, unknown>>(
   initialValues: T,
   onSubmit: (values: T) => Promise<void> | void
 ) => {
@@ -32,7 +32,7 @@ export const useForm = <T extends Record<string, any>>(
   }, [errors]);
 
   // Atualizar múltiplos campos
-  const setFieldValue = useCallback((name: keyof T, value: any) => {
+  const setFieldValue = useCallback((name: keyof T, value: unknown) => {
     setValues(prev => ({
       ...prev,
       [name]: value
@@ -89,7 +89,7 @@ export const useModal = (initialOpen = false) => {
  * Hook para gerenciar fetch de dados de API
  * Cuida de loading, erro e cache
  */
-export const useFetch = <T,>(url: string, dependencies: any[] = []) => {
+export const useFetch = <T,>(url: string, dependencies: ReadonlyArray<unknown> = []) => {
   const [data, setData] = useState<T | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

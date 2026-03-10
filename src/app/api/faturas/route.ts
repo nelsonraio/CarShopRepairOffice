@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { 
   successResponse, 
   errorResponse, 
@@ -12,10 +12,44 @@ import {
 
 const prisma = new PrismaClient();
 
+type InvoiceRecord = {
+  id: bigint | number;
+  numero_fatura: string;
+  cliente_id: number;
+  ordem_trabalho_id: number | null;
+  data_emissao: Date | string | null;
+  data_vencimento: Date | string | null;
+  estado: string | null;
+  subtotal: unknown;
+  valor_imposto: unknown;
+  valor_desconto: unknown;
+  valor_total: unknown;
+  valor_pago: unknown;
+  notas: string | null;
+  toconline_id?: string | null;
+  recibo_toconline_id?: string | null;
+  criado_em: Date | string | null;
+};
+
+type ClientInfo = { id?: number; nome?: string | null; nif?: string | null };
+type OrderInfo = {
+  id?: number;
+  ref_ordem_trabalho?: string;
+  veiculo?: {
+    marca?: string;
+    modelo?: string;
+    matricula?: string;
+  } | null;
+};
+
 /**
  * Format invoice data for API response
  */
-const formatInvoice = (invoice: any, clientMap: Map<any, any>, orderMap: Map<any, any>) => ({
+const formatInvoice = (
+  invoice: InvoiceRecord,
+  clientMap: Map<number, ClientInfo>,
+  orderMap: Map<number, OrderInfo>
+) => ({
   id: Number(invoice.id),
   numero_fatura: invoice.numero_fatura,
   cliente_id: invoice.cliente_id,
@@ -56,7 +90,7 @@ export async function GET(req: NextRequest) {
     const { skip, take } = parsePaginationParams(new URL(req.url));
     const status = searchParams.get('status');
 
-    const where: any = {};
+    const where: { estado?: string } = {};
     if (status) where.estado = status;
 
     // Fetch invoices with pagination
@@ -86,7 +120,7 @@ export async function GET(req: NextRequest) {
         : Promise.resolve([]),
       orderIds.length
         ? prisma.ordens_trabalho.findMany({
-            where: { id: { in: orderIds.map(id => BigInt(id)) } },
+            where: { id: { in: (orderIds as (number | bigint)[]).map(id => BigInt(id)) } },
             select: {
               id: true,
               ref_ordem_trabalho: true,
@@ -98,8 +132,8 @@ export async function GET(req: NextRequest) {
         : Promise.resolve([])
     ]);
 
-    const clientMap = buildDataMap(clientes, 'id');
-    const orderMap = buildDataMap(
+    const clientMap = buildDataMap<number, ClientInfo>(clientes, 'id');
+    const orderMap = buildDataMap<number, OrderInfo>(
       ordensTrabalho.map(o => ({ ...o, id: Number(o.id) })),
       'id'
     );

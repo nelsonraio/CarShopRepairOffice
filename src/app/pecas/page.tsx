@@ -54,6 +54,7 @@ export default function PartsPage() {
   // Data fetching
   const { data: rawParts, loading, refetch } = useFetch<any[]>('/api/pecas');
   const { data: rawSuppliers = [], loading: suppliersLoading } = useFetch<any[]>('/api/fornecedores');
+  const { data: categorias = [] } = useFetch<string[]>('/api/categorias-pecas');
 
   // Map raw API data to Part interface
   const parts: Part[] = (rawParts || []).map((peca: any) => ({
@@ -65,6 +66,7 @@ export default function PartsPage() {
     supplierId: peca.fornecedor_id ? String(peca.fornecedor_id) : '',
     supplierName: peca.fornecedor_nome || '',
     stock: peca.quantidade_stock || 0,
+    minStock: peca.nivel_stock_minimo || 0,
     price: parseFloat(peca.preco_venda) || 0,
     stockStatus: peca.ativo === false ? 'esgotado' : 
                 (peca.quantidade_stock || 0) === 0 ? 'esgotado' :
@@ -126,7 +128,7 @@ export default function PartsPage() {
           referencia: newPart.reference,
           categoria: newPart.category,
           stock: newPart.stock,
-          minStock: 0,
+          minStock: newPart.minStock || 0,
           price: newPart.price,
           fornecedor_id: newPart.supplierId ? parseInt(newPart.supplierId) : null,
           supplierName: newPart.supplierName,
@@ -264,21 +266,9 @@ export default function PartsPage() {
               className="bg-gray-800 border border-gray-600 text-gray-300 rounded-none focus:ring-brand-yellow focus:border-brand-yellow px-4 py-2"
             >
               <option value="">Todas as Categorias</option>
-              <option value="motor">Motor</option>
-              <option value="travoes">Travões</option>
-              <option value="suspensao">Suspensão</option>
-              <option value="transmissao">Transmissão</option>
-              <option value="sistema-eletrico">Sistema Elétrico</option>
-              <option value="sistema-arrefecimento">Sistema de Arrefecimento</option>
-              <option value="filtros">Filtros</option>
-              <option value="acessorios">Acessórios</option>
-              <option value="carrocaria">Carroçaria</option>
-              <option value="vidros">Vidros</option>
-              <option value="pneus-rodas">Pneus e Rodas</option>
-              <option value="lubrificantes">Lubrificantes</option>
-              <option value="exaustao">Exaustão</option>
-              <option value="direcao">Direção</option>
-              <option value="ar-condicionado">Ar Condicionado</option>
+              {(categorias || []).map((cat: string) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
             </select>
             <select
               value={filters.stock || ''}

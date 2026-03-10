@@ -62,6 +62,8 @@ interface Appointment {
   ref_agendamento: string;
   veiculo_modelo: string;
   veiculo_matricula: string;
+  veiculo_marca?: string;
+  veiculo_ano?: string;
   mecanico_nome: string;
   cliente_nome: string;
   cliente_telefone?: string | null;
@@ -107,6 +109,8 @@ interface KanbanCard {
   proc: string;
   plate?: string;
   model?: string;
+  veiculo_marca?: string;
+  veiculo_ano?: string;
   mechanic?: string;
   estado?: string;
   cliente_nome?: string;
@@ -470,6 +474,8 @@ export default function KanbanBoard() {
             proc: appt.ref_agendamento,
             plate: appt.veiculo_matricula,
             model: appt.veiculo_modelo,
+            ...(appt.veiculo_marca && { veiculo_marca: appt.veiculo_marca }),
+            ...(appt.veiculo_ano && { veiculo_ano: appt.veiculo_ano }),
             mechanic: appt.mecanico_nome || 'N/A',
             estado: 'em_recepcao',
             cliente_nome: appt.cliente_nome,
@@ -799,8 +805,20 @@ export default function KanbanBoard() {
       try {
         const matricula = card.plate || '';
         const cliente = card.cliente_nome || '';
+        const marca = card.veiculo_marca || '';
+        const modelo = card.model || '';
+        const ano = card.veiculo_ano || '';
 
-        console.log('Drag from Recepção to Aprovação', { matricula, cliente, card });
+        console.log('=== Drag from Recepção to Aprovação ===');
+        console.log('Card completo:', card);
+        console.log('Matricula:', matricula);
+        console.log('Cliente:', cliente);
+        console.log('Marca:', marca);
+        console.log('Modelo:', modelo);
+        console.log('Ano:', ano);
+        console.log('card.veiculo_marca:', card.veiculo_marca);
+        console.log('card.model:', card.model);
+        console.log('card.veiculo_ano:', card.veiculo_ano);
 
         // NÃO apagar o agendamento neste momento!
 
@@ -823,14 +841,37 @@ export default function KanbanBoard() {
             setPendingCard(card);
             setPendingVehicleData({
               licensePlate: matricula,
-              clientName: cliente
+              clientName: cliente,
+              make: marca,
+              model: modelo,
+              year: ano,
+              marca: marca,
+              modelo: modelo,
+              ano: ano
             });
             setIsNewVehicleModalOpen(true);
             return;
           } else {
             // Veículo existe - redirecionar para novo orçamento com dados pré-preenchidos
             const vehicle = vehicleData.vehicle;
-            const newUrl = `/orcamentos/novo?agendamento_id=${encodeURIComponent(card.id)}&matricula=${encodeURIComponent(vehicle.matricula)}&cliente=${encodeURIComponent(cliente)}&from=kanban`;
+            const params = new URLSearchParams({
+              agendamento_id: card.id,
+              matricula: vehicle.matricula,
+              cliente: cliente,
+              from: 'kanban'
+            });
+            
+            // Usar dados do card se disponíveis, caso contrário do veículo encontrado
+            const marcaFinal = marca || vehicle.marca || '';
+            const modeloFinal = modelo || vehicle.modelo || '';
+            const anoFinal = ano || vehicle.ano || '';
+            
+            if (marcaFinal) params.set('marca', marcaFinal);
+            if (modeloFinal) params.set('modelo', modeloFinal);
+            if (anoFinal) params.set('ano', String(anoFinal));
+            
+            const newUrl = `/orcamentos/novo?${params.toString()}`;
+            console.log('URL params:', params.toString());
             console.log('Redirecting to:', newUrl);
             router.push(newUrl);
             return;
@@ -1171,9 +1212,25 @@ export default function KanbanBoard() {
     
     // Redirecionar para a página de novo orçamento com a matricula pré-preenchida
     if (pendingCard && pendingCard.plate) {
-      router.push(
-        `/orcamentos/novo?agendamento_id=${encodeURIComponent(pendingCard.id)}&matricula=${encodeURIComponent(pendingCard.plate)}&cliente=${encodeURIComponent(pendingCard.cliente_nome || '')}&from=kanban`
-      );
+      const params = new URLSearchParams({
+        agendamento_id: pendingCard.id,
+        matricula: pendingCard.plate,
+        cliente: pendingCard.cliente_nome || '',
+        from: 'kanban'
+      });
+      
+      // Adicionar marca, modelo e ano se disponíveis
+      if (pendingCard.veiculo_marca || pendingVehicleData?.marca) {
+        params.set('marca', pendingCard.veiculo_marca || pendingVehicleData?.marca || '');
+      }
+      if (pendingCard.model || pendingVehicleData?.modelo) {
+        params.set('modelo', pendingCard.model || pendingVehicleData?.modelo || '');
+      }
+      if (pendingCard.veiculo_ano || pendingVehicleData?.ano) {
+        params.set('ano', pendingCard.veiculo_ano || pendingVehicleData?.ano || '');
+      }
+      
+      router.push(`/orcamentos/novo?${params.toString()}`);
       setPendingCard(null);
     }
   };
@@ -1184,9 +1241,24 @@ export default function KanbanBoard() {
     setIsNewVehicleModalOpen(false);
     
     if (pendingCard && pendingCard.plate && pendingVehicleData) {
-      router.push(
-        `/orcamentos/novo?agendamento_id=${encodeURIComponent(pendingCard.id)}&matricula=${encodeURIComponent(pendingVehicleData.veiculo_matricula)}&cliente=${encodeURIComponent(pendingCard.cliente_nome || '')}&from=kanban`
-      );
+      const params = new URLSearchParams({
+        agendamento_id: pendingCard.id,
+        matricula: pendingVehicleData.licensePlate || pendingCard.plate,
+        cliente: pendingCard.cliente_nome || '',
+        from: 'kanban'
+      });
+
+      if (pendingVehicleData.marca || pendingCard.veiculo_marca) {
+        params.set('marca', pendingVehicleData.marca || pendingCard.veiculo_marca || '');
+      }
+      if (pendingVehicleData.modelo || pendingCard.model) {
+        params.set('modelo', pendingVehicleData.modelo || pendingCard.model || '');
+      }
+      if (pendingVehicleData.ano || pendingCard.veiculo_ano) {
+        params.set('ano', pendingVehicleData.ano || pendingCard.veiculo_ano || '');
+      }
+
+      router.push(`/orcamentos/novo?${params.toString()}`);
       setPendingCard(null);
     }
   };
@@ -1313,6 +1385,7 @@ export default function KanbanBoard() {
           setIsNewVehicleModalOpen(false);
           setPendingCard(null);
           setPendingVehicleData(null);
+          fetchData();
         }}
         onSuccess={handleNewVehicleSuccess}
         initialData={pendingVehicleData}
