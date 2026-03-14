@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { registarAuditoria } from '@/lib/auditoria';
 
 // @ts-ignore
 const prisma = new PrismaClient({
@@ -28,6 +29,8 @@ export async function PUT(
         ativo: body.ativo !== undefined ? body.ativo : true
       }
     });
+
+    await registarAuditoria('UPDATE', 'fornecedores', id, null, { nome: body.nome, email: body.email }, request);
 
     return NextResponse.json(fornecedor);
   } catch (error) {
@@ -90,6 +93,8 @@ export async function DELETE(
     await prisma.fornecedores.delete({
       where: { id }
     });
+
+    await registarAuditoria('DELETE', 'fornecedores', id, null, null, request);
 
     return NextResponse.json({ success: true });
   } catch (error) {

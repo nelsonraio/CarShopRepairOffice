@@ -9,6 +9,10 @@ async function main() {
     await prisma.veiculos.deleteMany();
     await prisma.mecanicos.deleteMany();
     await prisma.clientes.deleteMany();
+  // Perfis
+  const perfilNormal = await prisma.perfis_clientes.findFirst({ where: { nome: 'Normal' } });
+  const perfilEmpresa = await prisma.perfis_clientes.findFirst({ where: { nome: 'Empresa' } });
+
   // Clientes
   const cliente1 = await prisma.clientes.create({
     data: {
@@ -17,7 +21,7 @@ async function main() {
       endereco: 'Rua das Flores, 10',
       telefone: '912345678',
       email: 'joao.silva@email.com',
-      perfil: 'Normal',
+      perfil_id: perfilNormal ? perfilNormal.id : null,
       ativo: true
     }
   });
@@ -28,7 +32,7 @@ async function main() {
       endereco: 'Av. Central, 100',
       telefone: '219876543',
       email: 'contato@xpto.com',
-      perfil: 'Empresa',
+      perfil_id: perfilEmpresa ? perfilEmpresa.id : null,
       ativo: true
     }
   });

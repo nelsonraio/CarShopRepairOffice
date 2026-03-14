@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { registarAuditoria } from '@/lib/auditoria';
 
 // @ts-ignore
 const prisma = new PrismaClient();
@@ -15,7 +16,7 @@ export async function GET(
     const veiculo = await prisma.veiculos.findUnique({
       where: { id: vehicleId },
       include: {
-        cliente: true
+        cliente: { include: { perfil_cliente: true } }
       }
     });
 
@@ -32,7 +33,8 @@ export async function GET(
       clientEmail: veiculo.cliente?.email || '',
       clientNif: veiculo.cliente?.nif || '',
       clientAddress: veiculo.cliente?.endereco || '',
-      clientProfile: veiculo.cliente?.perfil === 'TVDE_Interno' ? 'TVDE Interno' : veiculo.cliente?.perfil === 'TVDE_Externo' ? 'TVDE Externo' : (veiculo.cliente?.perfil || 'Normal'),
+      clientProfileId: veiculo.cliente?.perfil_id || null,
+      clientProfile: veiculo.cliente?.perfil_cliente ? veiculo.cliente.perfil_cliente.nome : 'Normal',
       make: veiculo.marca,
       model: veiculo.modelo,
       licensePlate: veiculo.matricula,
@@ -95,11 +97,6 @@ export async function PUT(
 
     // Handle client creation/update if client data is provided
     if (body.clientName) {
-      const perfilMap: Record<string, string> = {
-        'TVDE Interno': 'TVDE_Interno',
-        'TVDE Externo': 'TVDE_Externo'
-      };
-
       if (clientId) {
         // Update existing client
         await prisma.clientes.update({
@@ -110,7 +107,7 @@ export async function PUT(
             email: body.clientEmail || '',
             nif: body.clientNif || '',
             endereco: body.clientAddress || '',
-            perfil: perfilMap[body.clientProfile] || body.clientProfile || 'Normal'
+            perfil_id: body.perfil_id ? parseInt(body.perfil_id) : null
           }
         });
       } else {
@@ -122,7 +119,7 @@ export async function PUT(
             email: body.clientEmail || '',
             nif: body.clientNif || '',
             endereco: body.clientAddress || '',
-            perfil: perfilMap[body.clientProfile] || body.clientProfile || 'Normal',
+            perfil_id: body.perfil_id ? parseInt(body.perfil_id) : null,
             data_registo: new Date(),
             visitas: 0,
             total_gasto: 0,
@@ -165,6 +162,8 @@ export async function PUT(
       lastIntervention: veiculo.ultima_intervencao ? veiculo.ultima_intervencao.toLocaleDateString('pt-PT') : ''
     };
 
+    await registarAuditoria('UPDATE', 'veiculos', Number(vehicleId), { matricula: existingVehicle.matricula, marca: existingVehicle.marca, modelo: existingVehicle.modelo }, { marca: body.make, modelo: body.model, matricula: body.licensePlate }, request);
+
     return NextResponse.json(transformedVehicle);
 
   } catch (error) {
@@ -201,10 +200,28 @@ export async function DELETE(
       return NextResponse.json({ error: 'Vehicle not found' }, { status: 404 });
     }
 
+    // Check for related records that prevent deletion
+    const [ordensCount, orcamentosCount] = await Promise.all([
+      prisma.ordens_trabalho.count({ where: { veiculo_id: vehicleId } }),
+      prisma.orcamentos.count({ where: { veiculo_id: vehicleId } }),
+    ]);
+
+    if (ordensCount > 0 || orcamentosCount > 0) {
+      const refs = [];
+      if (ordensCount > 0) refs.push(`${ordensCount} ordem(ns) de trabalho`);
+      if (orcamentosCount > 0) refs.push(`${orcamentosCount} orçamento(s)`);
+      return NextResponse.json(
+        { error: `Não é possível eliminar o veículo. Existem ${refs.join(' e ')} associados.` },
+        { status: 409 }
+      );
+    }
+
     // Delete the vehicle
     await prisma.veiculos.delete({
       where: { id: vehicleId }
     });
+
+    await registarAuditoria('DELETE', 'veiculos', Number(vehicleId), { matricula: existingVehicle.matricula, marca: existingVehicle.marca, modelo: existingVehicle.modelo }, null, request);
 
     return NextResponse.json({ message: 'Vehicle deleted successfully' }, { status: 200 });
 

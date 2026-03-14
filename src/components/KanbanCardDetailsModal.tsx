@@ -397,14 +397,6 @@ export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTi
         </div>
 
         <div className="flex justify-end space-x-3 mt-8 pt-4 border-t border-gray-700">
-          {card.estado === 'em_recepcao' && (
-            <button
-              onClick={handleCreateBudget}
-              className="px-4 py-2 bg-brand-yellow-dark text-white hover:bg-yellow-600 transition-colors rounded-none border border-brand-yellow font-medium"
-            >
-              Criar Orçamento
-            </button>
-          )}
           <button
             onClick={onClose}
             className="px-4 py-2 bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors rounded-none border border-gray-600"

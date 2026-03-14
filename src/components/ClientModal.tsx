@@ -10,6 +10,7 @@ interface Cliente {
   nif: string;
   endereco: string;
   perfil: 'Normal' | 'TVDE Interno' | 'TVDE Externo' | 'Empresa';
+  perfil_id: string;
   veiculos: number;
   dataRegistro: string;
   totalGasto: number;
@@ -39,7 +40,7 @@ export default function ClientModal({ isOpen, onClose, onAddClient, client }: Cl
     telefone: '',
     email: '',
     endereco: '',
-    perfil: 'Normal'
+    perfilId: '' // perfil_id
   });
 
   // Fetch perfis from API
@@ -70,7 +71,7 @@ export default function ClientModal({ isOpen, onClose, onAddClient, client }: Cl
         telefone: client.telefone,
         email: client.email,
         endereco: client.endereco || '',
-        perfil: client.perfil || 'Normal'
+        perfilId: client.perfil_id || ''
       });
     } else {
       setFormData({
@@ -79,7 +80,7 @@ export default function ClientModal({ isOpen, onClose, onAddClient, client }: Cl
         telefone: '',
         email: '',
         endereco: '',
-        perfil: 'Normal'
+        perfilId: ''
       });
     }
   }, [client, isOpen]);
@@ -88,13 +89,15 @@ export default function ClientModal({ isOpen, onClose, onAddClient, client }: Cl
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const selectedPerfil = perfis.find(p => p.id === formData.perfilId)?.nome || 'Normal';
     const newClient: Omit<Cliente, 'id' | 'dataRegistro' | 'totalGasto' | 'visitas'> = {
       nome: formData.nome,
       email: formData.email,
       telefone: formData.telefone,
       nif: formData.nif,
       endereco: formData.endereco,
-      perfil: formData.perfil as 'Normal' | 'TVDE Interno' | 'TVDE Externo' | 'Empresa',
+      perfil_id: formData.perfilId || '',
+      perfil: selectedPerfil as 'Normal' | 'TVDE Interno' | 'TVDE Externo' | 'Empresa',
       veiculos: 0
     };
     onAddClient(newClient);
@@ -104,7 +107,7 @@ export default function ClientModal({ isOpen, onClose, onAddClient, client }: Cl
       telefone: '',
       email: '',
       endereco: '',
-      perfil: 'Normal'
+      perfilId: ''
     });
     onClose();
   };
@@ -183,24 +186,25 @@ export default function ClientModal({ isOpen, onClose, onAddClient, client }: Cl
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-1">Perfil de Cliente</label>
             <select
-              name="perfil"
-              value={formData.perfil}
+              name="perfilId"
+              value={formData.perfilId}
               onChange={handleChange}
               className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
             >
+              <option value="">Selecione o perfil</option>
               {perfis.map((perfil) => (
-                <option key={perfil.id} value={perfil.nome}>
+                <option key={perfil.id} value={perfil.id}>
                   {perfil.nome} {perfil.desconto > 0 && `(-${perfil.desconto}%)`}
                 </option>
               ))}
             </select>
             {(() => {
-              const selectedPerfil = perfis.find(p => p.nome === formData.perfil);
+              const selectedPerfil = perfis.find(p => p.id === formData.perfilId);
               return selectedPerfil && selectedPerfil.desconto && selectedPerfil.desconto > 0 ? (
                 <p className="text-xs text-brand-yellow mt-1">
                   Desconto de {selectedPerfil.desconto}% aplicado a este perfil
                 </p>
-              ) : null;
+              ) : <></>;
             })()}
           </div>
 

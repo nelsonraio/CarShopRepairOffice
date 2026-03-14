@@ -19,7 +19,19 @@ interface ClientApiResponse {
     email: string;
     endereco: string;
     perfil: string;
+    perfil_id: string;
   };
+}
+
+/**
+ * Interface para perfis de clientes
+ */
+interface ProfileApiResponse {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  desconto: number;
+  ativo: boolean;
 }
 
 /**
@@ -56,8 +68,11 @@ const EditClientPage = () => {
     telefone: '',
     email: '',
     endereco: '',
-    perfil: 'Normal',
+    perfilId: '' // perfil_id
   });
+
+  // Estado para perfis
+  const [perfis, setPerfis] = useState<ProfileApiResponse[]>([]);
 
   /**
    * Popula formulário quando dados do cliente são carregados
@@ -73,9 +88,16 @@ const EditClientPage = () => {
       telefone: client.telefone || '',
       email: client.email || '',
       endereco: client.endereco || '',
-      perfil: client.perfil || 'Normal',
+      perfilId: client.perfil_id || ''
     });
   }, [clientData]);
+
+  /**
+   * Fetch perfis de clientes
+   */
+  useEffect(() => {
+    fetch('/api/perfis-clientes').then(res => res.json()).then(data => setPerfis(data));
+  }, []);
 
   /**
    * Handler para mudanças em campos do formulário
@@ -100,14 +122,17 @@ const EditClientPage = () => {
    */
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-
+    const payload = {
+      ...formData,
+      perfil_id: formData.perfilId || null,
+    };
     try {
       const response = await fetch(`/api/clientes/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -249,15 +274,17 @@ const EditClientPage = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-1">Perfil de Cliente</label>
                 <select
-                  name="perfil"
-                  value={formData.perfil}
+                  name="perfilId"
+                  value={formData.perfilId}
                   onChange={handleInputChange}
                   className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
                 >
-                  <option value="Normal">Normal</option>
-                  <option value="TVDE_Interno">TVDE Interno</option>
-                  <option value="TVDE_Externo">TVDE Externo</option>
-                  <option value="Empresa">Empresa</option>
+                  <option value="">Selecione o perfil</option>
+                  {perfis.map((perfil) => (
+                    <option key={perfil.id} value={perfil.id}>
+                      {perfil.nome} {perfil.desconto > 0 && `(-${perfil.desconto}%)`}
+                    </option>
+                  ))}
                 </select>
               </div>
             </form>

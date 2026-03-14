@@ -20,7 +20,7 @@ export async function GET(request: Request) {
         matricula: matricula
       },
       include: {
-        cliente: true
+        cliente: { include: { perfil_cliente: true } }
       },
       orderBy: {
         data_agendamento: 'desc' // Get the most recent appointment
@@ -52,15 +52,16 @@ export async function GET(request: Request) {
       contacto_nome: agendamento.contacto_nome || null,
       contacto_telefone: agendamento.contacto_telefone || null,
       contacto_email: agendamento.contacto_email || null,
-      cliente: agendamento.cliente ? {
-        id: agendamento.cliente.id.toString(),
-        nome: agendamento.cliente.nome,
-        telefone: agendamento.cliente.telefone,
-        email: agendamento.cliente.email || '',
-        nif: agendamento.cliente.nif || '',
-        endereco: agendamento.cliente.endereco || '',
-        perfil: agendamento.cliente.perfil || 'Normal'
-      } : null
+        cliente: agendamento.cliente ? {
+          id: agendamento.cliente.id.toString(),
+          nome: agendamento.cliente.nome,
+          telefone: agendamento.cliente.telefone,
+          email: agendamento.cliente.email || '',
+          nif: agendamento.cliente.nif || '',
+          endereco: agendamento.cliente.endereco || '',
+          perfil_id: agendamento.cliente.perfil_id || null,
+          perfil: agendamento.cliente.perfil_cliente ? agendamento.cliente.perfil_cliente.nome : 'Normal'
+        } : null
     };
 
     return NextResponse.json(result);

@@ -11,6 +11,7 @@ import {
   buildDataMap,
   extractUniqueIds
 } from '@/lib/api-utils';
+import { registarAuditoria } from '@/lib/auditoria';
 
 const prisma = new PrismaClient({
   log: ['error'],
@@ -260,6 +261,8 @@ export async function POST(request: Request) {
     // Create work order items
     await createWorkOrderItems(ordemTrabalho.id, items || []);
 
+    await registarAuditoria('CREATE', 'ordens_trabalho', Number(ordemTrabalho.id), null, { ref: ref_ordem_trabalho, cliente_id, veiculo_id: Number(veiculo_id), estado }, request);
+
     return successResponse(
       {
         success: true,
@@ -478,6 +481,8 @@ export async function DELETE(request: Request) {
       where: { ref_ordem_trabalho: id }
     });
 
+    await registarAuditoria('DELETE', 'ordens_trabalho', Number(order.id), { ref: order.ref_ordem_trabalho, cliente_id: order.cliente_id, estado: order.estado }, null, request);
+
     return successResponse({ success: true });
   } catch (error) {
     console.error('Error deleting work order:', error);
@@ -594,6 +599,8 @@ export async function PATCH(request: Request) {
         });
       }
     }
+
+    await registarAuditoria('UPDATE', 'ordens_trabalho', Number(order.id), { estado: order.estado }, { estado: updated.estado, data_conclusao: updated.data_conclusao }, request);
 
     return successResponse({
       success: true,

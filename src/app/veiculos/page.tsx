@@ -121,9 +121,13 @@ export default function VeiculosPage() {
       });
       if (response.ok) {
         await refetch(); // Recarrega dados após eliminação
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Erro ao eliminar veículo');
       }
     } catch (err) {
       console.error('Failed to delete vehicle:', err);
+      alert('Erro de ligação ao servidor');
     }
   };
 

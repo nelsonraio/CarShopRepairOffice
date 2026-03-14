@@ -350,6 +350,24 @@ async function main() {
     console.log(`📦 A inserir ${pecas.length} peças...`);
 
     for (const peca of pecas) {
+      // Procurar o id da categoria pelo nome
+      let categoriaNome = peca.categoria;
+      let categoria = await prisma.categorias_peca.findFirst({
+        where: {
+          OR: [
+            { nome: categoriaNome },
+            { nome: { contains: categoriaNome } },
+            { nome: { contains: categoriaNome + '/' } },
+            { nome: { contains: '/' + categoriaNome } }
+          ]
+        }
+      });
+      if (!categoria) {
+        throw new Error(`Categoria não encontrada para a peça: ${peca.nome} (${categoriaNome})`);
+      }
+      const pecaData = { ...peca, categoria_id: categoria.id };
+      delete pecaData.categoria;
+
       const existing = await prisma.pecas.findUnique({
         where: { referencia: peca.referencia }
       });
@@ -358,12 +376,12 @@ async function main() {
         console.log(`⏭️  Peça ${peca.referencia} já existe, a atualizar...`);
         await prisma.pecas.update({
           where: { referencia: peca.referencia },
-          data: peca
+          data: pecaData
         });
       } else {
         console.log(`✅ A criar peça: ${peca.nome}`);
         await prisma.pecas.create({
-          data: peca
+          data: pecaData
         });
       }
     }

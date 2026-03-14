@@ -8,12 +8,10 @@ interface Part {
   reference: string;
   name: string;
   category: string;
-  supplier: string;
-  supplierId?: string;
-  supplierName?: string;
   stock: number;
   price: number;
   stockStatus: 'em_stock' | 'baixo_stock' | 'esgotado';
+  supplierName?: string;
 }
 
 interface OrderItem {
@@ -43,18 +41,28 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
   const [orderText, setOrderText] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [showNewPartForm, setShowNewPartForm] = useState(false);
-  // no global supplier; deliveries still optional
-  // delivery date no longer used
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [newPart, setNewPart] = useState({
     name: "",
     reference: "",
-    supplier: "",
     category: "",
     quantity: 1
   });
+  const [selectedFornecedor, setSelectedFornecedor] = useState("");
+  // Dynamic part categories
+  const [dynamicCategories, setDynamicCategories] = useState<string[]>([]);
+
+  // Load categories when opening new part form
+  useEffect(() => {
+    if (showNewPartForm) {
+      fetch('/api/categorias-pecas')
+        .then(res => res.ok ? res.json() : Promise.reject('Erro ao carregar categorias'))
+        .then(data => Array.isArray(data) ? setDynamicCategories(data) : setDynamicCategories([]))
+        .catch(() => setDynamicCategories([]));
+    }
+  }, [showNewPartForm]);
 
   useEffect(() => {
     if (isOpen) {
@@ -115,7 +123,7 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
   const filteredItems = orderItems.filter(item =>
     item.part.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.part.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (item.part.supplier || item.part.supplierName || '').toLowerCase().includes(searchTerm.toLowerCase())
+    (item.part.supplierName ? item.part.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) : false)
   );
 
   const handleAddNewPart = () => {
@@ -129,10 +137,7 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
       setErrorMsg("Informe a referência da peça");
       return;
     }
-    if (!newPart.supplier) {
-      setErrorMsg("Informe o fornecedor da peça");
-      return;
-    }
+    // fornecedor não é mais obrigatório para peça
     if (!newPart.category) {
       setErrorMsg("Selecione a categoria da peça");
       return;
@@ -143,7 +148,6 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
       reference: newPart.reference,
       name: newPart.name,
       category: newPart.category,
-      supplier: newPart.supplier,
       stock: 0,
       price: 0,
       stockStatus: "esgotado"
@@ -156,7 +160,7 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
     };
 
     setOrderItems(prevItems => [...prevItems, newOrderItem]);
-    setNewPart({ name: "", reference: "", supplier: "", category: "", quantity: 1 });
+    setNewPart({ name: "", reference: "", category: "", quantity: 1 });
     setShowNewPartForm(false);
     setSuccessMsg("Nova peça personalizada adicionada. Será criada no stock com quantidade 0.");
   };
@@ -171,6 +175,10 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
       setErrorMsg("Selecione pelo menos uma peça");
       return;
     }
+    if (!selectedFornecedor) {
+      setErrorMsg("Selecione o fornecedor da encomenda");
+      return;
+    }
 
     setLoading(true);
 
@@ -178,52 +186,59 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
       console.log("📨 Enviando envelope para API...");
 
       // ensure custom items have reference
-    for (const item of selectedParts) {
-      if (item.part.id.startsWith('custom') && !item.part.reference) {
-        setErrorMsg('Referência obrigatória para peças novas');
-        setLoading(false);
-        return;
-      }
-    }
-
-    const itens = selectedParts.map(item => ({
-        // send part object for custom parts so backend can create it
-        ...(item.part.id.startsWith('custom')
-          ? {
-              peca_id: null,
-              quantidade_encomendada: item.quantity,
-              preco_unitario: item.part.price || 0,
-              part: {
-                name: item.part.name,
-                reference: item.part.reference,
-                category: item.part.category || 'custom',
-                supplier: item.part.supplier || ''
-              }
-            }
-          : {
-              peca_id: item.part.id,
-              quantidade_encomendada: item.quantity,
-              preco_unitario: item.part.price || 0
-            })
-      }));
-
-      // determine supplier id from selected parts if they share one
-      let fornecedor_id: string | null = null;
-      if (selectedParts.length > 0) {
-        const suppliers = new Set(selectedParts.map(i => i.part.supplier).filter(Boolean));
-        if (suppliers.size === 1) {
-          const supplierName = [...suppliers][0];
-          const found = fornecedores.find(f => f.nome === supplierName);
-          if (found) fornecedor_id = String(found.id);
+      for (const item of selectedParts) {
+        const partId = String(item.part.id);
+        if (typeof partId === 'string' && partId.startsWith('custom') && !item.part.reference) {
+          setErrorMsg('Referência obrigatória para peças novas');
+          setLoading(false);
+          return;
         }
       }
 
+    const itens = selectedParts.map(item => {
+      const partId = String(item.part.id);
+      if (typeof partId === 'string' && partId.startsWith('custom')) {
+        return {
+          peca_id: null,
+          quantidade_encomendada: item.quantity,
+          preco_unitario: item.part.price || 0,
+          part: {
+            name: item.part.name,
+            reference: item.part.reference,
+            category: item.part.category || 'custom'
+          }
+        };
+      } else {
+        return {
+          peca_id: item.part.id,
+          quantidade_encomendada: item.quantity,
+          preco_unitario: item.part.price || 0
+        };
+      }
+    });
+
+      // Use supplier id directly
+      const fornecedor_id = selectedFornecedor;
       const payload: any = {
         itens: itens
       };
-      if (fornecedor_id) payload.fornecedor_id = fornecedor_id;
+      if (fornecedor_id) {
+        payload.fornecedor = { connect: { id: fornecedor_id } };
+      }
+      // Remove qualquer envio de fornecedor_id
+      if ('fornecedor_id' in payload) {
+        delete payload.fornecedor_id;
+      }
+      // Log payload and warn if fornecedor is missing
+      console.log("📤 Payload enviado:", JSON.stringify(payload, null, 2));
+      if (!payload.fornecedor) {
+        console.warn("⚠️ Payload NÃO contém fornecedor!");
+      }
 
       console.log("📤 Payload enviado:", JSON.stringify(payload, null, 2));
+      if ('fornecedor_id' in payload) {
+        console.warn('⚠️ Payload contém fornecedor_id:', payload.fornecedor_id);
+      }
 
       const response = await fetch('/api/encomendas', {
         method: 'POST',
@@ -296,6 +311,19 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
                   className="w-full pl-10 pr-4 py-2 bg-gray-900 border border-gray-600 text-white rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow placeholder-gray-500"
                 />
               </div>
+              <div className="flex items-center">
+                <label className="text-sm font-medium text-gray-300 mr-3">Fornecedor:</label>
+                <select 
+                  value={selectedFornecedor}
+                  onChange={(e) => setSelectedFornecedor(e.target.value)}
+                  className="ml-2 bg-gray-800 border border-gray-500 text-white px-3 py-2 rounded-xl focus:ring-2 ring-brand-yellow outline-none w-64 text-sm"
+                >
+                  <option value="">Selecione fornecedor...</option>
+                  {fornecedores?.map((f) => (
+                    <option key={f.id} value={String(f.id)}>{f.nome}</option>
+                  ))}
+                </select>
+              </div>
               <button
                 onClick={() => setShowNewPartForm(!showNewPartForm)}
                 className="px-4 py-2 bg-purple-600 text-white font-bold hover:bg-purple-700 transition-colors rounded-none flex items-center"
@@ -321,20 +349,12 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
                     <label className="block text-sm font-medium text-gray-400 mb-1">Categoria *</label>
                     <select value={newPart.category} onChange={e => setNewPart({ ...newPart, category: e.target.value })} className="w-full bg-gray-800 border border-gray-500 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow outline-none">
                       <option value="">Selecione uma categoria...</option>
-                      {partCategories.map(cat => (
+                      {dynamicCategories.map(cat => (
                         <option key={cat} value={cat}>{cat}</option>
                       ))}
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1">Fornecedor *</label>
-                    <select value={newPart.supplier} onChange={(e) => setNewPart({ ...newPart, supplier: e.target.value })} className="w-full bg-gray-800 border border-gray-500 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow outline-none">
-                      <option value="">Selecione um fornecedor...</option>
-                      {fornecedores.map(f => (
-                        <option key={f.id} value={f.nome}>{f.nome}</option>
-                      ))}
-                    </select>
-                  </div>
+                  {/* Campo fornecedor removido do formulário de nova peça */}
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-1">Quantidade *</label>
                     <input type="number" min="1" value={newPart.quantity} onChange={(e) => setNewPart({ ...newPart, quantity: parseInt(e.target.value) || 1 })} className="w-full bg-gray-800 border border-gray-500 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow outline-none" />
@@ -352,7 +372,7 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
                 <div key={item.part.id} className="flex items-center justify-between bg-gray-700 p-3 border border-gray-600">
                   <div>
                     <p className="text-sm font-medium text-gray-200">{item.part.name}</p>
-                    <p className="text-xs text-gray-400">Ref: {item.part.reference} | Fornecedor: {item.part.supplierName || item.part.supplier}</p>
+                    <p className="text-xs text-gray-400">Ref: {item.part.reference} | Fornecedor: {item.part.supplierName || ""}</p>
                   </div>
                   <button onClick={() => handleItemToggle(item.part.id)} className="px-3 py-1 bg-green-600 text-white text-xs font-bold hover:bg-green-700 transition-colors rounded-none flex items-center">
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>

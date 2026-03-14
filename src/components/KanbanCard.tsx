@@ -40,13 +40,13 @@ export default function KanbanCard({ card, columnId, onClick, onDragStart, isRea
       } hover:bg-gray-750 transition-colors${shake ? ' shake' : ''}`}
       onClick={onClick}
     >
-      <div className="flex justify-between items-start">
-        <div>
+      <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-2 w-full">
+        <div className="flex-1">
           <p className="text-xs font-mono text-brand-yellow mb-1">{card.proc}</p>
           <p className="font-bold text-base text-white">{card.plate}</p>
           <p className="text-sm text-gray-400">{card.model}</p>
         </div>
-        <span className="bg-brand-yellow text-gray-900 text-xs font-semibold px-2 py-1 rounded whitespace-nowrap ml-2">
+        <span className="bg-brand-yellow text-gray-900 text-xs font-semibold px-2 py-1 rounded whitespace-nowrap md:ml-2 mt-2 md:mt-0">
           {card.mechanic || 'N/A'}
         </span>
       </div>

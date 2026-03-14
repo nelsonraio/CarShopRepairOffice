@@ -11,7 +11,7 @@
     "auth:test": "node scripts/teste-auth-simples.mjs"
   },
   "dependencies": {
-    "@prisma/client": "^6.19.0",
+    "@prisma/client": "^6.19.2",
     "@sveltejs/kit": "^2.49.0",
     "bcryptjs": "^3.0.2",
     "chart.js": "^4.5.1",
@@ -27,7 +27,8 @@
     "react-chartjs-2": "^5.3.1",
     "react-dom": "19.1.0",
     "session": "^0.1.0",
-    "sveltejs": "^0.0.1-security"
+    "sveltejs": "^0.0.1-security",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

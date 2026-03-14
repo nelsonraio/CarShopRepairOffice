@@ -5,9 +5,7 @@ interface Part {
   reference: string;
   name: string;
   category: string;
-  supplier: string;
-  supplierId?: string;
-  supplierName?: string;
+  // Removed supplier fields
   stock: number;
   price: number;
   stockStatus: 'em_stock' | 'baixo_stock' | 'esgotado';
@@ -100,6 +98,24 @@ const OrdersModal: React.FC<OrdersModalProps> = ({ isOpen, onClose, parts, onReo
     }
   };
 
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!window.confirm('Tem certeza que deseja apagar esta encomenda?')) return;
+    try {
+      const response = await fetch(`/api/encomendas/${orderId}`, {
+        method: 'DELETE',
+      });
+      const result = await response.json();
+      if (response.ok && result.success) {
+        setOrders(orders.filter(o => o.id !== orderId));
+        alert('Encomenda apagada com sucesso!');
+      } else {
+        alert(result.error || 'Não é possível apagar a encomenda.');
+      }
+    } catch (error) {
+      console.error('Erro ao apagar encomenda:', error);
+      alert('Erro ao apagar encomenda.');
+    }
+  };
   const handleAddToStock = async (orderId: string, itemId: string, quantity: number) => {
     try {
       const response = await fetch(`/api/encomendas/${orderId}/adicionar-stock`, {
@@ -209,13 +225,7 @@ const OrdersModal: React.FC<OrdersModalProps> = ({ isOpen, onClose, parts, onReo
                       <p className="text-gray-400">Encomendado:</p>
                       <p className="text-gray-200 font-medium">{formatDate(order.data_encomenda)}</p>
                     </div>
-                    <div className="text-sm">
-                      <p className="text-gray-400">Previsto:</p>
-                      <p className={order.dias_atraso && order.dias_atraso > 0 ? 'text-red-400 font-semibold' : 'text-gray-200 font-medium'}>
-                        {formatDate(order.data_entrega_estimada)}
-                        {order.dias_atraso && order.dias_atraso > 0 && <span className="text-xs"> ({order.dias_atraso}d)</span>}
-                      </p>
-                    </div>
+                    {/* Previsto column removed as requested */}
                     <div className="text-center">
                       <select
                         value={order.estado}
@@ -261,8 +271,8 @@ const OrdersModal: React.FC<OrdersModalProps> = ({ isOpen, onClose, parts, onReo
                                   <p className="text-xs text-yellow-400">{remaining} por receber</p>
                                 )}
                               </div>
-                              {/* Botão Adicionar ao Stock - sempre visível se houver quantidade restante */}
-                              {remaining > 0 && (
+                              {/* Botão Adicionar ao Stock - só aparece se estado for 'recebido' e houver quantidade restante */}
+                              {order.estado === 'recebido' && remaining > 0 && (
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -285,6 +295,13 @@ const OrdersModal: React.FC<OrdersModalProps> = ({ isOpen, onClose, parts, onReo
                     <div className="p-4 border-t border-gray-700 flex justify-between items-center">
                       <span className="text-gray-400 font-medium">Total da Encomenda:</span>
                       <span className="text-white font-bold text-lg">€{order.custo_total.toFixed(2)}</span>
+                      <button
+                        onClick={() => handleDeleteOrder(order.id)}
+                        className="ml-4 px-3 py-1 bg-red-700 hover:bg-red-800 text-white text-xs font-bold rounded transition-colors"
+                        title="Apagar encomenda"
+                      >
+                        Apagar
+                      </button>
                     </div>
                   </div>
                 )}

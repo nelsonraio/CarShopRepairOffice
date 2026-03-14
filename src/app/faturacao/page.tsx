@@ -1,6 +1,39 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+
+// ErrorBoundary simples para páginas Next/React
+function FaturacaoErrorBoundary({ children }: { children: React.ReactNode }) {
+  const [error, setError] = useState<Error | null>(null);
+
+  // Captura erros de renderização
+  React.useEffect(() => {
+    const handler = (event: ErrorEvent) => {
+      setError(event.error || new Error(event.message));
+    };
+    window.addEventListener('error', handler);
+    return () => window.removeEventListener('error', handler);
+  }, []);
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-red-200 p-8">
+        <Sidebar activePage="faturacao" />
+        <div className="max-w-md w-full bg-red-900 border border-red-700 rounded-lg p-8 shadow-lg mt-12">
+          <h2 className="text-2xl font-bold mb-4">Erro inesperado</h2>
+          <p className="mb-4">{error.message || 'Ocorreu um erro inesperado. Por favor, tente novamente ou contacte o suporte.'}</p>
+          <button
+            className="px-4 py-2 bg-brand-yellow text-gray-900 font-bold rounded hover:bg-yellow-400 transition-colors"
+            onClick={() => window.location.reload()}
+          >
+            Tentar Novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
+  return <>{children}</>;
+}
 import { useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import CriarFaturaModal from "@/components/CriarFaturaModal";
@@ -166,6 +199,9 @@ const formatDateSafe = (value: unknown): string => {
 };
 
 export default function FaturacaoPage() {
+    // Estado para erro de callback
+    const [callbackError, setCallbackError] = useState<string | null>(null);
+
     const normalizarEstado = (estado: string): Invoice['estado'] => {
       if (estado === 'pendente' || estado === 'parcial' || estado === 'paga' || estado === 'vencida' || estado === 'cancelada') {
         return estado;
@@ -259,6 +295,7 @@ export default function FaturacaoPage() {
 
       const reason = authReason ? ` Erro: ${authReason}` : '';
       setAuthReasonMsg(authReason || '');
+      setCallbackError('Não foi possível autenticar com o TOConline. Por favor, tente novamente mais tarde ou contacte o suporte.' + (authReason ? ` Motivo: ${authReason}` : ''));
       console.warn('Falha autenticacao TOConline.' + reason);
       setAuthStatus('error');
     }
@@ -573,292 +610,303 @@ export default function FaturacaoPage() {
     }
   };
 
+  if (callbackError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-red-200 p-8">
+        <Sidebar activePage="faturacao" />
+        <div className="max-w-md w-full bg-red-900 border border-red-700 rounded-lg p-8 shadow-lg mt-12">
+          <h2 className="text-2xl font-bold mb-4">Erro de Autenticação TOConline</h2>
+          <p className="mb-4">{callbackError}</p>
+          <button
+            className="px-4 py-2 bg-brand-yellow text-gray-900 font-bold rounded hover:bg-yellow-400 transition-colors"
+            onClick={() => window.location.reload()}
+          >
+            Tentar Novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-screen bg-gray-800">
-      <Sidebar activePage="faturacao" />
-
-      <main className="flex-1 relative overflow-y-auto focus:outline-none p-8">
-        {showAuthToast && authStatus === 'success' && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-            <div className="w-[90vw] max-w-md border border-green-700 bg-green-900 text-green-200 px-6 py-4 shadow-2xl text-base font-medium text-center">
-              TOConline autenticado com sucesso.
+    <FaturacaoErrorBoundary>
+      <div className="flex h-screen bg-gray-800">
+        <Sidebar activePage="faturacao" />
+        <main className="flex-1 relative overflow-y-auto focus:outline-none p-8">
+          {showAuthToast && authStatus === 'success' && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+              <div className="w-[90vw] max-w-md border border-green-700 bg-green-900 text-green-200 px-6 py-4 shadow-2xl text-base font-medium text-center">
+                TOConline autenticado com sucesso.
+              </div>
+            </div>
+          )}
+          {showAuthToast && authStatus === 'error' && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+              <div className="w-[90vw] max-w-md border border-red-700 bg-red-900 text-red-200 px-6 py-4 shadow-2xl text-base font-medium text-center">
+                TOConline autenticacao falhou.{authReasonMsg ? ` Motivo: ${authReasonMsg}` : ''}
+              </div>
+            </div>
+          )}
+          {/* Header */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-100 leading-tight">Faturação Externa (TOConline)</h2>
+              <p className="mt-1 text-gray-400">Gestão de faturas TOConline</p>
+            </div>
+            <div className="flex gap-3 items-center">
+              {/* Botão Gerar Fatura */}
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="px-4 py-2 bg-brand-yellow text-gray-900 font-bold hover:bg-brand-yellow-dark transition-colors rounded-none flex items-center shadow-md"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Gerar Fatura (TOConline)
+              </button>
             </div>
           </div>
-        )}
-
-        {showAuthToast && authStatus === 'error' && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-            <div className="w-[90vw] max-w-md border border-red-700 bg-red-900 text-red-200 px-6 py-4 shadow-2xl text-base font-medium text-center">
-              TOConline autenticacao falhou.{authReasonMsg ? ` Motivo: ${authReasonMsg}` : ''}
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="bg-gray-700 border border-gray-600 p-6 rounded-none">
+              <h3 className="text-sm font-medium text-gray-400 uppercase">Faturado</h3>
+              <p className="mt-2 text-3xl font-bold text-gray-100">€{totalFaturado.toFixed(2)}</p>
+              <p className="text-xs text-gray-400 mt-1">{filteredInvoices.length} faturas</p>
+            </div>
+            <div className="bg-gray-700 border border-gray-600 p-6 rounded-none">
+              <h3 className="text-sm font-medium text-gray-400 uppercase">Pendente</h3>
+              <p className="mt-2 text-3xl font-bold text-brand-yellow">€{totalPendente.toFixed(2)}</p>
+              <p className="text-xs text-gray-400 mt-1">{countPendente} {countPendente === 1 ? 'fatura' : 'faturas'} em aberto</p>
             </div>
           </div>
-        )}
-
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-100 leading-tight">Faturação Externa (TOConline)</h2>
-            <p className="mt-1 text-gray-400">Gestão de faturas TOConline</p>
-          </div>
-          <div className="flex gap-3 items-center">
-            {/* Botão Gerar Fatura */}
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="px-4 py-2 bg-brand-yellow text-gray-900 font-bold hover:bg-brand-yellow-dark transition-colors rounded-none flex items-center shadow-md"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
-              </svg>
-              Gerar Fatura (TOConline)
-            </button>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-gray-700 border border-gray-600 p-6 rounded-none">
-            <h3 className="text-sm font-medium text-gray-400 uppercase">Faturado</h3>
-            <p className="mt-2 text-3xl font-bold text-gray-100">€{totalFaturado.toFixed(2)}</p>
-            <p className="text-xs text-gray-400 mt-1">{filteredInvoices.length} faturas</p>
-          </div>
-          <div className="bg-gray-700 border border-gray-600 p-6 rounded-none">
-            <h3 className="text-sm font-medium text-gray-400 uppercase">Pendente</h3>
-            <p className="mt-2 text-3xl font-bold text-brand-yellow">€{totalPendente.toFixed(2)}</p>
-            <p className="text-xs text-gray-400 mt-1">{countPendente} {countPendente === 1 ? 'fatura' : 'faturas'} em aberto</p>
-          </div>
-        </div>
-
-        {/* Filters & Search */}
-        <div className="bg-gray-700 border border-gray-600 p-4 mb-6 rounded-none flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-              </svg>
+          {/* Filters & Search */}
+          <div className="bg-gray-700 border border-gray-600 p-4 mb-6 rounded-none flex flex-col md:flex-row gap-4">
+            <div className="flex-1 relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+              </div>
+              <input
+                type="text"
+                placeholder="Pesquisar por cliente, NIF, matrícula, nº fatura ou ordem trabalho..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-600 text-white rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow placeholder-gray-500"
+              />
             </div>
-            <input
-              type="text"
-              placeholder="Pesquisar por cliente, NIF, matrícula, nº fatura ou ordem trabalho..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-600 text-white rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow placeholder-gray-500"
-            />
-          </div>
-          <div className="flex gap-4">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-gray-800 border border-gray-600 text-gray-300 rounded-none focus:ring-brand-yellow focus:border-brand-yellow px-4 py-2"
-            >
-              <option value="">Todos os Status</option>
-              <option value="paga">Paga</option>
-              <option value="pendente">Pendente</option>
-              <option value="parcial">Parcial</option>
-              <option value="vencida">Vencida</option>
-              <option value="cancelada">Cancelada</option>
-            </select>
-            <div className="flex gap-2">
+            <div className="flex gap-4">
               <select
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
                 className="bg-gray-800 border border-gray-600 text-gray-300 rounded-none focus:ring-brand-yellow focus:border-brand-yellow px-4 py-2"
               >
-                <option value="todos">Todos</option>
-                <option value="ultimo_mes">Último mês</option>
-                <option value="ultimos_3_meses">Últimos 3 meses</option>
-                <option value="ultimos_6_meses">Últimos 6 meses</option>
-                <option value="intervalo_personalizado">Intervalo personalizado</option>
+                <option value="">Todos os Status</option>
+                <option value="paga">Paga</option>
+                <option value="pendente">Pendente</option>
+                <option value="parcial">Parcial</option>
+                <option value="vencida">Vencida</option>
+                <option value="cancelada">Cancelada</option>
               </select>
-              {dateFilter === "intervalo_personalizado" && (
-                <div className="flex gap-2">
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    placeholder="Data inicial"
-                    className="bg-gray-800 border border-gray-600 text-gray-300 rounded-none focus:ring-brand-yellow focus:border-brand-yellow px-3 py-2 text-sm"
-                  />
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    placeholder="Data final"
-                    className="bg-gray-800 border border-gray-600 text-gray-300 rounded-none focus:ring-brand-yellow focus:border-brand-yellow px-3 py-2 text-sm"
-                  />
-                </div>
-              )}
+              <div className="flex gap-2">
+                <select
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="bg-gray-800 border border-gray-600 text-gray-300 rounded-none focus:ring-brand-yellow focus:border-brand-yellow px-4 py-2"
+                >
+                  <option value="todos">Todos</option>
+                  <option value="ultimo_mes">Último mês</option>
+                  <option value="ultimos_3_meses">Últimos 3 meses</option>
+                  <option value="ultimos_6_meses">Últimos 6 meses</option>
+                  <option value="intervalo_personalizado">Intervalo personalizado</option>
+                </select>
+                {dateFilter === "intervalo_personalizado" && (
+                  <div className="flex gap-2">
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      placeholder="Data inicial"
+                      className="bg-gray-800 border border-gray-600 text-gray-300 rounded-none focus:ring-brand-yellow focus:border-brand-yellow px-3 py-2 text-sm"
+                    />
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      placeholder="Data final"
+                      className="bg-gray-800 border border-gray-600 text-gray-300 rounded-none focus:ring-brand-yellow focus:border-brand-yellow px-3 py-2 text-sm"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* Table */}
-        <div className="bg-gray-700 border border-gray-600 rounded-none overflow-hidden shadow-sm">
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-yellow"></div>
-            </div>
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left text-gray-400">
-                  <thead className="text-xs text-gray-300 uppercase bg-gray-800 border-b border-gray-600">
-                    <tr>
-                      <th scope="col" className="px-6 py-3">Fatura Nº</th>
-                      <th scope="col" className="px-6 py-3">Ordem Trabalho</th>
-                      <th scope="col" className="px-6 py-3">Veículo</th>
-                      <th scope="col" className="px-6 py-3">Cliente</th>
-                      <th scope="col" className="px-6 py-3">Data Emissão</th>
-                      <th scope="col" className="px-6 py-3">Vencimento</th>
-                      <th scope="col" className="px-6 py-3 text-right">Valor Total</th>
-                      <th scope="col" className="px-6 py-3 text-center">Status</th>
-                      <th scope="col" className="px-6 py-3 text-center">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-600">
-                    {filteredInvoices.length === 0 ? (
+          {/* Table */}
+          <div className="bg-gray-700 border border-gray-600 rounded-none overflow-hidden shadow-sm">
+            {loading ? (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-yellow"></div>
+              </div>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm text-left text-gray-400">
+                    <thead className="text-xs text-gray-300 uppercase bg-gray-800 border-b border-gray-600">
                       <tr>
-                        <td colSpan={9} className="px-6 py-12 text-center text-gray-400">
-                          {invoices.length === 0 ? 'Nenhuma fatura encontrada' : 'Nenhuma fatura corresponde aos filtros'}
-                        </td>
+                        <th scope="col" className="px-6 py-3">Fatura Nº</th>
+                        <th scope="col" className="px-6 py-3">Ordem Trabalho</th>
+                        <th scope="col" className="px-6 py-3">Veículo</th>
+                        <th scope="col" className="px-6 py-3">Cliente</th>
+                        <th scope="col" className="px-6 py-3">Data Emissão</th>
+                        <th scope="col" className="px-6 py-3">Vencimento</th>
+                        <th scope="col" className="px-6 py-3 text-right">Valor Total</th>
+                        <th scope="col" className="px-6 py-3 text-center">Status</th>
+                        <th scope="col" className="px-6 py-3 text-center">Ações</th>
                       </tr>
-                    ) : (
-                      (paginatedInvoices as Invoice[]).map((invoice: Invoice) => (
-                        <tr key={invoice.id} className="hover:bg-gray-600 transition-colors">
-                          <td className="px-6 py-4 font-medium text-gray-200 font-mono" title={`ID Local: ${invoice.id} | TOConline ID: ${invoice.toconline_id || 'N/A'} | Recibo: ${invoice.recibo_toconline_id || 'N/A'}`}>
-                            <div>{getNumeroFaturaExibicao(invoice)}</div>
-                            {invoice.numero_fatura_toconline && invoice.numero_fatura_toconline !== invoice.numero_fatura ? (
-                              <div className="text-xs text-gray-500">Local: {invoice.numero_fatura}</div>
-                            ) : null}
-                          </td>
-                          <td className="px-6 py-4 text-gray-200 font-mono">{invoice.ordem_trabalho_ref || '-'}</td>
-                          <td className="px-6 py-4 text-gray-200 font-mono">
-                            {invoice.veiculo_marca || invoice.veiculo_modelo || invoice.veiculo_matricula ? (
-                              <div>
-                                <div className="flex gap-2">
-                                  {invoice.veiculo_marca && <span className="font-bold">{invoice.veiculo_marca}</span>}
-                                  {invoice.veiculo_modelo && <span>{invoice.veiculo_modelo}</span>}
-                                </div>
-                                {invoice.veiculo_matricula && <div className="text-xs text-gray-500">{invoice.veiculo_matricula}</div>}
-                              </div>
-                            ) : (
-                              <span className="text-gray-500">-</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 text-gray-100">
-                            <div>{invoice.cliente_nome}</div>
-                            <div className="text-xs text-gray-500">NIF: {invoice.cliente_nif}</div>
-                          </td>
-                          <td className="px-6 py-4">
-                            {formatDateSafe(invoice.data_emissao)}
-                          </td>
-                          <td className="px-6 py-4">
-                            {formatDateSafe(invoice.data_vencimento)}
-                          </td>
-                          <td className="px-6 py-4 text-right font-medium text-gray-200">€{invoice.valor_total.toFixed(2)}</td>
-                          <td className="px-6 py-4 text-center">
-                            <span className={`px-2 py-1 text-xs font-bold border ${getStatusColor(invoice.estado)}`}>
-                              {getStatusText(invoice.estado)}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-center flex justify-center gap-3">
-                            {/* Ícone 1: Download PDF da Fatura */}
-                            <button 
-                              onClick={() => handleDownloadPDF(invoice.id, getNumeroFaturaExibicao(invoice))}
-                              className="text-gray-400 hover:text-brand-yellow transition-colors p-1" 
-                              title="Descarregar PDF da Fatura"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                              </svg>
-                            </button>
-                            
-                            {/* Ícone 2: Emitir Recibo (apareça apenas se pendente E tiver toconline_id) */}
-                            {invoice.estado === 'pendente' && invoice.toconline_id ? (
-                              <button 
-                                onClick={() => handleEmitirRecibo(invoice.id, getNumeroFaturaExibicao(invoice))}
-                                className="text-gray-400 hover:text-green-400 transition-colors p-1" 
-                                title="Emitir Recibo e Marcar como Paga"
-                              >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                              </button>
-                            ) : invoice.estado === 'pendente' ? (
-                              <button 
-                                disabled
-                                className="text-gray-600 cursor-not-allowed p-1" 
-                                title="Fatura não vinculada ao TOConline. Apenas faturas criadas via TOConline podem ter recibos."
-                              >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                              </button>
-                            ) : null}
-                            
-                            {/* Ícone 3: Descarregar Recibo (apareça apenas se paga E tiver recibo_toconline_id) */}
-                            {invoice.estado === 'paga' && invoice.recibo_toconline_id ? (
-                              <button 
-                                onClick={() => handleDownloadRecibo(invoice.id, getNumeroFaturaExibicao(invoice))}
-                                className="text-gray-400 hover:text-blue-400 transition-colors p-1" 
-                                title="Descarregar PDF do Recibo"
-                              >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                              </button>
-                            ) : null}
+                    </thead>
+                    <tbody className="divide-y divide-gray-600">
+                      {filteredInvoices.length === 0 ? (
+                        <tr>
+                          <td colSpan={9} className="px-6 py-12 text-center text-gray-400">
+                            {invoices.length === 0 ? 'Nenhuma fatura encontrada' : 'Nenhuma fatura corresponde aos filtros'}
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination */}
-              {filteredInvoices.length > 0 && (
-                <div className="bg-gray-800 px-4 py-3 border-t border-gray-600 flex items-center justify-between sm:px-6">
-                  <div className="flex-1 flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-400">
-                        <span className="font-medium text-gray-200">{filteredInvoices.length}</span> faturas encontradas
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={prevPage}
-                        disabled={currentPage === 1}
-                        className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-600 text-gray-300 rounded border border-gray-600 transition-colors"
-                      >
-                        Anterior
-                      </button>
-                      <span className="text-sm text-gray-400 px-3">
-                        Página <span className="font-medium text-gray-200">{currentPage}</span> de <span className="font-medium text-gray-200">{totalPages}</span>
-                      </span>
-                      <button
-                        onClick={nextPage}
-                        disabled={currentPage === totalPages}
-                        className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-600 text-gray-300 rounded border border-gray-600 transition-colors"
-                      >
-                        Próxima
-                      </button>
+                      ) : (
+                        (paginatedInvoices as Invoice[]).map((invoice: Invoice) => (
+                          <tr key={invoice.id} className="hover:bg-gray-600 transition-colors">
+                            <td className="px-6 py-4 font-medium text-gray-200 font-mono" title={`ID Local: ${invoice.id} | TOConline ID: ${invoice.toconline_id || 'N/A'} | Recibo: ${invoice.recibo_toconline_id || 'N/A'}`}>
+                              <div>{getNumeroFaturaExibicao(invoice)}</div>
+                              {invoice.numero_fatura_toconline && invoice.numero_fatura_toconline !== invoice.numero_fatura ? (
+                                <div className="text-xs text-gray-500">Local: {invoice.numero_fatura}</div>
+                              ) : null}
+                            </td>
+                            <td className="px-6 py-4 text-gray-200 font-mono">{invoice.ordem_trabalho_ref || '-'}</td>
+                            <td className="px-6 py-4 text-gray-200 font-mono">
+                              {invoice.veiculo_marca || invoice.veiculo_modelo || invoice.veiculo_matricula ? (
+                                <div>
+                                  <div className="flex gap-2">
+                                    {invoice.veiculo_marca && <span className="font-bold">{invoice.veiculo_marca}</span>}
+                                    {invoice.veiculo_modelo && <span>{invoice.veiculo_modelo}</span>}
+                                  </div>
+                                  {invoice.veiculo_matricula && <div className="text-xs text-gray-500">{invoice.veiculo_matricula}</div>}
+                                </div>
+                              ) : (
+                                <span className="text-gray-500">-</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 text-gray-100">
+                              <div>{invoice.cliente_nome}</div>
+                              <div className="text-xs text-gray-500">NIF: {invoice.cliente_nif}</div>
+                            </td>
+                            <td className="px-6 py-4">
+                              {formatDateSafe(invoice.data_emissao)}
+                            </td>
+                            <td className="px-6 py-4">
+                              {formatDateSafe(invoice.data_vencimento)}
+                            </td>
+                            <td className="px-6 py-4 text-right font-medium text-gray-200">€{invoice.valor_total.toFixed(2)}</td>
+                            <td className="px-6 py-4 text-center">
+                              <span className={`px-2 py-1 text-xs font-bold border ${getStatusColor(invoice.estado)}`}>
+                                {getStatusText(invoice.estado)}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-center flex justify-center gap-3">
+                              {/* Ícone 1: Download PDF da Fatura */}
+                              <button 
+                                onClick={() => handleDownloadPDF(invoice.id, getNumeroFaturaExibicao(invoice))}
+                                className="text-gray-400 hover:text-brand-yellow transition-colors p-1" 
+                                title="Descarregar PDF da Fatura"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                              </button>
+                              
+                              {/* Ícone 2: Emitir Recibo (apareça apenas se pendente E tiver toconline_id) */}
+                              {invoice.estado === 'pendente' && invoice.toconline_id ? (
+                                <button 
+                                  onClick={() => handleEmitirRecibo(invoice.id, getNumeroFaturaExibicao(invoice))}
+                                  className="text-gray-400 hover:text-green-400 transition-colors p-1" 
+                                  title="Emitir Recibo e Marcar como Paga"
+                                >
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                  </svg>
+                                </button>
+                              ) : invoice.estado === 'pendente' ? (
+                                <button 
+                                  disabled
+                                  className="text-gray-600 cursor-not-allowed p-1" 
+                                  title="Fatura não vinculada ao TOConline. Apenas faturas criadas via TOConline podem ter recibos."
+                                >
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                  </svg>
+                                </button>
+                              ) : null}
+                              
+                              {/* Ícone 3: Descarregar Recibo (apareça apenas se paga E tiver recibo_toconline_id) */}
+                              {invoice.estado === 'paga' && invoice.recibo_toconline_id ? (
+                                <button 
+                                  onClick={() => handleDownloadRecibo(invoice.id, getNumeroFaturaExibicao(invoice))}
+                                  className="text-gray-400 hover:text-blue-400 transition-colors p-1" 
+                                  title="Descarregar PDF do Recibo"
+                                >
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                  </svg>
+                                </button>
+                              ) : null}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Pagination */}
+                {filteredInvoices.length > 0 && (
+                  <div className="bg-gray-800 px-4 py-3 border-t border-gray-600 flex items-center justify-between sm:px-6">
+                    <div className="flex-1 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-400">
+                          <span className="font-medium text-gray-200">{filteredInvoices.length}</span> faturas encontradas
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={prevPage}
+                          disabled={currentPage === 1}
+                          className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-600 text-gray-300 rounded border border-gray-600 transition-colors"
+                        >
+                          Anterior
+                        </button>
+                        <span className="text-sm text-gray-400 px-3">
+                          Página <span className="font-medium text-gray-200">{currentPage}</span> de <span className="font-medium text-gray-200">{totalPages}</span>
+                        </span>
+                        <button
+                          onClick={nextPage}
+                          disabled={currentPage === totalPages}
+                          className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-600 text-gray-300 rounded border border-gray-600 transition-colors"
+                        >
+                          Próxima
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </main>
-
-      {/* Modal Nova Fatura */}
-      <CriarFaturaModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)}
-        onSuccess={() => carregarFaturasCombinadas()}
-        oauthToken={oauthToken}
-      />
-
-    </div>
+                )}
+              </>
+            )}
+          </div>
+        </main>
+        {/* Modal Nova Fatura */}
+        <CriarFaturaModal 
+          isOpen={isModalOpen} 
+          onClose={() => setIsModalOpen(false)}
+          onSuccess={() => carregarFaturasCombinadas()}
+          oauthToken={oauthToken}
+        />
+      </div>
+    </FaturacaoErrorBoundary>
   );
 }

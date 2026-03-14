@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { successResponse, handleDatabaseError } from '@/lib/api-utils';
+import { registarAuditoria } from '@/lib/auditoria';
 
 const prisma = new PrismaClient({ log: ['error'] });
 
@@ -47,6 +48,8 @@ export async function POST(request: Request) {
         ativo: ativo !== undefined ? ativo : true
       }
     });
+
+    await registarAuditoria('CREATE', 'fornecedores', fornecedor.id, null, { nome, email, telefone }, request);
 
     return successResponse(fornecedor, 201);
   } catch (error) {

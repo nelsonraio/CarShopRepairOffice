@@ -1,5 +1,6 @@
 import { successResponse, handleDatabaseError } from '@/lib/api-utils';
 import { PrismaClient } from '@prisma/client';
+import { registarAuditoria } from '@/lib/auditoria';
 
 /**
  * Initialize Prisma Client for database operations
@@ -122,6 +123,8 @@ export async function POST(request: Request) {
       const budgetItems = parseBudgetItems(items, orcamento.id);
       await prisma.itens_orcamento.createMany({ data: budgetItems });
     }
+
+    await registarAuditoria('CREATE', 'orcamentos', Number(orcamento.id), null, { ref_orcamento, cliente_id: parseInt(cliente_id), total_geral: parseFloat(total_geral) }, request);
 
     return successResponse({
       success: true,
@@ -391,6 +394,8 @@ export async function PUT(request: Request) {
         await prisma.itens_orcamento.createMany({ data: budgetItems });
       }
 
+      await registarAuditoria('UPDATE', 'orcamentos', Number(id), null, { total_geral: Number(body.total_geral ?? currentOrcamento.total_geral), items_count: budgetItems.length }, request);
+
       return successResponse({ success: true });
     }
 
@@ -421,6 +426,8 @@ export async function PUT(request: Request) {
     if (estado === 'Aprovado') {
       await createWorkOrderFromBudget(id, currentOrcamento, mecanico_id);
     }
+
+    await registarAuditoria('UPDATE', 'orcamentos', Number(id), { estado: currentOrcamento.estado }, { estado: updatedOrcamento.estado }, request);
 
     return successResponse({
       success: true,
@@ -464,6 +471,8 @@ export async function DELETE(request: Request) {
     await prismaAny.orcamentos.delete({
       where: { id: BigInt(id) }
     });
+
+    await registarAuditoria('DELETE', 'orcamentos', Number(id), { ref_orcamento: budget.ref_orcamento, estado: budget.estado }, null, request);
 
     return successResponse({ success: true, message: 'Budget deleted successfully' });
   } catch (error) {

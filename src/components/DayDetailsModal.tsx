@@ -36,53 +36,98 @@ const DayDetailsModal: React.FC<DayDetailsModalProps> = ({ isOpen, onClose, day,
         </div>
 
         <div className="overflow-y-auto max-h-[50vh] pr-2">
-          <table className="w-full text-sm text-left">
-            <thead className="text-xs text-gray-300 uppercase bg-gray-700">
-              <tr>
-                <th className="px-4 py-3">Hora</th>
-                <th className="px-4 py-3">Veículo</th>
-                <th className="px-4 py-3">Matrícula</th>
-                <th className="px-4 py-3">Cliente</th>
-                <th className="px-4 py-3 text-center">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-600">
-              {appointments.map((appointment, index) => (
-                <tr key={index} className="bg-gray-800 hover:bg-gray-700 transition-colors">
-                  <td className="px-4 py-3 font-mono text-brand-yellow">{appointment.time}</td>
-                  <td className="px-4 py-3 text-gray-100 font-bold">{appointment.car}</td>
-                  <td className="px-4 py-3 font-mono">{appointment.plate}</td>
-                  <td className="px-4 py-3">{appointment.client}</td>
-                  <td className="px-4 py-3 text-center">
-                    <div className="flex justify-center space-x-2">
-                      <button
-                        onClick={() => onEditAppointment?.(appointment, index)}
-                        className="text-blue-400 hover:text-blue-300 transition-colors"
-                        title="Editar agendamento"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (window.confirm('Tem certeza que deseja apagar este agendamento?')) {
-                            onDeleteAppointment?.(index);
-                          }
-                        }}
-                        className="text-red-400 hover:text-red-300 transition-colors"
-                        title="Apagar agendamento"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
+          {/* Tabela para desktop */}
+          <div className="hidden md:block">
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs text-gray-300 uppercase bg-gray-700">
+                <tr>
+                  <th className="px-4 py-3">Hora</th>
+                  <th className="px-4 py-3">Veículo</th>
+                  <th className="px-4 py-3">Matrícula</th>
+                  <th className="px-4 py-3">Cliente</th>
+                  <th className="px-4 py-3 text-center">Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-600">
+                {appointments.map((appointment, index) => (
+                  <tr key={index} className="bg-gray-800 hover:bg-gray-700 transition-colors">
+                    <td className="px-4 py-3 font-mono text-brand-yellow">{appointment.time}</td>
+                    <td className="px-4 py-3 text-gray-100 font-bold">{appointment.car}</td>
+                    <td className="px-4 py-3 font-mono">{appointment.plate}</td>
+                    <td className="px-4 py-3">{appointment.client}</td>
+                    <td className="px-4 py-3 text-center">
+                      <div className="flex justify-center space-x-2">
+                        <button
+                          onClick={() => onEditAppointment?.(appointment, index)}
+                          className="text-blue-400 hover:text-blue-300 transition-colors"
+                          title="Editar agendamento"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (window.confirm('Tem certeza que deseja apagar este agendamento?')) {
+                              onDeleteAppointment?.(index);
+                            }
+                          }}
+                          className="text-red-400 hover:text-red-300 transition-colors"
+                          title="Apagar agendamento"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Cards para mobile */}
+          <div className="md:hidden flex flex-col gap-4 p-2">
+            {appointments.map((appointment, index) => (
+              <div key={index} className="bg-gray-800 border border-gray-700 rounded-lg shadow-md p-4 flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-brand-yellow text-lg">{appointment.time}</span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => onEditAppointment?.(appointment, index)}
+                      className="text-blue-400 hover:text-blue-300 transition-colors"
+                      title="Editar agendamento"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm('Tem certeza que deseja apagar este agendamento?')) {
+                          onDeleteAppointment?.(index);
+                        }
+                      }}
+                      className="text-red-400 hover:text-red-300 transition-colors"
+                      title="Apagar agendamento"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1 mt-2">
+                  <div className="text-gray-100 font-bold text-base">{appointment.car}</div>
+                  <div className="font-mono text-gray-300 text-xs">Matrícula: {appointment.plate}</div>
+                  <div className="text-gray-200 text-sm">Cliente: {appointment.client}</div>
+                </div>
+                {/* Exemplo de mais info: pode adicionar campos extra aqui se existir */}
+                {/* <div className="text-xs text-gray-400">Mais info...</div> */}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

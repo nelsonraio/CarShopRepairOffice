@@ -219,62 +219,103 @@ export default function AgendaPage() {
 
           {/* Appointments Table */}
           <div className="bg-gray-700 rounded-lg border border-gray-600 overflow-hidden">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs text-gray-300 uppercase bg-gray-800">
-                <tr>
-                  <th className="px-6 py-3">ID</th>
-                  <th className="px-6 py-3">Data</th>
-                  <th className="px-6 py-3">Hora</th>
-                  <th className="px-6 py-3">Cliente</th>
-                  <th className="px-6 py-3">Detalhes do Veículo</th>
-                  <th className="px-6 py-3">Mecânico</th>
-                  <th className="px-6 py-3 text-center">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-600">
-                {paginatedAppointments.map((appointment) => (
-                  <tr key={appointment.id} className="bg-gray-700 hover:bg-gray-600 transition-colors">
-                    <td className="px-6 py-4 font-mono text-gray-400">
-                      <button
-                        className="underline text-blue-400 hover:text-blue-300 font-mono"
-                        onClick={() => selectAppointment(appointment)}
-                        title="Visualizar dados do agendamento"
-                      >
-                        {appointment.id}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 font-mono text-brand-yellow">{appointment.date}</td>
-                    <td className="px-6 py-4 font-mono">{appointment.time}</td>
-                    <td className="px-6 py-4 text-gray-100 font-bold">{appointment.client || 'N/A'}</td>
-                    <td className="px-6 py-4 font-mono text-gray-100">{appointment.marca && appointment.modelo ? `${appointment.marca} ${appointment.modelo}${appointment.ano ? ` ${appointment.ano}` : ''}${appointment.matricula ? ` - ${appointment.matricula}` : ''}` : appointment.matricula || 'N/A'}</td>
-                    <td className="px-6 py-4 text-gray-100">{appointment.mechanic}</td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex justify-center space-x-2">
-                        <Link
-                          href={`/agenda/${appointment.id}/edit`}
-                          className="text-blue-400 hover:text-blue-300 transition-colors"
-                          title="Editar agendamento"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                          </svg>
-                        </Link>
-
-                        <button
-                          onClick={() => handleDelete(appointment.id)}
-                          className="text-red-400 hover:text-red-300 transition-colors"
-                          title="Apagar agendamento"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
+            {/* Tabela para desktop */}
+            <div className="hidden md:block">
+              <table className="w-full text-sm text-left">
+                <thead className="text-xs text-gray-300 uppercase bg-gray-800">
+                  <tr>
+                    <th className="px-6 py-3">ID</th>
+                    <th className="px-6 py-3">Data</th>
+                    <th className="px-6 py-3">Hora</th>
+                    <th className="px-6 py-3">Cliente</th>
+                    <th className="px-6 py-3">Detalhes do Veículo</th>
+                    <th className="px-6 py-3">Mecânico</th>
+                    <th className="px-6 py-3 text-center">Ações</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-600">
+                  {paginatedAppointments.map((appointment) => (
+                    <tr key={appointment.id} className="bg-gray-700 hover:bg-gray-600 transition-colors">
+                      <td className="px-6 py-4 font-mono text-gray-400">
+                        <button
+                          className="underline text-blue-400 hover:text-blue-300 font-mono"
+                          onClick={() => selectAppointment(appointment)}
+                          title="Visualizar dados do agendamento"
+                        >
+                          {appointment.id}
+                        </button>
+                      </td>
+                      <td className="px-6 py-4 font-mono text-brand-yellow">{appointment.date}</td>
+                      <td className="px-6 py-4 font-mono">{appointment.time}</td>
+                      <td className="px-6 py-4 text-gray-100 font-bold">{appointment.client || 'N/A'}</td>
+                      <td className="px-6 py-4 font-mono text-gray-100">{appointment.marca && appointment.modelo ? `${appointment.marca} ${appointment.modelo}${appointment.ano ? ` ${appointment.ano}` : ''}${appointment.matricula ? ` - ${appointment.matricula}` : ''}` : appointment.matricula || 'N/A'}</td>
+                      <td className="px-6 py-4 text-gray-100">{appointment.mechanic}</td>
+                      <td className="px-6 py-4 text-center">
+                        <div className="flex justify-center space-x-2">
+                          <Link
+                            href={`/agenda/${appointment.id}/edit`}
+                            className="text-blue-400 hover:text-blue-300 transition-colors"
+                            title="Editar agendamento"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                          </Link>
+
+                          <button
+                            onClick={() => handleDelete(appointment.id)}
+                            className="text-red-400 hover:text-red-300 transition-colors"
+                            title="Apagar agendamento"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Cards para mobile */}
+            <div className="md:hidden flex flex-col gap-4 p-2">
+              {paginatedAppointments.map((appointment) => (
+                <div key={appointment.id} className="bg-gray-800 border border-gray-700 rounded-lg shadow-md p-4 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-brand-yellow text-lg">{appointment.time}</span>
+                    <span className="bg-blue-900 text-blue-200 px-2 py-1 text-xs font-bold rounded">{appointment.status || ''}</span>
+                  </div>
+                  <div className="text-gray-100 font-bold text-base">{appointment.marca && appointment.modelo ? `${appointment.marca} ${appointment.modelo}${appointment.ano ? ` ${appointment.ano}` : ''}` : appointment.modelo || appointment.model || ''}</div>
+                  <div className="font-mono text-gray-300 text-xs">Matrícula: {appointment.matricula || appointment.plate || ''}</div>
+                  <div className="text-gray-200 text-sm">Cliente: {appointment.client || 'N/A'}</div>
+                  {appointment.descricao && <div className="text-xs text-gray-400">{appointment.descricao}</div>}
+                  {appointment.mechanic && <div className="text-xs text-gray-400">Mecânico: {appointment.mechanic}</div>}
+                  {appointment.priority && <div className="text-xs text-gray-400">Prioridade: {appointment.priority}</div>}
+                  <div className="flex justify-end gap-2 mt-2">
+                    <Link
+                      href={`/agenda/${appointment.id}/edit`}
+                      className="text-blue-400 hover:text-blue-300 transition-colors"
+                      title="Editar agendamento"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                      </svg>
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(appointment.id)}
+                      className="text-red-400 hover:text-red-300 transition-colors"
+                      title="Apagar agendamento"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
             {filteredAppointments.length === 0 && (
               <div className="text-center py-8 text-gray-400">
                 Nenhum agendamento encontrado.

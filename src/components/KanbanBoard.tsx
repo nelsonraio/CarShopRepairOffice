@@ -223,7 +223,8 @@ const stateConfig: Record<string, { title: string; color: string }> = {
   'concluido': { title: 'Concluído', color: 'text-yellow-400' }
 };
 
-const stateOrder = ['em_recepcao', 'em_aprovacao',  'aguarda_peca', 'em_andamento', 'concluido'];
+// Garantir que a coluna 'em_recepcao' aparece sempre, mesmo sem dados
+const stateOrder = ['em_recepcao', 'em_aprovacao', 'aguarda_peca', 'em_andamento', 'concluido'];
 
 export default function KanbanBoard() {
   const [shakeCardId, setShakeCardId] = useState<string | null>(null);
@@ -654,7 +655,7 @@ export default function KanbanBoard() {
           (grouped[estado] as KanbanCard[]).push(card);
         });
 
-        // Create columns
+        // Create columns: garantir todas as colunas, mesmo sem cartões
         const newColumns = stateOrder
           .filter(state => !!stateConfig[state])
           .map(state => {
@@ -663,11 +664,23 @@ export default function KanbanBoard() {
               id: state,
               title: config.title,
               color: config.color,
-              cards: grouped[state] || []
+              cards: grouped[state] && Array.isArray(grouped[state]) ? grouped[state] : []
             };
           });
 
-        setColumns(newColumns);
+        // Se não houver dados, garantir colunas vazias
+        if (newColumns.length === 0) {
+          setColumns(stateOrder
+            .filter(state => !!stateConfig[state])
+            .map(state => ({
+              id: state,
+              title: stateConfig[state]!.title,
+              color: stateConfig[state]!.color,
+              cards: []
+            })));
+        } else {
+          setColumns(newColumns);
+        }
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -1357,19 +1370,38 @@ export default function KanbanBoard() {
 
   return (
     <>
-      <div className="kanban-board">
+     
+      <div
+        className={"kanban-board " +
+          "md:flex md:flex-row md:gap-6 md:px-0 md:justify-center " +
+          "flex flex-col gap-4 px-2 justify-start "}
+      >
         {columns.map(column => (
-          <KanbanColumn
+          <div
             key={column.id}
-            column={column}
-            onCardClick={handleCardClick}
-            onCardDrop={handleCardDrop}
-            onCardDragStart={handleCardDragStart}
-            isReadOnly={false}
-            shakeCardId={shakeCardId}
-          />
+            className={"w-full md:w-[18%] md:min-w-[220px] md:max-w-[360px] md:flex-shrink-0"}
+          >
+            <KanbanColumn
+              column={column}
+              onCardClick={handleCardClick}
+              onCardDrop={handleCardDrop}
+              onCardDragStart={handleCardDragStart}
+              isReadOnly={false}
+              shakeCardId={shakeCardId}
+            />
+          </div>
         ))}
       </div>
+
+<style jsx global>{`
+  @keyframes bounce-right {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(10px); }
+  }
+  .animate-bounce-right {
+    animation: bounce-right 1s infinite;
+  }
+`}</style>
 
       <KanbanCardDetailsModal
         isOpen={isDetailsModalOpen}

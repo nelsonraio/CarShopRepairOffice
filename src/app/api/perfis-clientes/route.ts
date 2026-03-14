@@ -1,5 +1,6 @@
 import { successResponse, handleDatabaseError } from '@/lib/api-utils';
 import { PrismaClient } from '@prisma/client';
+import { registarAuditoria } from '@/lib/auditoria';
 
 /**
  * Initialize Prisma Client for database operations
@@ -63,6 +64,8 @@ export async function POST(request: Request) {
         ativo: body.ativo !== undefined ? body.ativo : true
       }
     });
+
+    await registarAuditoria('CREATE', 'perfis_clientes', perfil.id, null, { nome: body.nome, perclucro: toSafePercent(body.perclucro) }, request);
 
     return successResponse({
       ...perfil,

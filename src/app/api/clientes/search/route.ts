@@ -28,20 +28,23 @@ export async function GET(request: Request) {
           }
         ]
       },
-      select: {
-        id: true,
-        nome: true,
-        telefone: true,
-        email: true,
-        nif: true,
-        endereco: true,
-        perfil: true
-      },
+      include: { perfil_cliente: true },
       orderBy: { nome: 'asc' },
       take: 10
     });
 
-    return NextResponse.json(clientes);
+    const result = clientes.map(cliente => ({
+      id: cliente.id,
+      nome: cliente.nome,
+      telefone: cliente.telefone,
+      email: cliente.email,
+      nif: cliente.nif,
+      endereco: cliente.endereco,
+      perfil_id: cliente.perfil_id || null,
+      perfil: cliente.perfil_cliente ? cliente.perfil_cliente.nome : 'Normal'
+    }));
+
+    return NextResponse.json(result);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const isDbOffline =

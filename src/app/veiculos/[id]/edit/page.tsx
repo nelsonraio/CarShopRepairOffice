@@ -13,6 +13,7 @@ interface Client {
   nif: string;
   endereco: string;
   perfil: string;
+  perfil_id: string;
 }
 
 interface Brand {
@@ -44,7 +45,7 @@ const EditVehiclePage = () => {
     clientEmail: '',
     clientNif: '',
     clientAddress: '',
-    clientProfile: 'Normal',
+    clientProfileId: '', // perfil_id
     make: '',
     model: '',
     licensePlate: '',
@@ -128,16 +129,23 @@ const EditVehiclePage = () => {
           email: data.clientEmail || '',
           nif: data.clientNif || '',
           endereco: data.clientAddress || '',
-          perfil: data.clientProfile || 'Normal'
+          perfil: data.clientProfile || 'Normal',
+          perfil_id: data.clientProfileId || ''
         });
 
+        // Normaliza o perfil para corresponder ao nome de um dos perfis disponíveis
+        let normalizedProfile = 'Normal';
+        if (data.clientProfile) {
+          const found = perfis.find(p => p.nome.toLowerCase() === data.clientProfile.toLowerCase());
+          normalizedProfile = found ? found.nome : 'Normal';
+        }
         setFormData({
           clientSearch: data.clientName || '',
           clientPhone: data.clientPhone || '',
           clientEmail: data.clientEmail || '',
           clientNif: data.clientNif || '',
           clientAddress: data.clientAddress || '',
-          clientProfile: data.clientProfile || 'Normal',
+          clientProfileId: data.clientProfileId || '',
           make: data.make || '',
           model: data.model || '',
           licensePlate: data.licensePlate || '',
@@ -240,7 +248,7 @@ const EditVehiclePage = () => {
               clientEmail: data.cliente.email || '',
               clientNif: data.cliente.nif || '',
               clientAddress: data.cliente.endereco || '',
-              clientProfile: data.cliente.perfil || 'Normal'
+              clientProfileId: data.cliente.perfil_id || ''
             }));
             setSelectedClient({
               id: data.cliente.id,
@@ -249,7 +257,8 @@ const EditVehiclePage = () => {
               email: data.cliente.email || '',
               nif: data.cliente.nif || '',
               endereco: data.cliente.endereco || '',
-              perfil: data.cliente.perfil || 'Normal'
+              perfil: data.cliente.perfil || 'Normal',
+              perfil_id: data.cliente.perfil_id || ''
             });
           }
         } else {
@@ -327,8 +336,11 @@ const EditVehiclePage = () => {
     }
   };
 
-  const selectClient = (client: Client) => {
-    setSelectedClient(client);
+  const selectClient = (client: any) => {
+    setSelectedClient({
+      ...client,
+      perfil_id: client.perfil_id || ''
+    });
     setIsNewClient(false);
     setFormData(prev => ({
       ...prev,
@@ -337,7 +349,7 @@ const EditVehiclePage = () => {
       clientEmail: client.email || '',
       clientNif: client.nif || '',
       clientAddress: client.endereco || '',
-      clientProfile: client.perfil || 'Normal'
+      clientProfileId: client.perfil_id || ''
     }));
     setClientSuggestions([]);
     setShowClientSuggestions(false);
@@ -352,7 +364,7 @@ const EditVehiclePage = () => {
       clientEmail: '',
       clientNif: '',
       clientAddress: '',
-      clientProfile: 'Normal'
+      clientProfileId: ''
     }));
     setSelectedClient(null);
     setIsNewClient(true);
@@ -394,16 +406,18 @@ const EditVehiclePage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    const payload = {
+      ...formData,
+      perfil_id: formData.clientProfileId || null,
+    };
     try {
       const response = await fetch(`/api/veiculos/${params.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
-
       if (response.ok) {
         alert('Veículo atualizado com sucesso!');
         router.push('/veiculos');
@@ -465,6 +479,21 @@ const EditVehiclePage = () => {
               <div className="border-b border-gray-600 pb-6">
                 <h4 className="text-lg font-semibold text-gray-100 mb-4">Dados do Veículo</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Matrícula *</label>
+                    <input
+                      type="text"
+                      name="licensePlate"
+                      value={formData.licensePlate}
+                      onChange={handleInputChange}
+                      className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                      placeholder="XX-XX-XX"
+                      required
+                    />
+                    {licensePlateExists && (
+                      <p className="text-red-400 text-sm mt-1">Esta matrícula já existe na tabela de veículos.</p>
+                    )}
+                  </div>
                   <div className="relative">
                     <label className="block text-sm font-medium text-gray-400 mb-1">Marca *</label>
                     <input
@@ -517,21 +546,6 @@ const EditVehiclePage = () => {
                     )}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1">Matrícula *</label>
-                    <input
-                      type="text"
-                      name="licensePlate"
-                      value={formData.licensePlate}
-                      onChange={handleInputChange}
-                      className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-                      placeholder="XX-XX-XX"
-                      required
-                    />
-                    {licensePlateExists && (
-                      <p className="text-red-400 text-sm mt-1">Esta matrícula já existe na tabela de veículos.</p>
-                    )}
-                  </div>
-                  <div>
                     <label className="block text-sm font-medium text-gray-400 mb-1">Ano</label>
                     <input
                       type="number"
@@ -540,6 +554,17 @@ const EditVehiclePage = () => {
                       onChange={handleInputChange}
                       className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
                       placeholder="Ano"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Número do Chassis (VIN)</label>
+                    <input
+                      type="text"
+                      name="vin"
+                      value={formData.vin}
+                      onChange={handleInputChange}
+                      className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                      placeholder="Número do chassis"
                     />
                   </div>
                 </div>
@@ -633,20 +658,21 @@ const EditVehiclePage = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-1">Perfil de Cliente</label>
                     <select
-                      name="clientProfile"
-                      value={formData.clientProfile}
+                      name="clientProfileId"
+                      value={formData.clientProfileId}
                       onChange={handleInputChange}
                       disabled={!isNewClient}
                       className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     >
+                      <option value="">Selecione o perfil</option>
                       {perfis.map((perfil) => (
-                        <option key={perfil.id} value={perfil.nome}>
+                        <option key={perfil.id} value={perfil.id}>
                           {perfil.nome} {perfil.desconto > 0 && `(-${perfil.desconto}%)`}
                         </option>
                       ))}
                     </select>
                     {(() => {
-                      const selectedPerfil = perfis.find(p => p.nome === formData.clientProfile);
+                      const selectedPerfil = perfis.find(p => p.id === formData.clientProfileId);
                       return selectedPerfil && selectedPerfil.desconto && selectedPerfil.desconto > 0 ? (
                         <p className="text-xs text-brand-yellow mt-1">
                           Desconto de {selectedPerfil.desconto}% aplicado a este perfil
@@ -659,17 +685,7 @@ const EditVehiclePage = () => {
 
            
 
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Número do Chassis (VIN)</label>
-                <input
-                  type="text"
-                  name="vin"
-                  value={formData.vin}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-                  placeholder="Número do chassis"
-                />
-              </div>
+             
             </form>
           </div>
         </div>

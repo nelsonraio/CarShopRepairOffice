@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { registarAuditoria } from '@/lib/auditoria';
 
 const prisma = new PrismaClient({
   log: ['error'],
@@ -19,7 +20,8 @@ export async function GET(
 
     // Fetch client
     const cliente = await prisma.clientes.findUnique({
-      where: { id: clientId, ativo: true }
+      where: { id: clientId, ativo: true },
+      include: { perfil_cliente: true }
     });
 
     if (!cliente) {
@@ -57,7 +59,8 @@ export async function GET(
       telefone: cliente.telefone,
       nif: cliente.nif || '',
       endereco: cliente.endereco || '',
-      perfil: cliente.perfil === 'TVDE_Interno' ? 'TVDE Interno' : cliente.perfil === 'TVDE_Externo' ? 'TVDE Externo' : (cliente.perfil || 'Normal'),
+      perfil_id: cliente.perfil_id || null,
+      perfil: cliente.perfil_cliente ? cliente.perfil_cliente.nome : 'Normal',
       veiculos: veiculos.length,
       dataRegistro: cliente.data_registo ? cliente.data_registo.getFullYear().toString() : new Date().getFullYear().toString(),
       totalGasto: Number(cliente.total_gasto),
@@ -165,6 +168,8 @@ export async function DELETE(
       data: { ativo: false }
     });
 
+    await registarAuditoria('DELETE', 'clientes', clientId, { nome: cliente.nome }, null, request);
+
     return NextResponse.json({ success: true, message: 'Client deleted successfully' });
 
   } catch (error) {
@@ -198,24 +203,19 @@ export async function PUT(
 
     const body = await request.json();
 
-    // Normaliza o perfil para os valores válidos do enum `clientes_perfil`.
-    const normalizePerfil = (rawPerfil: unknown): 'Normal' | 'TVDE_Interno' | 'TVDE_Externo' | 'Empresa' => {
-      const perfil = String(rawPerfil ?? '').trim();
-
-      const perfilMap: Record<string, 'Normal' | 'TVDE_Interno' | 'TVDE_Externo' | 'Empresa'> = {
-        'normal': 'Normal',
-        'tvde interno': 'TVDE_Interno',
-        'tvde_interno': 'TVDE_Interno',
-        'tvde externo': 'TVDE_Externo',
-        'tvde_externo': 'TVDE_Externo',
-        'empresa': 'Empresa'
-      };
-
-      const key = perfil.toLowerCase();
-      return perfilMap[key] || 'Normal';
-    };
-
-    const perfilNormalizado = normalizePerfil(body.perfil);
+    // Verifica se o perfil_id existe
+    let perfilCliente = null;
+    if (body.perfil_id) {
+      const perfilIdInt = typeof body.perfil_id === 'string' ? parseInt(body.perfil_id, 10) : body.perfil_id;
+      if (isNaN(perfilIdInt)) {
+        return NextResponse.json({ error: 'Perfil de cliente inválido (ID não numérico)' }, { status: 400 });
+      }
+      perfilCliente = await prisma.perfis_clientes.findUnique({ where: { id: perfilIdInt } });
+      if (!perfilCliente) {
+        return NextResponse.json({ error: 'Perfil de cliente inválido' }, { status: 400 });
+      }
+      body.perfil_id = perfilIdInt;
+    }
 
     // Verifica se o NIF já existe em outro registo
     if (body.nif && body.nif.trim()) {
@@ -246,17 +246,25 @@ export async function PUT(
       updateData.telefone = body.telefone;
     }
     if (body.nif !== undefined && body.nif !== null) {
-      updateData.nif = body.nif.trim();
+      const nifTrimmed = body.nif.trim();
+      updateData.nif = nifTrimmed === '' ? null : nifTrimmed;
     }
     if (body.endereco !== undefined && body.endereco !== null) {
       updateData.endereco = body.endereco;
     }
-    updateData.perfil = perfilNormalizado; // Perfil sempre normalizado para código do enum
+    if (body.perfil_id !== undefined) {
+      updateData.perfil_id = body.perfil_id;
+    }
+
+    const clienteAnterior = await prisma.clientes.findUnique({ where: { id: clientId } });
 
     const cliente = await prisma.clientes.update({
       where: { id: clientId },
-      data: updateData
+      data: updateData,
+      include: { perfil_cliente: true }
     });
+
+    await registarAuditoria('UPDATE', 'clientes', clientId, { nome: clienteAnterior?.nome, email: clienteAnterior?.email, perfil_id: clienteAnterior?.perfil_id }, updateData, request);
 
     // Transform and return updated client
     const transformedClient = {
@@ -266,7 +274,8 @@ export async function PUT(
       telefone: cliente.telefone,
       nif: cliente.nif || '',
       endereco: cliente.endereco || '',
-      perfil: cliente.perfil === 'TVDE_Interno' ? 'TVDE Interno' : cliente.perfil === 'TVDE_Externo' ? 'TVDE Externo' : (cliente.perfil || 'Normal'),
+      perfil_id: cliente.perfil_id,
+      perfil: cliente.perfil_cliente ? cliente.perfil_cliente.nome : null,
       veiculos: 0,
       dataRegistro: cliente.data_registo ? cliente.data_registo.getFullYear().toString() : new Date().getFullYear().toString(),
       totalGasto: Number(cliente.total_gasto),

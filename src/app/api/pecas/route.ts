@@ -1,5 +1,39 @@
+/**
+ * DELETE: Apaga peça se não houver dependências
+ */
+export async function DELETE(request: Request) {
+  try {
+    const url = new URL(request.url);
+    const id = url.searchParams.get('id');
+    if (!id) {
+      return successResponse({ error: 'ID da peça é obrigatório' }, 400);
+    }
+    // Verifica dependências: encomendas, orçamentos, ordens de trabalho
+    const pecaId = parseInt(id);
+    // Encomendas (itens_encomenda_peca)
+    const encomendasCount = await prisma.itens_encomenda_peca.count({ where: { peca_id: pecaId } });
+    // Orçamentos
+    const orcamentosCount = await prisma.itens_orcamento.count({ where: { peca_id: pecaId } });
+    // Ordens de trabalho
+    const ordensCount = await prisma.itens_ordem_trabalho.count({ where: { peca_id: pecaId } });
+    if (encomendasCount > 0 || orcamentosCount > 0 || ordensCount > 0) {
+      let motivos = [];
+      if (encomendasCount > 0) motivos.push(`usada em ${encomendasCount} encomenda(s)`);
+      if (orcamentosCount > 0) motivos.push(`usada em ${orcamentosCount} orçamento(s)`);
+      if (ordensCount > 0) motivos.push(`usada em ${ordensCount} ordem(ns) de trabalho`);
+      return successResponse({ error: `Não é possível apagar a peça: ${motivos.join(', ')}.` }, 400);
+    }
+    // Apaga peça
+    await prisma.pecas.delete({ where: { id: pecaId } });
+    await registarAuditoria('DELETE', 'pecas', pecaId, null, null, request);
+    return successResponse({ success: true });
+  } catch (error) {
+    return handleDatabaseError(error as Error);
+  }
+}
 import { PrismaClient } from '@prisma/client';
 import { successResponse, handleDatabaseError } from '@/lib/api-utils';
+import { registarAuditoria } from '@/lib/auditoria';
 
 const prisma = new PrismaClient({ log: ['error'] });
 
@@ -11,7 +45,7 @@ const formatPecaResponse = (peca: any, fornecedorNome: string | null = null) => 
   referencia: peca.referencia,
   nome: peca.nome,
   descricao: peca.descricao,
-  categoria: peca.categoria,
+  category: peca.categoria?.nome || 'N/A',
   quantidade_stock: peca.quantidade_stock,
   nivel_stock_minimo: peca.nivel_stock_minimo,
   preco_venda: Number(peca.preco_venda),
@@ -47,7 +81,8 @@ export async function GET() {
   try {
     const pecas = await prisma.pecas.findMany({
       where: { ativo: true },
-      orderBy: { nome: 'asc' }
+      orderBy: { nome: 'asc' },
+      include: { categoria: true }
     });
 
     // Extrair IDs únicos de fornecedores
@@ -114,6 +149,8 @@ export async function POST(request: Request) {
       fornecedorNome = fornecedor?.nome || null;
     }
 
+    await registarAuditoria('CREATE', 'pecas', Number(peca.id), null, { nome: peca.nome, referencia: peca.referencia, quantidade_stock: peca.quantidade_stock }, request);
+
     return successResponse(formatPecaResponse(peca, fornecedorNome), 201);
   } catch (error) {
     return handleDatabaseError(error as Error);
@@ -125,7 +162,7 @@ export async function POST(request: Request) {
  */
 export async function PUT(request: Request) {
   try {
-    const { id, nome, referencia, categoria, stock, minStock, price, fornecedor_id, margem_lucro, notas } = await request.json();
+    const { id, nome, referencia, categoriaId, stock, minStock, price, fornecedor_id, margem_lucro, notas } = await request.json();
 
     if (!id) {
       return successResponse({ error: 'ID de peça é obrigatório' }, 400);
@@ -154,7 +191,7 @@ export async function PUT(request: Request) {
       data: {
         nome,
         referencia,
-        categoria,
+        categoria: { connect: { id: Number(categoriaId) } },
         quantidade_stock: stock,
         nivel_stock_minimo: minStock,
         preco_venda: price,
@@ -173,6 +210,8 @@ export async function PUT(request: Request) {
       });
       fornecedorNome = fornecedor?.nome || null;
     }
+
+    await registarAuditoria('UPDATE', 'pecas', Number(peca.id), null, { nome: peca.nome, referencia: peca.referencia, quantidade_stock: peca.quantidade_stock }, request);
 
     return successResponse(formatPecaResponse(peca, fornecedorNome));
   } catch (error) {

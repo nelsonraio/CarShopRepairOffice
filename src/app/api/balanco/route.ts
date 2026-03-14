@@ -20,15 +20,20 @@ const buildBalanceData = (order: any, pecasMap: Map<number, number>) => {
   // Calculate real cost of parts using preco_venda (base price, no margin)
   let gastoPecasReal = 0;
   if (order.itens_ordem_trabalho?.length > 0) {
-    gastoPecasReal = order.itens_ordem_trabalho.reduce((sum: number, item: any) => {
-      const quantity = parseNum(item.quantidade) || 1;
-      if (item.peca_id && pecasMap.has(item.peca_id)) {
-        // Use base price from pecas table (no margin)
-        return sum + (pecasMap.get(item.peca_id)! * quantity);
-      }
-      // No linked part — use stored price as fallback
-      return sum + (parseNum(item.preco_unitario) * quantity);
-    }, 0);
+    // Filtra apenas itens que são peças (com peca_id)
+    const pecasItens = order.itens_ordem_trabalho.filter((item: any) => item.peca_id);
+    if (pecasItens.length > 0) {
+      gastoPecasReal = pecasItens.reduce((sum: number, item: any) => {
+        const quantity = parseNum(item.quantidade) || 1;
+        if (item.peca_id && pecasMap.has(item.peca_id)) {
+          // Use base price from pecas table (no margin)
+          return sum + (pecasMap.get(item.peca_id)! * quantity);
+        }
+        // No linked part — use stored price as fallback
+        return sum + (parseNum(item.preco_unitario) * quantity);
+      }, 0);
+    }
+    // Se não houver peças, gastoPecasReal permanece zero
   }
 
   const totalIncome = parseNum(order.total_geral);
@@ -45,7 +50,8 @@ const buildBalanceData = (order: any, pecasMap: Map<number, number>) => {
     valorEntrada: totalIncome,
     gastoPecas: gastoPecasReal,
     maoObra: laborCost,
-    lucro: profit
+    lucro: profit,
+    estado: order.estado || undefined
   };
 };
 
@@ -60,7 +66,7 @@ export async function GET(request: Request) {
     // Fetch completed work orders with pagination
     const [ordensTrabalho, total] = await Promise.all([
       (prismaAny.ordens_trabalho as any).findMany({
-        where: { estado: 'concluido' },
+        where: { estado: { in: ['concluido', 'entregue', 'Entregue'] } },
         include: {
           veiculo: { include: { cliente: true } },
           itens_ordem_trabalho: true
@@ -69,7 +75,7 @@ export async function GET(request: Request) {
         skip,
         take
       }),
-      prismaAny.ordens_trabalho.count({ where: { estado: 'concluido' } })
+      prismaAny.ordens_trabalho.count({ where: { estado: { in: ['concluido', 'entregue', 'Entregue'] } } })
     ]);
 
     // Extract unique peca_ids for batch lookup of base prices

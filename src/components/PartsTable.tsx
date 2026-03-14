@@ -5,20 +5,19 @@ interface Part {
   reference: string;
   name: string;
   category: string;
-  supplier: string;
-  supplierId?: string;
-  supplierName?: string;
   stock: number;
   minStock?: number;
   price: number;
   stockStatus: 'em_stock' | 'baixo_stock' | 'esgotado';
   margem_lucro?: number;
+  notas?: string;
 }
 
 interface PartsTableProps {
   parts: Part[];
   onEdit?: (part: Part) => void;
   onReferenceClick?: (part: Part) => void;
+  onDelete?: (part: Part) => void;
 }
 
 const getCategoryLabel = (category: string) => {
@@ -71,7 +70,7 @@ const getRowBgClass = (stockStatus: string, stock: number) => {
   }
 };
 
-export default function PartsTable({ parts, onEdit, onReferenceClick }: PartsTableProps) {
+export default function PartsTable({ parts, onEdit, onReferenceClick, onDelete }: PartsTableProps) {
   return (
     <div className="bg-gray-700 border border-gray-600 rounded-none overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
@@ -81,9 +80,8 @@ export default function PartsTable({ parts, onEdit, onReferenceClick }: PartsTab
               <th scope="col" className="px-6 py-3">Referência</th>
               <th scope="col" className="px-6 py-3">Nome da Peça</th>
               <th scope="col" className="px-6 py-3">Categoria</th>
-              <th scope="col" className="px-6 py-3">Fornecedor</th>
               <th scope="col" className="px-6 py-3">Stock</th>
-              <th scope="col" className="px-6 py-3 text-right">Preço Unit.</th>
+              <th scope="col" className="px-6 py-3 text-right">Preço de Custo</th>
               <th scope="col" className="px-6 py-3 text-right">Margem</th>
               <th scope="col" className="px-6 py-3 text-center">Ações</th>
             </tr>
@@ -92,21 +90,40 @@ export default function PartsTable({ parts, onEdit, onReferenceClick }: PartsTab
             {parts.map((part) => (
               <tr key={part.id} className={`hover:bg-gray-600 transition-colors ${getRowBgClass(part.stockStatus, part.stock)}` }>
                 <td className="px-6 py-4 font-medium text-gray-200 font-mono">
-                  <button
-                    className="underline text-brand-yellow hover:text-yellow-400 cursor-pointer"
-                    onClick={() => onReferenceClick && onReferenceClick(part)}
-                    title="Ver detalhes da peça"
-                  >
-                    {part.reference}
-                  </button>
+                  {part.notas && part.notas !== '' ? (
+                    <span className="flex items-center gap-1">
+                      <button
+                        className="underline text-brand-yellow hover:text-yellow-400 cursor-pointer"
+                        onClick={() => onReferenceClick && onReferenceClick(part)}
+                        title="Ver detalhes da peça"
+                        style={{ position: 'relative' }}
+                      >
+                        {part.reference}
+                      </button>
+                      <span
+                        title={part.notas}
+                        className="ml-1 text-blue-400 cursor-help"
+                        style={{ fontSize: '1.1em', verticalAlign: 'middle' }}
+                      >
+                        &#9432;
+                      </span>
+                    </span>
+                  ) : (
+                    <button
+                      className="underline text-brand-yellow hover:text-yellow-400 cursor-pointer"
+                      onClick={() => onReferenceClick && onReferenceClick(part)}
+                      title="Ver detalhes da peça"
+                    >
+                      {part.reference}
+                    </button>
+                  )}
                 </td>
                 <td className="px-6 py-4 text-gray-100">{part.name}</td>
                 <td className="px-6 py-4">
                   <span className="px-2 py-1 text-xs font-semibold bg-gray-800 text-gray-300 border border-gray-600">
-                    {getCategoryLabel(part.category)}
+                    {part.category ? getCategoryLabel(part.category) : 'N/A'}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-gray-300">{part.supplierName || part.supplier || '-'}</td>
                 <td className="px-6 py-4 font-bold" style={{ color: getStockColor(part.stockStatus, part.stock).split(' ')[1] }}>
                   {part.stock} un.
                 </td>
@@ -117,14 +134,26 @@ export default function PartsTable({ parts, onEdit, onReferenceClick }: PartsTab
                   {part.margem_lucro ? `${part.margem_lucro}%` : '-'}
                 </td>
                 <td className="px-6 py-4 text-center">
-                  <button 
-                    onClick={() => onEdit && onEdit(part)}
-                    className="text-gray-400 hover:text-brand-yellow transition-colors"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
-                    </svg>
-                  </button>
+                  <div className="flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => onEdit && onEdit(part)}
+                      className="text-gray-400 hover:text-brand-yellow transition-colors"
+                      title="Editar peça"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => onDelete && onDelete(part)}
+                      className="text-gray-400 hover:text-red-400 transition-colors"
+                      title="Apagar peça"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

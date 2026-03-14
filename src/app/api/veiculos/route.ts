@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { successResponse, handleDatabaseError } from '@/lib/api-utils';
+import { registarAuditoria } from '@/lib/auditoria';
 
 const prisma = new PrismaClient();
 
@@ -90,7 +91,7 @@ export async function POST(request: Request) {
           telefone: clientPhone || '',
           nif: clientNif || null,
           endereco: clientAddress || null,
-          perfil: normalizePerfil(clientProfile),
+          perfil_id: clientProfile ? parseInt(clientProfile) : null,
           ativo: true,
           data_registo: new Date(),
           total_gasto: 0,
@@ -115,6 +116,8 @@ export async function POST(request: Request) {
       },
       include: { cliente: true }
     });
+
+    await registarAuditoria('CREATE', 'veiculos', Number(veiculo.id), null, { marca: make, modelo: model, matricula: licensePlate, cliente_id: vehicleClientId }, request);
 
     return successResponse(
       formatVeiculoResponse(veiculo, veiculo.cliente),

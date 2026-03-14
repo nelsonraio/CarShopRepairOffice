@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { registarAuditoria } from '@/lib/auditoria';
 
 // @ts-ignore
 const prisma = new PrismaClient({
@@ -137,6 +138,8 @@ export async function PUT(
       id: updatedAgendamento.id.toString()
     };
 
+    await registarAuditoria('UPDATE', 'agendamentos', parseInt(id), null, { titulo, data_agendamento: dataAgendamento, estado: 'agendado' }, request);
+
     return NextResponse.json({ success: true, agendamento: response });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -179,6 +182,8 @@ export async function PATCH(
       mecanico_id: updatedAgendamento.mecanico_id ? Number(updatedAgendamento.mecanico_id) : null,
     };
 
+    await registarAuditoria('UPDATE', 'agendamentos', parseInt(id), null, { estado: body.estado }, request);
+
     return NextResponse.json({ success: true, agendamento: serializedAgendamento });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -208,6 +213,8 @@ export async function DELETE(
     await prisma.agendamentos.delete({
       where: { id: parseInt(id) }
     });
+
+    await registarAuditoria('DELETE', 'agendamentos', parseInt(id), null, null, request);
 
     return NextResponse.json({ success: true, message: 'Agendamento deleted' });
   } catch (error) {

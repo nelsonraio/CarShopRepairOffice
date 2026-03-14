@@ -58,6 +58,7 @@ model categorias_peca {
   nome      String    @unique(map: "categorias_peca_nome") @db.VarChar(100)
   descricao String?   @db.Text
   ativo     Boolean?  @default(true)
+  pecas     pecas[]
   criado_em DateTime? @default(now()) @db.Timestamp(0)
 }
 
@@ -71,24 +72,27 @@ model categorias_servico {
 }
 
 model clientes {
-  id              Int              @id @default(autoincrement())
-  nome            String           @db.VarChar(100)
-  email           String?          @db.VarChar(255)
-  telefone        String           @db.VarChar(20)
-  nif             String?          @unique(map: "nif") @db.VarChar(20)
-  endereco        String?          @db.Text
-  perfil          clientes_perfil? @default(Normal)
-  data_registo    DateTime?        @default(dbgenerated("(curdate())")) @db.Date
-  total_gasto     Decimal?         @default(0.00) @db.Decimal(10, 2)
-  visitas         Int?             @default(0)
-  notas           String?          @db.Text
-  ativo           Boolean?         @default(true)
-  criado_em       DateTime?        @default(now()) @db.Timestamp(0)
-  atualizado_em   DateTime?        @default(now()) @db.Timestamp(0)
+  id              Int               @id @default(autoincrement())
+  nome            String            @db.VarChar(100)
+  email           String?           @db.VarChar(255)
+  telefone        String            @db.VarChar(20)
+  nif             String?           @db.VarChar(20)
+  endereco        String?           @db.Text
+  data_registo    DateTime?         @default(dbgenerated("(curdate())")) @db.Date
+  total_gasto     Decimal?          @default(0.00) @db.Decimal(10, 2)
+  visitas         Int?              @default(0)
+  notas           String?           @db.Text
+  ativo           Boolean?          @default(true)
+  criado_em       DateTime?         @default(now()) @db.Timestamp(0)
+  atualizado_em   DateTime?         @default(now()) @db.Timestamp(0)
+  perfil_id       Int?
   agendamentos    agendamentos[]
-  veiculos        veiculos[]
+  perfil_cliente  perfis_clientes?  @relation(fields: [perfil_id], references: [id])
   orcamentos      orcamentos[]
   ordens_trabalho ordens_trabalho[]
+  veiculos        veiculos[]
+
+  @@index([perfil_id], map: "clientes_perfil_id_fkey")
 }
 
 model colunas_kanban {
@@ -116,26 +120,26 @@ model configuracoes_sistema {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model faturas {
-  id                     BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
-  numero_fatura          String    @unique(map: "numero_fatura") @db.VarChar(20)
-  cliente_id             Int
-  ordem_trabalho_id      Int?
-  data_emissao           DateTime? @db.Date
-  data_vencimento        DateTime? @db.Date
-  data_pagamento         DateTime? @db.Date
-  estado                 String?   @default("pendente") @db.VarChar(20)
-  subtotal               Decimal   @db.Decimal(10, 2)
-  valor_imposto          Decimal?  @default(0.00) @db.Decimal(10, 2)
-  valor_desconto         Decimal?  @default(0.00) @db.Decimal(10, 2)
-  valor_total            Decimal   @db.Decimal(10, 2)
-  valor_pago             Decimal?  @default(0.00) @db.Decimal(10, 2)
-  notas                  String?   @db.Text
-  toconline_id           String?   @db.VarChar(50)
-  toconline_customer_id  String?   @db.VarChar(50)
-  recibo_toconline_id    String?   @db.VarChar(50)
-  criado_em              DateTime? @default(now()) @db.Timestamp(0)
-  atualizado_em          DateTime? @default(now()) @db.Timestamp(0)
-  criado_por             Int?
+  id                    BigInt    @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  numero_fatura         String    @unique(map: "numero_fatura") @db.VarChar(20)
+  cliente_id            Int
+  ordem_trabalho_id     Int?
+  data_emissao          DateTime? @db.Date
+  data_vencimento       DateTime? @db.Date
+  data_pagamento        DateTime? @db.Date
+  estado                String?   @default("pendente") @db.VarChar(20)
+  subtotal              Decimal   @db.Decimal(10, 2)
+  valor_imposto         Decimal?  @default(0.00) @db.Decimal(10, 2)
+  valor_desconto        Decimal?  @default(0.00) @db.Decimal(10, 2)
+  valor_total           Decimal   @db.Decimal(10, 2)
+  valor_pago            Decimal?  @default(0.00) @db.Decimal(10, 2)
+  notas                 String?   @db.Text
+  criado_em             DateTime? @default(now()) @db.Timestamp(0)
+  atualizado_em         DateTime? @default(now()) @db.Timestamp(0)
+  criado_por            Int?
+  recibo_toconline_id   String?   @db.VarChar(50)
+  toconline_customer_id String?   @db.VarChar(50)
+  toconline_id          String?   @db.VarChar(50)
 }
 
 model fornecedores {
@@ -180,47 +184,49 @@ model itens_fatura {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model itens_orcamento {
-  id                  BigInt       @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
-  orcamento_id        BigInt       @db.UnsignedBigInt
-  tipo_item           String       @db.VarChar(20)
+  id                  BigInt     @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  orcamento_id        BigInt     @db.UnsignedBigInt
+  tipo_item           String     @db.VarChar(20)
   servico_id          Int?
   peca_id             Int?
-  descricao           String       @db.Text
-  quantidade          Decimal?     @default(1.00) @db.Decimal(8, 2)
-  preco_unitario      Decimal      @db.Decimal(10, 2)
-  percentual_desconto Decimal?     @default(0.00) @db.Decimal(5, 2)
-  valor_desconto      Decimal?     @default(0.00) @db.Decimal(10, 2)
-  percentual_imposto  Decimal?     @default(23.00) @db.Decimal(5, 2)
-  valor_imposto       Decimal?     @default(0.00) @db.Decimal(10, 2)
-  valor_total         Decimal      @db.Decimal(10, 2)
-  notas               String?      @db.Text
-  criado_em           DateTime?    @default(now()) @db.Timestamp(0)
-  orcamento           orcamentos   @relation(fields: [orcamento_id], references: [id], onDelete: Cascade)
+  descricao           String     @db.Text
+  quantidade          Decimal?   @default(1.00) @db.Decimal(8, 2)
+  preco_unitario      Decimal    @db.Decimal(10, 2)
+  percentual_desconto Decimal?   @default(0.00) @db.Decimal(5, 2)
+  valor_desconto      Decimal?   @default(0.00) @db.Decimal(10, 2)
+  percentual_imposto  Decimal?   @default(23.00) @db.Decimal(5, 2)
+  valor_imposto       Decimal?   @default(0.00) @db.Decimal(10, 2)
+  valor_total         Decimal    @db.Decimal(10, 2)
+  notas               String?    @db.Text
+  criado_em           DateTime?  @default(now()) @db.Timestamp(0)
+  orcamento           orcamentos @relation(fields: [orcamento_id], references: [id], onDelete: Cascade)
 
   @@index([orcamento_id], map: "itens_orcamento_orcamento_id_fkey")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model itens_ordem_trabalho {
-  id                  BigInt            @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
-  ordem_trabalho_id   BigInt?           @db.UnsignedBigInt
-  tipo_item           String            @db.VarChar(20)
+  id                  BigInt           @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  ordem_trabalho_id   BigInt?          @db.UnsignedBigInt
+  tipo_item           String           @db.VarChar(20)
   servico_id          Int?
   peca_id             Int?
-  descricao           String            @db.Text
-  quantidade          Decimal?          @default(1.00) @db.Decimal(8, 2)
-  preco_unitario      Decimal           @db.Decimal(10, 2)
-  horas_trabalho      Decimal?          @db.Decimal(6, 2)
-  tarifa_horaria      Decimal?          @db.Decimal(8, 2)
-  percentual_desconto Decimal?          @default(0.00) @db.Decimal(5, 2)
-  valor_desconto      Decimal?          @default(0.00) @db.Decimal(10, 2)
-  percentual_imposto  Decimal?          @default(23.00) @db.Decimal(5, 2)
-  valor_imposto       Decimal?          @default(0.00) @db.Decimal(10, 2)
-  valor_total         Decimal           @db.Decimal(10, 2)
-  notas               String?           @db.Text
-  criado_em           DateTime?         @default(now()) @db.Timestamp(0)
-  aguarda_peca        Boolean?          @default(false)
-  ordens_trabalho     ordens_trabalho?  @relation(fields: [ordem_trabalho_id], references: [id], onDelete: Cascade)
+  descricao           String           @db.Text
+  quantidade          Decimal?         @default(1.00) @db.Decimal(8, 2)
+  preco_unitario      Decimal          @db.Decimal(10, 2)
+  horas_trabalho      Decimal?         @db.Decimal(6, 2)
+  tarifa_horaria      Decimal?         @db.Decimal(8, 2)
+  percentual_desconto Decimal?         @default(0.00) @db.Decimal(5, 2)
+  valor_desconto      Decimal?         @default(0.00) @db.Decimal(10, 2)
+  percentual_imposto  Decimal?         @default(23.00) @db.Decimal(5, 2)
+  valor_imposto       Decimal?         @default(0.00) @db.Decimal(10, 2)
+  valor_total         Decimal          @db.Decimal(10, 2)
+  notas               String?          @db.Text
+  criado_em           DateTime?        @default(now()) @db.Timestamp(0)
+  aguarda_peca        Boolean?         @default(false)
+  ordens_trabalho     ordens_trabalho? @relation(fields: [ordem_trabalho_id], references: [id], onDelete: Cascade)
+
+  @@index([ordem_trabalho_id], map: "itens_ordem_trabalho_ordem_trabalho_id_fkey")
 }
 
 model log_auditoria {
@@ -277,31 +283,31 @@ model mecanicos {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model orcamentos {
-  id                BigInt               @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
-  ref_orcamento     String               @unique(map: "numero_orcamento") @db.VarChar(20)
+  id                BigInt            @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  ref_orcamento     String            @unique(map: "numero_orcamento") @db.VarChar(20)
   cliente_id        Int
-  veiculo_id        BigInt               @db.UnsignedBigInt
+  veiculo_id        BigInt            @db.UnsignedBigInt
   preparado_por     Int?
-  data_emissao      DateTime?            @db.Date
-  data_expiracao    DateTime?            @db.Date
-  estado            String?              @default("pendente") @db.VarChar(20)
-  total_pecas       Decimal?             @default(0.00) @db.Decimal(10, 2)
-  total_mao_obra    Decimal?             @default(0.00) @db.Decimal(10, 2)
-  total_desconto    Decimal?             @default(0.00) @db.Decimal(10, 2)
-  total_imposto     Decimal?             @default(0.00) @db.Decimal(10, 2)
-  total_geral       Decimal              @db.Decimal(10, 2)
-  notas             String?              @db.Text
-  data_aprovacao    DateTime?            @db.Date
+  data_emissao      DateTime?         @db.Date
+  data_expiracao    DateTime?         @db.Date
+  estado            String?           @default("pendente") @db.VarChar(20)
+  total_pecas       Decimal?          @default(0.00) @db.Decimal(10, 2)
+  total_mao_obra    Decimal?          @default(0.00) @db.Decimal(10, 2)
+  total_desconto    Decimal?          @default(0.00) @db.Decimal(10, 2)
+  total_imposto     Decimal?          @default(0.00) @db.Decimal(10, 2)
+  total_geral       Decimal           @db.Decimal(10, 2)
+  notas             String?           @db.Text
+  data_aprovacao    DateTime?         @db.Date
   aprovado_por      Int?
-  criado_em         DateTime?            @default(now()) @db.Timestamp(0)
-  atualizado_em     DateTime?            @default(now()) @db.Timestamp(0)
+  criado_em         DateTime?         @default(now()) @db.Timestamp(0)
+  atualizado_em     DateTime?         @default(now()) @db.Timestamp(0)
   kms               Int?
-  contacto_nome     String?              @db.VarChar(100)
-  contacto_telefone String?              @db.VarChar(20)
-  contacto_email    String?              @db.VarChar(255)
-  cliente           clientes             @relation(fields: [cliente_id], references: [id])
-  veiculo           veiculos             @relation(fields: [veiculo_id], references: [id])
+  contacto_nome     String?           @db.VarChar(100)
+  contacto_telefone String?           @db.VarChar(20)
+  contacto_email    String?           @db.VarChar(255)
   itens_orcamento   itens_orcamento[]
+  cliente           clientes          @relation(fields: [cliente_id], references: [id])
+  veiculo           veiculos          @relation(fields: [veiculo_id], references: [id])
   ordens_trabalho   ordens_trabalho[]
 
   @@index([cliente_id], map: "orcamentos_cliente_id_fkey")
@@ -310,41 +316,41 @@ model orcamentos {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model ordens_trabalho {
-  id                    BigInt                @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
-  ref_ordem_trabalho    String                @unique(map: "numero_ordem_trabalho") @db.VarChar(20)
+  id                    BigInt                 @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  ref_ordem_trabalho    String                 @unique(map: "numero_ordem_trabalho") @db.VarChar(20)
   cliente_id            Int
-  veiculo_id            BigInt                @db.UnsignedBigInt
+  veiculo_id            BigInt                 @db.UnsignedBigInt
   mecanico_id           Int?
-  orcamento_id          BigInt?               @db.UnsignedBigInt
-  agendamento_id        BigInt?               @db.UnsignedBigInt
-  data_inicio           DateTime?             @db.Date
-  data_conclusao        DateTime?             @db.Date
-  estado                String?               @default("em_andamento") @db.VarChar(20)
+  orcamento_id          BigInt?                @db.UnsignedBigInt
+  agendamento_id        BigInt?                @db.UnsignedBigInt
+  data_inicio           DateTime?              @db.Date
+  data_conclusao        DateTime?              @db.Date
+  estado                String?                @default("em_andamento") @db.VarChar(20)
   quilometragem_servico Int?
-  descricao_problema    String?               @db.Text
-  trabalho_realizado    String?               @db.Text
-  recomendacoes         String?               @db.Text
-  total_pecas           Decimal?              @default(0.00) @db.Decimal(10, 2)
-  total_mao_obra        Decimal?              @default(0.00) @db.Decimal(10, 2)
-  total_desconto        Decimal?              @default(0.00) @db.Decimal(10, 2)
-  total_imposto         Decimal?              @default(0.00) @db.Decimal(10, 2)
-  total_geral           Decimal               @db.Decimal(10, 2)
-  criado_em             DateTime?             @default(now()) @db.Timestamp(0)
-  atualizado_em         DateTime?             @default(now()) @db.Timestamp(0)
+  descricao_problema    String?                @db.Text
+  trabalho_realizado    String?                @db.Text
+  recomendacoes         String?                @db.Text
+  total_pecas           Decimal?               @default(0.00) @db.Decimal(10, 2)
+  total_mao_obra        Decimal?               @default(0.00) @db.Decimal(10, 2)
+  total_desconto        Decimal?               @default(0.00) @db.Decimal(10, 2)
+  total_imposto         Decimal?               @default(0.00) @db.Decimal(10, 2)
+  total_geral           Decimal                @db.Decimal(10, 2)
+  criado_em             DateTime?              @default(now()) @db.Timestamp(0)
+  atualizado_em         DateTime?              @default(now()) @db.Timestamp(0)
   criado_por            Int?
   atualizado_por        Int?
-  prioridade            String?               @default("normal") @db.VarChar(20)
-  contacto_nome         String?               @db.VarChar(100)
-  contacto_telefone     String?               @db.VarChar(20)
-  contacto_email        String?               @db.VarChar(255)
+  prioridade            String?                @default("normal") @db.VarChar(20)
+  contacto_nome         String?                @db.VarChar(100)
+  contacto_telefone     String?                @db.VarChar(20)
+  contacto_email        String?                @db.VarChar(255)
   kms                   Int?
   fatura_id             BigInt?
-  veiculo               veiculos              @relation(fields: [veiculo_id], references: [id])
-  cliente               clientes              @relation(fields: [cliente_id], references: [id])
-  mecanico              mecanicos?            @relation(fields: [mecanico_id], references: [id])
-  orcamento             orcamentos?           @relation(fields: [orcamento_id], references: [id])
-  agendamento           agendamentos?         @relation(fields: [agendamento_id], references: [id])
   itens_ordem_trabalho  itens_ordem_trabalho[]
+  agendamento           agendamentos?          @relation(fields: [agendamento_id], references: [id])
+  cliente               clientes               @relation(fields: [cliente_id], references: [id])
+  mecanico              mecanicos?             @relation(fields: [mecanico_id], references: [id])
+  orcamento             orcamentos?            @relation(fields: [orcamento_id], references: [id])
+  veiculo               veiculos               @relation(fields: [veiculo_id], references: [id])
 
   @@index([cliente_id])
   @@index([mecanico_id])
@@ -371,7 +377,7 @@ model pecas {
   referencia           String                 @unique(map: "referencia") @db.VarChar(50)
   nome                 String                 @db.VarChar(255)
   descricao            String?                @db.Text
-  categoria            String                 @db.VarChar(50)
+  categoria_id         BigInt                 @db.UnsignedBigInt
   fornecedor_id        Int?
   custo_unitario       Decimal                @db.Decimal(10, 2)
   preco_venda          Decimal                @db.Decimal(10, 2)
@@ -387,6 +393,7 @@ model pecas {
   atualizado_em        DateTime?              @default(now()) @db.Timestamp(0)
   criado_por           Int?
   itens_encomenda      itens_encomenda_peca[]
+  categoria            categorias_peca        @relation(fields: [categoria_id], references: [id])
 }
 
 model pecas_ordem_trabalho {
@@ -469,21 +476,22 @@ model veiculos {
   notas              String?           @db.Text
   criado_em          DateTime?         @default(now()) @db.Timestamp(0)
   atualizado_em      DateTime?         @default(now()) @db.Timestamp(0)
-  cliente            clientes?         @relation(fields: [cliente_id], references: [id])
   orcamentos         orcamentos[]
   ordens_trabalho    ordens_trabalho[]
+  cliente            clientes?         @relation(fields: [cliente_id], references: [id])
 
   @@index([cliente_id], map: "veiculos_cliente_id_fkey")
 }
 
 model perfis_clientes {
-  id            Int       @id @default(autoincrement())
-  nome          String    @unique(map: "nome_perfil") @db.VarChar(50)
-  descricao     String?   @db.Text
-  perclucro     Decimal   @default(0.00) @db.Decimal(5, 2)
-  ativo         Boolean?  @default(true)
-  criado_em     DateTime? @default(now()) @db.Timestamp(0)
-  atualizado_em DateTime? @default(now()) @db.Timestamp(0)
+  id            Int        @id @default(autoincrement())
+  nome          String     @unique(map: "nome_perfil") @db.VarChar(50)
+  descricao     String?    @db.Text
+  perclucro     Decimal    @default(0.00) @db.Decimal(5, 2)
+  ativo         Boolean?   @default(true)
+  criado_em     DateTime?  @default(now()) @db.Timestamp(0)
+  atualizado_em DateTime?  @default(now()) @db.Timestamp(0)
+  clientes      clientes[]
 }
 
 /// Encomendas de peças aos fornecedores
@@ -552,11 +560,4 @@ enum utilizadores_papel {
   gestor
   mecanico
   rececionista
-}
-
-enum clientes_perfil {
-  Normal
-  TVDE_Interno @map("TVDE Interno")
-  TVDE_Externo @map("TVDE Externo")
-  Empresa
 }

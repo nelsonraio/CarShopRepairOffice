@@ -16,8 +16,8 @@ export async function GET() {
       orderBy: { nome: 'asc' },
       select: { id: true, nome: true, descricao: true }
     });
-
-    return successResponse(categorias.map((c: any) => c.nome));
+    // Devolve array de objetos {id, nome, descricao}
+    return successResponse(categorias);
   } catch (error) {
     return handleDatabaseError(error as Error);
   }

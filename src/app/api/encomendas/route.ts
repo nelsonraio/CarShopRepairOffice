@@ -8,6 +8,7 @@ import {
   toDateString,
   calculateDaysDelay
 } from '@/lib/api-utils';
+import { registarAuditoria } from '@/lib/auditoria';
 
 // @ts-ignore
 const prisma = new PrismaClient({
@@ -174,15 +175,15 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { fornecedor_id, data_entrega_estimada, itens } = body;
+    const { fornecedor, fornecedor_id, data_entrega_estimada, itens } = body;
 
     // Validate items array
     if (!Array.isArray(itens) || itens.length === 0) {
       return errorResponse('Items are required', 400);
     }
 
-    // Infer supplier from first part if not provided
-    let supplierId = fornecedor_id;
+    // Extract supplierId from fornecedor.connect.id if present, else fallback
+    let supplierId = fornecedor?.connect?.id || fornecedor_id;
     if (!supplierId && itens.length > 0) {
       supplierId = await inferSupplierFromPart(itens[0].peca_id);
     }
@@ -242,6 +243,8 @@ export async function POST(request: Request) {
     if (!created?.id) {
       return errorResponse('Order created but missing ID', 500);
     }
+
+    await registarAuditoria('CREATE', 'encomendas_pecas', Number(created.id), null, { numero_encomenda: created.numero_encomenda, fornecedor_id: supplierId }, request);
 
     return successResponse(
       {

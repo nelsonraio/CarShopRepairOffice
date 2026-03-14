@@ -9,6 +9,7 @@ import {
   buildDataMap,
   extractUniqueIds
 } from '@/lib/api-utils';
+import { registarAuditoria } from '@/lib/auditoria';
 
 const prisma = new PrismaClient();
 
@@ -279,6 +280,8 @@ export async function POST(req: NextRequest) {
         data: { fatura_id: fatura.id }
       });
     }
+
+    await registarAuditoria('CREATE', 'faturas', Number(fatura.id), null, { numero_fatura, cliente_id, ordem_trabalho_id: ordemTrabalhoIdParsed, valor_total: parseNum(valor_total) }, req);
 
     return successResponse(
       {

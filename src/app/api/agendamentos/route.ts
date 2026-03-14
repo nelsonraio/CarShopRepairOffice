@@ -1,5 +1,6 @@
 import { successResponse, handleDatabaseError } from '@/lib/api-utils';
 import { PrismaClient } from '@prisma/client';
+import { registarAuditoria } from '@/lib/auditoria';
 
 /**
  * Initialize Prisma Client for database operations
@@ -221,6 +222,8 @@ export async function POST(request: Request) {
       }
     });
 
+    await registarAuditoria('CREATE', 'agendamentos', Number(created.id), null, { cliente: body.cliente, titulo: created.titulo, data: body.data, hora: body.hora }, request);
+
     return successResponse({ success: true, id: String(created.id) }, 201);
   } catch (error) {
     return handleDatabaseError(error as Error);
@@ -268,6 +271,8 @@ export async function PUT(request: Request) {
       where: { id: parseInt(id) },
       data: updateData
     });
+
+    await registarAuditoria('UPDATE', 'agendamentos', parseInt(id), null, { titulo: body.tipoServico, data: body.data, hora: body.hora, estado: body.estado }, request);
 
     return successResponse({ success: true, id: String(updated.id) });
   } catch (error) {

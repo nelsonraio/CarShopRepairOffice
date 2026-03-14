@@ -74,7 +74,16 @@ export default function VehiclesTable({ vehicles, onViewHistory, onEdit, onDelet
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-600">
-              {filteredVehicles.map((vehicle) => {
+              {filteredVehicles.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
+                    <svg className="w-12 h-12 mx-auto mb-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v3.28a1 1 0 00.684.948l6 1.925A6.002 6.002 0 0019 17Z" />
+                    </svg>
+                    {searchTerm ? 'Nenhum veículo encontrado para a pesquisa.' : 'Nenhum veículo encontrado.'}
+                  </td>
+                </tr>
+              ) : filteredVehicles.map((vehicle) => {
                 const clientName = vehicle.clientName || 'Cliente não encontrado';
                 return (
                   <tr key={`${vehicle.id}_${vehicle.licensePlate}`} className="hover:bg-gray-600 transition-colors">

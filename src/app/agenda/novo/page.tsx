@@ -33,13 +33,15 @@ interface Service {
 }
 
 const NewAppointmentPage = () => {
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
   const [formData, setFormData] = useState({
     cliente: '',
     marca: '',
     modelo: '',
     ano: '',
     matricula: '',
-    data: '',
+    data: todayStr,
     hora: '',
     tipoServico: 'Revisão Geral',
     mecanico: '',
@@ -288,7 +290,8 @@ const NewAppointmentPage = () => {
   const selectClient = (client: Client) => {
     setFormData(prev => ({
       ...prev,
-      cliente: client.nome
+      cliente: client.nome,
+      contacto_telefone: client.telefone ? client.telefone : prev.contacto_telefone
     }));
     setClientSuggestions([]);
     setShowClientSuggestions(false);

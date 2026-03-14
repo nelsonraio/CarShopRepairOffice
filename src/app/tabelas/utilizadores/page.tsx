@@ -345,18 +345,18 @@ export default function UtilizadoresPage() {
                 </select>
               </div>
 
-              {isCreating && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Palavra-passe</label>
-                  <input
-                    type="password"
-                    value={formData.hash_palavra_passe}
-                    onChange={(e) => setFormData({ ...formData, hash_palavra_passe: e.target.value })}
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-600 text-white rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow"
-                    placeholder="••••••••"
-                  />
-                </div>
-              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Palavra-passe{!isCreating && <span className="text-gray-500 font-normal"> (deixe vazio para manter)</span>}
+                </label>
+                <input
+                  type="password"
+                  value={formData.hash_palavra_passe}
+                  onChange={(e) => setFormData({ ...formData, hash_palavra_passe: e.target.value })}
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-600 text-white rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow"
+                  placeholder={isCreating ? "••••••••" : "Nova palavra-passe (opcional)"}
+                />
+              </div>
             </div>
 
             <div className="flex gap-3 mt-8">

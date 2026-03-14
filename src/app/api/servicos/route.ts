@@ -1,5 +1,6 @@
 import { successResponse, handleDatabaseError, serializeBigInt } from '@/lib/api-utils';
 import { PrismaClient } from '@prisma/client';
+import { registarAuditoria } from '@/lib/auditoria';
 
 /**
  * Initialize Prisma Client for database operations
@@ -55,6 +56,8 @@ export async function POST(request: Request) {
 
     // Serialize BigInt fields
     const serialized = serializeBigInt(servico);
+
+    await registarAuditoria('CREATE', 'servicos', Number(servico.id), null, { nome: body.nome, preco_base: body.preco_base }, request);
 
     return successResponse(serialized, 201);
   } catch (error) {

@@ -15,9 +15,6 @@ interface Part {
   reference: string;
   name: string;
   category: string;
-  supplier: string;
-  supplierId?: string;
-  supplierName?: string;
   stock: number;
   minStock?: number;
   price: number;
@@ -34,9 +31,7 @@ const PART_DETAIL_LABELS: Record<string, string> = {
   reference: 'Referência',
   name: 'Nome',
   category: 'Categoria',
-  supplier: 'Fornecedor',
-  supplierId: 'ID Fornecedor',
-  supplierName: 'Nome Fornecedor',
+  minStock: 'Stock Mínimo',
   stock: 'Stock',
   price: 'Preço',
   stockStatus: 'Estado do Stock',
@@ -61,7 +56,7 @@ export default function PartsPage() {
     id: peca.id,
     reference: peca.referencia,
     name: peca.nome,
-    category: peca.categoria,
+    category: peca.category,
     supplier: peca.fornecedor_nome || '',
     supplierId: peca.fornecedor_id ? String(peca.fornecedor_id) : '',
     supplierName: peca.fornecedor_nome || '',
@@ -130,8 +125,6 @@ export default function PartsPage() {
           stock: newPart.stock,
           minStock: newPart.minStock || 0,
           price: newPart.price,
-          fornecedor_id: newPart.supplierId ? parseInt(newPart.supplierId) : null,
-          supplierName: newPart.supplierName,
           margem_lucro: typeof newPart.margem_lucro === 'number' ? newPart.margem_lucro : 0,
           notas: newPart.notas || null
         }),
@@ -151,7 +144,7 @@ export default function PartsPage() {
     }
   };
 
-  const handleEditPart = async (updatedPart: Part) => {
+  const handleEditPart = async (updatedPart: Part & { categoriaId?: string | number }) => {
     try {
       const response = await fetch('/api/pecas', {
         method: 'PUT',
@@ -160,12 +153,10 @@ export default function PartsPage() {
           id: updatedPart.id,
           nome: updatedPart.name,
           referencia: updatedPart.reference,
-          categoria: updatedPart.category,
+          categoriaId: updatedPart.categoriaId,
           stock: updatedPart.stock,
           minStock: updatedPart.minStock || 0,
           price: updatedPart.price,
-          fornecedor_id: updatedPart.supplierId ? parseInt(updatedPart.supplierId) : null,
-          supplierName: updatedPart.supplierName,
           margem_lucro: typeof updatedPart.margem_lucro === 'number' ? updatedPart.margem_lucro : 0,
           notas: updatedPart.notas || null
         }),
@@ -266,8 +257,8 @@ export default function PartsPage() {
               className="bg-gray-800 border border-gray-600 text-gray-300 rounded-none focus:ring-brand-yellow focus:border-brand-yellow px-4 py-2"
             >
               <option value="">Todas as Categorias</option>
-              {(categorias || []).map((cat: string) => (
-                <option key={cat} value={cat}>{cat}</option>
+              {(categorias || []).map((cat: any) => (
+                <option key={cat.id} value={cat.id}>{cat.nome}</option>
               ))}
             </select>
             <select
@@ -298,6 +289,21 @@ export default function PartsPage() {
             onReferenceClick={(part) => {
               setSelectedPart(part);
               openModal('isPartDetailsModalOpen');
+            }}
+            onDelete={async (part) => {
+              if (!window.confirm('Tem certeza que deseja apagar esta peça?')) return;
+              try {
+                const response = await fetch(`/api/pecas?id=${part.id}`, { method: 'DELETE' });
+                const data = await response.json();
+                if (!response.ok) {
+                  alert(data.error || 'Não é possível apagar a peça.');
+                } else {
+                  await refetch();
+                  alert('Peça apagada com sucesso!');
+                }
+              } catch (err) {
+                alert('Erro ao apagar peça.');
+              }
             }}
           />
         )}
@@ -391,14 +397,21 @@ export default function PartsPage() {
           <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 w-full max-w-2xl mx-4">
             <h3 className="text-xl font-bold text-white mb-4">Detalhes da Peça</h3>
             <div className="space-y-2 text-gray-200">
-              {Object.entries(selectedPart).map(([key, value]) => {
-                const label = PART_DETAIL_LABELS[key] || key.replace(/_/g, ' ').toUpperCase();
-                return (
-                  <div className="text-gray-100" key={key}>
-                    <span className="font-semibold">{label}:</span> {typeof value === 'string' || typeof value === 'number' ? value : JSON.stringify(value)}
-                  </div>
-                );
-              })}
+              {Object.entries(selectedPart)
+                .filter(([key]) => !['supplier', 'supplierId', 'supplierName', 'SUPPLIER', 'SUPPLIERID', 'SUPPLIERNAME'].includes(key))
+                .map(([key, value]) => {
+                  const label = PART_DETAIL_LABELS[key] || key.replace(/_/g, ' ').toUpperCase();
+                  let displayValue = value;
+                  // Show decimals for numeric values
+                  if (typeof value === 'number') {
+                    displayValue = value.toFixed(2);
+                  }
+                  return (
+                    <div className="text-gray-100" key={key}>
+                      <span className="font-semibold">{label}:</span> {typeof displayValue === 'string' || typeof displayValue === 'number' ? displayValue : JSON.stringify(displayValue)}
+                    </div>
+                  );
+                })}
             </div>
             <div className="flex justify-end mt-6">
               <button

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { registarAuditoria } from '@/lib/auditoria';
 
 // @ts-ignore
 const prisma = new PrismaClient({
@@ -32,6 +33,8 @@ export async function PUT(
         }
       }
     });
+
+    await registarAuditoria('UPDATE', 'modelos', id, null, { nome: body.nome, marca_id: parseInt(body.marca_id) }, request);
 
     return NextResponse.json(modelo);
   } catch (error) {
@@ -102,6 +105,8 @@ export async function DELETE(
     await prisma.modelos.delete({
       where: { id }
     });
+
+    await registarAuditoria('DELETE', 'modelos', id, null, null, request);
 
     return NextResponse.json({ success: true });
   } catch (error) {

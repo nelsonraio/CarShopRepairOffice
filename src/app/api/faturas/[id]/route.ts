@@ -1,5 +1,6 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
+import { registarAuditoria } from '@/lib/auditoria';
 
 const prisma = new PrismaClient();
 
@@ -76,6 +77,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       where: { id: BigInt(id) },
       data: updateData
     });
+
+    await registarAuditoria('UPDATE', 'faturas', Number(id), null, updateData, req);
 
     return NextResponse.json({
       success: true,
@@ -198,6 +201,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       data: updateData
     });
 
+    await registarAuditoria('UPDATE', 'faturas', Number(id), null, { estado: fatura.estado, valor_pago: fatura.valor_pago ? parseFloat(fatura.valor_pago.toString()) : null }, req);
+
     return NextResponse.json({
       success: true,
       data: {
@@ -244,6 +249,8 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
         atualizado_em: new Date()
       }
     });
+
+    await registarAuditoria('DELETE', 'faturas', Number(id), null, { estado: 'cancelada', numero_fatura: fatura.numero_fatura }, _req);
 
     return NextResponse.json({
       success: true,

@@ -13,9 +13,7 @@ interface Part {
   stock: number;
   minStock: number;
   price: number;
-  supplier: string;
-  supplierId: string;
-  supplierName: string;
+  // Removed supplier fields
   stockStatus: 'em_stock' | 'baixo_stock' | 'esgotado';
   margem_lucro?: number;
   notas?: string;
@@ -28,9 +26,7 @@ interface AddPartModalProps {
 }
 
 const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart }) => {
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [isLoadingSuppliers, setIsLoadingSuppliers] = useState(true);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   
   const [formData, setFormData] = useState({
@@ -40,9 +36,6 @@ const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart 
     stock: '',
     minStock: '',
     price: '',
-    supplier: '',
-    supplierId: '',
-    supplierName: '',
     stockStatus: 'em_stock' as 'em_stock' | 'baixo_stock' | 'esgotado',
     margem_lucro: '',
     notas: ''
@@ -51,24 +44,11 @@ const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart 
   // Fetch suppliers and categories on mount
   useEffect(() => {
     if (isOpen) {
-      fetchSuppliers();
       fetchCategories();
     }
   }, [isOpen]);
 
-  const fetchSuppliers = async () => {
-    try {
-      const response = await fetch('/api/fornecedores');
-      if (response.ok) {
-        const data = await response.json();
-        setSuppliers(data);
-      }
-    } catch (error) {
-      console.error('Error fetching suppliers:', error);
-    } finally {
-      setIsLoadingSuppliers(false);
-    }
-  };
+  // Removed fetchSuppliers
 
   const fetchCategories = async () => {
     try {
@@ -87,19 +67,12 @@ const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Get supplier name from selected supplier ID
-    const selectedSupplier = suppliers.find(s => s.id === formData.supplierId);
-    const supplierName = selectedSupplier ? selectedSupplier.nome : '';
-    
     onAddPart({
       ...formData,
       stock: Number(formData.stock) || 0,
       minStock: Number(formData.minStock) || 0,
       price: Number(formData.price) || 0,
-      margem_lucro: Number(formData.margem_lucro) || 0,
-      supplier: supplierName,
-      supplierId: formData.supplierId,
-      supplierName: supplierName
+      margem_lucro: Number(formData.margem_lucro) || 0
     });
     
     setFormData({
@@ -109,9 +82,6 @@ const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart 
       stock: '',
       minStock: '',
       price: '',
-      supplier: '',
-      supplierId: '',
-      supplierName: '',
       stockStatus: 'em_stock',
       margem_lucro: '',
       notas: ''
@@ -247,31 +217,7 @@ const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart 
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Fornecedor
-            </label>
-            {isLoadingSuppliers ? (
-              <div className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-400">
-                A carregar fornecedores...
-              </div>
-            ) : (
-              <select
-                name="supplierId"
-                value={formData.supplierId}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-brand-yellow"
-              >
-                <option value="">Selecionar fornecedor</option>
-                {suppliers.map(supplier => (
-                  <option key={supplier.id} value={supplier.id}>
-                    {supplier.nome}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
+          {/* Removed supplier field */}
 
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">

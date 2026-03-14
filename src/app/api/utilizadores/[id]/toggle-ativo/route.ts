@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
+import { registarAuditoria } from '@/lib/auditoria';
 
 const prisma = new PrismaClient();
 
@@ -46,6 +47,8 @@ export async function PATCH(
         criado_em: true,
       },
     });
+
+    await registarAuditoria('UPDATE', 'utilizadores', userId, { ativo: utilizador.ativo }, { ativo: atualizado.ativo }, request);
 
     return NextResponse.json(atualizado);
   } catch (error) {

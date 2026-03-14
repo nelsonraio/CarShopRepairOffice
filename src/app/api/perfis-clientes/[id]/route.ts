@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { registarAuditoria } from '@/lib/auditoria';
 
 /**
  * Cliente Prisma configurado para logar apenas erros
@@ -66,6 +67,8 @@ export async function PUT(
         ativo: body.ativo !== undefined ? body.ativo : true
       }
     });
+
+    await registarAuditoria('UPDATE', 'perfis_clientes', id, null, { nome: body.nome, perclucro: toSafePercent(body.perclucro) }, request);
 
     // Normalizar Decimal para number antes de retornar
     return NextResponse.json({
@@ -151,6 +154,8 @@ export async function DELETE(
     await prisma.perfis_clientes.delete({
       where: { id }
     });
+
+    await registarAuditoria('DELETE', 'perfis_clientes', id, null, null, request);
 
     return NextResponse.json({ success: true });
   } catch (error) {

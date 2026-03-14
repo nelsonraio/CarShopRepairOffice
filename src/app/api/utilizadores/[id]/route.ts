@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
+import { registarAuditoria } from '@/lib/auditoria';
 
 const prisma = new PrismaClient();
 
@@ -110,14 +112,22 @@ export async function PUT(
       }
     }
 
+    // Preparar dados de atualização
+    const updateData: any = {
+      email,
+      nome_completo,
+      papel: papel as any,
+    };
+
+    // Se foi fornecida nova palavra-passe, fazer hash
+    if (body.hash_palavra_passe && body.hash_palavra_passe.trim()) {
+      updateData.hash_palavra_passe = await bcrypt.hash(body.hash_palavra_passe, 10);
+    }
+
     // Atualizar utilizador
     const atualizado = await prisma.utilizadores.update({
       where: { id: userId },
-      data: {
-        email,
-        nome_completo,
-        papel: papel as any,
-      },
+      data: updateData,
       select: {
         id: true,
         nome_utilizador: true,
@@ -128,6 +138,8 @@ export async function PUT(
         criado_em: true,
       },
     });
+
+    await registarAuditoria('UPDATE', 'utilizadores', userId, { email: utilizador.email, papel: utilizador.papel }, { email, nome_completo, papel }, request);
 
     return NextResponse.json(atualizado);
   } catch (error) {
@@ -181,6 +193,8 @@ export async function DELETE(
     await prisma.utilizadores.delete({
       where: { id: userId },
     });
+
+    await registarAuditoria('DELETE', 'utilizadores', userId, { nome_utilizador: utilizador.nome_utilizador, email: utilizador.email }, null, request);
 
     return NextResponse.json({ message: 'Utilizador eliminado com sucesso' });
   } catch (error) {

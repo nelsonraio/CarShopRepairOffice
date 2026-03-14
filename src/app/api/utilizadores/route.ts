@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
+import { registarAuditoria } from '@/lib/auditoria';
 
 const prisma = new PrismaClient();
 
@@ -89,6 +90,8 @@ export async function POST(request: NextRequest) {
         criado_em: true,
       },
     });
+
+    await registarAuditoria('CREATE', 'utilizadores', novoUtilizador.id, null, { nome_utilizador, email, papel }, request);
 
     return NextResponse.json(novoUtilizador, { status: 201 });
   } catch (error) {

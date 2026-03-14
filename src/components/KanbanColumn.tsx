@@ -84,7 +84,7 @@ export default function KanbanColumn({ column, onCardClick, onCardDrop, onCardDr
         </span>
       </div>
       <div
-        className={`kanban-column-content space-y-3 transition-all ${
+        className={`kanban-column-content flex flex-col space-y-3 transition-all ${
           isDragOver ? 'bg-gray-700/50 rounded-lg p-2 ring-2 ring-brand-yellow' : ''
         }`}
         data-column={column.title}

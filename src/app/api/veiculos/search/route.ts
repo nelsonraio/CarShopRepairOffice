@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     const veiculo = await prisma.veiculos.findUnique({
       where: { matricula },
       include: {
-        cliente: true
+        cliente: { include: { perfil_cliente: true } }
       }
     });
 
@@ -40,7 +40,8 @@ export async function GET(request: Request) {
         email: veiculo.cliente.email,
         nif: veiculo.cliente.nif,
         endereco: veiculo.cliente.endereco,
-        perfil: veiculo.cliente.perfil
+        perfil_id: veiculo.cliente.perfil_id || null,
+        perfil: veiculo.cliente.perfil_cliente ? veiculo.cliente.perfil_cliente.nome : 'Normal'
       }
     };
 

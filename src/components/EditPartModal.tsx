@@ -13,9 +13,7 @@ interface Part {
   stock: number;
   minStock?: number;
   price: number;
-  supplier: string;
-  supplierId?: string;
-  supplierName?: string;
+  // Removed supplier fields
   stockStatus: 'em_stock' | 'baixo_stock' | 'esgotado';
   margem_lucro?: number;
   notas?: string;
@@ -29,21 +27,16 @@ interface EditPartModalProps {
 }
 
 const EditPartModal: React.FC<EditPartModalProps> = ({ isOpen, onClose, onEdit, part }) => {
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [isLoadingSuppliers, setIsLoadingSuppliers] = useState(true);
+  const [categories, setCategories] = useState<{ id: string | number; nome: string }[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   
   const [formData, setFormData] = useState({
     name: '',
     reference: '',
-    category: '',
+    category: '', // will hold the category id as string
     stock: '',
     minStock: '',
     price: '',
-    supplier: '',
-    supplierId: '',
-    supplierName: '',
     stockStatus: 'em_stock' as 'em_stock' | 'baixo_stock' | 'esgotado',
     margem_lucro: '',
     notas: ''
@@ -51,52 +44,46 @@ const EditPartModal: React.FC<EditPartModalProps> = ({ isOpen, onClose, onEdit, 
 
   // Populate form data when part changes
   useEffect(() => {
-    if (part) {
+    if (part && categories.length > 0) {
+      // Find the category object by name (from old data)
+      const foundCat = categories.find(cat => cat.nome === part.category);
       setFormData({
         name: part.name || '',
         reference: part.reference || '',
-        category: part.category || '',
+        category: foundCat ? String(foundCat.id) : '',
         stock: String(part.stock ?? 0),
         minStock: String(part.minStock ?? 0),
         price: String(part.price ?? 0),
-        supplier: part.supplier || '',
-        supplierId: part.supplierId || '',
-        supplierName: part.supplierName || '',
         stockStatus: part.stockStatus || 'em_stock',
         margem_lucro: String(part.margem_lucro ?? 0),
         notas: part.notas || ''
       });
     }
-  }, [part]);
+  }, [part, categories]);
 
   // Fetch suppliers and categories on mount
   useEffect(() => {
     if (isOpen) {
-      fetchSuppliers();
       fetchCategories();
     }
   }, [isOpen]);
 
-  const fetchSuppliers = async () => {
-    try {
-      const response = await fetch('/api/fornecedores');
-      if (response.ok) {
-        const data = await response.json();
-        setSuppliers(data);
-      }
-    } catch (error) {
-      console.error('Error fetching suppliers:', error);
-    } finally {
-      setIsLoadingSuppliers(false);
-    }
-  };
+  // Removed fetchSuppliers
 
   const fetchCategories = async () => {
     try {
       const response = await fetch('/api/categorias-pecas');
       if (response.ok) {
+        // Espera array de objetos { id, nome, descricao }
         const data = await response.json();
-        setCategories(data);
+        if (Array.isArray(data) && typeof data[0] === 'object' && data[0].id) {
+          setCategories(data.map((c: any) => ({ id: c.id, nome: c.nome })));
+        } else if (Array.isArray(data)) {
+          // fallback para array de nomes
+          setCategories(data.map((nome: string, idx: number) => ({ id: String(idx + 1), nome })));
+        } else {
+          setCategories([]);
+        }
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -107,29 +94,22 @@ const EditPartModal: React.FC<EditPartModalProps> = ({ isOpen, onClose, onEdit, 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!part) return;
-    
-    // Get supplier name from selected supplier ID
-    const selectedSupplier = suppliers.find(s => s.id === formData.supplierId);
-    const supplierName = selectedSupplier ? selectedSupplier.nome : formData.supplierName;
-    
-    const updatedPart: Part = {
+    // Enviar categoriaId (id) e manter category (nome) para UI
+    const selectedCat = categories.find(cat => String(cat.id) === formData.category);
+    const updatedPart: Part & { categoriaId?: string | number } = {
       ...part,
       name: formData.name,
       reference: formData.reference,
-      category: formData.category,
+      category: selectedCat ? selectedCat.nome : '',
+      categoriaId: formData.category,
       stock: Number(formData.stock) || 0,
       minStock: Number(formData.minStock) || 0,
       price: Number(formData.price) || 0,
-      supplier: supplierName,
-      supplierId: formData.supplierId,
-      supplierName: supplierName,
       stockStatus: formData.stockStatus,
       margem_lucro: Number(formData.margem_lucro) || 0,
       notas: formData.notas
     };
-    
     onEdit(updatedPart);
     onClose();
   };
@@ -191,7 +171,7 @@ const EditPartModal: React.FC<EditPartModalProps> = ({ isOpen, onClose, onEdit, 
             >
               <option value="">Selecionar categoria</option>
               {categories.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
+                <option key={cat.id} value={cat.id}>{cat.nome}</option>
               ))}
             </select>
           </div>
@@ -262,31 +242,7 @@ const EditPartModal: React.FC<EditPartModalProps> = ({ isOpen, onClose, onEdit, 
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Fornecedor
-            </label>
-            {isLoadingSuppliers ? (
-              <div className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-400">
-                A carregar fornecedores...
-              </div>
-            ) : (
-              <select
-                name="supplierId"
-                value={formData.supplierId}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-brand-yellow"
-              >
-                <option value="">Selecionar fornecedor</option>
-                {suppliers.map(supplier => (
-                  <option key={supplier.id} value={supplier.id}>
-                    {supplier.nome}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
+          {/* Removed supplier field */}
 
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">

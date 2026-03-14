@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { registarAuditoria } from '@/lib/auditoria';
 
 // @ts-ignore
 const prisma = new PrismaClient({
@@ -91,6 +92,8 @@ export async function POST(
         }
       }
     });
+
+    await registarAuditoria('UPDATE', 'encomendas_pecas', Number(id), null, { acao: 'adicionar_stock', itemsAdded }, request);
 
     return NextResponse.json({ 
       success: true, 

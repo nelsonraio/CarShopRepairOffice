@@ -13,6 +13,7 @@ interface BalanceProcess {
   gastoPecas: number;
   maoObra: number;
   lucro: number;
+  estado?: string; // Adicionado para filtrar corretamente
 }
 
 interface BalanceResponse {
@@ -38,6 +39,13 @@ export default function BalancoPage() {
 
   const filteredProcesses = useMemo(() => {
     return searchFilteredProcesses.filter(process => {
+      // Só filtra se existir campo 'estado'. Se não existir, mostra tudo.
+      if (typeof process.estado !== 'undefined') {
+        if (process.estado !== 'concluido' && process.estado !== 'entregue' && process.estado !== 'Entregue') {
+          return false;
+        }
+      }
+
       const now = new Date();
       const processDate = new Date(process.dataConclusao);
 
