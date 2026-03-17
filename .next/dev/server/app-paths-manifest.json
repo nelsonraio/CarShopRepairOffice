@@ -1,16 +1,9 @@
 {
   "/api/agendamentos/hoje/route": "app/api/agendamentos/hoje/route.js",
-  "/api/categorias-pecas/route": "app/api/categorias-pecas/route.js",
-  "/api/faturas/route": "app/api/faturas/route.js",
-  "/api/fornecedores/route": "app/api/fornecedores/route.js",
   "/api/health/route": "app/api/health/route.js",
   "/api/orcamentos/route": "app/api/orcamentos/route.js",
   "/api/ordens-trabalho/route": "app/api/ordens-trabalho/route.js",
-  "/api/pecas/route": "app/api/pecas/route.js",
   "/api/utilizadores/me/route": "app/api/utilizadores/me/route.js",
-  "/api/veiculos/route": "app/api/veiculos/route.js",
-  "/faturacao/page": "app/faturacao/page.js",
   "/kanban/page": "app/kanban/page.js",
-  "/pecas/page": "app/pecas/page.js",
-  "/veiculos/page": "app/veiculos/page.js"
+  "/page": "app/page.js"
 }

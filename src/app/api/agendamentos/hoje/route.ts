@@ -49,9 +49,9 @@ export async function GET() {
     const mapped = filteredAgendamentos.map((agendamento: typeof filteredAgendamentos[number]) => ({
       id: agendamento.id.toString(),
       ref_agendamento: `AGD-${agendamento.id}`,
-      cliente_nome: agendamento.cliente.nome,
-      cliente_telefone: agendamento.cliente.telefone || null,
-      cliente_email: agendamento.cliente.email || null,
+      cliente_nome: agendamento.cliente?.nome || null,
+      cliente_telefone: agendamento.cliente?.telefone || null,
+      cliente_email: agendamento.cliente?.email || null,
       veiculo_matricula: agendamento.matricula || 'N/A',
       veiculo_modelo: agendamento.modelo || agendamento.marca || 'N/A',
       veiculo_marca: agendamento.marca || '',
@@ -62,9 +62,9 @@ export async function GET() {
       descricao: agendamento.descricao || '',
       hora_agendamento: agendamento.hora_inicio,
       mecanico_nome: 'N/A', // Mecânico ainda não atribuído
-      contacto_nome: agendamento.contacto_nome || agendamento.cliente.nome,
-      contacto_telefone: agendamento.contacto_telefone || agendamento.cliente.telefone || null,
-      contacto_email: agendamento.contacto_email || agendamento.cliente.email || null
+      contacto_nome: agendamento.contacto_nome || agendamento.cliente?.nome || null,
+      contacto_telefone: agendamento.contacto_telefone || agendamento.cliente?.telefone || null,
+      contacto_email: agendamento.contacto_email || agendamento.cliente?.email || null    
     }));
 
     return NextResponse.json(mapped);

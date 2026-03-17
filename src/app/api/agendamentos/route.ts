@@ -74,16 +74,10 @@ function formatAgendamentoResponse(agendamento: any, cliente?: any, mecanico?: a
  */
 async function getOrCreateCliente(clienteNome?: string) {
   if (clienteNome) {
-    let cliente = await prisma.clientes.findFirst({ where: { nome: clienteNome } });
-    if (!cliente) {
-      cliente = await prisma.clientes.create({ 
-        data: { nome: clienteNome, telefone: '', ativo: true } 
-      });
-    }
-    return cliente;
+    return await prisma.clientes.findFirst({ where: { nome: clienteNome } });
   }
-  // Fallback to first client
-  return prisma.clientes.findFirst();
+  // Não cria cliente novo, retorna null
+  return null;
 }
 
 /**
@@ -194,10 +188,6 @@ export async function POST(request: Request) {
     const { cliente, marca, modelo, ano, matricula, data, hora, tipoServico, mecanico, descricao, notas, contacto_nome, contacto_telefone, contacto_email } = body;
 
     const clienteRec = await getOrCreateCliente(cliente);
-    if (!clienteRec) {
-      return successResponse({ error: 'No cliente available' }, 400);
-    }
-
     const mecanicoRec = await getOrCreateMecanico(mecanico);
 
     const dateObj = parseDateString(data);
@@ -205,7 +195,7 @@ export async function POST(request: Request) {
 
     const created = await prisma.agendamentos.create({
       data: {
-        cliente_id: clienteRec.id,
+        cliente_id: clienteRec ? clienteRec.id : null,
         mecanico_id: mecanicoRec?.id || null,
         titulo: cliente ? `${tipoServico || 'Agendamento'} - ${cliente}` : (tipoServico || 'Agendamento'),
         descricao: notas || descricao || '',
@@ -218,8 +208,8 @@ export async function POST(request: Request) {
         matricula: matricula || null,
         contacto_nome: contacto_nome || null,
         contacto_telefone: contacto_telefone || null,
-        contacto_email: contacto_email || null
-      }
+        contacto_email: contacto_email || null,
+      },
     });
 
     await registarAuditoria('CREATE', 'agendamentos', Number(created.id), null, { cliente: body.cliente, titulo: created.titulo, data: body.data, hora: body.hora }, request);

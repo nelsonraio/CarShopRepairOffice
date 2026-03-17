@@ -6,14 +6,13 @@ interface Supplier {
 }
 
 interface Part {
-  id: string;
+  id: string | number;
   name: string;
   reference: string;
-  category: string;
+  category: { id: number; nome: string };
   stock: number;
   minStock: number;
   price: number;
-  // Removed supplier fields
   stockStatus: 'em_stock' | 'baixo_stock' | 'esgotado';
   margem_lucro?: number;
   notas?: string;
@@ -26,13 +25,14 @@ interface AddPartModalProps {
 }
 
 const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart }) => {
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<{ id: number; nome: string }[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   
   const [formData, setFormData] = useState({
     name: '',
     reference: '',
-    category: '',
+    categoryId: '',
+    categoryName: '',
     stock: '',
     minStock: '',
     price: '',
@@ -72,13 +72,18 @@ const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart 
       stock: Number(formData.stock) || 0,
       minStock: Number(formData.minStock) || 0,
       price: Number(formData.price) || 0,
-      margem_lucro: Number(formData.margem_lucro) || 0
+      margem_lucro: Number(formData.margem_lucro) || 0,
+      category: {
+        id: Number(formData.categoryId),
+        nome: formData.categoryName || '',
+      }
     });
     
     setFormData({
       name: '',
       reference: '',
-      category: '',
+      categoryId: '',
+      categoryName: '',
       stock: '',
       minStock: '',
       price: '',
@@ -138,15 +143,23 @@ const AddPartModal: React.FC<AddPartModalProps> = ({ isOpen, onClose, onAddPart 
               Categoria
             </label>
             <select
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
+              name="categoryId"
+              value={formData.categoryId}
+              onChange={e => {
+                const selectedId = e.target.value;
+                const selectedCat = categories.find(cat => String(cat.id) === selectedId);
+                setFormData(prev => ({
+                  ...prev,
+                  categoryId: selectedId,
+                  categoryName: selectedCat ? selectedCat.nome : ''
+                }));
+              }}
               required
               className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-brand-yellow"
             >
               <option value="">Selecionar categoria</option>
               {categories.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
+                <option key={cat.id} value={cat.id}>{cat.nome}</option>
               ))}
             </select>
           </div>

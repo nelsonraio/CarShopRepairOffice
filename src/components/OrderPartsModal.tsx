@@ -4,14 +4,15 @@ import { useState, useEffect } from "react";
 import partCategories from "../data/partCategories";
 
 interface Part {
-  id: string;
+  id: string | number;
   reference: string;
   name: string;
-  category: string;
+  category: { id: number; nome: string };
   stock: number;
   price: number;
   stockStatus: 'em_stock' | 'baixo_stock' | 'esgotado';
   supplierName?: string;
+  notas?: string;
 }
 
 interface OrderItem {
@@ -47,7 +48,8 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
   const [newPart, setNewPart] = useState({
     name: "",
     reference: "",
-    category: "",
+    categoryId: "",
+    categoryName: "",
     quantity: 1
   });
   const [selectedFornecedor, setSelectedFornecedor] = useState("");
@@ -138,7 +140,7 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
       return;
     }
     // fornecedor não é mais obrigatório para peça
-    if (!newPart.category) {
+    if (!newPart.categoryId) {
       setErrorMsg("Selecione a categoria da peça");
       return;
     }
@@ -147,7 +149,10 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
       id: `custom-${Date.now()}`,
       reference: newPart.reference,
       name: newPart.name,
-      category: newPart.category,
+      category: {
+        id: Number(newPart.categoryId),
+        nome: newPart.categoryName || ""
+      },
       stock: 0,
       price: 0,
       stockStatus: "esgotado"
@@ -160,7 +165,7 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
     };
 
     setOrderItems(prevItems => [...prevItems, newOrderItem]);
-    setNewPart({ name: "", reference: "", category: "", quantity: 1 });
+    setNewPart({ name: "", reference: "", categoryId: "", categoryName: "", quantity: 1 });
     setShowNewPartForm(false);
     setSuccessMsg("Nova peça personalizada adicionada. Será criada no stock com quantidade 0.");
   };
@@ -347,7 +352,7 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-1">Categoria *</label>
-                    <select value={newPart.category} onChange={e => setNewPart({ ...newPart, category: e.target.value })} className="w-full bg-gray-800 border border-gray-500 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow outline-none">
+                    <select value={newPart.categoryId} onChange={e => setNewPart({ ...newPart, categoryId: e.target.value })} className="w-full bg-gray-800 border border-gray-500 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow outline-none">
                       <option value="">Selecione uma categoria...</option>
                       {dynamicCategories.map(cat => (
                         <option key={cat} value={cat}>{cat}</option>
@@ -374,7 +379,7 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
                     <p className="text-sm font-medium text-gray-200">{item.part.name}</p>
                     <p className="text-xs text-gray-400">Ref: {item.part.reference} | Fornecedor: {item.part.supplierName || ""}</p>
                   </div>
-                  <button onClick={() => handleItemToggle(item.part.id)} className="px-3 py-1 bg-green-600 text-white text-xs font-bold hover:bg-green-700 transition-colors rounded-none flex items-center">
+                  <button onClick={() => handleItemToggle(String(item.part.id))} className="px-3 py-1 bg-green-600 text-white text-xs font-bold hover:bg-green-700 transition-colors rounded-none flex items-center">
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
                     Add
                   </button>
@@ -398,13 +403,13 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
                       <p className="text-sm font-medium text-gray-100">{item.part.name}</p>
                       <p className="text-xs text-gray-400">Ref: {item.part.reference}</p>
                     </div>
-                    <button onClick={() => handleItemToggle(item.part.id)} className="text-gray-500 hover:text-red-400 transition-colors">
+                    <button onClick={() => handleItemToggle(String(item.part.id))} className="text-gray-500 hover:text-red-400 transition-colors">
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>
                     </button>
                   </div>
                   <div className="flex items-center justify-end mt-2">
                     <label className="text-xs text-gray-400 mr-2">Qtd:</label>
-                    <input type="number" min="1" value={item.quantity} onChange={(e) => handleQuantityChange(item.part.id, parseInt(e.target.value) || 1)} className="w-20 bg-gray-800 border border-gray-500 text-white text-sm px-2 py-1 rounded-none focus:ring-1 focus:ring-brand-yellow outline-none" />
+                    <input type="number" min="1" value={item.quantity} onChange={(e) => handleQuantityChange(String(item.part.id), parseInt(e.target.value) || 1)} className="w-20 bg-gray-800 border border-gray-500 text-white text-sm px-2 py-1 rounded-none focus:ring-1 focus:ring-brand-yellow outline-none" />
                   </div>
                 </div>
               ))}

@@ -254,6 +254,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../src/app/tabelas/categorias-peca/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/tabelas/categorias-peca">> = Specific
+  const handler = {} as typeof import("../../src/app/tabelas/categorias-peca/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../src/app/tabelas/categorias-servico/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/tabelas/categorias-servico">> = Specific
@@ -420,6 +429,24 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/callback">> = Specific
   const handler = {} as typeof import("../../src/app/api/callback/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/categorias-pecas/[id]/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/categorias-pecas/[id]">> = Specific
+  const handler = {} as typeof import("../../src/app/api/categorias-pecas/[id]/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/categorias-pecas/[id]/toggle/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/categorias-pecas/[id]/toggle">> = Specific
+  const handler = {} as typeof import("../../src/app/api/categorias-pecas/[id]/toggle/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check

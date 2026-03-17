@@ -10,7 +10,7 @@ datasource db {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model agendamentos {
   id                BigInt            @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
-  cliente_id        Int
+  cliente_id        Int?
   mecanico_id       Int?
   matricula         String?           @db.VarChar(50)
   titulo            String            @db.VarChar(255)
@@ -29,7 +29,7 @@ model agendamentos {
   contacto_nome     String?           @db.VarChar(100)
   contacto_telefone String?           @db.VarChar(20)
   contacto_email    String?           @db.VarChar(255)
-  cliente           clientes          @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
+  cliente           clientes?         @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
   ordens_trabalho   ordens_trabalho[]
 
   @@index([cliente_id], map: "agendamentos_cliente_id_fkey")

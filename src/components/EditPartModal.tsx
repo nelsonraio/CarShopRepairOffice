@@ -6,14 +6,13 @@ interface Supplier {
 }
 
 interface Part {
-  id: string;
+  id: string | number;
   name: string;
   reference: string;
-  category: string;
+  category: { id: number; nome: string };
   stock: number;
   minStock?: number;
   price: number;
-  // Removed supplier fields
   stockStatus: 'em_stock' | 'baixo_stock' | 'esgotado';
   margem_lucro?: number;
   notas?: string;
@@ -45,12 +44,23 @@ const EditPartModal: React.FC<EditPartModalProps> = ({ isOpen, onClose, onEdit, 
   // Populate form data when part changes
   useEffect(() => {
     if (part && categories.length > 0) {
-      // Find the category object by name (from old data)
-      const foundCat = categories.find(cat => cat.nome === part.category);
+      let categoryId = '';
+      // Se category for objeto com id, usar esse id
+      if (part.category && typeof part.category === 'object' && 'id' in part.category) {
+        categoryId = String(part.category.id);
+      } else if ('categoriaId' in part && part.categoriaId) {
+        categoryId = String(part.categoriaId);
+      } else if ('categoryId' in part && part.categoryId) {
+        categoryId = String(part.categoryId);
+      } else if (typeof part.category === 'string') {
+        // fallback: procurar pelo nome
+        const foundCat = categories.find(cat => cat.id === part.category.id);
+        categoryId = foundCat ? String(foundCat.id) : '';
+      }
       setFormData({
         name: part.name || '',
         reference: part.reference || '',
-        category: foundCat ? String(foundCat.id) : '',
+        category: categoryId,
         stock: String(part.stock ?? 0),
         minStock: String(part.minStock ?? 0),
         price: String(part.price ?? 0),
@@ -101,7 +111,7 @@ const EditPartModal: React.FC<EditPartModalProps> = ({ isOpen, onClose, onEdit, 
       ...part,
       name: formData.name,
       reference: formData.reference,
-      category: selectedCat ? selectedCat.nome : '',
+      category: selectedCat ? { id: Number(selectedCat.id), nome: selectedCat.nome } : { id: 0, nome: '' },
       categoriaId: formData.category,
       stock: Number(formData.stock) || 0,
       minStock: Number(formData.minStock) || 0,

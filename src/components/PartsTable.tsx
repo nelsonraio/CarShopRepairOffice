@@ -1,10 +1,10 @@
 "use client";
 
 interface Part {
-  id: string;
+  id: string | number;
   reference: string;
   name: string;
-  category: string;
+  category: { id: number; nome: string };
   stock: number;
   minStock?: number;
   price: number;
@@ -121,7 +121,7 @@ export default function PartsTable({ parts, onEdit, onReferenceClick, onDelete }
                 <td className="px-6 py-4 text-gray-100">{part.name}</td>
                 <td className="px-6 py-4">
                   <span className="px-2 py-1 text-xs font-semibold bg-gray-800 text-gray-300 border border-gray-600">
-                    {part.category ? getCategoryLabel(part.category) : 'N/A'}
+                    {part.category?.nome || 'N/A'}
                   </span>
                 </td>
                 <td className="px-6 py-4 font-bold" style={{ color: getStockColor(part.stockStatus, part.stock).split(' ')[1] }}>

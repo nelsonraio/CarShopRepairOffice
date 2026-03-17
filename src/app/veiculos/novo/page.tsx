@@ -372,7 +372,7 @@ const NewVehiclePage = () => {
         model: formData.model,
         licensePlate: formData.licensePlate,
         year: formData.year,
-        vin: formData.vin
+        vin: formData.vin && formData.vin.trim() !== '' ? formData.vin : undefined
       };
 
       const response = await fetch('/api/veiculos', {
@@ -389,7 +389,16 @@ const NewVehiclePage = () => {
         router.push('/veiculos');
       } else {
         const errorData = await response.json();
-        alert(`Erro ao criar veículo: ${errorData.error || 'Erro desconhecido'}`);
+        if (
+          errorData.error &&
+          typeof errorData.error === 'string' &&
+          errorData.error.toLowerCase().includes('unique constraint') &&
+          errorData.error.toLowerCase().includes('numero_chassis')
+        ) {
+          alert('Já existe um veículo com o mesmo número de chassis (VIN).');
+        } else {
+          alert(`Erro ao criar veículo: ${errorData.error || 'Erro desconhecido'}`);
+        }
       }
 
 
@@ -403,7 +412,7 @@ const NewVehiclePage = () => {
     <div className="flex h-screen bg-gray-800">
       <Sidebar activePage="veiculos" />
       <main className="flex-1 relative overflow-y-auto focus:outline-none p-8">
-        <div className="max-w-5xl mx-auto bg-gray-700 rounded-none shadow-lg border border-gray-600">
+        <div className="max-w-5xl mx-auto bg-gray-700 rounded-none shadow-lg border border-gray-600 p-8">
           <header className="bg-gray-900 rounded-t-none p-6 border-b border-gray-600">
             <div className="flex justify-between items-center">
               <div>
@@ -416,219 +425,207 @@ const NewVehiclePage = () => {
                   </svg>
                   Voltar
                 </Link>
-                <button
-                  type="submit"
-                  form="new-vehicle-form"
-                  className="px-4 py-2 bg-brand-yellow-dark text-white font-bold hover:bg-yellow-600 transition-colors rounded-none flex items-center shadow-md"
-                >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
-                  </svg>
-                  Guardar Veículo
-                </button>
               </div>
             </div>
           </header>
-
-          <div className="p-6">
-            <form id="new-vehicle-form" onSubmit={handleSubmit} className="space-y-6">
-
-              {/* Vehicle Information */}
-
-              <div className="border-b border-gray-600 pb-6">
-                <h4 className="text-lg font-semibold text-gray-100 mb-4">Dados do Veículo</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1">Matrícula *</label>
-                    <input
-                      type="text"
-                      name="licensePlate"
-                      value={formData.licensePlate}
-                      onChange={handleInputChange}
-                      className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-                      placeholder="XX-XX-XX"
-                      required
-                    />
-                    {licensePlateExists && (
-                      <p className="text-red-400 text-sm mt-1">Esta matrícula já existe na tabela de veículos.</p>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <label className="block text-sm font-medium text-gray-400 mb-1">Marca *</label>
-                    <input
-                      type="text"
-                      name="make"
-                      value={formData.make}
-                      onChange={handleInputChange}
-                      className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-                      placeholder="Pesquisar marca..."
-                      required
-                    />
-                    {showBrandSuggestions && brandSuggestions.length > 0 && (
-                      <div className="absolute z-10 w-full bg-gray-800 border border-gray-600 mt-1 max-h-40 overflow-y-auto">
-                        {brandSuggestions.map((brand) => (
-                          <div
-                            key={brand.id}
-                            className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
-                            onClick={() => selectBrand(brand)}
-                          >
-                            <div className="font-medium">{brand.nome}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <label className="block text-sm font-medium text-gray-400 mb-1">Modelo *</label>
-                    <input
-                      type="text"
-                      name="model"
-                      value={formData.model}
-                      onChange={handleInputChange}
-                      disabled={!formData.make}
-                      className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                      placeholder={formData.make ? "Pesquisar modelo..." : "Selecione uma marca primeiro"}
-                      required
-                    />
-                    {showModelSuggestions && modelSuggestions.length > 0 && (
-                      <div className="absolute z-10 w-full bg-gray-800 border border-gray-600 mt-1 max-h-40 overflow-y-auto">
-                        {modelSuggestions.map((model) => (
-                          <div
-                            key={model.id}
-                            className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
-                            onClick={() => selectModel(model)}
-                          >
-                            <div className="font-medium">{model.nome}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1">Ano</label>
-                    <input
-                      type="number"
-                      name="year"
-                      value={formData.year}
-                      onChange={handleInputChange}
-                      className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-                      placeholder="Ano"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1">Número do Chassis (VIN)</label>
-                    <input
-                      type="text"
-                      name="vin"
-                      value={formData.vin}
-                      onChange={handleInputChange}
-                      className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-                      placeholder="Número do chassis"
-                    />
-                  </div>
-                </div>
-              </div>
-              {/* Client Information */}
-              <div className="border-b border-gray-600 pb-6">
-                <h4 className="text-lg font-semibold text-gray-100 mb-4">Dados do Cliente</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="relative">
-                    <label className="block text-sm font-medium text-gray-400 mb-1">Cliente *</label>
-                    <input
-                      type="text"
-                      name="clientSearch"
-                      value={formData.clientSearch}
-                      onChange={handleClientSearchChange}
-                      className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-                      placeholder="Pesquisar cliente..."
-                      required
-                    />
-
-                    {showClientSuggestions && clientSuggestions.length > 0 && (
-                      <div className="absolute z-10 w-full bg-gray-800 border border-gray-600 mt-1 max-h-40 overflow-y-auto">
-                        {clientSuggestions.map((client) => (
-                          <div
-                            key={client.id}
-                            className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
-                            onClick={() => selectClient(client)}
-                          >
-                            <div className="font-medium">{client.nome}</div>
-                            <div className="text-sm text-gray-400">
-                              {client.telefone} {client.email && `• ${client.email}`} {client.nif && `• NIF: ${client.nif}`}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1">Telefone</label>
-                    <input
-                      type="tel"
-                      name="clientPhone"
-                      value={formData.clientPhone}
-                      onChange={handleInputChange}
-                      disabled={!!selectedClient && !isNewClient}
-                      className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                      placeholder={isNewClient ? "+351 912 345 678" : "Selecione um cliente existente ou digite um novo"}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1">Email</label>
-                    <input
-                      type="email"
-                      name="clientEmail"
-                      value={formData.clientEmail}
-                      onChange={handleInputChange}
-                      disabled={!!(selectedClient && !isNewClient)}
-                      className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                      placeholder={isNewClient ? "joao.silva@email.com" : "Selecione um cliente existente ou digite um novo"}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1">NIF</label>
-                    <input
-                      type="text"
-                      name="clientNif"
-                      value={formData.clientNif}
-                      onChange={handleInputChange}
-                      disabled={!!(selectedClient && !isNewClient)}
-                      className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                      placeholder={isNewClient ? "123 456 789" : "Selecione um cliente existente ou digite um novo"}
-                    />
-                  </div>
-                </div>
-                <div className="mt-6">
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Morada</label>
-                  <textarea
-                    name="clientAddress"
-                    value={formData.clientAddress}
+          {/* Vehicle Information (Ordem igual ao editar) */}
+          <form onSubmit={handleSubmit}>
+            <div className="border-b border-gray-600 pb-6">
+              <h4 className="text-lg font-semibold text-gray-100 mb-4">Dados do Veículo</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Matrícula *</label>
+                  <input
+                    type="text"
+                    name="licensePlate"
+                    value={formData.licensePlate}
                     onChange={handleInputChange}
-                    
-                    rows={2}
+                    className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                    placeholder="XX-XX-XX"
+                    required
+                  />
+                  {licensePlateExists && (
+                    <p className="text-red-400 text-sm mt-1">Esta matrícula já existe na tabela de veículos.</p>
+                  )}
+                </div>
+                <div className="relative">
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Marca *</label>
+                  <input
+                    type="text"
+                    name="make"
+                    value={formData.make}
+                    onChange={handleInputChange}
+                    className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                    placeholder="Pesquisar marca..."
+                    required
+                  />
+                  {showBrandSuggestions && brandSuggestions.length > 0 && (
+                    <div className="absolute z-10 w-full bg-gray-800 border border-gray-600 mt-1 max-h-40 overflow-y-auto">
+                      {brandSuggestions.map((brand) => (
+                        <div
+                          key={brand.id}
+                          className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
+                          onClick={() => selectBrand(brand)}
+                        >
+                          <div className="font-medium">{brand.nome}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="relative">
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Modelo *</label>
+                  <input
+                    type="text"
+                    name="model"
+                    value={formData.model}
+                    onChange={handleInputChange}
+                    disabled={!formData.make}
                     className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                    placeholder="Rua das Flores, 123, Porto"
-                  ></textarea>
+                    placeholder={formData.make ? "Pesquisar modelo..." : "Selecione uma marca primeiro"}
+                    required
+                  />
+                  {showModelSuggestions && modelSuggestions.length > 0 && (
+                    <div className="absolute z-10 w-full bg-gray-800 border border-gray-600 mt-1 max-h-40 overflow-y-auto">
+                      {modelSuggestions.map((model) => (
+                        <div
+                          key={model.id}
+                          className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
+                          onClick={() => selectModel(model)}
+                        >
+                          <div className="font-medium">{model.nome}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <div className="mt-6">
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Perfil de Cliente</label>
-                  <select
-                    name="clientProfile"
-                    value={formData.clientProfile}
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Ano</label>
+                  <input
+                    type="number"
+                    name="year"
+                    value={formData.year}
                     onChange={handleInputChange}
-                   
-                    className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {clientProfiles.map(profile => (
-                      <option key={profile.id} value={profile.nome}>{profile.nome}</option>
-                    ))}
-                  </select>
+                    className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                    placeholder="Ano"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Número do Chassis (VIN)</label>
+                  <input
+                    type="text"
+                    name="vin"
+                    value={formData.vin}
+                    onChange={handleInputChange}
+                    className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                    placeholder="Número do chassis"
+                  />
                 </div>
               </div>
-
-            </form>
-          </div>
+            </div>
+            {/* Client Information */}
+            <div className="border-b border-gray-600 pb-6">
+              <h4 className="text-lg font-semibold text-gray-100 mb-4">Dados do Cliente</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="relative">
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Cliente *</label>
+                  <input
+                    type="text"
+                    name="clientSearch"
+                    value={formData.clientSearch}
+                    onChange={handleClientSearchChange}
+                    className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                    placeholder="Pesquisar cliente..."
+                    required
+                  />
+                  {showClientSuggestions && clientSuggestions.length > 0 && (
+                    <div className="absolute z-10 w-full bg-gray-800 border border-gray-600 mt-1 max-h-40 overflow-y-auto">
+                      {clientSuggestions.map((client) => (
+                        <div
+                          key={client.id}
+                          className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
+                          onClick={() => selectClient(client)}
+                        >
+                          <div className="font-medium">{client.nome}</div>
+                          <div className="text-sm text-gray-400">
+                            {client.telefone} {client.email && `• ${client.email}`} {client.nif && `• NIF: ${client.nif}`}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Telefone</label>
+                  <input
+                    type="tel"
+                    name="clientPhone"
+                    value={formData.clientPhone}
+                    onChange={handleInputChange}
+                    disabled={!!selectedClient && !isNewClient}
+                    className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    placeholder={isNewClient ? "+351 912 345 678" : "Selecione um cliente existente ou digite um novo"}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Email</label>
+                  <input
+                    type="email"
+                    name="clientEmail"
+                    value={formData.clientEmail}
+                    onChange={handleInputChange}
+                    disabled={!!(selectedClient && !isNewClient)}
+                    className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    placeholder={isNewClient ? "joao.silva@email.com" : "Selecione um cliente existente ou digite um novo"}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">NIF</label>
+                  <input
+                    type="text"
+                    name="clientNif"
+                    value={formData.clientNif}
+                    onChange={handleInputChange}
+                    disabled={!!(selectedClient && !isNewClient)}
+                    className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    placeholder={isNewClient ? "123 456 789" : "Selecione um cliente existente ou digite um novo"}
+                  />
+                </div>
+              </div>
+              <div className="mt-6">
+                <label className="block text-sm font-medium text-gray-400 mb-1">Morada</label>
+                <textarea
+                  name="clientAddress"
+                  value={formData.clientAddress}
+                  onChange={handleInputChange}
+                  rows={2}
+                  className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  placeholder="Rua das Flores, 123, Porto"
+                ></textarea>
+              </div>
+              <div className="mt-6">
+                <label className="block text-sm font-medium text-gray-400 mb-1">Perfil de Cliente</label>
+                <select
+                  name="clientProfile"
+                  value={formData.clientProfile}
+                  onChange={handleInputChange}
+                  className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {clientProfiles.map(profile => (
+                    <option key={profile.id} value={profile.nome}>{profile.nome}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end mt-8">
+              <button
+                type="submit"
+                className="px-6 py-2 bg-brand-yellow text-gray-900 font-semibold rounded-none hover:bg-yellow-400 transition-colors"
+              >
+                Criar Veículo
+              </button>
+            </div>
+          </form>
         </div>
       </main>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import PartsTable from "@/components/PartsTable";
 import AddPartModal from "@/components/AddPartModal";
@@ -11,10 +11,10 @@ import OrdersModal from "@/components/OrdersModal";
 import { useFetch, useModals, usePagination, useFilters, filterPredicates } from "@/hooks";
 
 interface Part {
-  id: string;
+  id: string | number;
   reference: string;
   name: string;
-  category: string;
+  category: { id: number; nome: string };
   stock: number;
   minStock?: number;
   price: number;
@@ -56,7 +56,9 @@ export default function PartsPage() {
     id: peca.id,
     reference: peca.referencia,
     name: peca.nome,
-    category: peca.category,
+    category: typeof peca.category === 'object' && peca.category !== null
+      ? { id: Number(peca.category.id ?? 0), nome: String(peca.category.nome ?? '') }
+      : { id: 0, nome: '' },
     supplier: peca.fornecedor_nome || '',
     supplierId: peca.fornecedor_id ? String(peca.fornecedor_id) : '',
     supplierName: peca.fornecedor_nome || '',
@@ -67,7 +69,7 @@ export default function PartsPage() {
                 (peca.quantidade_stock || 0) === 0 ? 'esgotado' :
                 (peca.quantidade_stock || 0) <= (peca.nivel_stock_minimo || 0) ? 'baixo_stock' : 'em_stock',
     margem_lucro: typeof peca.margem_lucro === 'number' ? peca.margem_lucro : (peca.margem_lucro ? Number(peca.margem_lucro) : 0),
-    notas: peca.notas || ''
+    notas: peca.notas ?? ''
   }));
 
   const fornecedores = Array.isArray(rawSuppliers) ? rawSuppliers : [];
@@ -89,24 +91,25 @@ export default function PartsPage() {
 
   // Filtering configuration
   const filterConfig = {
-    search: filterPredicates.search(['name', 'reference']),
-    category: filterPredicates.exact('category'),
+    search: filterPredicates.search<Part>(['name', 'reference', 'notas']),
+    category: (part: Part, value: string | number) => {
+      return !value || value === '' || value === 'todas' || value === 'all' || part.category.id === Number(value);
+    },
     stock: filterPredicates.exact('stockStatus'),
   };
 
   const { filters, setFilter } = useFilters(parts, filterConfig);
 
   // Apply filters
-  const filteredParts = parts.filter(part => {
-    const matchesSearch = (filters.search || '') === '' ||
-      part.name.toLowerCase().includes((filters.search || '').toLowerCase()) ||
-      part.reference.toLowerCase().includes((filters.search || '').toLowerCase());
 
-    const matchesCategory = (filters.category || '') === '' || part.category === filters.category;
-    const matchesStock = (filters.stock || '') === '' || part.stockStatus === filters.stock;
+  console.log('DEBUG filters:', filters);
+  const filteredParts = parts.filter(part =>
+    filterConfig.search(part, filters.search ?? "") &&
+    filterConfig.category(part, filters.category ?? "") &&
+    filterConfig.stock(part, filters.stock ?? "")
+  );
 
-    return matchesSearch && matchesCategory && matchesStock;
-  });
+  console.log('DEBUG filteredParts:', filteredParts);
 
   // Pagination with filter reset
   const { currentPage, totalPages, paginatedItems: paginatedParts, nextPage, prevPage } = 
@@ -192,6 +195,12 @@ export default function PartsPage() {
   // Pagination info
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, filteredParts.length);
+
+  useEffect(() => {
+    console.log('DEBUG parts:', parts);
+    console.log('DEBUG filters:', filters);
+    console.log('DEBUG rawParts:', rawParts);
+  }, [parts, filters, rawParts]);
 
   return (
     <div className="flex h-screen bg-gray-800">
@@ -375,7 +384,7 @@ export default function PartsPage() {
         }}
         fornecedores={fornecedores}
         pecas={parts.map(p => ({
-          id: p.id,
+          codigo: String(p.id),
           reference: p.reference,
           nome: p.name,
           preco: p.price,
@@ -402,8 +411,11 @@ export default function PartsPage() {
                 .map(([key, value]) => {
                   const label = PART_DETAIL_LABELS[key] || key.replace(/_/g, ' ').toUpperCase();
                   let displayValue = value;
-                  // Show decimals for numeric values
-                  if (typeof value === 'number') {
+                  if (key === 'category') {
+                    if (value && typeof value === 'object' && 'nome' in value) {
+                      displayValue = value.nome;
+                    }
+                  } else if (typeof value === 'number') {
                     displayValue = value.toFixed(2);
                   }
                   return (

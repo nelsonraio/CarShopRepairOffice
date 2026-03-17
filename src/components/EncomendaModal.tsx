@@ -10,7 +10,7 @@ interface Fornecedor {
 }
 
 interface Peca {
-  id: string;
+  codigo: string;
   reference: string;
   nome: string;
   preco: number;
@@ -68,7 +68,7 @@ const EncomendaModal: React.FC<EncomendaModalProps> = ({
       return;
     }
 
-    const peca = pecas.find(p => p.id === selectedPecaId);
+    const peca = pecas.find(p => p.codigo === selectedPecaId);
     if (!peca) return;
 
     // Check if already added
@@ -199,7 +199,7 @@ const EncomendaModal: React.FC<EncomendaModalProps> = ({
 
   if (!isOpen) return null;
 
-  const selectedPeca = pecas.find(p => p.id === selectedPecaId);
+  const selectedPeca = pecas.find(p => p.codigo === selectedPecaId);
   const total = calculateTotal();
 
   return (
@@ -292,7 +292,7 @@ const EncomendaModal: React.FC<EncomendaModalProps> = ({
                 >
                   <option value="">Selecione uma peça...</option>
                   {pecas.map(p => (
-                    <option key={p.id} value={p.id}>
+                    <option key={p.codigo} value={p.codigo}>
                       {p.nome} (Ref: {p.reference}) - €{p.preco?.toFixed(2) ?? '0.00'}
                     </option>
                   ))}

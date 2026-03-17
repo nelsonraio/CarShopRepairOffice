@@ -14,6 +14,14 @@ interface SystemTable {
 }
 
 const systemTablesConfig: SystemTable[] = [
+    {
+      id: "categorias-peca",
+      name: "Categorias de Peças",
+      description: "Gerir categorias de peças para organização do catálogo.",
+      recordCount: 0,
+      icon: "tag",
+      endpoint: "/api/categorias-peca"
+    },
   {
     id: "mecanicos",
     name: "Mecânicos",

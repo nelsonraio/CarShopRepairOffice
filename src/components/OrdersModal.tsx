@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 
 interface Part {
-  id: string;
+  id: string | number;
   reference: string;
   name: string;
-  category: string;
-  // Removed supplier fields
+  category: { id: number; nome: string };
   stock: number;
   price: number;
   stockStatus: 'em_stock' | 'baixo_stock' | 'esgotado';
+  notas?: string;
 }
 
 interface Order {

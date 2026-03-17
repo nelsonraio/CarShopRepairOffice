@@ -62,6 +62,23 @@ export async function GET() {
     const transformados = veiculos.map(v => formatVeiculoResponse(v, v.cliente));
     return successResponse(transformados);
   } catch (error) {
+    // Prisma unique constraint error for VIN (numero_chassis)
+    if (
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      error.code === 'P2002' &&
+      'meta' in error &&
+      typeof (error as any).meta === 'object' &&
+      'target' in (error as any).meta &&
+      Array.isArray((error as any).meta.target) &&
+      (error as any).meta.target.includes('numero_chassis')
+    ) {
+      return new Response(
+        JSON.stringify({ error: 'Já existe um veículo com o mesmo número de chassis (VIN).' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
     return handleDatabaseError(error as Error);
   }
 }

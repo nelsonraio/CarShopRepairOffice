@@ -45,7 +45,9 @@ const formatPecaResponse = (peca: any, fornecedorNome: string | null = null) => 
   referencia: peca.referencia,
   nome: peca.nome,
   descricao: peca.descricao,
-  category: peca.categoria?.nome || 'N/A',
+  category: peca.categoria
+    ? { id: peca.categoria.id, nome: peca.categoria.nome }
+    : { id: null, nome: 'N/A' },
   quantidade_stock: peca.quantidade_stock,
   nivel_stock_minimo: peca.nivel_stock_minimo,
   preco_venda: Number(peca.preco_venda),
