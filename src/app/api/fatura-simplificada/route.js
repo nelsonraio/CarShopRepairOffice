@@ -1,28 +1,43 @@
 
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import { db } from '@/db/connection';
+import { clientes, faturas, ordensTrabalho } from '@/db/schema';
+import { eq, and } from 'drizzle-orm';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://api7.toconline.pt';
 const CLIENT_ID = process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID || 'pt999999990_c101423-6604ef0f5744561b';
 const CLIENT_SECRET = process.env.OAUTH_CLIENT_SECRET || '8f753cea78d995b5b6c877933495bf2b';
 const OAUTH_URL = process.env.NEXT_PUBLIC_OAUTH_URL || 'https://app7.toconline.pt/oauth';
-const REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI || 'https://pond-computer-hear-initiatives.trycloudflare.com/callbackr';
+const DEFAULT_REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI || '';
 const SCOPE = 'commercial';
 
-async function getOAuthToken(code) {
+function resolveRedirectUri(redirectUriFromRequest) {
+  const fromRequest = typeof redirectUriFromRequest === 'string' ? redirectUriFromRequest.trim() : '';
+  if (fromRequest) {
+    return fromRequest;
+  }
+
+  const fromEnv = typeof DEFAULT_REDIRECT_URI === 'string' ? DEFAULT_REDIRECT_URI.trim() : '';
+  if (fromEnv) {
+    return fromEnv;
+  }
+
+  throw new Error('redirect_uri não configurado. Defina NEXT_PUBLIC_REDIRECT_URI ou envie redirectUri no pedido.');
+}
+
+async function getOAuthToken(code, redirectUri) {
   const basicAuth = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
   
   console.log('🔐 Tentando obter token com:');
   console.log('   CLIENT_ID:', CLIENT_ID);
-  console.log('   REDIRECT_URI:', REDIRECT_URI);
+  console.log('   REDIRECT_URI:', redirectUri);
   console.log('   Code length:', code?.length || 0);
   console.log('   Auth header:', `Basic ${basicAuth.substring(0, 20)}...`);
   
   const params = new URLSearchParams({
     grant_type: 'authorization_code',
     code: code.trim(),
-    redirect_uri: REDIRECT_URI,
+    redirect_uri: redirectUri,
     scope: SCOPE
   });
 
@@ -66,7 +81,7 @@ async function getOAuthToken(code) {
 
 export async function POST(req) {
   try {
-    const { payload, authCode, accessToken, percentual_imposto, subtotal, valor_desconto, ordem_trabalho_id } = await req.json();
+    const { payload, authCode, accessToken, redirectUri, percentual_imposto, subtotal, valor_desconto, ordem_trabalho_id } = await req.json();
     
     let token;
     
@@ -81,7 +96,7 @@ export async function POST(req) {
     // Se recebeu authCode, troca por access_token (primeira vez)
     else if (authCode) {
       console.log('🔄 Trocando código de autorização por access_token...');
-      token = await getOAuthToken(authCode);
+      token = await getOAuthToken(authCode, resolveRedirectUri(redirectUri));
     }
     // Se não tem nenhum dos dois, erro
     else {
@@ -165,24 +180,22 @@ export async function POST(req) {
         const nomeCliente = faturaOnline.customer_business_name || 'Consumidor Final';
         const nifCliente = faturaOnline.customer_tax_registration_number || '';
         console.log('🔍 Procurando cliente por NIF:', nifCliente);
-        let cliente = await prisma.clientes.findFirst({
-          where: { nif: nifCliente }
-        });
+        let cliente = (await db.select().from(clientes).where(eq(clientes.nif, nifCliente)).limit(1))[0];
         
         if (!cliente) {
           console.log('👤 Cliente não encontrado, criando novo...');
           // Criar cliente se não existir
           try {
-            cliente = await prisma.clientes.create({
-              data: {
-                nome: nomeCliente,
-                nif: nifCliente,
-                endereco: faturaOnline.customer_address_detail || '',
-                telefone: '',
-                email: '',
-                perfil: 'Normal'
-              }
+            const insertResult = await db.insert(clientes).values({
+              nome: nomeCliente,
+              nif: nifCliente,
+              endereco: faturaOnline.customer_address_detail || '',
+              telefone: '',
+              email: '',
+              // perfil: 'Normal' // Remove or map if not in schema
             });
+            const insertedId = insertResult.insertId || insertResult[0]?.insertId || insertResult[0]?.id;
+            cliente = (await db.select().from(clientes).where(eq(clientes.id, insertedId)).limit(1))[0];
             console.log('✅ Cliente criado com ID:', cliente.id);
           } catch (clienteErr) {
             console.error('❌ Erro ao criar cliente:', clienteErr);
@@ -196,13 +209,10 @@ export async function POST(req) {
             console.log('   Nome anterior:', cliente.nome);
             console.log('   Nome novo:', nomeCliente);
             try {
-              cliente = await prisma.clientes.update({
-                where: { id: cliente.id },
-                data: {
-                  nome: nomeCliente,
-                  endereco: faturaOnline.customer_address_detail || cliente.endereco
-                }
-              });
+              await db.update(clientes)
+                .set({ nome: nomeCliente, endereco: faturaOnline.customer_address_detail || cliente.endereco })
+                .where(eq(clientes.id, cliente.id));
+              cliente = (await db.select().from(clientes).where(eq(clientes.id, cliente.id)).limit(1))[0];
               console.log('✅ Cliente atualizado');
             } catch (updateErr) {
               console.error('⚠️ Erro ao atualizar cliente:', updateErr);
@@ -236,103 +246,96 @@ export async function POST(req) {
         const ordemTrabalhoIdParsed = ordem_trabalho_id ? parseInt(ordem_trabalho_id) : null;
 
         if (ordemTrabalhoIdParsed) {
-          const faturaExistente = await prisma.faturas.findFirst({
-            where: { ordem_trabalho_id: ordemTrabalhoIdParsed },
-            select: { id: true, numero_fatura: true }
-          });
+          const faturaExistente = (await db.select({ id: faturas.id, numeroFatura: faturas.numeroFatura })
+            .from(faturas)
+            .where(eq(faturas.ordemTrabalhoId, ordemTrabalhoIdParsed))
+            .limit(1))[0];
 
           if (faturaExistente) {
-            throw new Error(`A ordem de trabalho já está faturada (fatura ${faturaExistente.numero_fatura}).`);
+            throw new Error(`A ordem de trabalho já está faturada (fatura ${faturaExistente.numeroFatura}).`);
           }
 
-          const ordemTrabalho = await prisma.ordens_trabalho.findUnique({
-            where: { id: BigInt(ordemTrabalhoIdParsed) },
-            select: { id: true, ref_ordem_trabalho: true, fatura_id: true }
-          });
+          const ordemTrabalho = (await db.select({ id: ordensTrabalho.id, refOrdemTrabalho: ordensTrabalho.refOrdemTrabalho, faturaId: ordensTrabalho.faturaId })
+            .from(ordensTrabalho)
+            .where(eq(ordensTrabalho.id, ordemTrabalhoIdParsed))
+            .limit(1))[0];
 
           if (!ordemTrabalho) {
             throw new Error('Ordem de trabalho não encontrada.');
           }
 
-          if (ordemTrabalho.fatura_id) {
-            const faturaPorVinculo = await prisma.faturas.findUnique({
-              where: { id: ordemTrabalho.fatura_id },
-              select: { id: true, numero_fatura: true }
-            });
+          if (ordemTrabalho.faturaId) {
+            const faturaPorVinculo = (await db.select({ id: faturas.id, numeroFatura: faturas.numeroFatura })
+              .from(faturas)
+              .where(eq(faturas.id, ordemTrabalho.faturaId))
+              .limit(1))[0];
 
             if (faturaPorVinculo) {
-              throw new Error(`A ordem ${ordemTrabalho.ref_ordem_trabalho} já está associada à fatura ${faturaPorVinculo.numero_fatura}.`);
+              throw new Error(`A ordem ${ordemTrabalho.refOrdemTrabalho} já está associada à fatura ${faturaPorVinculo.numeroFatura}.`);
             }
 
-            await prisma.ordens_trabalho.update({
-              where: { id: BigInt(ordemTrabalhoIdParsed) },
-              data: { fatura_id: null }
-            });
-            console.warn('⚠️ Vínculo órfão limpo em ordens_trabalho.fatura_id:', ordemTrabalhoIdParsed);
+            await db.update(ordensTrabalho)
+              .set({ faturaId: null })
+              .where(eq(ordensTrabalho.id, ordemTrabalhoIdParsed));
+            console.warn('⚠️ Vínculo órfão limpo em ordensTrabalho.faturaId:', ordemTrabalhoIdParsed);
           }
         }
 
         const dataParaGravar = {
-          numero_fatura: numeroFaturaToconline,
-          cliente_id: cliente.id,
-          ordem_trabalho_id: ordemTrabalhoIdParsed,
-          data_emissao: new Date(faturaOnline.date),
-          data_vencimento: new Date(faturaOnline.due_date),
+          numeroFatura: numeroFaturaToconline,
+          clienteId: cliente.id,
+          ordemTrabalhoId: ordemTrabalhoIdParsed,
+          dataEmissao: faturaOnline.date || null,
+          dataVencimento: faturaOnline.due_date || null,
           subtotal: valorSubtotal,
-          valor_imposto: valorImpostoRounded,
-          valor_desconto: valorDesconto,
-          valor_total: valorTotalCalculado,
+          valorImposto: valorImpostoRounded,
+          valorDesconto: valorDesconto,
+          valorTotal: valorTotalCalculado,
           estado: 'pendente', // Sempre pendente inicialmente
           notas: faturaOnline.notes || ''
           // Nota: toconline_id e toconline_customer_id serão gravados após criação com update se necessário
         };
 
         console.log('📝 Dados para gravar:', {
-          numero_fatura: dataParaGravar.numero_fatura,
-          cliente_id: dataParaGravar.cliente_id,
-          ordem_trabalho_id: dataParaGravar.ordem_trabalho_id?.toString(),
-          data_emissao: dataParaGravar.data_emissao,
-          data_vencimento: dataParaGravar.data_vencimento,
+          numero_fatura: dataParaGravar.numeroFatura,
+          cliente_id: dataParaGravar.clienteId,
+          ordem_trabalho_id: dataParaGravar.ordemTrabalhoId?.toString(),
+          data_emissao: dataParaGravar.dataEmissao,
+          data_vencimento: dataParaGravar.dataVencimento,
           subtotal: dataParaGravar.subtotal,
-          valor_imposto: dataParaGravar.valor_imposto,
-          valor_desconto: dataParaGravar.valor_desconto,
-          valor_total: dataParaGravar.valor_total
+          valor_imposto: dataParaGravar.valorImposto,
+          valor_desconto: dataParaGravar.valorDesconto,
+          valor_total: dataParaGravar.valorTotal
         });
 
         try {
-          faturaLocal = await prisma.faturas.create({
-            data: dataParaGravar
-          });
+          const insertResult = await db.insert(faturas).values(dataParaGravar);
+          const insertedId = insertResult.insertId || insertResult[0]?.insertId || insertResult[0]?.id;
+          faturaLocal = (await db.select().from(faturas).where(eq(faturas.id, insertedId)).limit(1))[0];
           console.log('✅ Fatura local gravada com ID:', Number(faturaLocal.id));
-          
+
           // Atualizar com toconline_id e toconline_customer_id
           if (faturaOnline.id) {
             console.log('📝 Atualizando toconline_id:', faturaOnline.id);
-            faturaLocal = await prisma.faturas.update({
-              where: { id: faturaLocal.id },
-              data: {
-                toconline_id: String(faturaOnline.id),
-                toconline_customer_id: faturaOnline.customer_id ? String(faturaOnline.customer_id) : null
-              }
-            });
+            await db.update(faturas)
+              .set({
+                toconlineId: String(faturaOnline.id),
+                toconlineCustomerId: faturaOnline.customer_id ? String(faturaOnline.customer_id) : null
+              })
+              .where(eq(faturas.id, faturaLocal.id));
+            faturaLocal = (await db.select().from(faturas).where(eq(faturas.id, faturaLocal.id)).limit(1))[0];
             console.log('✅ toconline_id atualizado');
           }
 
           if (ordemTrabalhoIdParsed) {
-            await prisma.ordens_trabalho.update({
-              where: { id: BigInt(ordemTrabalhoIdParsed) },
-              data: { fatura_id: faturaLocal.id }
-            });
+            await db.update(ordensTrabalho)
+              .set({ faturaId: faturaLocal.id })
+              .where(eq(ordensTrabalho.id, ordemTrabalhoIdParsed));
             console.log('✅ Ordem de trabalho associada à fatura:', ordemTrabalhoIdParsed);
           }
-        } catch (prismaErr) {
-          console.error('❌ Erro Prisma detalhado:', {
-            message: prismaErr.message,
-            code: prismaErr.code,
-            meta: prismaErr.meta,
-            stack: prismaErr.stack
-          });
-          throw new Error(`Erro ao criar fatura no BD: ${prismaErr.message} (${prismaErr.code})`);
+        } catch (err) {
+          console.error('❌ Erro Drizzle detalhado:', err);
+          throw new Error(`Erro ao criar fatura no BD: ${err.message}`);
         }
         
       } catch (err) {
@@ -346,12 +349,23 @@ export async function POST(req) {
         console.error('❌ Erro ao gravar fatura local:', err);
       }
       
+      if (localError || !faturaLocal?.id) {
+        return NextResponse.json({ 
+          success: false,
+          error: localError || 'A fatura foi criada no TOConline mas falhou a gravação local.',
+          details: errorDetails,
+          externalSuccess: true,
+          data,
+          faturaLocalId: null
+        }, { status: 500 });
+      }
+
       return NextResponse.json({ 
         success: true, 
         data, 
-        localError,
-        errorDetails,
-        faturaLocalId: faturaLocal?.id ? Number(faturaLocal.id) : null
+        localError: null,
+        errorDetails: null,
+        faturaLocalId: Number(faturaLocal.id)
       });
     } else {
       return NextResponse.json({ error: data?.error || 'Erro ao criar fatura', details: data }, { status: 500 });

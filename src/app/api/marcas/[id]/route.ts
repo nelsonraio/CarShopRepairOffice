@@ -1,11 +1,9 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/db/connection';
+import { marcas } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 import { registarAuditoria } from '@/lib/auditoria';
-
-// @ts-ignore
-const prisma = new PrismaClient({
-  log: ['error'],
-});
+import { successResponse, handleDatabaseError } from '@/lib/api-utils';
 
 export async function PUT(
   request: Request,
@@ -16,32 +14,24 @@ export async function PUT(
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
 
-    const marca = await prisma.marcas.update({
-      where: { id },
-      data: {
-        nome: body.nome,
-        pais_origem: body.pais_origem || null,
-        ativo: body.ativo !== undefined ? body.ativo : true
-      }
-    });
+    // Map fields to Drizzle schema
+    const updateObj: any = {
+      nome: body.nome,
+      paisOrigem: body.pais_origem || null,
+      ativo: body.ativo !== undefined ? body.ativo : true
+    };
+
+    await db.update(marcas).set(updateObj).where(eq(marcas.id, id));
+    const updated = await db.select().from(marcas).where(eq(marcas.id, id));
+    if (!updated[0]) {
+      return NextResponse.json({ error: 'Marca nao encontrada' }, { status: 404 });
+    }
 
     await registarAuditoria('UPDATE', 'marcas', id, null, { nome: body.nome }, request);
 
-    return NextResponse.json(marca);
+    return successResponse(updated[0]);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error updating marca:', error);
-    return NextResponse.json({ error: 'Failed to update marca' }, { status: 500 });
+    return handleDatabaseError(error as Error);
   }
 }
 
@@ -54,26 +44,21 @@ export async function PATCH(
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
 
-    const marca = await prisma.marcas.update({
-      where: { id },
-      data: body
-    });
-
-    return NextResponse.json(marca);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
+    // Accepts partial update, so just set whatever is present
+    const updateObj: any = {};
+    for (const key in body) {
+      if (key === 'pais_origem') updateObj.paisOrigem = body[key];
+      else updateObj[key] = body[key];
     }
-    console.error('Error patching marca:', error);
-    return NextResponse.json({ error: 'Failed to patch marca' }, { status: 500 });
+
+    await db.update(marcas).set(updateObj).where(eq(marcas.id, id));
+    const updated = await db.select().from(marcas).where(eq(marcas.id, id));
+    if (!updated[0]) {
+      return NextResponse.json({ error: 'Marca nao encontrada' }, { status: 404 });
+    }
+    return successResponse(updated[0]);
+  } catch (error) {
+    return handleDatabaseError(error as Error);
   }
 }
 
@@ -85,27 +70,11 @@ export async function DELETE(
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
 
-    await prisma.marcas.delete({
-      where: { id }
-    });
-
+    await db.delete(marcas).where(eq(marcas.id, id));
     await registarAuditoria('DELETE', 'marcas', id, null, null, request);
-
-    return NextResponse.json({ success: true });
+    return successResponse({ success: true });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error deleting marca:', error);
-    return NextResponse.json({ error: 'Failed to delete marca' }, { status: 500 });
+    return handleDatabaseError(error as Error);
   }
 }
 

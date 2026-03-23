@@ -78,7 +78,7 @@ export const errorResponse = (message: string, status = 500): NextResponse<ApiEr
  * Verifica se erro é de base de dados offline
  * 
  * Detecta erros comuns:
- * - 'reach database server' - Prisma não consegue conectar
+ * - 'reach database server' - Erro de conexão com banco de dados
  * - 'ECONNREFUSED' - Porta do MySQL fechada
  * - 'ENOTFOUND' - Host não encontrado
  * 
@@ -138,8 +138,8 @@ export const extractId = (url: URL | string): string | null => {
  * - limit: itens por página (padrão: 20)
  * 
  * Retorna:
- * - skip: quantos registos pular (para Prisma)
- * - take: quantos registos retornar (para Prisma)
+ * - skip: quantos registos pular (para paginação)
+ * - take: quantos registos retornar (para paginação)
  * 
  * @example
  * // URL: /api/items?page=2&limit=10
@@ -187,10 +187,13 @@ export const mapFrontendStatusToDb = (status: string): string => {
     'Em Aprovação': 'em_aprovacao',
     'Aprovado': 'aprovado',
     'Aguarda Peças': 'aguarda_peca',
+    'Aguardando Peças': 'aguarda_peca',
     'Em Andamento': 'em_andamento',
     'Concluído': 'concluido',
+    'Concluída': 'concluido',
     'Entregue': 'entregue',
-    'Cancelado': 'cancelado'
+    'Cancelado': 'cancelado',
+    'Cancelada': 'cancelado'
   };
   return statusMap[status] || status;
 };

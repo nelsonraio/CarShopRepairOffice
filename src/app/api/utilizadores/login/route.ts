@@ -1,10 +1,11 @@
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/db/connection';
+import { utilizadores } from '../../../../../drizzle/migrations/schema';
+import { eq } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
 import { registarAuditoria } from '@/lib/auditoria';
 
-const prisma = new PrismaClient();
 const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
 /**
@@ -22,9 +23,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user = await prisma.utilizadores.findUnique({
-      where: { email },
-    });
+    // Busca o utilizador pelo email usando Drizzle
+    const [user] = await db
+      .select()
+      .from(utilizadores)
+      .where(eq(utilizadores.email, email));
 
     if (!user) {
       return NextResponse.json(
@@ -33,7 +36,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const passwordMatch = await bcrypt.compare(password, user.hash_palavra_passe);
+    const passwordMatch = await bcrypt.compare(password, user.hashPalavraPasse);
 
     if (!passwordMatch) {
       return NextResponse.json(
@@ -49,18 +52,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Atualizar último login
-    await prisma.utilizadores.update({
-      where: { id: user.id },
-      data: { ultimo_login: new Date() },
-    });
+    // Atualizar último login com Drizzle
+    await db
+      .update(utilizadores)
+      .set({ ultimoLogin: new Date().toISOString().slice(0, 19).replace('T', ' ') })
+      .where(eq(utilizadores.id, user.id));
 
     // Criar JWT
     const token = await new SignJWT({
       id: user.id,
       email: user.email,
-      nome_completo: user.nome_completo,
-      nome_utilizador: user.nome_utilizador,
+      nome_completo: user.nomeCompleto,
+      nome_utilizador: user.nomeUtilizador,
       papel: user.papel,
     })
       .setProtectedHeader({ alg: 'HS256' })
@@ -74,8 +77,8 @@ export async function POST(request: NextRequest) {
         user: {
           id: user.id,
           email: user.email,
-          nome_completo: user.nome_completo,
-          nome_utilizador: user.nome_utilizador,
+          nome_completo: user.nomeCompleto,
+          nome_utilizador: user.nomeUtilizador,
           papel: user.papel,
         },
       },

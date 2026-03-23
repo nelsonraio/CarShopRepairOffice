@@ -1,4 +1,3 @@
-import { PrismaClient, Prisma } from '@prisma/client';
 import {
   successResponse,
   errorResponse,
@@ -12,18 +11,19 @@ import {
   extractUniqueIds
 } from '@/lib/api-utils';
 import { registarAuditoria } from '@/lib/auditoria';
-
-const prisma = new PrismaClient({
-  log: ['error'],
-});
+import { db } from '@/db/connection';
+import { ordensTrabalho, clientes, veiculos, mecanicos, itensOrdemTrabalho, pecas } from '@/db/schema';
+import { eq, inArray, desc, sql } from 'drizzle-orm';
+import { and } from 'drizzle-orm';
+// already imported
 
 type WorkOrderItemLike = {
   id?: number | bigint;
   tipo_item?: string;
   descricao?: string | null;
-  quantidade?: number | string | Prisma.Decimal | null;
-  preco_unitario?: number | string | Prisma.Decimal | null;
-  valor_total?: number | string | Prisma.Decimal | null;
+  quantidade?: number | string | null;
+  preco_unitario?: number | string | null;
+  valor_total?: number | string | null;
   aguarda_peca?: boolean | null;
   type?: string;
   servico_id?: number | string | null;
@@ -32,8 +32,8 @@ type WorkOrderItemLike = {
   quantity?: number | string | null;
   unitPrice?: number | string | null;
   desconto?: number | string | null;
-  valor_desconto?: number | string | Prisma.Decimal | null;
-  valor_imposto?: number | string | Prisma.Decimal | null;
+  valor_desconto?: number | string | null;
+  valor_imposto?: number | string | null;
   total?: number | string | null;
   notas?: string | null;
   notes?: string | null;
@@ -62,6 +62,13 @@ type WorkOrderRequestBody = {
   total_geral?: number | string | null;
   items?: WorkOrderItemLike[];
 };
+
+class StockValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'StockValidationError';
+  }
+}
 
 /**
  * Format a work order item for API response
@@ -144,61 +151,157 @@ const parseWorkOrderData = (body: WorkOrderRequestBody) => {
 /**
  * Create work order items in database
  */
-const createWorkOrderItems = async (orderId: bigint, items: WorkOrderItemLike[]) => {
+
+const createWorkOrderItems = async (orderId: number, items: WorkOrderItemLike[]) => {
   if (!items || items.length === 0) return;
 
   const workOrderItems = items.map((item) => ({
-    ordem_trabalho_id: orderId,
-    tipo_item: item.tipo_item || (item.type === 'service' ? 'servico' : 'peca'),
-    servico_id: item.servico_id ? parseInt(String(item.servico_id), 10) : null,
-    peca_id: item.peca_id ? parseInt(String(item.peca_id), 10) : null,
+    ordemTrabalhoId: orderId,
+    tipoItem: item.tipo_item || (item.type === 'service' ? 'servico' : 'peca'),
+    servicoId: item.servico_id ? parseInt(String(item.servico_id), 10) : null,
+    pecaId: item.peca_id ? parseInt(String(item.peca_id), 10) : null,
     descricao: item.descricao || item.name || '',
-    quantidade: parseNum(item.quantidade || item.quantity) || 1,
-    preco_unitario: parseNum(item.preco_unitario || item.unitPrice) || 0,
-    valor_desconto: parseNum(item.valor_desconto || item.desconto) || 0,
-    valor_imposto: parseNum(item.valor_imposto) || 0,
-    valor_total: parseNum(item.valor_total || item.total) || 0,
-    notas: item.notas || item.notes || null
+    quantidade: String(parseNum(item.quantidade || item.quantity) || 1),
+    precoUnitario: String(parseNum(item.preco_unitario || item.unitPrice) || 0),
+    valorDesconto: String(parseNum(item.valor_desconto || item.desconto) || 0),
+    valorImposto: String(parseNum(item.valor_imposto) || 0),
+    valorTotal: String(parseNum(item.valor_total || item.total) || 0),
+    notas: item.notas || item.notes || null,
+    aguardaPeca: item.aguarda_peca ? 1 : 0,
   }));
 
-  await prisma.itens_ordem_trabalho.createMany({ data: workOrderItems });
+  await db.insert(itensOrdemTrabalho).values(workOrderItems);
 };
 
 /**
  * Deduct parts from stock when order is completed
  */
 const deductPartsFromStock = async (orderId: number) => {
-  const orderItems = await prisma.itens_ordem_trabalho.findMany({
-    where: {
-      ordem_trabalho_id: orderId,
-      tipo_item: 'peca',
-      peca_id: { not: null }
-    },
-    select: { peca_id: true, quantidade: true }
-  });
+  const orderItems = await db.select({ pecaId: itensOrdemTrabalho.pecaId, quantidade: itensOrdemTrabalho.quantidade, descricao: itensOrdemTrabalho.descricao })
+    .from(itensOrdemTrabalho)
+    .where(
+      and(
+        eq(itensOrdemTrabalho.ordemTrabalhoId, orderId),
+        eq(itensOrdemTrabalho.tipoItem, 'peca'),
+        sql`${itensOrdemTrabalho.pecaId} IS NOT NULL`
+      )
+    );
 
-  // Update stock for each part
+  if (!orderItems.length) {
+    return;
+  }
+
+  const requiredByPartId = new Map<number, { qty: number; description: string }>();
+
   for (const item of orderItems) {
-    if (item.peca_id && item.quantidade) {
-      try {
-        const current = await prisma.pecas.findUnique({
-          where: { id: BigInt(item.peca_id) },
-          select: { quantidade_stock: true }
-        });
-        
-        const decrement = Math.floor(Number(item.quantidade));
-        let newStock = (current?.quantidade_stock ?? 0) - decrement;
-        if (newStock < 0) newStock = 0;
-
-        await prisma.pecas.update({
-          where: { id: BigInt(item.peca_id) },
-          data: { quantidade_stock: newStock }
-        });
-      } catch (error) {
-        console.error(`Failed to update stock for part ${item.peca_id}:`, error);
-        // Continue processing other parts even if one fails
-      }
+    const partId = Number(item.pecaId);
+    const qty = Number(item.quantidade);
+    if (!partId || !Number.isFinite(qty) || qty <= 0) {
+      continue;
     }
+
+    const current = requiredByPartId.get(partId);
+    if (current) {
+      current.qty += qty;
+    } else {
+      requiredByPartId.set(partId, { qty, description: String(item.descricao || `Peça ${partId}`) });
+    }
+  }
+
+  if (requiredByPartId.size === 0) {
+    return;
+  }
+
+  const partIds = [...requiredByPartId.keys()];
+  const currentStocks = await db
+    .select({ id: pecas.id, nome: pecas.nome, quantidade_stock: pecas.quantidade_stock })
+    .from(pecas)
+    .where(inArray(pecas.id, partIds));
+
+  const stockMap = new Map<number, { name: string; stock: number }>();
+  for (const p of currentStocks) {
+    stockMap.set(Number(p.id), {
+      name: String(p.nome || `Peça ${p.id}`),
+      stock: Number(p.quantidade_stock) || 0,
+    });
+  }
+
+  const missingOrInsufficient: string[] = [];
+  for (const [partId, required] of requiredByPartId.entries()) {
+    const current = stockMap.get(partId);
+    const available = current?.stock ?? 0;
+    if (!current || available < required.qty) {
+      const label = current?.name || required.description || `Peça ${partId}`;
+      missingOrInsufficient.push(`${label} (necessário: ${required.qty}, disponível: ${available})`);
+    }
+  }
+
+  if (missingOrInsufficient.length > 0) {
+    throw new StockValidationError(`Stock insuficiente para concluir a ordem de trabalho: ${missingOrInsufficient.join('; ')}`);
+  }
+
+  for (const [partId, required] of requiredByPartId.entries()) {
+    const current = stockMap.get(partId);
+    if (!current) {
+      continue;
+    }
+    const newStock = Math.max(0, current.stock - required.qty);
+    await db.update(pecas)
+      .set({ quantidade_stock: newStock })
+      .where(eq(pecas.id, partId));
+  }
+};
+
+/**
+ * Restore parts stock when a concluded order is reopened
+ */
+const restorePartsToStock = async (orderId: number) => {
+  const orderItems = await db.select({ pecaId: itensOrdemTrabalho.pecaId, quantidade: itensOrdemTrabalho.quantidade })
+    .from(itensOrdemTrabalho)
+    .where(
+      and(
+        eq(itensOrdemTrabalho.ordemTrabalhoId, orderId),
+        eq(itensOrdemTrabalho.tipoItem, 'peca'),
+        sql`${itensOrdemTrabalho.pecaId} IS NOT NULL`
+      )
+    );
+
+  if (!orderItems.length) {
+    return;
+  }
+
+  const restoreByPartId = new Map<number, number>();
+
+  for (const item of orderItems) {
+    const partId = Number(item.pecaId);
+    const qty = Number(item.quantidade);
+    if (!partId || !Number.isFinite(qty) || qty <= 0) {
+      continue;
+    }
+
+    restoreByPartId.set(partId, (restoreByPartId.get(partId) || 0) + qty);
+  }
+
+  if (restoreByPartId.size === 0) {
+    return;
+  }
+
+  const partIds = [...restoreByPartId.keys()];
+  const currentStocks = await db
+    .select({ id: pecas.id, quantidade_stock: pecas.quantidade_stock })
+    .from(pecas)
+    .where(inArray(pecas.id, partIds));
+
+  const stockMap = new Map<number, number>();
+  for (const p of currentStocks) {
+    stockMap.set(Number(p.id), Number(p.quantidade_stock) || 0);
+  }
+
+  for (const [partId, qtyToRestore] of restoreByPartId.entries()) {
+    const current = stockMap.get(partId) || 0;
+    await db.update(pecas)
+      .set({ quantidade_stock: current + qtyToRestore })
+      .where(eq(pecas.id, partId));
   }
 };
 
@@ -232,43 +335,42 @@ export async function POST(request: Request) {
       items
     } = parseWorkOrderData(body);
 
-    // Create work order
-    const ordemTrabalho = await prisma.ordens_trabalho.create({
-      data: {
-        ref_ordem_trabalho,
-        cliente_id,
-        mecanico_id: mecanico_id,
-        orcamento_id: orcamento_id,
-        veiculo_id: veiculo_id,
-        data_inicio,
-        data_conclusao,
-        estado,
-        kms,
-        descricao_problema,
-        trabalho_realizado,
-        recomendacoes,
-        contacto_nome,
-        contacto_telefone,
-        contacto_email,
-        total_pecas,
-        total_mao_obra,
-        total_desconto,
-        total_imposto,
-        total_geral
-      }
+    // Create work order (Drizzle)
+    const [insertResult] = await db.insert(ordensTrabalho).values({
+      refOrdemTrabalho: ref_ordem_trabalho,
+      clienteId: cliente_id,
+      veiculoId: Number(veiculo_id) || 0,
+      mecanicoId: mecanico_id ? Number(mecanico_id) : null,
+      descricaoProblema: descricao_problema,
+      trabalhoRealizado: trabalho_realizado,
+      totalGeral: String(total_geral || 0),
+      totalPecas: String(total_pecas || 0),
+      totalMaoObra: String(total_mao_obra || 0),
+      totalDesconto: String(total_desconto || 0),
+      totalImposto: String(total_imposto || 0),
+      estado: estado || 'em_andamento',
+      dataInicio: data_inicio ? String(data_inicio) : new Date().toISOString().slice(0, 10),
+      dataConclusao: data_conclusao ? String(data_conclusao) : null,
+      kms: kms ? Number(kms) : null,
+      contactoNome: contacto_nome ?? null,
+      contactoTelefone: contacto_telefone ?? null,
+      contactoEmail: contacto_email ?? null,
     });
 
-    // Create work order items
-    await createWorkOrderItems(ordemTrabalho.id, items || []);
+    // Recuperar o id inserido
+    const ordemTrabalhoId = insertResult.insertId || insertResult;
 
-    await registarAuditoria('CREATE', 'ordens_trabalho', Number(ordemTrabalho.id), null, { ref: ref_ordem_trabalho, cliente_id, veiculo_id: Number(veiculo_id), estado }, request);
+    // Create work order items
+    await createWorkOrderItems(Number(ordemTrabalhoId), items || []);
+
+    await registarAuditoria('CREATE', 'ordens_trabalho', Number(ordemTrabalhoId), null, { ref: ref_ordem_trabalho, cliente_id, veiculo_id: Number(veiculo_id), estado }, request);
 
     return successResponse(
       {
         success: true,
         ordem_trabalho: {
-          id: Number(ordemTrabalho.id),
-          ref_ordem_trabalho: ordemTrabalho.ref_ordem_trabalho
+          id: Number(ordemTrabalhoId),
+          ref_ordem_trabalho: ref_ordem_trabalho
         }
       },
       201
@@ -289,158 +391,194 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
+    const vehicleIdParam = searchParams.get('vehicleId');
+    const statusParam = searchParams.get('status');
 
-    // Single work order lookup
+
+    // Single work order lookup with items
     if (id) {
-      const order = await prisma.ordens_trabalho.findUnique({
-        where: { ref_ordem_trabalho: id },
-        include: {
-          mecanico: true,
-          itens_ordem_trabalho: {
-            select: {
-              id: true,
-              tipo_item: true,
-              descricao: true,
-              quantidade: true,
-              preco_unitario: true,
-              valor_total: true,
-              aguarda_peca: true
-            }
-          },
-          orcamento: { include: { itens_orcamento: true } }
-        }
-      });
-
+      // Buscar ordem de trabalho — aceita id numérico ou referência (ex: OT-0007)
+      const rawId = String(id).trim();
+      const numericId = Number(rawId);
+      const isNumericId = Number.isFinite(numericId) && numericId > 0 && !rawId.includes('-');
+      const order = isNumericId
+        ? await db.query.ordensTrabalho.findFirst({ where: (o, { eq }) => eq(o.id, numericId) })
+        : await db.query.ordensTrabalho.findFirst({ where: (o, { eq }) => eq(o.refOrdemTrabalho, rawId) });
       if (!order) {
         return errorResponse('Work order not found', 404);
       }
 
-      const [cliente, veiculo] = await Promise.all([
-        prisma.clientes.findUnique({ where: { id: order.cliente_id } }),
-        order.veiculo_id
-          ? prisma.veiculos.findUnique({ where: { id: order.veiculo_id } })
-          : Promise.resolve(null)
-      ]);
+      // Buscar itens relacionados
+      const items = await db.query.itensOrdemTrabalho.findMany({ where: (i, { eq }) => eq(i.ordemTrabalhoId, Number(order.id)) });
 
-      const waitingParts = getWaitingParts(order.itens_ordem_trabalho);
+      // Mapear itens para formato esperado pelo frontend
+      const itens_ordem_trabalho = items.map(item => ({
+        id: item.id,
+        tipo_item: item.tipoItem,
+        descricao: item.descricao,
+        quantidade: Number(item.quantidade) || 0,
+        preco_unitario: Number(item.precoUnitario) || 0,
+        valor_total: Number(item.valorTotal) || 0,
+        aguarda_peca: !!item.aguardaPeca
+      }));
 
-      const responseData = {
-        id: String(order.id),
-        client: cliente?.nome ?? '',
-        vehicle: veiculo ? `${veiculo.marca} ${veiculo.modelo} | ${veiculo.matricula}` : '',
-        mechanic: order.mecanico?.nome ?? '',
-        openDate: formatDatePt(order.data_inicio),
-        closeDate: formatDatePt(order.data_conclusao),
-        status: mapDbStatusToFrontend(order.estado),
-        priority: mapPriority(order.prioridade ?? null),
-        problem: order.descricao_problema ?? '',
-        waitingParts,
-        itens_ordem_trabalho: (order.itens_ordem_trabalho || []).map(formatWorkOrderItem),
-        orcamento: order.orcamento ? {
-          id: String(order.orcamento.id),
-          ref_orcamento: order.orcamento.ref_orcamento,
-          itens_orcamento: (order.orcamento.itens_orcamento || []).map((item: {
-            id: number | bigint;
-            orcamento_id: number | bigint;
-            descricao?: string | null;
-            quantidade?: number | string | Prisma.Decimal | null;
-            valor_total?: number | string | Prisma.Decimal | null;
-            servico_id?: number | bigint | null;
-            peca_id?: number | bigint | null;
-          }) => ({
-            id: String(item.id),
-            orcamento_id: String(item.orcamento_id),
-            descricao: item.descricao ?? '',
-            quantidade: Number(item.quantidade) || 0,
-            valor_total: Number(item.valor_total) || 0,
-            servico_id: item.servico_id ? String(item.servico_id) : null,
-            peca_id: item.peca_id ? String(item.peca_id) : null
-          }))
-        } : undefined
-      };
-
-      // Handle remaining BigInt values
-      const jsonString = JSON.stringify(responseData, (key, value) =>
-        typeof value === 'bigint' ? value.toString() : value
-      );
-
-      return new Response(jsonString, {
-        headers: { 'Content-Type': 'application/json' }
+      return successResponse({
+        ...order,
+        itens_ordem_trabalho
       });
     }
 
     // List all work orders
-    const orders = await prisma.ordens_trabalho.findMany({
-      orderBy: { criado_em: 'desc' },
-      include: {
-        mecanico: true,
-        itens_ordem_trabalho: {
-          select: {
-            id: true,
-            tipo_item: true,
-            descricao: true,
-            quantidade: true,
-            preco_unitario: true,
-            valor_total: true,
-            aguarda_peca: true
-          }
-        }
-      }
+    const orders = await db.select().from(ordensTrabalho).orderBy(desc(ordensTrabalho.criadoEm));
+    const requestedVehicleId = vehicleIdParam ? Number(vehicleIdParam) : null;
+    const requestedStatuses = statusParam
+      ? new Set(
+          statusParam
+            .split(',')
+            .map(status => status.trim())
+            .filter(Boolean)
+            .flatMap((status) => {
+              const lowered = status.toLowerCase();
+              if (lowered === 'faturado') {
+                return ['concluido', 'entregue'];
+              }
+
+              return [mapFrontendStatusToDb(status)];
+            })
+        )
+      : null;
+
+    const filteredOrders = orders.filter((order) => {
+      const matchesVehicle = requestedVehicleId == null || Number(order.veiculoId) === requestedVehicleId;
+      const matchesStatus = !requestedStatuses || requestedStatuses.has(String(order.estado || '').toLowerCase());
+      return matchesVehicle && matchesStatus;
     });
 
     // Batch load related entities
-    const clienteIds = extractUniqueIds(orders, 'cliente_id');
-    const veiculoIds = extractUniqueIds(orders, 'veiculo_id').filter(
+    const clienteIds = extractUniqueIds(filteredOrders, 'clienteId');
+    const veiculoIds = extractUniqueIds(filteredOrders, 'veiculoId').filter(
       id => typeof id === 'bigint' || typeof id === 'number'
     );
-    const mecanicoIds = extractUniqueIds(orders, 'mecanico_id');
+    const mecanicoIds = extractUniqueIds(filteredOrders, 'mecanicoId');
 
-    const [clientes, veiculos, mecanicos] = await Promise.all([
+    const [clientesArr, veiculosArr, mecanicosArr] = await Promise.all([
       clienteIds.length
-        ? prisma.clientes.findMany({ where: { id: { in: clienteIds as number[] } } })
+        ? db.select().from(clientes).where(inArray(clientes.id, clienteIds as number[]))
         : Promise.resolve([]),
       veiculoIds.length
-        ? prisma.veiculos.findMany({ where: { id: { in: veiculoIds.map(id => BigInt(id)) } } })
+        ? db.select().from(veiculos).where(inArray(veiculos.id, veiculoIds as number[]))
         : Promise.resolve([]),
       mecanicoIds.length
-        ? prisma.mecanicos.findMany({ where: { id: { in: mecanicoIds as number[] } } })
+        ? db.select().from(mecanicos).where(inArray(mecanicos.id, mecanicoIds as number[]))
         : Promise.resolve([])
     ]);
 
-    const clientMap = buildDataMap(clientes, 'id');
+    const clientMap = buildDataMap(clientesArr, 'id');
     const veiculoMap = buildDataMap(
-      veiculos.map(v => ({ ...v, id: Number(v.id) })),
+      veiculosArr.map(v => ({ ...v, id: Number(v.id) })),
       'id'
     );
-    const mecanicoMap = buildDataMap(mecanicos, 'id');
+    const mecanicoMap = buildDataMap(mecanicosArr, 'id');
+
+    // Load waiting parts items for orders in aguarda_peca state
+    const aguardaPecaIds = filteredOrders
+      .filter(o => o.estado === 'aguarda_peca')
+      .map(o => Number(o.id));
+
+    const waitingItemsMap = new Map<number, Array<{ id: number; descricao: string; quantidade: number; valor_total: number }>>();
+    if (aguardaPecaIds.length > 0) {
+      const waitingItems = await db
+        .select()
+        .from(itensOrdemTrabalho)
+        .where(
+          and(
+            inArray(itensOrdemTrabalho.ordemTrabalhoId, aguardaPecaIds),
+            eq(itensOrdemTrabalho.tipoItem, 'peca'),
+            eq(itensOrdemTrabalho.aguardaPeca, 1)
+          )
+        );
+      waitingItems.forEach(item => {
+        const ordId = Number(item.ordemTrabalhoId);
+        if (!waitingItemsMap.has(ordId)) waitingItemsMap.set(ordId, []);
+        waitingItemsMap.get(ordId)!.push({
+          id: Number(item.id),
+          descricao: item.descricao ?? '',
+          quantidade: Number(item.quantidade) || 0,
+          valor_total: Number(item.valorTotal) || 0
+        });
+      });
+    }
+
+    const filteredOrderIds = filteredOrders.map(order => Number(order.id));
+    const orderItemsMap = new Map<number, Array<{
+      id: number;
+      tipo_item: string;
+      descricao: string;
+      quantidade: number;
+      preco_unitario: number;
+      valor_total: number;
+      aguarda_peca: boolean;
+    }>>();
+
+    if (filteredOrderIds.length > 0) {
+      const orderItems = await db
+        .select()
+        .from(itensOrdemTrabalho)
+        .where(inArray(itensOrdemTrabalho.ordemTrabalhoId, filteredOrderIds));
+
+      orderItems.forEach((item) => {
+        const orderId = Number(item.ordemTrabalhoId);
+        if (!orderItemsMap.has(orderId)) {
+          orderItemsMap.set(orderId, []);
+        }
+
+        orderItemsMap.get(orderId)!.push({
+          id: Number(item.id),
+          tipo_item: item.tipoItem ?? '',
+          descricao: item.descricao ?? '',
+          quantidade: Number(item.quantidade) || 0,
+          preco_unitario: Number(item.precoUnitario) || 0,
+          valor_total: Number(item.valorTotal) || 0,
+          aguarda_peca: !!item.aguardaPeca,
+        });
+      });
+    }
 
     // Transform orders for response
-    const transformedOrders = orders.map((order) => {
-      const cliente = clientMap.get(order.cliente_id);
-      const veiculo = veiculoMap.get(Number(order.veiculo_id));
-      const mecanicoFromMap = order.mecanico_id != null ? mecanicoMap.get(order.mecanico_id) : undefined;
-      const mecanico = mecanicoFromMap || order.mecanico;
-
+    const transformedOrders = filteredOrders.map((order) => {
+      const cliente = order.clienteId != null ? clientMap.get(order.clienteId) : undefined;
+      const veiculo = order.veiculoId != null ? veiculoMap.get(Number(order.veiculoId)) : undefined;
+      const mecanico = order.mecanicoId != null ? mecanicoMap.get(order.mecanicoId) : undefined;
+      const vehicleLabel = veiculo ? `${veiculo.marca ?? ''} ${veiculo.modelo ?? ''}`.trim() : '';
+      const dateValue = order.dataConclusao ?? order.dataInicio ?? undefined;
+      const descriptionValue = order.descricaoProblema ?? order.trabalhoRealizado ?? '';
       return {
-        id: order.ref_ordem_trabalho,
-        client: cliente?.nome ?? '',
-        contacto_nome: order.contacto_nome ?? null,
-        contacto_telefone: order.contacto_telefone ?? cliente?.telefone ?? null,
-        contacto_email: order.contacto_email ?? cliente?.email ?? null,
-        vehicle: `${veiculo?.marca ?? ''} ${veiculo?.modelo ?? ''} | ${veiculo?.matricula ?? ''}`,
-        mechanic: mecanico?.nome ?? '',
+        id: String(order.id),
+        ref_ordem_trabalho: order.refOrdemTrabalho,
+        cliente_nome: cliente?.nome ?? '',
+        veiculo_modelo: veiculo ? `${veiculo.marca ?? ''} ${veiculo.modelo ?? ''}`.trim() : '',
+        veiculo_matricula: veiculo?.matricula ?? '',
         mecanico_nome: mecanico?.nome ?? '',
-        openDate: formatDatePt(order.data_inicio),
-        closeDate: formatDatePt(order.data_conclusao),
-        total: Number(order.total_geral) || 0,
+        estado: order.estado ?? 'em_andamento',
+        contacto_nome: order.contactoNome ?? null,
+        contacto_telefone: order.contactoTelefone ?? null,
+        contacto_email: order.contactoEmail ?? null,
+        data_inicio: order.dataInicio ?? undefined,
+        data_conclusao: order.dataConclusao ?? undefined,
+        prioridade: order.prioridade ?? 'normal',
+        descricao_problema: order.descricaoProblema ?? '',
+        trabalho_realizado: order.trabalhoRealizado ?? '',
+        total_geral: Number(order.totalGeral) || 0,
+        plate: veiculo?.matricula ?? '',
+        vehicle: vehicleLabel,
+        date: dateValue,
+        description: descriptionValue,
         status: mapDbStatusToFrontend(order.estado),
-        priority: mapPriority(order.prioridade ?? null),
-        problem: order.descricao_problema ?? '',
-        waitingParts: getWaitingParts(order.itens_ordem_trabalho),
-        items: (order.itens_ordem_trabalho || []).map(formatWorkOrderItem)
+        mechanic: mecanico?.nome ?? '',
+        items: orderItemsMap.get(Number(order.id)) ?? [],
+        waitingParts: waitingItemsMap.get(Number(order.id)) ?? [],
       };
     });
-
     return successResponse(transformedOrders);
   } catch (error) {
     console.error('Error fetching work orders:', error);
@@ -463,25 +601,18 @@ export async function DELETE(request: Request) {
       return errorResponse('Work order ID is required', 400);
     }
 
-    const order = await prisma.ordens_trabalho.findUnique({
-      where: { ref_ordem_trabalho: id }
-    });
-
+    // Buscar ordem pelo id
+    const order = await db.query.ordensTrabalho.findFirst({ where: (o, { eq }) => eq(o.id, Number(id)) });
     if (!order) {
       return errorResponse('Work order not found', 404);
     }
 
-    // Delete work order items first (foreign key constraint)
-    await prisma.itens_ordem_trabalho.deleteMany({
-      where: { ordem_trabalho_id: Number(order.id) }
-    });
+    // Deletar itens relacionados
+    await db.delete(itensOrdemTrabalho).where(eq(itensOrdemTrabalho.ordemTrabalhoId, Number(id)));
+    // Deletar ordem
+    await db.delete(ordensTrabalho).where(eq(ordensTrabalho.id, Number(id)));
 
-    // Delete work order
-    await prisma.ordens_trabalho.delete({
-      where: { ref_ordem_trabalho: id }
-    });
-
-    await registarAuditoria('DELETE', 'ordens_trabalho', Number(order.id), { ref: order.ref_ordem_trabalho, cliente_id: order.cliente_id, estado: order.estado }, null, request);
+    await registarAuditoria('DELETE', 'ordens_trabalho', Number(order.id), { cliente_id: order.clienteId }, null, request);
 
     return successResponse({ success: true });
   } catch (error) {
@@ -496,78 +627,78 @@ export async function DELETE(request: Request) {
 /**
  * PATCH /api/ordens-trabalho - Update work order status and details
  */
+
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
-    const { id, estado, data_conclusao, selectedPartIds } = body;
+    const { id, estado, data_conclusao, selectedPartIds, confirmReopen } = body;
 
     if (!id) {
       return errorResponse('Work order ID is required', 400);
     }
 
-    const order = await prisma.ordens_trabalho.findUnique({
-      where: { ref_ordem_trabalho: id }
-    });
+    const rawId = String(id).trim();
+    const numericId = Number(rawId);
+    const isNumericId = Number.isFinite(numericId);
+
+    // Buscar ordem por id numérico ou por referência (ex: OT-0007)
+    const order = isNumericId
+      ? await db.query.ordensTrabalho.findFirst({ where: (o, { eq }) => eq(o.id, numericId) })
+      : await db.query.ordensTrabalho.findFirst({ where: (o, { eq }) => eq(o.refOrdemTrabalho, rawId) });
 
     if (!order) {
       return errorResponse('Work order not found', 404);
     }
 
+    const orderId = Number(order.id);
+
     // Map frontend status to database status
     const dbStatus = estado ? mapFrontendStatusToDb(estado) : undefined;
 
     // Build update data
-    const updateData: Prisma.ordens_trabalhoUpdateInput = {};
-
+    const updateData: any = {};
     if (dbStatus) {
       updateData.estado = dbStatus;
-
       // Auto-stamp conclusion date when moving to 'concluido'
       if (dbStatus === 'concluido' && !data_conclusao) {
-        updateData.data_conclusao = new Date();
-      }
-      // Clear conclusion date when reverting from 'concluido'
-      else if ((dbStatus === 'em_andamento' || dbStatus === 'aguarda_peca') && !data_conclusao) {
-        updateData.data_conclusao = null;
+        updateData.dataConclusao = new Date().toISOString().slice(0, 10);
+      } else if ((dbStatus === 'em_andamento' || dbStatus === 'aguarda_peca') && !data_conclusao) {
+        updateData.dataConclusao = null;
       }
     }
-
     if (data_conclusao && data_conclusao.trim()) {
-      updateData.data_conclusao = new Date(data_conclusao);
+      updateData.dataConclusao = new Date(data_conclusao).toISOString().slice(0, 10);
+    }
+
+    const previousStatus = String(order.estado || '').toLowerCase();
+    const isReopeningFromConcluded =
+      previousStatus === 'concluido' && (dbStatus === 'em_andamento' || dbStatus === 'aguarda_peca');
+
+    if (isReopeningFromConcluded && !confirmReopen) {
+      return errorResponse('Confirme a reabertura da ordem de trabalho para repor peças em stock.', 409);
     }
 
     // Update work order
-    const updated = await prisma.ordens_trabalho.update({
-      where: { ref_ordem_trabalho: id },
-      data: updateData
-    });
+    await db.update(ordensTrabalho).set(updateData).where(eq(ordensTrabalho.id, orderId));
 
     // Clear parts waiting flag for certain statuses
     if (dbStatus === 'concluido' || dbStatus === 'em_andamento') {
-      await prisma.itens_ordem_trabalho.updateMany({
-        where: {
-          ordem_trabalho_id: Number(order.id),
-          tipo_item: 'peca'
-        },
-        data: { aguarda_peca: false }
-      });
+      await db.update(itensOrdemTrabalho).set({ aguardaPeca: 0 }).where(and(eq(itensOrdemTrabalho.ordemTrabalhoId, orderId), eq(itensOrdemTrabalho.tipoItem, 'peca')));
     }
 
-    // Deduct parts from stock when changing to 'concluido'
-    if (dbStatus === 'concluido' && order.estado !== 'concluido') {
-      await deductPartsFromStock(Number(order.id));
+    if (isReopeningFromConcluded) {
+      await restorePartsToStock(orderId);
+    }
+
+    // Deduct stock only once when transitioning into concluded status
+    if (dbStatus === 'concluido' && previousStatus !== 'concluido') {
+      await deductPartsFromStock(orderId);
     }
 
     // Handle "Aguarda Peças" (waiting for parts) status
-    if (estado === 'Aguarda Peças') {
+    if (dbStatus === 'aguarda_peca') {
       // Reset all parts to not waiting
-      await prisma.itens_ordem_trabalho.updateMany({
-        where: {
-          ordem_trabalho_id: Number(order.id),
-          tipo_item: 'peca'
-        },
-        data: { aguarda_peca: false }
-      });
+      await db.update(itensOrdemTrabalho).set({ aguardaPeca: 0 }).where(and(eq(itensOrdemTrabalho.ordemTrabalhoId, orderId), eq(itensOrdemTrabalho.tipoItem, 'peca')));
 
       // Mark selected parts as waiting
       if (selectedPartIds && Array.isArray(selectedPartIds) && selectedPartIds.length > 0) {
@@ -577,40 +708,31 @@ export async function PATCH(request: Request) {
             return isNaN(num) ? null : num;
           })
           .filter((id: number | null): id is number => id !== null);
-
         if (numericIds.length > 0) {
-          await prisma.itens_ordem_trabalho.updateMany({
-            where: {
-              id: { in: numericIds },
-              ordem_trabalho_id: Number(order.id),
-              tipo_item: 'peca'
-            },
-            data: { aguarda_peca: true }
-          });
+          for (const partId of numericIds) {
+            await db.update(itensOrdemTrabalho).set({ aguardaPeca: 1 }).where(and(eq(itensOrdemTrabalho.id, partId), eq(itensOrdemTrabalho.ordemTrabalhoId, orderId), eq(itensOrdemTrabalho.tipoItem, 'peca')));
+          }
         }
       } else {
         // Mark all parts as waiting if none specified
-        await prisma.itens_ordem_trabalho.updateMany({
-          where: {
-            ordem_trabalho_id: Number(order.id),
-            tipo_item: 'peca'
-          },
-          data: { aguarda_peca: true }
-        });
+        await db.update(itensOrdemTrabalho).set({ aguardaPeca: 1 }).where(and(eq(itensOrdemTrabalho.ordemTrabalhoId, orderId), eq(itensOrdemTrabalho.tipoItem, 'peca')));
       }
     }
 
-    await registarAuditoria('UPDATE', 'ordens_trabalho', Number(order.id), { estado: order.estado }, { estado: updated.estado, data_conclusao: updated.data_conclusao }, request);
+    await registarAuditoria('UPDATE', 'ordens_trabalho', Number(order.id), {}, { estado: dbStatus, data_conclusao: updateData.dataConclusao }, request);
 
     return successResponse({
       success: true,
       ordem_trabalho: {
-        id: updated.ref_ordem_trabalho,
-        estado: updated.estado
+        id: order.id,
+        estado: dbStatus
       }
     });
   } catch (error) {
     console.error('Error updating work order:', error);
+    if (error instanceof StockValidationError) {
+      return errorResponse(error.message, 400);
+    }
     if (error instanceof Error) {
       return handleDatabaseError(error);
     }

@@ -1,6 +1,5 @@
 /*
   Warnings:
-
   - You are about to drop the column `perfil` on the `clientes` table. All the data in the column will be lost.
 
 */

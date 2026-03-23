@@ -1,7 +1,7 @@
-import { PrismaClient } from '@prisma/client';
 import { handleDatabaseError, successResponse } from '@/lib/api-utils';
-
-const prisma = new PrismaClient({ log: ['error'] });
+import { db } from '@/db/connection';
+import { categoriasPeca } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 
 // PATCH: Ativar/Inativar categoria de peça
 export async function PATCH(request: Request) {
@@ -10,10 +10,14 @@ export async function PATCH(request: Request) {
     const id = url.pathname.split('/').slice(-2)[0];
     const { ativo } = await request.json();
     if (!id) return Response.json({ error: 'ID é obrigatório' }, { status: 400 });
-    const categoria = await prisma.categorias_peca.update({
-      where: { id: Number(id) },
-      data: { ativo: Boolean(ativo) }
-    });
+    await db.update(categoriasPeca)
+      .set({ ativo: ativo ? 1 : 0 })
+      .where(eq(categoriasPeca.id, Number(id)));
+    // Buscar a categoria atualizada para devolver o objeto completo
+    const [categoria] = await db
+      .select({ id: categoriasPeca.id, nome: categoriasPeca.nome, descricao: categoriasPeca.descricao, ativo: categoriasPeca.ativo })
+      .from(categoriasPeca)
+      .where(eq(categoriasPeca.id, Number(id)));
     return successResponse(categoria);
   } catch (error) {
     return handleDatabaseError(error as Error);

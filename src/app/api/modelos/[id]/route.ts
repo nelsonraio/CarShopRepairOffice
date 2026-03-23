@@ -1,11 +1,8 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/db/connection';
+import { modelos, marcas } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 import { registarAuditoria } from '@/lib/auditoria';
-
-// @ts-ignore
-const prisma = new PrismaClient({
-  log: ['error'],
-});
 
 export async function PUT(
   request: Request,
@@ -16,26 +13,29 @@ export async function PUT(
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
 
-    const modelo = await prisma.modelos.update({
-      where: { id },
-      data: {
-        marca_id: parseInt(body.marca_id),
+    await db.update(modelos)
+      .set({
+        marcaId: parseInt(body.marca_id),
         nome: body.nome,
-        tipo_veiculo: body.tipo_veiculo || null,
-        ativo: body.ativo !== undefined ? body.ativo : true
-      },
-      include: {
+        tipoVeiculo: body.tipo_veiculo || null,
+        ativo: body.ativo !== undefined ? (body.ativo ? 1 : 0) : 1
+      })
+      .where(eq(modelos.id, id));
+    const [modelo] = await db
+      .select({
+        id: modelos.id,
+        nome: modelos.nome,
+        tipoVeiculo: modelos.tipoVeiculo,
+        ativo: modelos.ativo,
         marca: {
-          select: {
-            id: true,
-            nome: true
-          }
+          id: marcas.id,
+          nome: marcas.nome
         }
-      }
-    });
-
+      })
+      .from(modelos)
+      .leftJoin(marcas, eq(modelos.marcaId, marcas.id))
+      .where(eq(modelos.id, id));
     await registarAuditoria('UPDATE', 'modelos', id, null, { nome: body.nome, marca_id: parseInt(body.marca_id) }, request);
-
     return NextResponse.json(modelo);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -63,19 +63,23 @@ export async function PATCH(
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
 
-    const modelo = await prisma.modelos.update({
-      where: { id },
-      data: body,
-      include: {
+    await db.update(modelos)
+      .set(body)
+      .where(eq(modelos.id, id));
+    const [modelo] = await db
+      .select({
+        id: modelos.id,
+        nome: modelos.nome,
+        tipoVeiculo: modelos.tipoVeiculo,
+        ativo: modelos.ativo,
         marca: {
-          select: {
-            id: true,
-            nome: true
-          }
+          id: marcas.id,
+          nome: marcas.nome
         }
-      }
-    });
-
+      })
+      .from(modelos)
+      .leftJoin(marcas, eq(modelos.marcaId, marcas.id))
+      .where(eq(modelos.id, id));
     return NextResponse.json(modelo);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -102,12 +106,8 @@ export async function DELETE(
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
 
-    await prisma.modelos.delete({
-      where: { id }
-    });
-
+    await db.delete(modelos).where(eq(modelos.id, id));
     await registarAuditoria('DELETE', 'modelos', id, null, null, request);
-
     return NextResponse.json({ success: true });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

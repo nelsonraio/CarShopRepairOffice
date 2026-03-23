@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/db/connection';
+import { ordensTrabalho, veiculos, clientes, itensOrdemTrabalho, pecas } from '@/db/schema';
+import { eq, inArray, desc, or } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import {
   successResponse,
   handleDatabaseError,
@@ -8,9 +11,7 @@ import {
   calculateDaysDelay
 } from '@/lib/api-utils';
 
-const prisma = new PrismaClient();
-// @ts-ignore
-const prismaAny = prisma as any;
+
 
 /**
  * Build balance data for a completed work order
@@ -64,43 +65,86 @@ export async function GET(request: Request) {
     const { skip, take } = parsePaginationParams(new URL(request.url));
 
     // Fetch completed work orders with pagination
-    const [ordensTrabalho, total] = await Promise.all([
-      (prismaAny.ordens_trabalho as any).findMany({
-        where: { estado: { in: ['concluido', 'entregue', 'Entregue'] } },
-        include: {
-          veiculo: { include: { cliente: true } },
-          itens_ordem_trabalho: true
-        },
-        orderBy: { data_conclusao: 'desc' },
-        skip,
-        take
-      }),
-      prismaAny.ordens_trabalho.count({ where: { estado: { in: ['concluido', 'entregue', 'Entregue'] } } })
+    const completedStates = ['concluido', 'entregue', 'Entregue'];
+    const [ordens, total] = await Promise.all([
+      db.select()
+        .from(ordensTrabalho)
+        .where(inArray(ordensTrabalho.estado, completedStates))
+        .orderBy(desc(ordensTrabalho.dataConclusao))
+        .offset(skip)
+        .limit(take),
+      db.select({ count: sql<number>`count(*)` })
+        .from(ordensTrabalho)
+        .where(inArray(ordensTrabalho.estado, completedStates))
+        .then(rows => rows[0]?.count || 0)
     ]);
 
-    // Extract unique peca_ids for batch lookup of base prices
-    const pecaIds = new Set<number>();
-    ordensTrabalho.forEach((ordem: any) => {
-      ordem.itens_ordem_trabalho?.forEach((item: any) => {
-        if (item.peca_id) pecaIds.add(item.peca_id);
-      });
-    });
+    // Fetch related veiculos and clientes
+    const veiculoIds = ordens.map(o => o.veiculoId).filter((id): id is number => id != null);
+    const veiculosList = veiculoIds.length > 0
+      ? await db.select().from(veiculos).where(inArray(veiculos.id, veiculoIds))
+      : [];
+    const clienteIds = veiculosList.map(v => v.clienteId).filter((id): id is number => id != null);
+    const clientesList = clienteIds.length > 0
+      ? await db.select().from(clientes).where(inArray(clientes.id, clienteIds))
+      : [];
+    const veiculosMap = new Map(veiculosList.map(v => [v.id, v]));
+    const clientesMap = new Map(clientesList.map(c => [c.id, c]));
 
-    // Fetch base prices (preco_venda) for all referenced parts
-    const pecasMap = new Map<number, number>();
-    if (pecaIds.size > 0) {
-      const pecas = await prismaAny.pecas.findMany({
-        where: { id: { in: Array.from(pecaIds) } },
-        select: { id: true, preco_venda: true }
-      });
-      pecas.forEach((peca: any) => {
-        pecasMap.set(Number(peca.id), parseNum(peca.preco_venda));
-      });
+    // Fetch itens_ordem_trabalho for all ordens
+    const ordemIds = ordens.map(o => o.id);
+    const itens = ordemIds.length > 0
+      ? await db.select().from(itensOrdemTrabalho).where(inArray(itensOrdemTrabalho.ordemTrabalhoId, ordemIds))
+      : [];
+    const itensByOrdem = new Map();
+    for (const item of itens) {
+      if (!itensByOrdem.has(item.ordemTrabalhoId)) itensByOrdem.set(item.ordemTrabalhoId, []);
+      itensByOrdem.get(item.ordemTrabalhoId).push(item);
     }
 
+    // Extract unique peca_ids for batch lookup of base prices
+    const pecaIds = Array.from(new Set(itens.map(i => i.pecaId).filter((id): id is number => id != null)));
+    const pecasList = pecaIds.length > 0
+      ? await db.select().from(pecas).where(inArray(pecas.id, pecaIds))
+      : [];
+    const pecasMap = new Map(pecasList.map(p => [p.id, parseNum(p.preco_venda)]));
+
     // Transform work orders into balance data
-    const balanceData = ordensTrabalho.map((ordem: any) => {
-      return buildBalanceData(ordem, pecasMap);
+    const balanceData = ordens.map(ordem => {
+      const veiculo = ordem.veiculoId != null ? veiculosMap.get(ordem.veiculoId) : undefined;
+      const cliente = veiculo?.clienteId != null ? clientesMap.get(veiculo.clienteId) : undefined;
+      const ordemItens = itensByOrdem.get(ordem.id) || [];
+      // Calculate real cost of parts using preco_venda (base price, no margin)
+      let gastoPecasReal = 0;
+      if (ordemItens.length > 0) {
+        const pecasItens = ordemItens.filter((item: any) => item.pecaId);
+        if (pecasItens.length > 0) {
+          gastoPecasReal = pecasItens.reduce((sum: number, item: any) => {
+            const quantity = parseNum(item.quantidade) || 1;
+            if (item.pecaId && pecasMap.has(item.pecaId)) {
+              const precoBase = pecasMap.get(item.pecaId) ?? 0;
+              return sum + (precoBase * quantity);
+            }
+            return sum + (parseNum(item.precoUnitario) * quantity);
+          }, 0);
+        }
+      }
+      const totalIncome = parseNum(ordem.totalGeral);
+      const laborCost = parseNum(ordem.totalMaoObra);
+      const profit = totalIncome - gastoPecasReal;
+      return {
+        id: ordem.refOrdemTrabalho,
+        matricula: veiculo?.matricula || 'N/A',
+        cliente: cliente?.nome || 'N/A',
+        dataConclusao: ordem.dataConclusao
+          ? new Date(ordem.dataConclusao).toISOString().split('T')[0]
+          : null,
+        valorEntrada: totalIncome,
+        gastoPecas: gastoPecasReal,
+        maoObra: laborCost,
+        lucro: profit,
+        estado: ordem.estado || undefined
+      };
     });
 
     // Calculate pagination info

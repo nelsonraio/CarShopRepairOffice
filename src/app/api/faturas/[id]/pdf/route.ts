@@ -1,9 +1,10 @@
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/db/connection';
+import { faturas, clientes } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import PDFDocument from 'pdfkit';
 import path from 'path';
 
-const prisma = new PrismaClient();
 
 export const runtime = 'nodejs';
 
@@ -26,22 +27,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params;
     
-    // Obter fatura com dados do cliente
-    const fatura = await prisma.faturas.findUnique({
-      where: { id: BigInt(id) }
-    });
 
+    // Obter fatura com dados do cliente
+    const [fatura] = await db.select().from(faturas).where(eq(faturas.id, Number(id)));
     if (!fatura) {
       return NextResponse.json(
         { success: false, error: 'Fatura não encontrada' },
         { status: 404 }
       );
     }
-
     // Obter dados do cliente
-    const cliente = await prisma.clientes.findUnique({
-      where: { id: fatura.cliente_id }
-    });
+    const [cliente] = await db.select().from(clientes).where(eq(clientes.id, fatura.clienteId));
 
     // Criar PDF
     const doc = new PDFDocument({
@@ -53,7 +49,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     // Cabeçalho
     doc.fontSize(24).font(FONT_BOLD).text('FATURA', { align: 'center' });
     doc.moveDown(0.5);
-    doc.fontSize(10).font(FONT_REGULAR).text(fatura.numero_fatura, { align: 'center' });
+    doc.fontSize(10).font(FONT_REGULAR).text(fatura.numeroFatura, { align: 'center' });
     
     // Linha separadora
     doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
@@ -78,8 +74,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       .text(`Email: ${cliente?.email || 'N/A'}`, rightX);
 
     // Datas
-    const dataEmissao = fatura.data_emissao ? new Date(fatura.data_emissao).toLocaleDateString('pt-PT') : 'N/A';
-    const dataVencimento = fatura.data_vencimento ? new Date(fatura.data_vencimento).toLocaleDateString('pt-PT') : 'N/A';
+    const dataEmissao = fatura.dataEmissao ? new Date(fatura.dataEmissao).toLocaleDateString('pt-PT') : 'N/A';
+    const dataVencimento = fatura.dataVencimento ? new Date(fatura.dataVencimento).toLocaleDateString('pt-PT') : 'N/A';
     
     doc.fontSize(10).font(FONT_REGULAR);
     doc.text(`Data de Emissão: ${dataEmissao}`, rightX, 165);
@@ -130,18 +126,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     currentY += 20;
     doc.text('Imposto (IVA):', totalX, currentY, { width: 80 })
-      .text(`€${parseFloat(fatura.valor_imposto?.toString() || '0').toFixed(2)}`, totalX + 80, currentY, { width: 60, align: 'right' });
+      .text(`€${parseFloat(fatura.valorImposto?.toString() || '0').toFixed(2)}`, totalX + 80, currentY, { width: 60, align: 'right' });
 
     currentY += 20;
     doc.text('Desconto:', totalX, currentY, { width: 80 })
-      .text(`€${parseFloat(fatura.valor_desconto?.toString() || '0').toFixed(2)}`, totalX + 80, currentY, { width: 60, align: 'right' });
+      .text(`€${parseFloat(fatura.valorDesconto?.toString() || '0').toFixed(2)}`, totalX + 80, currentY, { width: 60, align: 'right' });
 
     currentY += 25;
     doc.fontSize(11).font(FONT_BOLD)
       .moveTo(totalX - 10, currentY - 5).lineTo(550, currentY - 5).stroke()
       .text('TOTAL:', totalX, currentY, { width: 80 })
       .fontSize(12)
-      .text(`€${parseFloat(fatura.valor_total.toString()).toFixed(2)}`, totalX + 80, currentY, { width: 60, align: 'right' });
+      .text(`€${parseFloat(fatura.valorTotal.toString()).toFixed(2)}`, totalX + 80, currentY, { width: 60, align: 'right' });
 
     // Rodapé
     currentY += 50;
@@ -168,7 +164,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     return new NextResponse(pdfBuffer, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${fatura.numero_fatura}.pdf"`,
+        'Content-Disposition': `attachment; filename="${fatura.numeroFatura}.pdf"`,
         'Content-Length': pdfBuffer.length.toString()
       }
     });

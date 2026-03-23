@@ -1,11 +1,9 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/db/connection';
+import { categoriasServico } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 import { registarAuditoria } from '@/lib/auditoria';
 
-// @ts-ignore
-const prisma = new PrismaClient({
-  log: ['error'],
-});
 
 export async function PUT(
   request: Request,
@@ -16,17 +14,19 @@ export async function PUT(
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
 
-    const categoria = await prisma.categorias_servico.update({
-      where: { id: BigInt(id) },
-      data: {
+
+    await db.update(categoriasServico)
+      .set({
         nome: body.nome,
         descricao: body.descricao || null,
-        duracao_estimada: body.duracao_estimada || null,
+        duracaoEstimada: body.duracao_estimada || null,
         ativo: body.ativo !== undefined ? body.ativo : true
-      }
-    });
-
-    // Serialize BigInt fields
+      })
+      .where(eq(categoriasServico.id, id));
+    const [categoria] = await db.select().from(categoriasServico).where(eq(categoriasServico.id, id));
+    if (!categoria) {
+      return NextResponse.json({ error: 'Categoria de servico nao encontrada' }, { status: 404 });
+    }
     const serialized = {
       ...categoria,
       id: Number(categoria.id)
@@ -61,12 +61,14 @@ export async function PATCH(
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
 
-    const categoria = await prisma.categorias_servico.update({
-      where: { id: BigInt(id) },
-      data: body
-    });
 
-    // Serialize BigInt fields
+    await db.update(categoriasServico)
+      .set(body)
+      .where(eq(categoriasServico.id, id));
+    const [categoria] = await db.select().from(categoriasServico).where(eq(categoriasServico.id, id));
+    if (!categoria) {
+      return NextResponse.json({ error: 'Categoria de servico nao encontrada' }, { status: 404 });
+    }
     const serialized = {
       ...categoria,
       id: Number(categoria.id)
@@ -98,9 +100,8 @@ export async function DELETE(
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
 
-    await prisma.categorias_servico.delete({
-      where: { id: BigInt(id) }
-    });
+
+    await db.delete(categoriasServico).where(eq(categoriasServico.id, id));
 
     await registarAuditoria('DELETE', 'categorias_servico', id, null, null, request);
 

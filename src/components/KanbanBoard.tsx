@@ -175,10 +175,13 @@ const mapStatusLabelToEstado = (status?: string) => {
   switch (status) {
     case 'Em Aprovação': return 'em_aprovacao';
     case 'Aguarda Peças': return 'aguarda_peca';
+    case 'Aguardando Peças': return 'aguarda_peca';
     case 'Em Andamento': return 'em_andamento';
     case 'Concluído': return 'concluido';
+    case 'Concluída': return 'concluido';
     case 'Entregue': return 'entregue';
     case 'Cancelado': return 'cancelado';
+    case 'Cancelada': return 'cancelado';
     default: return undefined;
   }
 };
@@ -459,10 +462,21 @@ export default function KanbanBoard() {
             }
           });
 
+        // Also collect plates that already have an active work order (any state except entregue/cancelado)
+        const workOrderPlates = new Set<string>();
+        workOrders.forEach(order => {
+          const plate = (order as any).veiculo_matricula;
+          const estado = String((order as any).estado ?? '').toLowerCase();
+          if (plate && estado !== 'entregue' && estado !== 'cancelado' && estado !== 'entregue') {
+            workOrderPlates.add(plate);
+          }
+        });
+
         // Then process appointments - only add if not already in em_aprovacao (budget takes priority)
+        // and not already in an active work order
         appointments.forEach(appt => {
-          // Skip if this plate already has a budget in em_aprovacao
-          if (budgetPlates.has(appt.veiculo_matricula)) {
+          // Skip if this plate already has a budget in em_aprovacao or an active work order
+          if (budgetPlates.has(appt.veiculo_matricula) || workOrderPlates.has(appt.veiculo_matricula)) {
             return;
           }
           
@@ -706,7 +720,7 @@ export default function KanbanBoard() {
       aprovado: ['em_andamento', 'aguarda_peca'],
       em_andamento: ['aguarda_peca', 'concluido'],
       aguarda_peca: ['em_andamento'],
-      concluido: ['entregue']
+      concluido: ['entregue', 'em_andamento', 'aguarda_peca']
     };
 
     if (fromColumnId !== toColumnId) {
@@ -808,6 +822,44 @@ export default function KanbanBoard() {
       } catch (error) {
         console.error('Erro ao entregar ordem de trabalho:', error);
         alert('Erro ao entregar ordem de trabalho. Por favor, tente novamente.');
+      }
+      return;
+    }
+
+    // Lógica especial: reabrir ordem concluída
+    if (fromColumnId === 'concluido' && (toColumnId === 'em_andamento' || toColumnId === 'aguarda_peca')) {
+      const confirmed = window.confirm(
+        'Esta ordem de trabalho está concluída. Deseja mesmo reabrir? As peças usadas serão repostas em stock.'
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+        const targetStatus = toColumnId === 'em_andamento' ? 'Em Andamento' : 'Aguarda Peças';
+        const response = await fetch('/api/ordens-trabalho', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: card.proc,
+            estado: targetStatus,
+            confirmReopen: true,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Falha ao reabrir ordem de trabalho');
+        }
+
+        updateCardState(card, toColumnId);
+        await fetchData();
+      } catch (error) {
+        console.error('Erro ao reabrir ordem de trabalho:', error);
+        alert('Erro ao reabrir ordem de trabalho: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
       }
       return;
     }
@@ -1084,12 +1136,16 @@ export default function KanbanBoard() {
         // Apenas peças devem aparecer no modal de "Aguarda Peças"
         const pecaItems = budgetItems
           .filter((item: any) => {
-            const tipo = String(item?.tipo_item || item?.tipo || item?.type || '').toLowerCase();
-            return tipo === 'peca' || tipo === 'part';
+            const tipo = String(item?.tipo_item ?? item?.tipoItem ?? item?.tipo ?? item?.type ?? '').toLowerCase();
+            const hasPecaId = item?.peca_id !== null && item?.peca_id !== undefined
+              ? Number(item.peca_id) > 0
+              : (item?.pecaId !== null && item?.pecaId !== undefined ? Number(item.pecaId) > 0 : false);
+
+            return tipo === 'peca' || tipo === 'part' || hasPecaId;
           })
           .map((item: any, index: number) => {
             const quantidade = Number(item.quantidade) || 0;
-            const valorTotal = Number(item.valor_total) || 0;
+            const valorTotal = Number(item.valor_total ?? item.valorTotal) || 0;
             return {
               id: item.id || index + 1000,
               tipo_item: 'peca',
@@ -1106,9 +1162,9 @@ export default function KanbanBoard() {
         }
         
         // Configurar o estado para o modal de peças
-        setWorkOrderItems(pecaItems);
+        // Buscar os itens reais da OT (IDs correctos de itensOrdemTrabalho)
         setPendingWorkOrderRef(workOrderRef);
-        setLoadingItems(false);
+        setLoadingItems(true);
         
         // Atualizar o pendingCard com a referência OT
         const mechanicName = mechanics.find(m => m.id === parseInt(selectedMechanic))?.nome || 'N/A';
@@ -1123,6 +1179,23 @@ export default function KanbanBoard() {
         setShowMechanicModal(false);
         setSelectedMechanic('');
         setPendingBudgetId(null);
+        
+        // Tentar buscar itens reais da OT criada (IDs da tabela itensOrdemTrabalho)
+        try {
+          const otResponse = await fetch(`/api/ordens-trabalho?id=${encodeURIComponent(workOrderRef)}`);
+          if (otResponse.ok) {
+            const otData = await otResponse.json();
+            const realItems = (otData.itens_ordem_trabalho || []).filter(
+              (item: any) => item.tipo_item === 'peca'
+            );
+            setWorkOrderItems(realItems.length > 0 ? realItems : pecaItems);
+          } else {
+            setWorkOrderItems(pecaItems);
+          }
+        } catch {
+          setWorkOrderItems(pecaItems);
+        }
+        setLoadingItems(false);
         
         // Abrir o modal de peças
         setShowWaitingPartsModal(true);

@@ -1,13 +1,10 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { registarAuditoria } from '@/lib/auditoria';
+import { db } from '@/db/connection';
+import { perfisClientes } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 
-/**
- * Cliente Prisma configurado para logar apenas erros
- */
-const prisma = new PrismaClient({
-  log: ['error'],
-});
+
 
 /**
  * Converte valor para percentagem segura
@@ -58,22 +55,24 @@ export async function PUT(
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
 
-    const perfil = await prisma.perfis_clientes.update({
-      where: { id },
-      data: {
+
+    await db.update(perfisClientes)
+      .set({
         nome: body.nome,
         descricao: body.descricao || null,
-        perclucro: toSafePercent(body.perclucro),
+        perclucro: toSafePercent(body.perclucro).toString(),
         ativo: body.ativo !== undefined ? body.ativo : true
-      }
-    });
+      })
+      .where(eq(perfisClientes.id, id));
 
+    const [perfil] = await db.select().from(perfisClientes).where(eq(perfisClientes.id, id));
     await registarAuditoria('UPDATE', 'perfis_clientes', id, null, { nome: body.nome, perclucro: toSafePercent(body.perclucro) }, request);
-
-    // Normalizar Decimal para number antes de retornar
+    if (!perfil) {
+      return NextResponse.json({ error: 'Perfil not found' }, { status: 404 });
+    }
     return NextResponse.json({
       ...perfil,
-      perclucro: Number(perfil.perclucro?.toString() || '0'),
+      perclucro: Number(perfil.perclucro || '0'),
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -82,10 +81,7 @@ export async function PUT(
       errorMessage.includes("ECONNREFUSED");
 
     if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 } // Service Unavailable
-      );
+      return NextResponse.json({ error: 'Database offline' }, { status: 503 });
     }
     console.error('Error updating perfil:', error);
     return NextResponse.json({ error: 'Failed to update perfil' }, { status: 500 });
@@ -116,15 +112,24 @@ export async function PATCH(
     const id = parseInt(resolvedParams.id);
 
     // Atualização parcial - apenas campos fornecidos
-    const perfil = await prisma.perfis_clientes.update({
-      where: { id },
-      data: body
-    });
+
+    // If perclucro is present, ensure it's a string
+    const patchData = { ...body };
+    if (patchData.perclucro !== undefined) {
+      patchData.perclucro = String(toSafePercent(patchData.perclucro));
+    }
+    await db.update(perfisClientes)
+      .set(patchData)
+      .where(eq(perfisClientes.id, id));
+    const [perfil] = await db.select().from(perfisClientes).where(eq(perfisClientes.id, id));
 
     // Normalizar Decimal para number
+    if (!perfil) {
+      return NextResponse.json({ error: 'Perfil not found' }, { status: 404 });
+    }
     return NextResponse.json({
       ...perfil,
-      perclucro: Number(perfil.perclucro?.toString() || '0'),
+      perclucro: Number(perfil.perclucro || '0'),
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -151,9 +156,8 @@ export async function DELETE(
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
 
-    await prisma.perfis_clientes.delete({
-      where: { id }
-    });
+
+    await db.delete(perfisClientes).where(eq(perfisClientes.id, id));
 
     await registarAuditoria('DELETE', 'perfis_clientes', id, null, null, request);
 

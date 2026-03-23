@@ -1,0 +1,4194 @@
+{
+  "id": "00000000-0000-0000-0000-000000000000",
+  "prevId": "",
+  "version": "5",
+  "dialect": "mysql",
+  "tables": {
+    "__pagamentos": {
+      "name": "__pagamentos",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fatura_id": {
+          "autoincrement": false,
+          "name": "fatura_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "data_pagamento": {
+          "autoincrement": false,
+          "name": "data_pagamento",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valor": {
+          "autoincrement": false,
+          "name": "valor",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "metodo_pagamento": {
+          "autoincrement": false,
+          "name": "metodo_pagamento",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "referencia": {
+          "autoincrement": false,
+          "name": "referencia",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notas": {
+          "autoincrement": false,
+          "name": "notas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_por": {
+          "autoincrement": false,
+          "name": "criado_por",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "__pagamentos_id": {
+          "name": "__pagamentos_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {
+        "id": {
+          "name": "id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "__pecas_ordem_trabalho": {
+      "name": "__pecas_ordem_trabalho",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ordem_trabalho_id": {
+          "autoincrement": false,
+          "name": "ordem_trabalho_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "peca_id": {
+          "autoincrement": false,
+          "name": "peca_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantidade_utilizada": {
+          "autoincrement": false,
+          "name": "quantidade_utilizada",
+          "type": "decimal(8,2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "custo_unitario": {
+          "autoincrement": false,
+          "name": "custo_unitario",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "custo_total": {
+          "autoincrement": false,
+          "name": "custo_total",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "notas": {
+          "autoincrement": false,
+          "name": "notas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "__pecas_ordem_trabalho_id": {
+          "name": "__pecas_ordem_trabalho_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {
+        "id": {
+          "name": "id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "_prisma_migrations": {
+      "name": "_prisma_migrations",
+      "columns": {
+        "id": {
+          "autoincrement": false,
+          "name": "id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "checksum": {
+          "autoincrement": false,
+          "name": "checksum",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "finished_at": {
+          "autoincrement": false,
+          "name": "finished_at",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "migration_name": {
+          "autoincrement": false,
+          "name": "migration_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "logs": {
+          "autoincrement": false,
+          "name": "logs",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rolled_back_at": {
+          "autoincrement": false,
+          "name": "rolled_back_at",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "started_at": {
+          "default": "(CURRENT_TIMESTAMP(3))",
+          "autoincrement": false,
+          "name": "started_at",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "applied_steps_count": {
+          "default": 0,
+          "autoincrement": false,
+          "name": "applied_steps_count",
+          "type": "int unsigned",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "compositePrimaryKeys": {
+        "_prisma_migrations_id": {
+          "name": "_prisma_migrations_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "agendamentos": {
+      "name": "agendamentos",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cliente_id": {
+          "autoincrement": false,
+          "name": "cliente_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mecanico_id": {
+          "autoincrement": false,
+          "name": "mecanico_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "matricula": {
+          "autoincrement": false,
+          "name": "matricula",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "titulo": {
+          "autoincrement": false,
+          "name": "titulo",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descricao": {
+          "autoincrement": false,
+          "name": "descricao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_agendamento": {
+          "autoincrement": false,
+          "name": "data_agendamento",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hora_inicio": {
+          "autoincrement": false,
+          "name": "hora_inicio",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estado": {
+          "default": "'agendado'",
+          "autoincrement": false,
+          "name": "estado",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prioridade": {
+          "default": "'normal'",
+          "autoincrement": false,
+          "name": "prioridade",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "atualizado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "atualizado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "marca": {
+          "autoincrement": false,
+          "name": "marca",
+          "type": "varchar(150)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "modelo": {
+          "autoincrement": false,
+          "name": "modelo",
+          "type": "varchar(150)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ano": {
+          "autoincrement": false,
+          "name": "ano",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contacto_nome": {
+          "autoincrement": false,
+          "name": "contacto_nome",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contacto_telefone": {
+          "autoincrement": false,
+          "name": "contacto_telefone",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contacto_email": {
+          "autoincrement": false,
+          "name": "contacto_email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_por": {
+          "autoincrement": false,
+          "name": "criado_por",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "atualizado_por": {
+          "autoincrement": false,
+          "name": "atualizado_por",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "agendamentos_id": {
+          "name": "agendamentos_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "agendamentos_cliente_id_fkey": {
+          "name": "agendamentos_cliente_id_fkey",
+          "tableFrom": "agendamentos",
+          "tableTo": "clientes",
+          "columnsFrom": [
+            "cliente_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "uniqueConstraints": {
+        "id": {
+          "name": "id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "alertas_sistema": {
+      "name": "alertas_sistema",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "autoincrement": false,
+          "name": "tipo",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "titulo": {
+          "autoincrement": false,
+          "name": "titulo",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descricao": {
+          "autoincrement": false,
+          "name": "descricao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "severidade": {
+          "default": "'normal'",
+          "autoincrement": false,
+          "name": "severidade",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "referencia_id": {
+          "autoincrement": false,
+          "name": "referencia_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "referencia_tipo": {
+          "autoincrement": false,
+          "name": "referencia_tipo",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lido": {
+          "default": 0,
+          "autoincrement": false,
+          "name": "lido",
+          "type": "tinyint(1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lido_em": {
+          "autoincrement": false,
+          "name": "lido_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "alertas_sistema_id": {
+          "name": "alertas_sistema_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {
+        "criado_em": {
+          "name": "criado_em",
+          "columns": [
+            "criado_em"
+          ],
+          "isUnique": false
+        },
+        "lido": {
+          "name": "lido",
+          "columns": [
+            "lido"
+          ],
+          "isUnique": false
+        },
+        "severidade": {
+          "name": "severidade",
+          "columns": [
+            "severidade"
+          ],
+          "isUnique": false
+        },
+        "tipo": {
+          "name": "tipo",
+          "columns": [
+            "tipo"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "uniqueConstraints": {
+        "id": {
+          "name": "id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "cartoes_kanban": {
+      "name": "cartoes_kanban",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "coluna_id": {
+          "autoincrement": false,
+          "name": "coluna_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ordem_trabalho_id": {
+          "autoincrement": false,
+          "name": "ordem_trabalho_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "titulo": {
+          "autoincrement": false,
+          "name": "titulo",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descricao": {
+          "autoincrement": false,
+          "name": "descricao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prioridade": {
+          "default": "'normal'",
+          "autoincrement": false,
+          "name": "prioridade",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "atribuido_a": {
+          "autoincrement": false,
+          "name": "atribuido_a",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_limite": {
+          "autoincrement": false,
+          "name": "data_limite",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "etiquetas": {
+          "autoincrement": false,
+          "name": "etiquetas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "posicao": {
+          "autoincrement": false,
+          "name": "posicao",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "atualizado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "atualizado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_por": {
+          "autoincrement": false,
+          "name": "criado_por",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "atualizado_por": {
+          "autoincrement": false,
+          "name": "atualizado_por",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "cartoes_kanban_id": {
+          "name": "cartoes_kanban_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {
+        "id": {
+          "name": "id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "categorias_peca": {
+      "name": "categorias_peca",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome": {
+          "autoincrement": false,
+          "name": "nome",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descricao": {
+          "autoincrement": false,
+          "name": "descricao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ativo": {
+          "default": 1,
+          "autoincrement": false,
+          "name": "ativo",
+          "type": "tinyint(1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "categorias_peca_id": {
+          "name": "categorias_peca_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {
+        "categorias_peca_id": {
+          "name": "categorias_peca_id",
+          "columns": [
+            "id"
+          ]
+        },
+        "categorias_peca_nome": {
+          "name": "categorias_peca_nome",
+          "columns": [
+            "nome"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "categorias_servico": {
+      "name": "categorias_servico",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome": {
+          "autoincrement": false,
+          "name": "nome",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descricao": {
+          "autoincrement": false,
+          "name": "descricao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "duracao_estimada": {
+          "autoincrement": false,
+          "name": "duracao_estimada",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ativo": {
+          "default": 1,
+          "autoincrement": false,
+          "name": "ativo",
+          "type": "tinyint(1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "categorias_servico_id": {
+          "name": "categorias_servico_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {
+        "id": {
+          "name": "id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "clientes": {
+      "name": "clientes",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome": {
+          "autoincrement": false,
+          "name": "nome",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "autoincrement": false,
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "telefone": {
+          "autoincrement": false,
+          "name": "telefone",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nif": {
+          "autoincrement": false,
+          "name": "nif",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "endereco": {
+          "autoincrement": false,
+          "name": "endereco",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_registo": {
+          "default": "(curdate())",
+          "autoincrement": false,
+          "name": "data_registo",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_gasto": {
+          "default": "'0.00'",
+          "autoincrement": false,
+          "name": "total_gasto",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "visitas": {
+          "default": 0,
+          "autoincrement": false,
+          "name": "visitas",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notas": {
+          "autoincrement": false,
+          "name": "notas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ativo": {
+          "default": 1,
+          "autoincrement": false,
+          "name": "ativo",
+          "type": "tinyint(1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "atualizado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "atualizado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "perfil_id": {
+          "autoincrement": false,
+          "name": "perfil_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "clientes_id": {
+          "name": "clientes_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "clientes_perfil_id_fkey": {
+          "name": "clientes_perfil_id_fkey",
+          "tableFrom": "clientes",
+          "tableTo": "perfis_clientes",
+          "columnsFrom": [
+            "perfil_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "cascade"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "colunas_kanban": {
+      "name": "colunas_kanban",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome": {
+          "autoincrement": false,
+          "name": "nome",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descricao": {
+          "autoincrement": false,
+          "name": "descricao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "posicao": {
+          "autoincrement": false,
+          "name": "posicao",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cor": {
+          "autoincrement": false,
+          "name": "cor",
+          "type": "varchar(7)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ativo": {
+          "default": 1,
+          "autoincrement": false,
+          "name": "ativo",
+          "type": "tinyint(1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "atualizado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "atualizado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "colunas_kanban_id": {
+          "name": "colunas_kanban_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {
+        "id": {
+          "name": "id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "configuracoes_sistema": {
+      "name": "configuracoes_sistema",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "chave_configuracao": {
+          "autoincrement": false,
+          "name": "chave_configuracao",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "valor_configuracao": {
+          "autoincrement": false,
+          "name": "valor_configuracao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tipo_configuracao": {
+          "default": "'string'",
+          "autoincrement": false,
+          "name": "tipo_configuracao",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "descricao": {
+          "autoincrement": false,
+          "name": "descricao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sistema": {
+          "default": 0,
+          "autoincrement": false,
+          "name": "sistema",
+          "type": "tinyint(1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "atualizado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "atualizado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "atualizado_por": {
+          "autoincrement": false,
+          "name": "atualizado_por",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "configuracoes_sistema_id": {
+          "name": "configuracoes_sistema_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {
+        "id": {
+          "name": "id",
+          "columns": [
+            "id"
+          ]
+        },
+        "chave_configuracao": {
+          "name": "chave_configuracao",
+          "columns": [
+            "chave_configuracao"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "encomendas_pecas": {
+      "name": "encomendas_pecas",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "numero_encomenda": {
+          "autoincrement": false,
+          "name": "numero_encomenda",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fornecedor_id": {
+          "autoincrement": false,
+          "name": "fornecedor_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "data_encomenda": {
+          "autoincrement": false,
+          "name": "data_encomenda",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "data_entrega_estimada": {
+          "autoincrement": false,
+          "name": "data_entrega_estimada",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_entrega_real": {
+          "autoincrement": false,
+          "name": "data_entrega_real",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estado": {
+          "default": "'pendente'",
+          "autoincrement": false,
+          "name": "estado",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "custo_total": {
+          "autoincrement": false,
+          "name": "custo_total",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notas": {
+          "autoincrement": false,
+          "name": "notas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "atualizado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "atualizado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_por": {
+          "autoincrement": false,
+          "name": "criado_por",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "encomendas_pecas_id": {
+          "name": "encomendas_pecas_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {
+        "estado": {
+          "name": "estado",
+          "columns": [
+            "estado"
+          ],
+          "isUnique": false
+        },
+        "fornecedor_id": {
+          "name": "fornecedor_id",
+          "columns": [
+            "fornecedor_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "encomendas_pecas_ibfk_1": {
+          "name": "encomendas_pecas_ibfk_1",
+          "tableFrom": "encomendas_pecas",
+          "tableTo": "fornecedores",
+          "columnsFrom": [
+            "fornecedor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "uniqueConstraints": {
+        "id": {
+          "name": "id",
+          "columns": [
+            "id"
+          ]
+        },
+        "numero_encomenda": {
+          "name": "numero_encomenda",
+          "columns": [
+            "numero_encomenda"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "faturas": {
+      "name": "faturas",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "numero_fatura": {
+          "autoincrement": false,
+          "name": "numero_fatura",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cliente_id": {
+          "autoincrement": false,
+          "name": "cliente_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ordem_trabalho_id": {
+          "autoincrement": false,
+          "name": "ordem_trabalho_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_emissao": {
+          "autoincrement": false,
+          "name": "data_emissao",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_vencimento": {
+          "autoincrement": false,
+          "name": "data_vencimento",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_pagamento": {
+          "autoincrement": false,
+          "name": "data_pagamento",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estado": {
+          "default": "'pendente'",
+          "autoincrement": false,
+          "name": "estado",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "subtotal": {
+          "autoincrement": false,
+          "name": "subtotal",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "valor_imposto": {
+          "default": "'0.00'",
+          "autoincrement": false,
+          "name": "valor_imposto",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valor_desconto": {
+          "default": "'0.00'",
+          "autoincrement": false,
+          "name": "valor_desconto",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valor_total": {
+          "autoincrement": false,
+          "name": "valor_total",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "valor_pago": {
+          "default": "'0.00'",
+          "autoincrement": false,
+          "name": "valor_pago",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notas": {
+          "autoincrement": false,
+          "name": "notas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "atualizado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "atualizado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_por": {
+          "autoincrement": false,
+          "name": "criado_por",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recibo_toconline_id": {
+          "autoincrement": false,
+          "name": "recibo_toconline_id",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "toconline_customer_id": {
+          "autoincrement": false,
+          "name": "toconline_customer_id",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "toconline_id": {
+          "autoincrement": false,
+          "name": "toconline_id",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "faturas_id": {
+          "name": "faturas_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {
+        "id": {
+          "name": "id",
+          "columns": [
+            "id"
+          ]
+        },
+        "numero_fatura": {
+          "name": "numero_fatura",
+          "columns": [
+            "numero_fatura"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "fornecedores": {
+      "name": "fornecedores",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome": {
+          "autoincrement": false,
+          "name": "nome",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pessoa_contato": {
+          "autoincrement": false,
+          "name": "pessoa_contato",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "autoincrement": false,
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "telefone": {
+          "autoincrement": false,
+          "name": "telefone",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "endereco": {
+          "autoincrement": false,
+          "name": "endereco",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nif": {
+          "autoincrement": false,
+          "name": "nif",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "termos_pagamento": {
+          "autoincrement": false,
+          "name": "termos_pagamento",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ativo": {
+          "default": 1,
+          "autoincrement": false,
+          "name": "ativo",
+          "type": "tinyint(1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notas": {
+          "autoincrement": false,
+          "name": "notas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "atualizado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "atualizado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_por": {
+          "autoincrement": false,
+          "name": "criado_por",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "fornecedores_id": {
+          "name": "fornecedores_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "historico_cartao_kanban": {
+      "name": "historico_cartao_kanban",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cartao_id": {
+          "autoincrement": false,
+          "name": "cartao_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "coluna_origem_id": {
+          "autoincrement": false,
+          "name": "coluna_origem_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "coluna_destino_id": {
+          "autoincrement": false,
+          "name": "coluna_destino_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "movido_por": {
+          "autoincrement": false,
+          "name": "movido_por",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "movido_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "movido_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notas": {
+          "autoincrement": false,
+          "name": "notas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "historico_cartao_kanban_id": {
+          "name": "historico_cartao_kanban_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {
+        "id": {
+          "name": "id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "itens_encomenda_peca": {
+      "name": "itens_encomenda_peca",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "encomenda_id": {
+          "autoincrement": false,
+          "name": "encomenda_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "peca_id": {
+          "autoincrement": false,
+          "name": "peca_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantidade_encomendada": {
+          "autoincrement": false,
+          "name": "quantidade_encomendada",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantidade_recebida": {
+          "default": 0,
+          "autoincrement": false,
+          "name": "quantidade_recebida",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "preco_unitario": {
+          "autoincrement": false,
+          "name": "preco_unitario",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "preco_total": {
+          "autoincrement": false,
+          "name": "preco_total",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estado": {
+          "default": "'pendente'",
+          "autoincrement": false,
+          "name": "estado",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ordem_trabalho_item_id": {
+          "autoincrement": false,
+          "name": "ordem_trabalho_item_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notas": {
+          "autoincrement": false,
+          "name": "notas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "itens_encomenda_peca_id": {
+          "name": "itens_encomenda_peca_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {
+        "encomenda_id": {
+          "name": "encomenda_id",
+          "columns": [
+            "encomenda_id"
+          ],
+          "isUnique": false
+        },
+        "estado": {
+          "name": "estado",
+          "columns": [
+            "estado"
+          ],
+          "isUnique": false
+        },
+        "peca_id": {
+          "name": "peca_id",
+          "columns": [
+            "peca_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "itens_encomenda_peca_ibfk_1": {
+          "name": "itens_encomenda_peca_ibfk_1",
+          "tableFrom": "itens_encomenda_peca",
+          "tableTo": "encomendas_pecas",
+          "columnsFrom": [
+            "encomenda_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "itens_encomenda_peca_ibfk_2": {
+          "name": "itens_encomenda_peca_ibfk_2",
+          "tableFrom": "itens_encomenda_peca",
+          "tableTo": "pecas",
+          "columnsFrom": [
+            "peca_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "uniqueConstraints": {
+        "id": {
+          "name": "id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "itens_fatura": {
+      "name": "itens_fatura",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fatura_id": {
+          "autoincrement": false,
+          "name": "fatura_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "item_ordem_trabalho_id": {
+          "autoincrement": false,
+          "name": "item_ordem_trabalho_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "descricao": {
+          "autoincrement": false,
+          "name": "descricao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantidade": {
+          "default": "'1.00'",
+          "autoincrement": false,
+          "name": "quantidade",
+          "type": "decimal(8,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "preco_unitario": {
+          "autoincrement": false,
+          "name": "preco_unitario",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "valor_desconto": {
+          "default": "'0.00'",
+          "autoincrement": false,
+          "name": "valor_desconto",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valor_imposto": {
+          "default": "'0.00'",
+          "autoincrement": false,
+          "name": "valor_imposto",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valor_total": {
+          "autoincrement": false,
+          "name": "valor_total",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "itens_fatura_id": {
+          "name": "itens_fatura_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {
+        "id": {
+          "name": "id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "itens_orcamento": {
+      "name": "itens_orcamento",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "orcamento_id": {
+          "autoincrement": false,
+          "name": "orcamento_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo_item": {
+          "autoincrement": false,
+          "name": "tipo_item",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "servico_id": {
+          "autoincrement": false,
+          "name": "servico_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "peca_id": {
+          "autoincrement": false,
+          "name": "peca_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "descricao": {
+          "autoincrement": false,
+          "name": "descricao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantidade": {
+          "default": "'1.00'",
+          "autoincrement": false,
+          "name": "quantidade",
+          "type": "decimal(8,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "preco_unitario": {
+          "autoincrement": false,
+          "name": "preco_unitario",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "percentual_desconto": {
+          "default": "'0.00'",
+          "autoincrement": false,
+          "name": "percentual_desconto",
+          "type": "decimal(5,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valor_desconto": {
+          "default": "'0.00'",
+          "autoincrement": false,
+          "name": "valor_desconto",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "percentual_imposto": {
+          "default": "'23.00'",
+          "autoincrement": false,
+          "name": "percentual_imposto",
+          "type": "decimal(5,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valor_imposto": {
+          "default": "'0.00'",
+          "autoincrement": false,
+          "name": "valor_imposto",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valor_total": {
+          "autoincrement": false,
+          "name": "valor_total",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "notas": {
+          "autoincrement": false,
+          "name": "notas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "itens_orcamento_id": {
+          "name": "itens_orcamento_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "itens_orcamento_orcamento_id_fkey": {
+          "name": "itens_orcamento_orcamento_id_fkey",
+          "tableFrom": "itens_orcamento",
+          "tableTo": "orcamentos",
+          "columnsFrom": [
+            "orcamento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "uniqueConstraints": {
+        "id": {
+          "name": "id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "itens_ordem_trabalho": {
+      "name": "itens_ordem_trabalho",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ordem_trabalho_id": {
+          "autoincrement": false,
+          "name": "ordem_trabalho_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tipo_item": {
+          "autoincrement": false,
+          "name": "tipo_item",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "servico_id": {
+          "autoincrement": false,
+          "name": "servico_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "peca_id": {
+          "autoincrement": false,
+          "name": "peca_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "descricao": {
+          "autoincrement": false,
+          "name": "descricao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantidade": {
+          "default": "'1.00'",
+          "autoincrement": false,
+          "name": "quantidade",
+          "type": "decimal(8,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "preco_unitario": {
+          "autoincrement": false,
+          "name": "preco_unitario",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "horas_trabalho": {
+          "autoincrement": false,
+          "name": "horas_trabalho",
+          "type": "decimal(6,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tarifa_horaria": {
+          "autoincrement": false,
+          "name": "tarifa_horaria",
+          "type": "decimal(8,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "percentual_desconto": {
+          "default": "'0.00'",
+          "autoincrement": false,
+          "name": "percentual_desconto",
+          "type": "decimal(5,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valor_desconto": {
+          "default": "'0.00'",
+          "autoincrement": false,
+          "name": "valor_desconto",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "percentual_imposto": {
+          "default": "'23.00'",
+          "autoincrement": false,
+          "name": "percentual_imposto",
+          "type": "decimal(5,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valor_imposto": {
+          "default": "'0.00'",
+          "autoincrement": false,
+          "name": "valor_imposto",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valor_total": {
+          "autoincrement": false,
+          "name": "valor_total",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "notas": {
+          "autoincrement": false,
+          "name": "notas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "aguarda_peca": {
+          "default": 0,
+          "autoincrement": false,
+          "name": "aguarda_peca",
+          "type": "tinyint(1)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "itens_ordem_trabalho_id": {
+          "name": "itens_ordem_trabalho_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "itens_ordem_trabalho_ordem_trabalho_id_fkey": {
+          "name": "itens_ordem_trabalho_ordem_trabalho_id_fkey",
+          "tableFrom": "itens_ordem_trabalho",
+          "tableTo": "ordens_trabalho",
+          "columnsFrom": [
+            "ordem_trabalho_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "uniqueConstraints": {
+        "id": {
+          "name": "id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "keystart": {
+      "name": "keystart",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "chave": {
+          "autoincrement": false,
+          "name": "chave",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ativo": {
+          "default": 1,
+          "autoincrement": false,
+          "name": "ativo",
+          "type": "tinyint(1)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "atualizado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "atualizado_em",
+          "type": "datetime",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "keystart_id": {
+          "name": "keystart_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "log_auditoria": {
+      "name": "log_auditoria",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "utilizador_id": {
+          "autoincrement": false,
+          "name": "utilizador_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "acao": {
+          "autoincrement": false,
+          "name": "acao",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome_tabela": {
+          "autoincrement": false,
+          "name": "nome_tabela",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id_registo": {
+          "autoincrement": false,
+          "name": "id_registo",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valores_antigos": {
+          "autoincrement": false,
+          "name": "valores_antigos",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valores_novos": {
+          "autoincrement": false,
+          "name": "valores_novos",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "endereco_ip": {
+          "autoincrement": false,
+          "name": "endereco_ip",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "agente_utilizador": {
+          "autoincrement": false,
+          "name": "agente_utilizador",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "log_auditoria_id": {
+          "name": "log_auditoria_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {
+        "id": {
+          "name": "id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "marcas": {
+      "name": "marcas",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome": {
+          "autoincrement": false,
+          "name": "nome",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pais_origem": {
+          "autoincrement": false,
+          "name": "pais_origem",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ativo": {
+          "default": 1,
+          "autoincrement": false,
+          "name": "ativo",
+          "type": "tinyint(1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "atualizado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "atualizado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "marcas_id": {
+          "name": "marcas_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {
+        "nome_marca": {
+          "name": "nome_marca",
+          "columns": [
+            "nome"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "mecanicos": {
+      "name": "mecanicos",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "utilizador_id": {
+          "autoincrement": false,
+          "name": "utilizador_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nome": {
+          "autoincrement": false,
+          "name": "nome",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "especialidade": {
+          "autoincrement": false,
+          "name": "especialidade",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "telefone": {
+          "autoincrement": false,
+          "name": "telefone",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "autoincrement": false,
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tarifa_horaria": {
+          "autoincrement": false,
+          "name": "tarifa_horaria",
+          "type": "decimal(8,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ativo": {
+          "default": 1,
+          "autoincrement": false,
+          "name": "ativo",
+          "type": "tinyint(1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_contratacao": {
+          "autoincrement": false,
+          "name": "data_contratacao",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notas": {
+          "autoincrement": false,
+          "name": "notas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "atualizado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "atualizado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "mecanicos_id": {
+          "name": "mecanicos_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "modelos": {
+      "name": "modelos",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "marca_id": {
+          "autoincrement": false,
+          "name": "marca_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome": {
+          "autoincrement": false,
+          "name": "nome",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo_veiculo": {
+          "autoincrement": false,
+          "name": "tipo_veiculo",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ativo": {
+          "default": 1,
+          "autoincrement": false,
+          "name": "ativo",
+          "type": "tinyint(1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "atualizado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "atualizado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "modelos_id": {
+          "name": "modelos_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "modelos_marca_id_fkey": {
+          "name": "modelos_marca_id_fkey",
+          "tableFrom": "modelos",
+          "tableTo": "marcas",
+          "columnsFrom": [
+            "marca_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "orcamentos": {
+      "name": "orcamentos",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ref_orcamento": {
+          "autoincrement": false,
+          "name": "ref_orcamento",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cliente_id": {
+          "autoincrement": false,
+          "name": "cliente_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "veiculo_id": {
+          "autoincrement": false,
+          "name": "veiculo_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "preparado_por": {
+          "autoincrement": false,
+          "name": "preparado_por",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_emissao": {
+          "autoincrement": false,
+          "name": "data_emissao",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_expiracao": {
+          "autoincrement": false,
+          "name": "data_expiracao",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estado": {
+          "default": "'pendente'",
+          "autoincrement": false,
+          "name": "estado",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_pecas": {
+          "default": "'0.00'",
+          "autoincrement": false,
+          "name": "total_pecas",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_mao_obra": {
+          "default": "'0.00'",
+          "autoincrement": false,
+          "name": "total_mao_obra",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_desconto": {
+          "default": "'0.00'",
+          "autoincrement": false,
+          "name": "total_desconto",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_imposto": {
+          "default": "'0.00'",
+          "autoincrement": false,
+          "name": "total_imposto",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_geral": {
+          "autoincrement": false,
+          "name": "total_geral",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "notas": {
+          "autoincrement": false,
+          "name": "notas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_aprovacao": {
+          "autoincrement": false,
+          "name": "data_aprovacao",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "aprovado_por": {
+          "autoincrement": false,
+          "name": "aprovado_por",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "atualizado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "atualizado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kms": {
+          "autoincrement": false,
+          "name": "kms",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contacto_nome": {
+          "autoincrement": false,
+          "name": "contacto_nome",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contacto_telefone": {
+          "autoincrement": false,
+          "name": "contacto_telefone",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contacto_email": {
+          "autoincrement": false,
+          "name": "contacto_email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "orcamentos_id": {
+          "name": "orcamentos_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "orcamentos_cliente_id_fkey": {
+          "name": "orcamentos_cliente_id_fkey",
+          "tableFrom": "orcamentos",
+          "tableTo": "clientes",
+          "columnsFrom": [
+            "cliente_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "orcamentos_veiculo_id_fkey": {
+          "name": "orcamentos_veiculo_id_fkey",
+          "tableFrom": "orcamentos",
+          "tableTo": "veiculos",
+          "columnsFrom": [
+            "veiculo_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "uniqueConstraints": {
+        "id": {
+          "name": "id",
+          "columns": [
+            "id"
+          ]
+        },
+        "numero_orcamento": {
+          "name": "numero_orcamento",
+          "columns": [
+            "ref_orcamento"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "ordens_trabalho": {
+      "name": "ordens_trabalho",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ref_ordem_trabalho": {
+          "autoincrement": false,
+          "name": "ref_ordem_trabalho",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cliente_id": {
+          "autoincrement": false,
+          "name": "cliente_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "veiculo_id": {
+          "autoincrement": false,
+          "name": "veiculo_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mecanico_id": {
+          "autoincrement": false,
+          "name": "mecanico_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "orcamento_id": {
+          "autoincrement": false,
+          "name": "orcamento_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "agendamento_id": {
+          "autoincrement": false,
+          "name": "agendamento_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_inicio": {
+          "autoincrement": false,
+          "name": "data_inicio",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_conclusao": {
+          "autoincrement": false,
+          "name": "data_conclusao",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estado": {
+          "default": "'em_andamento'",
+          "autoincrement": false,
+          "name": "estado",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "quilometragem_servico": {
+          "autoincrement": false,
+          "name": "quilometragem_servico",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "descricao_problema": {
+          "autoincrement": false,
+          "name": "descricao_problema",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trabalho_realizado": {
+          "autoincrement": false,
+          "name": "trabalho_realizado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recomendacoes": {
+          "autoincrement": false,
+          "name": "recomendacoes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_pecas": {
+          "default": "'0.00'",
+          "autoincrement": false,
+          "name": "total_pecas",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_mao_obra": {
+          "default": "'0.00'",
+          "autoincrement": false,
+          "name": "total_mao_obra",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_desconto": {
+          "default": "'0.00'",
+          "autoincrement": false,
+          "name": "total_desconto",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_imposto": {
+          "default": "'0.00'",
+          "autoincrement": false,
+          "name": "total_imposto",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_geral": {
+          "autoincrement": false,
+          "name": "total_geral",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "atualizado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "atualizado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_por": {
+          "autoincrement": false,
+          "name": "criado_por",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "atualizado_por": {
+          "autoincrement": false,
+          "name": "atualizado_por",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prioridade": {
+          "default": "'normal'",
+          "autoincrement": false,
+          "name": "prioridade",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contacto_nome": {
+          "autoincrement": false,
+          "name": "contacto_nome",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contacto_telefone": {
+          "autoincrement": false,
+          "name": "contacto_telefone",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contacto_email": {
+          "autoincrement": false,
+          "name": "contacto_email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kms": {
+          "autoincrement": false,
+          "name": "kms",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fatura_id": {
+          "autoincrement": false,
+          "name": "fatura_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "ordens_trabalho_id": {
+          "name": "ordens_trabalho_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {
+        "ordens_trabalho_cliente_id_idx": {
+          "name": "ordens_trabalho_cliente_id_idx",
+          "columns": [
+            "cliente_id"
+          ],
+          "isUnique": false
+        },
+        "ordens_trabalho_mecanico_id_idx": {
+          "name": "ordens_trabalho_mecanico_id_idx",
+          "columns": [
+            "mecanico_id"
+          ],
+          "isUnique": false
+        },
+        "ordens_trabalho_orcamento_id_idx": {
+          "name": "ordens_trabalho_orcamento_id_idx",
+          "columns": [
+            "orcamento_id"
+          ],
+          "isUnique": false
+        },
+        "ordens_trabalho_veiculo_id_idx": {
+          "name": "ordens_trabalho_veiculo_id_idx",
+          "columns": [
+            "veiculo_id"
+          ],
+          "isUnique": false
+        },
+        "ordens_trabalho_agendamento_id_idx": {
+          "name": "ordens_trabalho_agendamento_id_idx",
+          "columns": [
+            "agendamento_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "ordens_trabalho_agendamento_id_fkey": {
+          "name": "ordens_trabalho_agendamento_id_fkey",
+          "tableFrom": "ordens_trabalho",
+          "tableTo": "agendamentos",
+          "columnsFrom": [
+            "agendamento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "cascade"
+        },
+        "ordens_trabalho_cliente_id_fkey": {
+          "name": "ordens_trabalho_cliente_id_fkey",
+          "tableFrom": "ordens_trabalho",
+          "tableTo": "clientes",
+          "columnsFrom": [
+            "cliente_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "ordens_trabalho_mecanico_id_fkey": {
+          "name": "ordens_trabalho_mecanico_id_fkey",
+          "tableFrom": "ordens_trabalho",
+          "tableTo": "mecanicos",
+          "columnsFrom": [
+            "mecanico_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "cascade"
+        },
+        "ordens_trabalho_orcamento_id_fkey": {
+          "name": "ordens_trabalho_orcamento_id_fkey",
+          "tableFrom": "ordens_trabalho",
+          "tableTo": "orcamentos",
+          "columnsFrom": [
+            "orcamento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "cascade"
+        },
+        "ordens_trabalho_veiculo_id_fkey": {
+          "name": "ordens_trabalho_veiculo_id_fkey",
+          "tableFrom": "ordens_trabalho",
+          "tableTo": "veiculos",
+          "columnsFrom": [
+            "veiculo_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "uniqueConstraints": {
+        "id": {
+          "name": "id",
+          "columns": [
+            "id"
+          ]
+        },
+        "numero_ordem_trabalho": {
+          "name": "numero_ordem_trabalho",
+          "columns": [
+            "ref_ordem_trabalho"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "pecas": {
+      "name": "pecas",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "referencia": {
+          "autoincrement": false,
+          "name": "referencia",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome": {
+          "autoincrement": false,
+          "name": "nome",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descricao": {
+          "autoincrement": false,
+          "name": "descricao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fornecedor_id": {
+          "autoincrement": false,
+          "name": "fornecedor_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "custo_unitario": {
+          "autoincrement": false,
+          "name": "custo_unitario",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "preco_venda": {
+          "autoincrement": false,
+          "name": "preco_venda",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantidade_stock": {
+          "default": 0,
+          "autoincrement": false,
+          "name": "quantidade_stock",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nivel_stock_minimo": {
+          "default": 0,
+          "autoincrement": false,
+          "name": "nivel_stock_minimo",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nivel_stock_maximo": {
+          "autoincrement": false,
+          "name": "nivel_stock_maximo",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "localizacao": {
+          "autoincrement": false,
+          "name": "localizacao",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "veiculos_compativeis": {
+          "autoincrement": false,
+          "name": "veiculos_compativeis",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ativo": {
+          "default": 1,
+          "autoincrement": false,
+          "name": "ativo",
+          "type": "tinyint(1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notas": {
+          "autoincrement": false,
+          "name": "notas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "margem_lucro": {
+          "autoincrement": false,
+          "name": "margem_lucro",
+          "type": "decimal(5,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "atualizado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "atualizado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_por": {
+          "autoincrement": false,
+          "name": "criado_por",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "categoria_id": {
+          "autoincrement": false,
+          "name": "categoria_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "compositePrimaryKeys": {
+        "pecas_id": {
+          "name": "pecas_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "pecas_categoria_id_fkey": {
+          "name": "pecas_categoria_id_fkey",
+          "tableFrom": "pecas",
+          "tableTo": "categorias_peca",
+          "columnsFrom": [
+            "categoria_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "uniqueConstraints": {
+        "id": {
+          "name": "id",
+          "columns": [
+            "id"
+          ]
+        },
+        "referencia": {
+          "name": "referencia",
+          "columns": [
+            "referencia"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "perfis_clientes": {
+      "name": "perfis_clientes",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome": {
+          "autoincrement": false,
+          "name": "nome",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descricao": {
+          "autoincrement": false,
+          "name": "descricao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "perclucro": {
+          "default": "'0.00'",
+          "autoincrement": false,
+          "name": "perclucro",
+          "type": "decimal(5,2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ativo": {
+          "default": 1,
+          "autoincrement": false,
+          "name": "ativo",
+          "type": "tinyint(1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "atualizado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "atualizado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "perfis_clientes_id": {
+          "name": "perfis_clientes_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {
+        "nome_perfil": {
+          "name": "nome_perfil",
+          "columns": [
+            "nome"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "servicos": {
+      "name": "servicos",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "categoria_id": {
+          "autoincrement": false,
+          "name": "categoria_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nome": {
+          "autoincrement": false,
+          "name": "nome",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descricao": {
+          "autoincrement": false,
+          "name": "descricao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "preco_base": {
+          "autoincrement": false,
+          "name": "preco_base",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "duracao_estimada": {
+          "autoincrement": false,
+          "name": "duracao_estimada",
+          "type": "varchar(8)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "requer_pecas": {
+          "default": 0,
+          "autoincrement": false,
+          "name": "requer_pecas",
+          "type": "tinyint(1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ativo": {
+          "default": 1,
+          "autoincrement": false,
+          "name": "ativo",
+          "type": "tinyint(1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "atualizado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "atualizado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "servicos_id": {
+          "name": "servicos_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {
+        "id": {
+          "name": "id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "transacoes_pecas": {
+      "name": "transacoes_pecas",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "peca_id": {
+          "autoincrement": false,
+          "name": "peca_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo_transacao": {
+          "autoincrement": false,
+          "name": "tipo_transacao",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantidade": {
+          "autoincrement": false,
+          "name": "quantidade",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "custo_unitario": {
+          "autoincrement": false,
+          "name": "custo_unitario",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "custo_total": {
+          "autoincrement": false,
+          "name": "custo_total",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "documento_referencia": {
+          "autoincrement": false,
+          "name": "documento_referencia",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fornecedor_id": {
+          "autoincrement": false,
+          "name": "fornecedor_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notas": {
+          "autoincrement": false,
+          "name": "notas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_por": {
+          "autoincrement": false,
+          "name": "criado_por",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "transacoes_pecas_id": {
+          "name": "transacoes_pecas_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {
+        "id": {
+          "name": "id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "utilizadores": {
+      "name": "utilizadores",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome_utilizador": {
+          "autoincrement": false,
+          "name": "nome_utilizador",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "autoincrement": false,
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hash_palavra_passe": {
+          "autoincrement": false,
+          "name": "hash_palavra_passe",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome_completo": {
+          "autoincrement": false,
+          "name": "nome_completo",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "papel": {
+          "autoincrement": false,
+          "name": "papel",
+          "type": "enum('admin','gestor','mecanico','rececionista')",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ativo": {
+          "default": 1,
+          "autoincrement": false,
+          "name": "ativo",
+          "type": "tinyint(1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ultimo_login": {
+          "autoincrement": false,
+          "name": "ultimo_login",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "atualizado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "atualizado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "utilizadores_id": {
+          "name": "utilizadores_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {
+        "nome_utilizador": {
+          "name": "nome_utilizador",
+          "columns": [
+            "nome_utilizador"
+          ]
+        },
+        "email": {
+          "name": "email",
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "veiculos": {
+      "name": "veiculos",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cliente_id": {
+          "autoincrement": false,
+          "name": "cliente_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "marca": {
+          "autoincrement": false,
+          "name": "marca",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "modelo": {
+          "autoincrement": false,
+          "name": "modelo",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "matricula": {
+          "autoincrement": false,
+          "name": "matricula",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ano": {
+          "autoincrement": false,
+          "name": "ano",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "numero_chassis": {
+          "autoincrement": false,
+          "name": "numero_chassis",
+          "type": "varchar(17)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tipo_motor": {
+          "autoincrement": false,
+          "name": "tipo_motor",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tipo_combustivel": {
+          "autoincrement": false,
+          "name": "tipo_combustivel",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estado": {
+          "default": "'disponivel'",
+          "autoincrement": false,
+          "name": "estado",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ultima_intervencao": {
+          "autoincrement": false,
+          "name": "ultima_intervencao",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "proxima_revisao": {
+          "autoincrement": false,
+          "name": "proxima_revisao",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "companhia_seguros": {
+          "autoincrement": false,
+          "name": "companhia_seguros",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "apolice_seguro": {
+          "autoincrement": false,
+          "name": "apolice_seguro",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "validade_seguro": {
+          "autoincrement": false,
+          "name": "validade_seguro",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notas": {
+          "autoincrement": false,
+          "name": "notas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "criado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "atualizado_em": {
+          "default": "(CURRENT_TIMESTAMP)",
+          "autoincrement": false,
+          "name": "atualizado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "veiculos_id": {
+          "name": "veiculos_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "veiculos_cliente_id_fkey": {
+          "name": "veiculos_cliente_id_fkey",
+          "tableFrom": "veiculos",
+          "tableTo": "clientes",
+          "columnsFrom": [
+            "cliente_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "cascade"
+        }
+      },
+      "uniqueConstraints": {
+        "id": {
+          "name": "id",
+          "columns": [
+            "id"
+          ]
+        },
+        "matricula": {
+          "name": "matricula",
+          "columns": [
+            "matricula"
+          ]
+        },
+        "numero_chassis": {
+          "name": "numero_chassis",
+          "columns": [
+            "numero_chassis"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    }
+  },
+  "views": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "tables": {
+      "__pagamentos": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "__pecas_ordem_trabalho": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "_prisma_migrations": {
+        "columns": {
+          "started_at": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "agendamentos": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          },
+          "atualizado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "alertas_sistema": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "cartoes_kanban": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          },
+          "atualizado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "categorias_peca": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "categorias_servico": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "clientes": {
+        "columns": {
+          "data_registo": {
+            "isDefaultAnExpression": true
+          },
+          "criado_em": {
+            "isDefaultAnExpression": true
+          },
+          "atualizado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "colunas_kanban": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          },
+          "atualizado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "configuracoes_sistema": {
+        "columns": {
+          "atualizado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "encomendas_pecas": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          },
+          "atualizado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "faturas": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          },
+          "atualizado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "fornecedores": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          },
+          "atualizado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "historico_cartao_kanban": {
+        "columns": {
+          "movido_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "itens_encomenda_peca": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "itens_fatura": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "itens_orcamento": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "itens_ordem_trabalho": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "keystart": {
+        "columns": {
+          "atualizado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "log_auditoria": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "marcas": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          },
+          "atualizado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "mecanicos": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          },
+          "atualizado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "modelos": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          },
+          "atualizado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "orcamentos": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          },
+          "atualizado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "ordens_trabalho": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          },
+          "atualizado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "pecas": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          },
+          "atualizado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "perfis_clientes": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          },
+          "atualizado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "servicos": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          },
+          "atualizado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "transacoes_pecas": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "utilizadores": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          },
+          "atualizado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      },
+      "veiculos": {
+        "columns": {
+          "criado_em": {
+            "isDefaultAnExpression": true
+          },
+          "atualizado_em": {
+            "isDefaultAnExpression": true
+          }
+        }
+      }
+    },
+    "indexes": {}
+  }
+}

@@ -1,6 +1,5 @@
 /*
   Warnings:
-
   - You are about to drop the column `categoria` on the `pecas` table. All the data in the column will be lost.
   - Added the required column `categoria_id` to the `pecas` table without a default value. This is not possible if the table is not empty.
 

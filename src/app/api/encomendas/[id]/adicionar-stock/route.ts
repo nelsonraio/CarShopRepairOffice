@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/db/connection';
+import { encomendasPecas, itensEncomendaPeca, pecas } from '@/db/schema';
 import { registarAuditoria } from '@/lib/auditoria';
-
-// @ts-ignore
-const prisma = new PrismaClient({
-  log: ['error']
-});
-const prismaAny = prisma as any;
+import { eq, sql } from 'drizzle-orm';
 
 /**
  * API endpoint to add items to stock from an already received order
@@ -29,64 +25,48 @@ export async function POST(
       return NextResponse.json({ error: 'Nenhum item selecionado' }, { status: 400 });
     }
 
-    const bigIntId = BigInt(id);
 
-    const encomenda = await prismaAny.encomendas_pecas.findUnique({
-      where: { id: bigIntId },
-      include: { itens: true }
+    // Buscar encomenda e itens
+    const encomenda = await db.query.encomendasPecas.findFirst({
+      where: eq(encomendasPecas.id, Number(id)),
     });
-
     if (!encomenda) {
       return NextResponse.json({ error: 'Encomenda não encontrada' }, { status: 404 });
     }
-
-    // Verify the order is already received
     if (encomenda.estado !== 'recebido') {
-      return NextResponse.json({ 
-        error: 'A encomenda deve estar marcada como recebida para adicionar itens ao stock' 
+      return NextResponse.json({
+        error: 'A encomenda deve estar marcada como recebida para adicionar itens ao stock'
       }, { status: 400 });
     }
 
+    // Buscar itens da encomenda
+    const itens = await db.select().from(itensEncomendaPeca).where(eq(itensEncomendaPeca.encomendaId, encomenda.id));
+
     let itemsAdded = 0;
 
-    await prismaAny.$transaction(async (tx: any) => {
+    // Transação para atualizar stock e itens
+    await db.transaction(async (tx) => {
       for (const sel of selectedItems) {
-        const item = encomenda.itens.find((i: any) => String(i.id) === String(sel.id));
-        if (!item) {
-          continue;
-        }
+        const item = itens.find((i) => String(i.id) === String(sel.id));
+        if (!item) continue;
 
-        const totalOrdered = Number(item.quantidade_encomendada) || 0;
-        const alreadyReceived = Number(item.quantidade_recebida) || 0;
+        const totalOrdered = Number(item.quantidadeEncomendada) || 0;
+        const alreadyReceived = Number(item.quantidadeRecebida) || 0;
         const remaining = totalOrdered - alreadyReceived;
 
         let qtyToAdd = Number(sel.quantity ?? 0);
         if (isNaN(qtyToAdd) || qtyToAdd <= 0) continue;
-
-        // Never exceed remaining quantity
-        if (qtyToAdd > remaining) {
-          qtyToAdd = remaining;
-        }
-
+        if (qtyToAdd > remaining) qtyToAdd = remaining;
         if (qtyToAdd > 0) {
-          // Add to stock
-          await tx.pecas.update({
-            where: { id: item.peca_id },
-            data: {
-              quantidade_stock: {
-                increment: qtyToAdd
-              }
-            }
-          });
+          // Atualizar stock da peça
+          await tx.update(pecas)
+            .set({ quantidade_stock: sql`${pecas.quantidade_stock} + ${qtyToAdd}` })
+            .where(eq(pecas.id, Number(item.pecaId)));
 
-          // Update received quantity
-          await tx.itens_encomenda_peca.update({
-            where: { id: item.id },
-            data: {
-              quantidade_recebida: alreadyReceived + qtyToAdd,
-              estado: 'recebido'
-            }
-          });
+          // Atualizar item da encomenda
+          await tx.update(itensEncomendaPeca)
+            .set({ quantidadeRecebida: alreadyReceived + qtyToAdd, estado: 'recebido' })
+            .where(eq(itensEncomendaPeca.id, item.id));
 
           itemsAdded += qtyToAdd;
         }

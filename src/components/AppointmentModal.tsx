@@ -354,8 +354,19 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onClose, ap
     setShowModelSuggestions(false);
   };
 
+
+  const [horaError, setHoraError] = useState<string | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validar hora obrigatória
+    if (!formData.hora) {
+      setHoraError('A hora é obrigatória.');
+      return;
+    } else {
+      setHoraError(null);
+    }
 
     // Validate that notes are required when "Outro" is selected
     if (formData.tipoServico === 'Outro' && !formData.notas.trim()) {
@@ -366,11 +377,11 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onClose, ap
     if (onSave) {
       try {
         await onSave(formData);
+        onClose(); // Só fecha se guardar com sucesso
       } catch (err) {
         console.error('Failed to save appointment', err);
       }
     }
-    onClose();
   };
 
   if (!isOpen) return null;
@@ -513,9 +524,12 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onClose, ap
                 name="hora"
                 value={formData.hora}
                 onChange={handleInputChange}
-                className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                className={`w-full bg-gray-900 border ${horaError ? 'border-red-500' : 'border-gray-600'} text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600`}
                 required
               />
+              {horaError && (
+                <p className="text-red-500 text-xs mt-1">{horaError}</p>
+              )}
             </div>
 
 

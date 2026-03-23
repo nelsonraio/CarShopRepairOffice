@@ -1,57 +1,59 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { db } from '@/db/connection';
+import { agendamentos, clientes, orcamentos } from '../../../../../drizzle/migrations/schema';
+import { eq, and, gte, lt } from 'drizzle-orm';
 
 export async function GET() {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const agendamentos = await prisma.agendamentos.findMany({
-      where: {
-        data_agendamento: {
-          gte: today,
-          lt: tomorrow
-        }
-      },
-      include: {
-        cliente: {
-          select: {
-            nome: true,
-            telefone: true,
-            email: true
-          }
-        }
-      },
-      orderBy: {
-        hora_inicio: 'asc'
-      }
-    });
+    // Fetch agendamentos for today, join with clientes
+    const agendamentosHoje = await db.select({
+      id: agendamentos.id,
+      matricula: agendamentos.matricula,
+      modelo: agendamentos.modelo,
+      marca: agendamentos.marca,
+      ano: agendamentos.ano,
+      prioridade: agendamentos.prioridade,
+      estado: agendamentos.estado,
+      titulo: agendamentos.titulo,
+      descricao: agendamentos.descricao,
+      horaInicio: agendamentos.horaInicio,
+      contactoNome: agendamentos.contactoNome,
+      contactoTelefone: agendamentos.contactoTelefone,
+      contactoEmail: agendamentos.contactoEmail,
+      cliente_nome: clientes.nome,
+      cliente_telefone: clientes.telefone,
+      cliente_email: clientes.email
+    })
+      .from(agendamentos)
+      .leftJoin(clientes, eq(agendamentos.clienteId, clientes.id))
+      .where(and(
+        gte(agendamentos.dataAgendamento, today.toISOString().slice(0, 10)),
+        lt(agendamentos.dataAgendamento, tomorrow.toISOString().slice(0, 10))
+      ))
+      .orderBy(agendamentos.horaInicio);
 
-    const orcamentos = await prisma.orcamentos.findMany({
-      select: {
-        data_emissao: true,
-        cliente_id: true,
-        veiculo_id: true
-      }
-    });
+    // Fetch orcamentos (only needed fields)
+    const orcamentosHoje = await db.select({
+      data_emissao: orcamentos.dataEmissao,
+      cliente_id: orcamentos.clienteId,
+      veiculo_id: orcamentos.veiculoId
+    }).from(orcamentos);
 
     const budgetMatriculasByDate = new Set<string>();
     // Original logic was broken; removed veiculo relation dependency
 
-    const filteredAgendamentos = agendamentos;
-
     // Map to UI format
-    const mapped = filteredAgendamentos.map((agendamento: typeof filteredAgendamentos[number]) => ({
-      id: agendamento.id.toString(),
-      ref_agendamento: `AGD-${agendamento.id}`,
-      cliente_nome: agendamento.cliente?.nome || null,
-      cliente_telefone: agendamento.cliente?.telefone || null,
-      cliente_email: agendamento.cliente?.email || null,
+    const mapped = agendamentosHoje.map((agendamento) => ({
+      id: agendamento.id ? agendamento.id.toString() : '',
+      ref_agendamento: agendamento.id ? `AGD-${agendamento.id}` : '',
+      cliente_nome: agendamento.cliente_nome || null,
+      cliente_telefone: agendamento.cliente_telefone || null,
+      cliente_email: agendamento.cliente_email || null,
       veiculo_matricula: agendamento.matricula || 'N/A',
       veiculo_modelo: agendamento.modelo || agendamento.marca || 'N/A',
       veiculo_marca: agendamento.marca || '',
@@ -60,11 +62,11 @@ export async function GET() {
       estado: agendamento.estado || 'agendado',
       titulo: agendamento.titulo,
       descricao: agendamento.descricao || '',
-      hora_agendamento: agendamento.hora_inicio,
+      hora_agendamento: agendamento.horaInicio,
       mecanico_nome: 'N/A', // Mecânico ainda não atribuído
-      contacto_nome: agendamento.contacto_nome || agendamento.cliente?.nome || null,
-      contacto_telefone: agendamento.contacto_telefone || agendamento.cliente?.telefone || null,
-      contacto_email: agendamento.contacto_email || agendamento.cliente?.email || null    
+      contacto_nome: agendamento.contactoNome || agendamento.cliente_nome || null,
+      contacto_telefone: agendamento.contactoTelefone || agendamento.cliente_telefone || null,
+      contacto_email: agendamento.contactoEmail || agendamento.cliente_email || null    
     }));
 
     return NextResponse.json(mapped);

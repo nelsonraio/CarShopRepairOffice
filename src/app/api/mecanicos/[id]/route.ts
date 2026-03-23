@@ -1,11 +1,9 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/db/connection';
+import { mecanicos } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 import { registarAuditoria } from '@/lib/auditoria';
-
-// @ts-ignore
-const prisma = new PrismaClient({
-  log: ['error'],
-});
+import { successResponse, errorResponse, handleDatabaseError } from '@/lib/api-utils';
 
 export async function PUT(
   request: Request,
@@ -16,39 +14,33 @@ export async function PUT(
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
 
-    const mecanico = await prisma.mecanicos.update({
-      where: { id },
-      data: {
-        nome: body.nome,
-        especialidade: body.especialidade || null,
-        telefone: body.telefone || null,
-        email: body.email || null,
-        tarifa_horaria: body.tarifa_horaria ? parseFloat(body.tarifa_horaria.toString()) : null,
-        data_contratacao: body.data_contratacao ? new Date(body.data_contratacao) : null,
-        ativo: body.ativo !== undefined ? body.ativo : true
-      }
-    });
+    // Prepare update object, mapping camelCase to snake_case as needed
+    const updateObj: any = {
+      nome: body.nome,
+      especialidade: body.especialidade || null,
+      telefone: body.telefone || null,
+      email: body.email || null,
+      tarifaHoraria: body.tarifa_horaria ? parseFloat(body.tarifa_horaria.toString()) : null,
+      dataContratacao: body.data_contratacao ? new Date(body.data_contratacao) : null,
+      ativo: body.ativo !== undefined ? body.ativo : true
+    };
+
+    const result = await db
+      .update(mecanicos)
+      .set(updateObj)
+      .where(eq(mecanicos.id, id));
+
+    // Fetch updated record
+    const updated = await db
+      .select()
+      .from(mecanicos)
+      .where(eq(mecanicos.id, id));
 
     await registarAuditoria('UPDATE', 'mecanicos', id, null, { nome: body.nome, especialidade: body.especialidade }, request);
 
-    return NextResponse.json(mecanico);
+    return successResponse(updated[0]);
   } catch (error: any) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error updating mecanico:', error);
-    return NextResponse.json({ 
-      error: 'Failed to update mecanico',
-      details: error.message 
-    }, { status: 500 });
+    return handleDatabaseError(error as Error);
   }
 }
 
@@ -61,26 +53,20 @@ export async function PATCH(
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
 
-    const mecanico = await prisma.mecanicos.update({
-      where: { id },
-      data: body
-    });
-
-    return NextResponse.json(mecanico);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
+    // Accepts partial update, so just set whatever is present
+    const updateObj: any = {};
+    for (const key in body) {
+      // Map snake_case to camelCase for Drizzle schema
+      if (key === 'tarifa_horaria') updateObj.tarifaHoraria = body[key];
+      else if (key === 'data_contratacao') updateObj.dataContratacao = body[key] ? new Date(body[key]) : null;
+      else updateObj[key] = body[key];
     }
-    console.error('Error patching mecanico:', error);
-    return NextResponse.json({ error: 'Failed to patch mecanico' }, { status: 500 });
+
+    await db.update(mecanicos).set(updateObj).where(eq(mecanicos.id, id));
+    const updated = await db.select().from(mecanicos).where(eq(mecanicos.id, id));
+    return successResponse(updated[0]);
+  } catch (error) {
+    return handleDatabaseError(error as Error);
   }
 }
 
@@ -92,27 +78,11 @@ export async function DELETE(
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
 
-    await prisma.mecanicos.delete({
-      where: { id }
-    });
-
+    await db.delete(mecanicos).where(eq(mecanicos.id, id));
     await registarAuditoria('DELETE', 'mecanicos', id, null, null, request);
-
-    return NextResponse.json({ success: true });
+    return successResponse({ success: true });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error deleting mecanico:', error);
-    return NextResponse.json({ error: 'Failed to delete mecanico' }, { status: 500 });
+    return handleDatabaseError(error as Error);
   }
 }
 

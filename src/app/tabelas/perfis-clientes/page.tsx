@@ -17,20 +17,7 @@ interface PerfilCliente {
   ativo: boolean;
 }
 
-/**
- * parsePercent - Converte diversos formatos em número válido
- * 
- * Casos suportados:
- * 1. number: Retorna diretamente se finito
- * 2. string: '55' ou '55,00' ou '55.00' → 55
- * 3. Decimal object (Prisma): {toString: () => '55'} → 55
- * 4. Outros: Tenta conversão para Number
- * 
- * IMPORTANTE: Suporta vírgula como separador decimal (padrão PT)
- * 
- * @param value - Valor a converter
- * @returns Número finito ou 0 se inválido
- */
+
 const parsePercent = (value: unknown): number => {
   // Caso 1: Já é número
   if (typeof value === 'number') {
@@ -45,7 +32,7 @@ const parsePercent = (value: unknown): number => {
     return Number.isFinite(parsed) ? parsed : 0;
   }
 
-  // Caso 3: Objeto Decimal do Prisma (tem método toString)
+  // Caso 3: Objeto Decimal 
   if (value && typeof value === 'object' && typeof (value as { toString?: () => string }).toString === 'function') {
     const stringValue = (value as { toString: () => string }).toString();
     const normalized = stringValue.replace(',', '.').trim();
@@ -115,7 +102,7 @@ const columns: ColumnDef<PerfilCliente>[] = [
  * - Activar/desactivar perfis
  * - Validação de percentagens com suporte a vírgula decimal
  * 
- * IMPORTANTE: Esta página lida com Decimal do Prisma que precisa de normalização
+ * IMPORTANTE: Esta página lida com Decimal que precisa de normalização
  * para evitar exibição de NaN ou 0.00%
  */
 export default function PerfisClientesPage() {
@@ -128,7 +115,7 @@ export default function PerfisClientesPage() {
    * Carrega todos os perfis da API (ativos e inativos)
    * 
    * IMPORTANTE: Normaliza perclucro de Decimal para number
-   * Prisma retorna Decimal que precisa ser convertido para evitar bugs de exibição
+   *  retorna Decimal que precisa ser convertido para evitar bugs de exibição
    */
   const fetchPerfis = async () => {
     setLoading(true);

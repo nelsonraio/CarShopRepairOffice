@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/db/connection';
+import { encomendasPecas, itensEncomendaPeca } from '@/drizzle/schema';
 import { registarAuditoria } from '@/lib/auditoria';
-
-// @ts-ignore
-const prisma = new PrismaClient({
-  log: ['error']
-});
-const prismaAny = prisma as any;
+import { eq } from 'drizzle-orm';
 
 export async function PATCH(
   request: NextRequest,
@@ -21,10 +17,16 @@ export async function PATCH(
       return NextResponse.json({ error: 'Estado obrigatorio' }, { status: 400 });
     }
 
-    const updated = await prismaAny.encomendas_pecas.update({
-      where: { id: BigInt(id) },
-      data: { estado }
-    });
+    // Atualizar encomenda usando Drizzle
+    await db.update(encomendasPecas)
+      .set({ estado })
+      .where(eq(encomendasPecas.id, Number(id)));
+
+    // Buscar encomenda atualizada para resposta
+    const [updated] = await db.select().from(encomendasPecas).where(eq(encomendasPecas.id, Number(id)));
+    if (!updated) {
+      return NextResponse.json({ error: 'Encomenda nao encontrada' }, { status: 404 });
+    }
 
     await registarAuditoria('UPDATE', 'encomendas_pecas', Number(id), null, { estado }, request);
 
@@ -54,24 +56,12 @@ export async function PATCH(
 export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params;
-    const encomendaId = BigInt(id);
-    // Verifica dependências: itens_encomenda_peca, itens_orcamento, itens_ordem_trabalho
-    const itensCount = await prisma.itens_encomenda_peca.count({ where: { encomenda_id: encomendaId } });
-    // Não existe encomenda_id em itens_orcamento, então não é possível contar dependências diretamente.
-    // Se necessário, ajuste para a lógica correta. Aqui, apenas ignora a contagem de itens_orcamento.
-    const orcamentosCount = 0;
-    // Não existe encomenda_id em itens_ordem_trabalho, então não é possível contar dependências diretamente.
-    // Se necessário, ajuste para a lógica correta. Aqui, apenas ignora a contagem de itens_ordem_trabalho.
-    const ordensCount = 0;
-    if (itensCount > 0 || orcamentosCount > 0 || ordensCount > 0) {
-      let motivos = [];
-      if (itensCount > 0) motivos.push(`usada em ${itensCount} item(ns) de encomenda`);
-      if (orcamentosCount > 0) motivos.push(`usada em ${orcamentosCount} orçamento(s)`);
-      if (ordensCount > 0) motivos.push(`usada em ${ordensCount} ordem(ns) de trabalho`);
-      return NextResponse.json({ error: `Não é possível apagar a encomenda: ${motivos.join(', ')}.` }, { status: 400 });
-    }
-    await prisma.encomendas_pecas.delete({ where: { id: encomendaId } });
-    await registarAuditoria('DELETE', 'encomendas_pecas', Number(id), null, null, request);
+    const encomendaId = Number(id);
+    // Apagar todos os itens da encomenda primeiro
+    await db.delete(itensEncomendaPeca).where(eq(itensEncomendaPeca.encomendaId, encomendaId));
+    // Depois apagar a encomenda
+    await db.delete(encomendasPecas).where(eq(encomendasPecas.id, encomendaId));
+    await registarAuditoria('DELETE', 'encomendas_pecas', encomendaId, null, null, request);
     return NextResponse.json({ success: true });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

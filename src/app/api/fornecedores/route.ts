@@ -1,8 +1,8 @@
-import { PrismaClient } from '@prisma/client';
 import { successResponse, handleDatabaseError } from '@/lib/api-utils';
 import { registarAuditoria } from '@/lib/auditoria';
-
-const prisma = new PrismaClient({ log: ['error'] });
+import { db } from '@/db/connection';
+import { fornecedores } from '@/db/schema';
+import { eq, asc } from 'drizzle-orm';
 
 /**
  * GET: Lista fornecedores ativos ou todos
@@ -13,13 +13,15 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const all = searchParams.get('all') === 'true';
-
-    const fornecedores = await prisma.fornecedores.findMany({
-      where: all ? {} : { ativo: true },
-      orderBy: { nome: 'asc' }
-    });
-
-    return successResponse(fornecedores);
+    const query = db
+      .select()
+      .from(fornecedores)
+      .orderBy(asc(fornecedores.nome));
+    let result = await query;
+    if (!all) {
+      result = result.filter(f => f.ativo === 1);
+    }
+    return successResponse(result);
   } catch (error) {
     return handleDatabaseError(error as Error);
   }
@@ -36,20 +38,23 @@ export async function POST(request: Request) {
       return successResponse({ error: 'Nome do fornecedor é obrigatório' }, 400);
     }
 
-    const fornecedor = await prisma.fornecedores.create({
-      data: {
-        nome,
-        pessoa_contato: pessoa_contato || null,
-        email: email || null,
-        telefone: telefone || null,
-        nif: nif || null,
-        endereco: endereco || null,
-        termos_pagamento: termos_pagamento || null,
-        ativo: ativo !== undefined ? ativo : true
-      }
-    });
+    const insertData: any = {
+      nome,
+      email: email || null,
+      telefone: telefone || null,
+      nif: nif || null,
+      endereco: endereco || null,
+      ativo: ativo !== undefined ? ativo : 1
+    };
+    // pessoa_contato e termos_pagamento só se existirem na tabela drizzle
+    if ('pessoa_contato' in fornecedores) insertData.pessoa_contato = pessoa_contato || null;
+    if ('termos_pagamento' in fornecedores) insertData.termos_pagamento = termos_pagamento || null;
 
-    await registarAuditoria('CREATE', 'fornecedores', fornecedor.id, null, { nome, email, telefone }, request);
+    const result = await db.insert(fornecedores).values(insertData);
+    // Buscar o fornecedor criado
+    const [fornecedor] = await db.select().from(fornecedores).where(eq(fornecedores.nome, nome));
+
+    await registarAuditoria('CREATE', 'fornecedores', fornecedor?.id, null, { nome, email, telefone }, request);
 
     return successResponse(fornecedor, 201);
   } catch (error) {

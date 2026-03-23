@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
+const isStandaloneBuild = process.env.STANDALONE_BUILD === '1';
+
 const nextConfig: NextConfig = {
-  output: "standalone"
+  ...(isStandaloneBuild ? { output: 'standalone' as const } : {}),
 };
 
 export default nextConfig;

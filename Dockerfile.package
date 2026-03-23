@@ -1,0 +1,23 @@
+FROM node:22-bookworm-slim AS builder
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+
+ENV NODE_ENV=production
+ENV STANDALONE_BUILD=1
+
+RUN npm run build:standalone
+
+RUN mkdir -p /out/app
+RUN cp -R .next/standalone/. /out/app/
+RUN mkdir -p /out/app/.next/static
+RUN cp -R .next/static/. /out/app/.next/static/
+RUN if [ -d public ]; then mkdir -p /out/app/public && cp -R public/. /out/app/public/; fi
+RUN tar -C /out -czf /out/carshoprepair-linux-package.tar.gz app
+
+FROM scratch AS export
+COPY --from=builder /out/carshoprepair-linux-package.tar.gz /carshoprepair-linux-package.tar.gz

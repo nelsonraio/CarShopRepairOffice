@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-// @ts-ignore
-const prisma = new PrismaClient({
-  log: ['error'],
-});
+import { db } from '@/db/connection';
+import { clientes, perfisClientes } from '../../../../../drizzle/migrations/schema';
+import { and, or, like, eq } from 'drizzle-orm';
 
 export async function GET(request: Request) {
   try {
@@ -15,25 +12,35 @@ export async function GET(request: Request) {
       return NextResponse.json([]);
     }
 
-    const clientes = await prisma.clientes.findMany({
-      where: {
-        AND: [
-          { ativo: true },
-          {
-            OR: [
-              { nome: { contains: query } },
-              { telefone: { contains: query } },
-              { email: { contains: query } }
-            ]
-          }
-        ]
-      },
-      include: { perfil_cliente: true },
-      orderBy: { nome: 'asc' },
-      take: 10
-    });
+    // Montar filtro
+    const whereArr = [
+      eq(clientes.ativo, 1),
+      or(
+        like(clientes.nome, `%${query}%`),
+        like(clientes.telefone, `%${query}%`),
+        like(clientes.email, `%${query}%`)
+      )
+    ];
 
-    const result = clientes.map(cliente => ({
+    // Buscar clientes
+    const result = await db
+      .select({
+        id: clientes.id,
+        nome: clientes.nome,
+        telefone: clientes.telefone,
+        email: clientes.email,
+        nif: clientes.nif,
+        endereco: clientes.endereco,
+        perfil_id: clientes.perfilId,
+        perfil_nome: perfisClientes.nome
+      })
+      .from(clientes)
+      .leftJoin(perfisClientes, eq(clientes.perfilId, perfisClientes.id))
+      .where(and(...whereArr))
+      .orderBy(clientes.nome)
+      .limit(10);
+
+    const serialized = result.map(cliente => ({
       id: cliente.id,
       nome: cliente.nome,
       telefone: cliente.telefone,
@@ -41,10 +48,10 @@ export async function GET(request: Request) {
       nif: cliente.nif,
       endereco: cliente.endereco,
       perfil_id: cliente.perfil_id || null,
-      perfil: cliente.perfil_cliente ? cliente.perfil_cliente.nome : 'Normal'
+      perfil: cliente.perfil_nome || 'Normal'
     }));
 
-    return NextResponse.json(result);
+    return NextResponse.json(serialized);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const isDbOffline =

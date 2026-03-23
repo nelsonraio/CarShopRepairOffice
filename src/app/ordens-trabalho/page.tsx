@@ -17,6 +17,49 @@ interface WorkOrder {
   waitingParts: string;
 }
 
+type RawWorkOrder = Record<string, any>;
+
+const mapApiStatusToUi = (status: string): WorkOrder['status'] => {
+  const s = String(status || '').toLowerCase();
+  if (s === 'aguarda_peca' || s === 'aguardando pecas') return 'Aguardando Peças';
+  if (s === 'concluido' || s === 'concluida') return 'Concluída';
+  if (s === 'entregue') return 'Entregue';
+  if (s === 'cancelado' || s === 'cancelada') return 'Cancelada';
+  return 'Em Andamento';
+};
+
+const mapApiPriorityToUi = (priority: string): WorkOrder['priority'] => {
+  const p = String(priority || '').toLowerCase();
+  if (p === 'baixa') return 'Baixa';
+  if (p === 'alta') return 'Alta';
+  if (p === 'urgente') return 'Urgente';
+  return 'Normal';
+};
+
+const normalizeWorkOrder = (order: RawWorkOrder): WorkOrder => {
+  const waitingPartsArr = Array.isArray(order.waitingParts) ? order.waitingParts : [];
+  const waitingPartsText = waitingPartsArr
+    .map((item: any) => item?.descricao)
+    .filter((v: unknown): v is string => typeof v === 'string' && v.trim().length > 0)
+    .join('\n');
+
+  const ref = String(order.ref_ordem_trabalho || order.refOrdemTrabalho || '').trim();
+  const numericId = String(order.id || '').trim();
+
+  return {
+    id: ref || numericId,
+    client: String(order.cliente_nome || order.client || ''),
+    vehicle: String(order.veiculo_modelo || order.vehicle || ''),
+    mechanic: String(order.mecanico_nome || order.mechanic || ''),
+    openDate: String(order.data_inicio || order.openDate || ''),
+    closeDate: String(order.data_conclusao || order.closeDate || ''),
+    status: mapApiStatusToUi(String(order.estado || order.status || '')),
+    priority: mapApiPriorityToUi(String(order.prioridade || order.priority || '')),
+    problem: String(order.descricao_problema || order.problem || ''),
+    waitingParts: waitingPartsText || String(order.waitingParts || '')
+  };
+};
+
 interface WorkOrderItem {
   id: string | number;
   tipo_item: string;
@@ -53,8 +96,8 @@ const WORK_ORDER_FIELD_LABELS: Record<string, string> = {
  */
 const WorkOrdersPage = () => {
   // Data fetching
-  const { data: rawWorkOrders = [], loading, error, refetch } = useFetch<WorkOrder[]>('/api/ordens-trabalho');
-  const workOrders = rawWorkOrders || [];
+  const { data: rawWorkOrders = [], loading, error, refetch } = useFetch<RawWorkOrder[]>('/api/ordens-trabalho');
+  const workOrders = (rawWorkOrders || []).map(normalizeWorkOrder);
 
   // Modal states
   const { isOpen: detailsModalOpen, selectedItem: detailsWorkOrder, select: selectDetailsWorkOrder, close: closeDetailsModal } = useModal<WorkOrder>();
@@ -70,6 +113,8 @@ const WorkOrdersPage = () => {
   const [workOrderItems, setWorkOrderItems] = useState<WorkOrderItem[]>([]);
   const [selectedParts, setSelectedParts] = useState<Set<string>>(new Set());
   const [loadingItems, setLoadingItems] = useState(false);
+  const [detailsItems, setDetailsItems] = useState<WorkOrderItem[]>([]);
+  const [detailsLoadingItems, setDetailsLoadingItems] = useState(false);
 
   // Auto-refresh when page becomes visible (fixes sync issues after Kanban updates)
   useEffect(() => {
@@ -120,8 +165,26 @@ const WorkOrdersPage = () => {
   const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, filteredWorkOrders.length);
 
   // Details modal handler
-  const handleWorkOrderIdClick = (workOrder: WorkOrder) => {
+  const handleWorkOrderIdClick = async (workOrder: WorkOrder) => {
     selectDetailsWorkOrder(workOrder);
+
+    setDetailsItems([]);
+    setDetailsLoadingItems(true);
+    try {
+      const response = await fetch(`/api/ordens-trabalho?id=${encodeURIComponent(workOrder.id)}`);
+      if (!response.ok) {
+        return;
+      }
+
+      const data = await response.json();
+      if (Array.isArray(data.itens_ordem_trabalho)) {
+        setDetailsItems(data.itens_ordem_trabalho);
+      }
+    } catch (err) {
+      console.error('Error fetching work order details items:', err);
+    } finally {
+      setDetailsLoadingItems(false);
+    }
   };
 
   // Status modal handlers
@@ -171,6 +234,20 @@ const WorkOrdersPage = () => {
   const handleSaveStatus = async () => {
     if (!selectedWorkOrder) return;
 
+    const isReopeningFromConcluded =
+      selectedWorkOrder.status === 'Concluída' &&
+      (newStatus === 'Em Andamento' || newStatus === 'Aguardando Peças');
+
+    let confirmReopen = false;
+    if (isReopeningFromConcluded) {
+      confirmReopen = window.confirm(
+        'Esta ordem de trabalho está concluída. Deseja mesmo reabrir? As peças usadas serão repostas em stock.'
+      );
+      if (!confirmReopen) {
+        return;
+      }
+    }
+
     // Get selected part IDs from workOrderItems
     const waitingPartsStr = typeof waitingParts === 'string' ? waitingParts : '';
     const selectedPartIds = workOrderItems
@@ -202,7 +279,8 @@ const WorkOrdersPage = () => {
           estado: newStatus,
           data_conclusao: (newStatus === 'Concluída' || newStatus === 'Entregue') ? completionDate : null,
           waitingParts: newStatus === 'Aguardando Peças' ? waitingParts : null,
-          selectedPartIds: newStatus === 'Aguardando Peças' ? selectedPartIds : []
+          selectedPartIds: newStatus === 'Aguardando Peças' ? selectedPartIds : [],
+          confirmReopen
         })
       });
 
@@ -579,46 +657,13 @@ const WorkOrdersPage = () => {
             <h3 className="text-xl font-bold text-white mb-4">Detalhes da Ordem de Trabalho</h3>
             <div className="space-y-2 text-gray-200">
               {Object.entries(detailsWorkOrder).map(([key, value]) => {
+                if (key === 'items') return null;
                 // evitar mostrar mecanico_nome se já existe mechanic
                 if (key === 'mecanico_nome' && ('mechanic' in detailsWorkOrder)) {
                   return null;
                 }
-                if (key === 'items' && Array.isArray(value)) {
-                  return (
-                    <div className="mt-4" key={key}>
-                      <span className="font-semibold block mb-2">ITENS:</span>
-                      {value.length === 0 ? (
-                        <div className="text-gray-400">Nenhum item.</div>
-                      ) : (
-                        <table className="w-full text-sm text-left text-gray-300 border border-gray-700 rounded mb-2">
-                          <thead className="bg-gray-900 text-gray-400">
-                            <tr>
-                              <th className="px-2 py-1">Tipo</th>
-                              <th className="px-2 py-1">Descrição</th>
-                              <th className="px-2 py-1">Qtd</th>
-                              <th className="px-2 py-1">Outros</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {value.map((item, idx) => (
-                              <tr key={idx} className="border-t border-gray-700">
-                                <td className="px-2 py-1">{item.tipo_item || '-'}</td>
-                                <td className="px-2 py-1">{item.descricao || '-'}</td>
-                                <td className="px-2 py-1">{item.quantidade || '-'}</td>
-                                <td className="px-2 py-1 text-xs">
-                                  {Object.entries(item)
-                                    .filter(([k]) => !['tipo_item','descricao','quantidade'].includes(k))
-                                    .map(([k, v]) => (
-                                      <div key={k}><span className="font-semibold">{k}:</span> {typeof v === 'string' || typeof v === 'number' ? v : JSON.stringify(v)}</div>
-                                    ))}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      )}
-                    </div>
-                  );
+                if (key === 'waitingParts' && detailsWorkOrder.status !== 'Aguardando Peças') {
+                  return null;
                 }
                 const label = WORK_ORDER_FIELD_LABELS[key] 
                   || (key === 'mecanico_nome' ? 'Mecânico' : key.replace(/_/g, ' ').toUpperCase());
@@ -628,10 +673,46 @@ const WorkOrdersPage = () => {
                   </div>
                 );
               })}
+
+              <div className="mt-4">
+                <span className="font-semibold block mb-2">ITENS DA ORDEM:</span>
+                {detailsLoadingItems ? (
+                  <div className="text-gray-400">A carregar itens...</div>
+                ) : detailsItems.length === 0 ? (
+                  <div className="text-gray-400">Nenhum item.</div>
+                ) : (
+                  <table className="w-full text-sm text-left text-gray-300 border border-gray-700 rounded mb-2">
+                    <thead className="bg-gray-900 text-gray-400">
+                      <tr>
+                        <th className="px-2 py-1">Tipo</th>
+                        <th className="px-2 py-1">Descrição</th>
+                        <th className="px-2 py-1">Qtd</th>
+                        <th className="px-2 py-1">Preço Unit.</th>
+                        <th className="px-2 py-1">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {detailsItems.map((item) => (
+                        <tr key={item.id} className="border-t border-gray-700">
+                          <td className="px-2 py-1">{item.tipo_item || '-'}</td>
+                          <td className="px-2 py-1">{item.descricao || '-'}</td>
+                          <td className="px-2 py-1">{item.quantidade || '-'}</td>
+                          <td className="px-2 py-1">{item.preco_unitario ?? '-'}</td>
+                          <td className="px-2 py-1">{item.valor_total ?? '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
             </div>
             <div className="flex justify-end mt-6">
               <button
-                onClick={closeDetailsModal}
+                onClick={() => {
+                  setDetailsItems([]);
+                  setDetailsLoadingItems(false);
+                  closeDetailsModal();
+                }}
                 className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
               >
                 Fechar

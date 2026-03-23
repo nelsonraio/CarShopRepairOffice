@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-// @ts-ignore
-const prisma = new PrismaClient({
-  log: ['error'],
-});
+import { db } from '@/db/connection';
+import { marcas } from '../../../../../drizzle/migrations/schema';
+import { and, like, eq } from 'drizzle-orm';
 
 export async function GET(request: Request) {
   try {
@@ -15,24 +12,15 @@ export async function GET(request: Request) {
       return NextResponse.json([]);
     }
 
-    const marcas = await prisma.marcas.findMany({
-      where: {
-        AND: [
-          { ativo: true },
-          { nome: { contains: query } }
-        ]
-      },
-      select: {
-        id: true,
-        nome: true,
-        pais_origem: true
-      },
-      orderBy: { nome: 'asc' },
-      take: 10
-    });
+    const result = await db
+      .select({ id: marcas.id, nome: marcas.nome, pais_origem: marcas.paisOrigem })
+      .from(marcas)
+      .where(and(eq(marcas.ativo, 1), like(marcas.nome, `%${query}%`)))
+      .orderBy(marcas.nome)
+      .limit(10);
 
     // Convert BigInt id to string for JSON serialization
-    const serializedMarcas = marcas.map((marca: any) => ({
+    const serializedMarcas = result.map((marca: any) => ({
       id: String(marca.id),
       nome: marca.nome,
       pais_origem: marca.pais_origem

@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-// @ts-ignore
-const prisma = new PrismaClient({
-  log: ['error'],
-});
+import { db } from '@/db/connection';
+import { mecanicos } from '@/db/schema';
+import { and, eq, sql } from 'drizzle-orm';
 
 export async function GET(request: Request) {
   try {
@@ -15,38 +12,24 @@ export async function GET(request: Request) {
       return NextResponse.json([]);
     }
 
-    const mecanicos = await prisma.mecanicos.findMany({
-      where: {
-        AND: [
-          { ativo: true },
-          {
-            nome: { contains: query }
-          }
-        ]
-      },
-      select: {
-        id: true,
-        nome: true
-      },
-      orderBy: { nome: 'asc' },
-      take: 10
-    });
+    // Drizzle does not have ilike for MySQL, so use LIKE with lower-case
+    const search = `%${query.toLowerCase()}%`;
+    const results = await db
+      .select({ id: mecanicos.id, nome: mecanicos.nome })
+      .from(mecanicos)
+      .where(
+        and(
+          eq(mecanicos.ativo, 1),
+          sql`LOWER(${mecanicos.nome}) LIKE ${search}`
+        )
+      )
+      .orderBy(mecanicos.nome)
+      .limit(10);
 
-    return NextResponse.json(mecanicos);
+    return NextResponse.json(results);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Error searching mecanicos:', error);
-    return NextResponse.json({ error: 'Failed to search mecanicos' }, { status: 500 });
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

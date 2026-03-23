@@ -21,11 +21,15 @@ interface RepairHistory {
 
 interface WorkOrder {
   id: string;
+  ref_ordem_trabalho?: string;
   status: string;
   date: string;
   description: string;
   plate?: string; // Adicionado para filtrar por matrícula
   vehicle?: string; // Adicionado para corresponder ao uso em filtragem
+  mechanic?: string;
+  mecanico_nome?: string;
+  veiculo_modelo?: string;
   items?: any[];
 }
 
@@ -41,12 +45,29 @@ const VehicleHistoryModal: React.FC<VehicleHistoryModalProps> = ({ isOpen, onClo
   const [workOrders, setWorkOrders] = React.useState<WorkOrder[]>([]);
   const [selectedWorkOrder, setSelectedWorkOrder] = React.useState<WorkOrder | null>(null);
 
+  const formatCurrency = (value: unknown) => {
+    const numericValue = Number(value) || 0;
+    return numericValue.toLocaleString('pt-PT', {
+      style: 'currency',
+      currency: 'EUR'
+    });
+  };
+
+  const parseSortableDate = (value: string | undefined) => {
+    if (!value) return 0;
+    const parsed = new Date(value);
+    const time = parsed.getTime();
+    return Number.isNaN(time) ? 0 : time;
+  };
+
   React.useEffect(() => {
     if (isOpen && vehicle) {
       // Fetch work orders for this vehicle
-      fetch(`/api/ordens-trabalho?vehicleId=${vehicle.id}&status=Concluída,Faturado`)
+      fetch(`/api/ordens-trabalho?vehicleId=${vehicle.id}&status=Concluída,Entregue`)
         .then(res => res.ok ? res.json() : [])
         .then(data => setWorkOrders(Array.isArray(data) ? data : []));
+    } else {
+      setWorkOrders([]);
     }
   }, [isOpen, vehicle]);
 
@@ -84,6 +105,14 @@ const VehicleHistoryModal: React.FC<VehicleHistoryModalProps> = ({ isOpen, onClo
             // Filtra as OTs pela matrícula do veículo selecionado, se disponível
             const filteredWorkOrders = vehicle && vehicle.plate
               ? workOrders.filter(wo => {
+                  if (wo.plate === vehicle.plate) {
+                    return true;
+                  }
+
+                  if ((wo as any).veiculo_matricula === vehicle.plate) {
+                    return true;
+                  }
+
                   // wo.vehicle pode ser "Marca Modelo | MATRICULA"
                   if (typeof wo.vehicle === 'string') {
                     const parts = wo.vehicle.split('|');
@@ -94,54 +123,34 @@ const VehicleHistoryModal: React.FC<VehicleHistoryModalProps> = ({ isOpen, onClo
                   return wo.plate === vehicle.plate;
                 })
               : workOrders;
-            if (filteredWorkOrders.length === 0) {
+
+            const sortedWorkOrders = [...filteredWorkOrders].sort(
+              (a, b) => parseSortableDate(b.date) - parseSortableDate(a.date)
+            );
+
+            if (sortedWorkOrders.length === 0) {
               return <div className="text-gray-400">Nenhuma ordem de trabalho encontrada para este veículo.</div>;
             }
-            // Dicionário de labels PT
-            const labels: { [key: string]: string } = {
-                            problem: 'Itens da OT',
-              id: 'ID',
-              status: 'Estado',
-              date: 'Data',
-              description: 'Descrição',
-              plate: 'Matrícula',
-              vehicle: 'Veículo',
-              items: 'Itens',
-              mechanic: 'Mecânico',
-              mecanico_nome: 'Mecânico',
-              client: 'Cliente',
-              clientName: 'Cliente',
-              contacto_nome: 'Contacto nome',
-              contacto_telefone: 'Contacto telefone',
-              contacto_email: 'Contacto email',
-              // Adicione mais traduções conforme necessário
-              openDate: 'Data de Abertura',
-              closeDate: 'Data de Encerramento',
-              priority: 'Prioridade',
-            };
             return (
               <div className="space-y-6">
-                {filteredWorkOrders.map((wo) => (
+                {sortedWorkOrders.map((wo) => (
                   <div key={wo.id} className="border border-gray-700 rounded p-3 bg-gray-900">
                     <div className="flex items-center gap-4 mb-2">
-                      <span className="font-mono text-brand-yellow text-lg">OT: {wo.id}</span>
-                      <span>{wo.date || '-'}</span>
+                      <span className="font-mono text-brand-yellow text-lg">OT: {wo.ref_ordem_trabalho || wo.id}</span>
                     </div>
-                    <div className="mb-2 text-gray-400">{wo.description}</div>
-                    {/* Detalhes da OT com labels traduzidos e capitalizados */}
-                    <div className="space-y-1 mb-2">
-                      {Object.entries(wo).map(([key, value]) => {
-                        if (['items', 'description', 'id', 'date', 'vehicle', 'waitingParts'].includes(key)) return null;
-                        // Evitar duplicidade de 'Mecânico'
-                        if (key === 'mecanico_nome' && ('mechanic' in wo)) return null;
-                        const label = labels[key] || key.replace(/_/g, ' ');
-                        const labelFinal = label.charAt(0).toUpperCase() + label.slice(1).toLowerCase();
-                        return (
-                          <div className="text-gray-100" key={key}>
-                            <span className="font-semibold">{labelFinal}:</span> {typeof value === 'string' || typeof value === 'number' ? value : JSON.stringify(value)}
-                          </div>
-                        );
-                      })}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3 text-sm">
+                      <div className="text-gray-100">
+                        <span className="font-semibold text-gray-400">Marca/Modelo:</span>{' '}
+                        {wo.veiculo_modelo || wo.vehicle || '-'}
+                      </div>
+                      <div className="text-gray-100">
+                        <span className="font-semibold text-gray-400">Data:</span>{' '}
+                        {wo.date || '-'}
+                      </div>
+                      <div className="text-gray-100">
+                        <span className="font-semibold text-gray-400">Mecânico:</span>{' '}
+                        {wo.mechanic || wo.mecanico_nome || '-'}
+                      </div>
                     </div>
                     {wo.items && Array.isArray(wo.items) && wo.items.length > 0 ? (
                       <table className="w-full text-xs text-left text-gray-300 border border-gray-700 rounded mb-2">
@@ -150,7 +159,8 @@ const VehicleHistoryModal: React.FC<VehicleHistoryModalProps> = ({ isOpen, onClo
                             <th className="px-2 py-1">Tipo</th>
                             <th className="px-2 py-1">Descrição</th>
                             <th className="px-2 py-1">Qtd</th>
-                            <th className="px-2 py-1">Outros</th>
+                            <th className="px-2 py-1">Preço Unit.</th>
+                            <th className="px-2 py-1">Total</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -159,17 +169,8 @@ const VehicleHistoryModal: React.FC<VehicleHistoryModalProps> = ({ isOpen, onClo
                               <td className="px-2 py-1">{item.tipo_item || '-'}</td>
                               <td className="px-2 py-1">{item.descricao || '-'}</td>
                               <td className="px-2 py-1">{item.quantidade || '-'}</td>
-                              <td className="px-2 py-1 text-xs">
-                                {Object.entries(item)
-                                  .filter(([k]) => !['tipo_item','descricao','quantidade'].includes(k))
-                                  .map(([k, v]) => {
-                                    const label = labels[k] || k.replace(/_/g, ' ');
-                                    const labelFinal = label.charAt(0).toUpperCase() + label.slice(1).toLowerCase();
-                                    return (
-                                      <div key={k}><span className="font-semibold">{labelFinal}:</span> {typeof v === 'string' || typeof v === 'number' ? v : JSON.stringify(v)}</div>
-                                    );
-                                  })}
-                              </td>
+                              <td className="px-2 py-1">{formatCurrency(item.preco_unitario)}</td>
+                              <td className="px-2 py-1">{formatCurrency(item.valor_total)}</td>
                             </tr>
                           ))}
                         </tbody>

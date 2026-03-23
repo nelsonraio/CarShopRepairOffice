@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 
-// @ts-ignore
-const prisma = new PrismaClient();
+import { NextResponse } from 'next/server';
+import { db } from '@/db/connection';
+import { orcamentos } from '@/db/schema';
+import { like, desc } from 'drizzle-orm';
 
 export async function GET(request: Request) {
   try {
@@ -24,35 +24,26 @@ export async function GET(request: Request) {
       prefix = `OR-${year}-C`;
     }
 
-    // Find the last budget ID with this prefix
-    const lastBudget = await prisma.orcamentos.findFirst({
-      where: {
-        ref_orcamento: {
-          startsWith: prefix
-        }
-      },
-      orderBy: {
-        ref_orcamento: 'desc'
-      }
-    });
+    // Buscar o último orçamento com este prefixo usando Drizzle
+    const last = await db.select().from(orcamentos)
+      .where(like(orcamentos.ref_orcamento, `${prefix}%`))
+      .orderBy(desc(orcamentos.ref_orcamento)).limit(1);
 
     let nextNumber = 1;
+    const lastBudget = last[0];
     if (lastBudget) {
       const lastRef = lastBudget.ref_orcamento;
       const numberPart = lastRef.substring(prefix.length);
       const lastNumber = parseInt(numberPart, 10);
-      nextNumber = lastNumber + 1;
+      if (!isNaN(lastNumber)) nextNumber = lastNumber + 1;
     }
-
     const nextId = `${prefix}${nextNumber.toString().padStart(4, '0')}`;
-
     return NextResponse.json({ nextId });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const isDbOffline =
       errorMessage.includes("reach database server") ||
       errorMessage.includes("ECONNREFUSED");
-
     if (isDbOffline) {
       return NextResponse.json(
         { error: "Database unavailable. Please start the database server and try again." },

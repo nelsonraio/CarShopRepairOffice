@@ -394,6 +394,12 @@ const EditAppointmentPage = () => {
       return;
     }
 
+    // Validate hora
+    if (!formData.hora.trim()) {
+      alert('A hora é obrigatória.');
+      return;
+    }
+
     try {
       const response = await fetch(`/api/agendamentos/${id}`, {
         method: 'PUT',
@@ -408,7 +414,8 @@ const EditAppointmentPage = () => {
         // Redirect to agenda page
         window.location.href = '/agenda';
       } else {
-        alert('Erro ao atualizar agendamento');
+        const errData = await response.json().catch(() => ({}));
+        alert(errData?.error || 'Erro ao atualizar agendamento');
       }
     } catch (error) {
       console.error('Error updating appointment:', error);

@@ -1,13 +1,8 @@
 import { successResponse, handleDatabaseError } from '@/lib/api-utils';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/db/connection';
+import { perfisClientes } from '@/db/schema';
+import { asc, desc, eq } from 'drizzle-orm';
 import { registarAuditoria } from '@/lib/auditoria';
-
-/**
- * Initialize Prisma Client for database operations
- */
-const prisma = new PrismaClient({
-  log: ['error'],
-});
 
 const toSafePercent = (value: unknown): number => {
   if (typeof value === 'string') {
@@ -27,25 +22,23 @@ const toSafePercent = (value: unknown): number => {
  * @returns JSON array of profiles or error response
  */
 export async function GET(request: Request) {
+
   try {
     const { searchParams } = new URL(request.url);
     const all = searchParams.get('all') === 'true';
-
-    const perfis = await prisma.perfis_clientes.findMany({
-      where: all ? {} : { ativo: true },
-      orderBy: { nome: 'asc' }
-    });
-
+    const perfis = all
+      ? await db.select().from(perfisClientes).orderBy(asc(perfisClientes.nome))
+      : await db.select().from(perfisClientes).where(eq(perfisClientes.ativo, 1)).orderBy(asc(perfisClientes.nome));
     const normalized = perfis.map((perfil) => ({
       ...perfil,
       perclucro: Number(perfil.perclucro?.toString() || '0'),
     }));
-
     return successResponse(normalized);
   } catch (error) {
     return handleDatabaseError(error as Error);
   }
 }
+
 
 /**
  * POST: Create new client profile
@@ -55,18 +48,18 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    
-    const perfil = await prisma.perfis_clientes.create({
-      data: {
-        nome: body.nome,
-        descricao: body.descricao || null,
-        perclucro: toSafePercent(body.perclucro),
-        ativo: body.ativo !== undefined ? body.ativo : true
-      }
+    const safePercent = toSafePercent(body.perclucro);
+    await db.insert(perfisClientes).values({
+      nome: body.nome,
+      descricao: body.descricao || null,
+      perclucro: String(safePercent),
+      ativo: body.ativo !== undefined ? body.ativo : 1
     });
-
-    await registarAuditoria('CREATE', 'perfis_clientes', perfil.id, null, { nome: body.nome, perclucro: toSafePercent(body.perclucro) }, request);
-
+    const [perfil] = await db.select().from(perfisClientes).where(eq(perfisClientes.nome, body.nome)).orderBy(desc(perfisClientes.id)).limit(1);
+    if (!perfil) {
+      return handleDatabaseError(new Error('Failed to create perfil cliente'));
+    }
+    await registarAuditoria('CREATE', 'perfis_clientes', perfil.id, null, { nome: body.nome, perclucro: safePercent }, request);
     return successResponse({
       ...perfil,
       perclucro: Number(perfil.perclucro?.toString() || '0'),

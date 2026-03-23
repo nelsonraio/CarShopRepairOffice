@@ -1,14 +1,8 @@
 import { successResponse, handleDatabaseError } from '@/lib/api-utils';
-import { PrismaClient } from '@prisma/client';
 import { registarAuditoria } from '@/lib/auditoria';
-
-/**
- * Initialize Prisma Client for database operations
- */
-// @ts-ignore
-const prisma = new PrismaClient({
-  log: ['error'],
-});
+import { db } from '@/db/connection';
+import { marcas } from '../../../../drizzle/migrations/schema';
+import { desc, eq } from 'drizzle-orm';
 
 /**
  * GET: Fetch all brands or active brands only
@@ -20,12 +14,13 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const all = searchParams.get('all') === 'true';
 
-    const marcas = await prisma.marcas.findMany({
-      where: all ? {} : { ativo: true },
-      orderBy: { nome: 'asc' }
-    });
-
-    return successResponse(marcas);
+    let result;
+    if (all) {
+      result = await db.select().from(marcas).orderBy(marcas.nome);
+    } else {
+      result = await db.select().from(marcas).where(eq(marcas.ativo, 1)).orderBy(marcas.nome);
+    }
+    return successResponse(result);
   } catch (error) {
     return handleDatabaseError(error as Error);
   }
@@ -40,13 +35,16 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     
-    const marca = await prisma.marcas.create({
-      data: {
-        nome: body.nome,
-        pais_origem: body.pais_origem || null,
-        ativo: body.ativo !== undefined ? body.ativo : true
-      }
-    });
+    const insertData = {
+      nome: body.nome,
+      paisOrigem: body.pais_origem || null,
+      ativo: body.ativo !== undefined ? (body.ativo ? 1 : 0) : 1
+    };
+    await db.insert(marcas).values(insertData);
+    const [marca] = await db.select().from(marcas).where(eq(marcas.nome, body.nome)).orderBy(desc(marcas.id)).limit(1);
+    if (!marca) {
+      return handleDatabaseError(new Error('Failed to create marca'));
+    }
 
     await registarAuditoria('CREATE', 'marcas', marca.id, null, { nome: body.nome }, request);
 

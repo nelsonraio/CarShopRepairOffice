@@ -1,4 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/db/connection';
+import { faturas, clientes, ordensTrabalho } from '@/db/schema';
+import { and, desc, eq, inArray, ne, sql } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
 import { 
   successResponse, 
@@ -6,36 +8,34 @@ import {
   handleDatabaseError,
   parsePaginationParams,
   parseNum,
-  buildDataMap,
   extractUniqueIds
 } from '@/lib/api-utils';
 import { registarAuditoria } from '@/lib/auditoria';
 
-const prisma = new PrismaClient();
 
 type InvoiceRecord = {
-  id: bigint | number;
-  numero_fatura: string;
-  cliente_id: number;
-  ordem_trabalho_id: number | null;
-  data_emissao: Date | string | null;
-  data_vencimento: Date | string | null;
+  id: number;
+  numeroFatura: string;
+  clienteId: number;
+  ordemTrabalhoId: number | null;
+  dataEmissao: Date | string | null;
+  dataVencimento: Date | string | null;
   estado: string | null;
   subtotal: unknown;
-  valor_imposto: unknown;
-  valor_desconto: unknown;
-  valor_total: unknown;
-  valor_pago: unknown;
+  valorImposto: unknown;
+  valorDesconto: unknown;
+  valorTotal: unknown;
+  valorPago: unknown;
   notas: string | null;
-  toconline_id?: string | null;
-  recibo_toconline_id?: string | null;
-  criado_em: Date | string | null;
+  toconlineId?: string | null;
+  reciboToconlineId?: string | null;
+  criadoEm: Date | string | null;
 };
 
 type ClientInfo = { id?: number; nome?: string | null; nif?: string | null };
 type OrderInfo = {
   id?: number;
-  ref_ordem_trabalho?: string;
+  refOrdemTrabalho?: string;
   veiculo?: {
     marca?: string;
     modelo?: string;
@@ -52,95 +52,84 @@ const formatInvoice = (
   orderMap: Map<number, OrderInfo>
 ) => ({
   id: Number(invoice.id),
-  numero_fatura: invoice.numero_fatura,
-  cliente_id: invoice.cliente_id,
-  cliente_nome: clientMap.get(invoice.cliente_id)?.nome,
-  cliente_nif: clientMap.get(invoice.cliente_id)?.nif,
-  ordem_trabalho_ref: invoice.ordem_trabalho_id
-    ? orderMap.get(invoice.ordem_trabalho_id)?.ref_ordem_trabalho
+  numero_fatura: invoice.numeroFatura,
+  cliente_id: invoice.clienteId,
+  cliente_nome: clientMap.get(invoice.clienteId)?.nome,
+  cliente_nif: clientMap.get(invoice.clienteId)?.nif,
+  ordem_trabalho_ref: invoice.ordemTrabalhoId
+    ? orderMap.get(invoice.ordemTrabalhoId)?.refOrdemTrabalho
     : undefined,
-  veiculo_marca: invoice.ordem_trabalho_id
-    ? orderMap.get(invoice.ordem_trabalho_id)?.veiculo?.marca
+  veiculo_marca: invoice.ordemTrabalhoId
+    ? orderMap.get(invoice.ordemTrabalhoId)?.veiculo?.marca
     : undefined,
-  veiculo_modelo: invoice.ordem_trabalho_id
-    ? orderMap.get(invoice.ordem_trabalho_id)?.veiculo?.modelo
+  veiculo_modelo: invoice.ordemTrabalhoId
+    ? orderMap.get(invoice.ordemTrabalhoId)?.veiculo?.modelo
     : undefined,
-  veiculo_matricula: invoice.ordem_trabalho_id
-    ? orderMap.get(invoice.ordem_trabalho_id)?.veiculo?.matricula
+  veiculo_matricula: invoice.ordemTrabalhoId
+    ? orderMap.get(invoice.ordemTrabalhoId)?.veiculo?.matricula
     : undefined,
-  data_emissao: invoice.data_emissao instanceof Date ? invoice.data_emissao.toISOString() : invoice.data_emissao,
-  data_vencimento: invoice.data_vencimento instanceof Date ? invoice.data_vencimento.toISOString() : invoice.data_vencimento,
+  data_emissao: invoice.dataEmissao instanceof Date ? invoice.dataEmissao.toISOString() : invoice.dataEmissao,
+  data_vencimento: invoice.dataVencimento instanceof Date ? invoice.dataVencimento.toISOString() : invoice.dataVencimento,
   estado: invoice.estado,
   subtotal: parseNum(invoice.subtotal),
-  valor_imposto: parseNum(invoice.valor_imposto || 0),
-  valor_desconto: parseNum(invoice.valor_desconto || 0),
-  valor_total: parseNum(invoice.valor_total),
-  valor_pago: parseNum(invoice.valor_pago || 0),
+  valor_imposto: parseNum(invoice.valorImposto || 0),
+  valor_desconto: parseNum(invoice.valorDesconto || 0),
+  valor_total: parseNum(invoice.valorTotal),
+  valor_pago: parseNum(invoice.valorPago || 0),
   notas: invoice.notas,
-  toconline_id: invoice.toconline_id,
-  recibo_toconline_id: invoice.recibo_toconline_id,
-  criado_em: invoice.criado_em instanceof Date ? invoice.criado_em.toISOString() : invoice.criado_em
+  toconline_id: invoice.toconlineId,
+  recibo_toconline_id: invoice.reciboToconlineId,
+  criado_em: invoice.criadoEm instanceof Date ? invoice.criadoEm.toISOString() : invoice.criadoEm
 });
 
 /**
  * GET /api/faturas - List invoices with pagination
  */
-export async function GET(req: NextRequest) {
+export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const { skip, take } = parsePaginationParams(new URL(req.url));
     const status = searchParams.get('status');
 
-    const where: { estado?: string } = {};
-    if (status) where.estado = status;
+    // Build where clause
+    let whereClause = undefined;
+    if (status) {
+      whereClause = eq(faturas.estado, status);
+    }
 
     // Fetch invoices with pagination
-    const [faturas, total] = await Promise.all([
-      prisma.faturas.findMany({
-        where,
-        skip,
-        take,
-        orderBy: { data_emissao: 'desc' }
-      }),
-      prisma.faturas.count({ where })
+    const [faturasList, total] = await Promise.all([
+      db.select().from(faturas)
+        .where(whereClause)
+        .orderBy(desc(faturas.dataEmissao))
+        .offset(skip)
+        .limit(take),
+      db.select({ count: sql<number>`count(*)` }).from(faturas)
+        .where(whereClause)
+        .then(rows => rows[0]?.count || 0)
     ]);
 
     // Batch load related data
-    const clienteIds = extractUniqueIds(faturas, 'cliente_id');
+    const clienteIds = extractUniqueIds(faturasList, 'clienteId').filter((id): id is number => typeof id === 'number');
     const orderIds = extractUniqueIds(
-      faturas.filter(f => f.ordem_trabalho_id),
-      'ordem_trabalho_id'
-    );
+      faturasList.filter(f => f.ordemTrabalhoId),
+      'ordemTrabalhoId'
+    ).filter((id): id is number => typeof id === 'number');
 
-    const [clientes, ordensTrabalho] = await Promise.all([
+    const [clientesList, ordensTrabalhoList] = await Promise.all([
       clienteIds.length
-        ? prisma.clientes.findMany({
-            where: { id: { in: clienteIds as number[] } },
-            select: { id: true, nome: true, nif: true }
-          })
-        : Promise.resolve([]),
+        ? db.select({ id: clientes.id, nome: clientes.nome, nif: clientes.nif }).from(clientes).where(inArray(clientes.id, clienteIds))
+        : [],
       orderIds.length
-        ? prisma.ordens_trabalho.findMany({
-            where: { id: { in: (orderIds as (number | bigint)[]).map(id => BigInt(id)) } },
-            select: {
-              id: true,
-              ref_ordem_trabalho: true,
-              veiculo: {
-                select: { marca: true, modelo: true, matricula: true }
-              }
-            }
-          })
-        : Promise.resolve([])
+        ? db.select({ id: ordensTrabalho.id, refOrdemTrabalho: ordensTrabalho.refOrdemTrabalho }).from(ordensTrabalho).where(inArray(ordensTrabalho.id, orderIds))
+        : []
     ]);
 
-    const clientMap = buildDataMap<number, ClientInfo>(clientes, 'id');
-    const orderMap = buildDataMap<number, OrderInfo>(
-      ordensTrabalho.map(o => ({ ...o, id: Number(o.id) })),
-      'id'
-    );
+    const clientMap = new Map<number, ClientInfo>(clientesList.map(cliente => [cliente.id, cliente]));
+    const orderMap = new Map<number, OrderInfo>(ordensTrabalhoList.map(ordem => [Number(ordem.id), ordem]));
 
     // Format and return response
-    const faturasFormatadas = faturas.map(f => formatInvoice(f, clientMap, orderMap));
+    const faturasFormatadas = faturasList.map(f => formatInvoice(f, clientMap, orderMap));
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
 
@@ -192,93 +181,85 @@ export async function POST(req: NextRequest) {
 
     // Check for existing invoice on work order
     if (ordemTrabalhoIdParsed) {
-      const faturaExistente = await prisma.faturas.findFirst({
-        where: { ordem_trabalho_id: ordemTrabalhoIdParsed },
-        select: { id: true, numero_fatura: true }
-      });
-
-      if (faturaExistente) {
+      const faturaExistente = await db.select().from(faturas)
+        .where(eq(faturas.ordemTrabalhoId, ordemTrabalhoIdParsed)).limit(1);
+      const existingInvoice = faturaExistente[0];
+      if (existingInvoice) {
         return errorResponse(
-          `The work order is already invoiced (invoice ${faturaExistente.numero_fatura})`,
+          `The work order is already invoiced (invoice ${existingInvoice.numeroFatura})`,
           409
         );
       }
 
       // Verify work order exists
-      const ordemTrabalho = await prisma.ordens_trabalho.findUnique({
-        where: { id: BigInt(ordemTrabalhoIdParsed) },
-        select: { id: true, ref_ordem_trabalho: true, fatura_id: true }
-      });
-
-      if (!ordemTrabalho) {
+      const ordemTrabalho = await db.select().from(ordensTrabalho)
+        .where(eq(ordensTrabalho.id, ordemTrabalhoIdParsed)).limit(1);
+      const ordemTrabalhoAtual = ordemTrabalho[0];
+      if (!ordemTrabalhoAtual) {
         return errorResponse('Work order not found', 404);
       }
 
       // Clean up orphaned invoice links
-      if (ordemTrabalho.fatura_id) {
-        const faturaPorVinculo = await prisma.faturas.findUnique({
-          where: { id: ordemTrabalho.fatura_id },
-          select: { id: true, numero_fatura: true }
-        });
-
-        if (faturaPorVinculo) {
+      if (ordemTrabalhoAtual.faturaId) {
+        const faturaPorVinculo = await db.select().from(faturas)
+          .where(eq(faturas.id, ordemTrabalhoAtual.faturaId)).limit(1);
+        const linkedInvoice = faturaPorVinculo[0];
+        if (linkedInvoice) {
           return errorResponse(
-            `Work order ${ordemTrabalho.ref_ordem_trabalho} is already linked to invoice ${faturaPorVinculo.numero_fatura}`,
+            `Work order ${ordemTrabalhoAtual.refOrdemTrabalho} is already linked to invoice ${linkedInvoice.numeroFatura}`,
             409
           );
         }
-
-        await prisma.ordens_trabalho.update({
-          where: { id: BigInt(ordemTrabalhoIdParsed) },
-          data: { fatura_id: null }
-        });
+        await db.update(ordensTrabalho)
+          .set({ faturaId: null })
+          .where(eq(ordensTrabalho.id, ordemTrabalhoIdParsed));
         console.warn('⚠️ Cleaned orphaned invoice link for work order:', ordemTrabalhoIdParsed);
       }
     }
 
     // Update client NIF if provided
     if (cliente_nif && cliente_id) {
-      const nifExistente = await prisma.clientes.findFirst({
-        where: { nif: cliente_nif, id: { not: cliente_id } },
-        select: { id: true }
-      });
-
-      if (nifExistente) {
+      const nifExistente = await db.select().from(clientes)
+        .where(and(eq(clientes.nif, cliente_nif), ne(clientes.id, cliente_id))).limit(1);
+      if (nifExistente && nifExistente.length > 0) {
         return errorResponse('NIF is already associated with another client', 409);
       }
-
-      await prisma.clientes.update({
-        where: { id: cliente_id },
-        data: { nif: cliente_nif }
-      });
+      await db.update(clientes)
+        .set({ nif: cliente_nif })
+        .where(eq(clientes.id, cliente_id));
     }
 
     // Create invoice
-    const fatura = await prisma.faturas.create({
-      data: {
-        numero_fatura,
-        cliente_id,
-        ordem_trabalho_id: ordemTrabalhoIdParsed,
-        data_emissao: new Date(data_emissao),
-        data_vencimento: new Date(data_vencimento),
-        subtotal: parseNum(subtotal),
-        valor_imposto: parseNum(valor_imposto || 0),
-        valor_desconto: parseNum(valor_desconto || 0),
-        valor_total: parseNum(valor_total),
-        estado: 'pendente',
-        notas,
-        valor_pago: 0,
-        toconline_id: toconline_id ? String(toconline_id) : null,
-        toconline_customer_id: toconline_customer_id ? String(toconline_customer_id) : null
-      }
+    await db.insert(faturas).values({
+      numeroFatura: numero_fatura,
+      clienteId: cliente_id,
+      ordemTrabalhoId: ordemTrabalhoIdParsed,
+      dataEmissao: data_emissao || null,
+      dataVencimento: data_vencimento || null,
+      subtotal: String(parseNum(subtotal)),
+      valorImposto: String(parseNum(valor_imposto || 0)),
+      valorDesconto: String(parseNum(valor_desconto || 0)),
+      valorTotal: String(parseNum(valor_total)),
+      estado: 'pendente',
+      notas,
+      valorPago: '0.00',
+      toconlineId: toconline_id ? String(toconline_id) : null,
+      toconlineCustomerId: toconline_customer_id ? String(toconline_customer_id) : null
     });
+
+    const [fatura] = await db.select().from(faturas)
+      .where(eq(faturas.numeroFatura, numero_fatura))
+      .orderBy(desc(faturas.id))
+      .limit(1);
+    if (!fatura) {
+      return errorResponse('Failed to create invoice', 500);
+    }
 
     // Link invoice to work order if provided
     if (ordemTrabalhoIdParsed) {
-      await prisma.ordens_trabalho.update({
-        where: { id: BigInt(ordemTrabalhoIdParsed) },
-        data: { fatura_id: fatura.id }
-      });
+      await db.update(ordensTrabalho)
+        .set({ faturaId: fatura.id })
+        .where(eq(ordensTrabalho.id, ordemTrabalhoIdParsed));
     }
 
     await registarAuditoria('CREATE', 'faturas', Number(fatura.id), null, { numero_fatura, cliente_id, ordem_trabalho_id: ordemTrabalhoIdParsed, valor_total: parseNum(valor_total) }, req);
@@ -288,18 +269,18 @@ export async function POST(req: NextRequest) {
         success: true,
         data: {
           id: Number(fatura.id),
-          numero_fatura: fatura.numero_fatura,
-          cliente_id: fatura.cliente_id,
-          data_emissao: fatura.data_emissao,
-          data_vencimento: fatura.data_vencimento,
+          numero_fatura: fatura.numeroFatura,
+          cliente_id: fatura.clienteId,
+          data_emissao: fatura.dataEmissao,
+          data_vencimento: fatura.dataVencimento,
           estado: fatura.estado,
           subtotal: parseNum(fatura.subtotal),
-          valor_imposto: parseNum(fatura.valor_imposto || 0),
-          valor_desconto: parseNum(fatura.valor_desconto || 0),
-          valor_total: parseNum(fatura.valor_total),
-          valor_pago: parseNum(fatura.valor_pago || 0),
+          valor_imposto: parseNum(fatura.valorImposto || 0),
+          valor_desconto: parseNum(fatura.valorDesconto || 0),
+          valor_total: parseNum(fatura.valorTotal),
+          valor_pago: parseNum(fatura.valorPago || 0),
           notas: fatura.notas,
-          criado_em: fatura.criado_em
+          criado_em: fatura.criadoEm
         }
       },
       201

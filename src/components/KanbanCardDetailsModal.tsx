@@ -61,7 +61,7 @@ interface KanbanCardDetailsModalProps {
   isReadOnly?: boolean;
 }
 
-export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTitle, isReadOnly = false }: KanbanCardDetailsModalProps) {
+export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTitle }: KanbanCardDetailsModalProps) {
     const [clientModalOpen, setClientModalOpen] = React.useState(false);
     const [clientDetails, setClientDetails] = React.useState<any | null>(null);
 
@@ -86,6 +86,7 @@ export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTi
   const getStatusLabel = (estado?: string) => {
     switch(estado) {
       case 'em_recepcao': return 'Em Recepção';
+      case 'em_aprovacao': return 'Em Aprovação';
       case 'em_andamento': return 'Em Andamento';
       case 'aguarda_peca': return 'Aguarda Peças';
       case 'concluido': return 'Concluído';
@@ -98,6 +99,7 @@ export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTi
   const getStatusColor = (estado?: string) => {
     switch(estado) {
       case 'em_recepcao': return 'bg-purple-400/20 text-purple-300 border-purple-400/50';
+      case 'em_aprovacao': return 'bg-indigo-400/20 text-indigo-300 border-indigo-400/50';
       case 'em_andamento': return 'bg-blue-400/20 text-blue-300 border-blue-400/50';
       case 'aguarda_peca': return 'bg-orange-400/20 text-orange-300 border-orange-400/50';
       case 'concluido': return 'bg-yellow-400/20 text-yellow-300 border-yellow-400/50';
@@ -353,9 +355,48 @@ export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTi
                   </div>
                 </div>
               )}
-              <p className="text-sm text-indigo-300 italic pt-3 border-t border-indigo-700 mt-3">
-                ⏳ Aguardando aprovação do cliente
-              </p>
+            </div>
+          )}
+
+          {/* Budget Details */}
+          {card.estado === 'em_aprovacao' && (
+            <div className="bg-indigo-900/25 border border-indigo-700 p-4 rounded">
+              <h4 className="text-sm font-bold text-indigo-200 mb-3">Detalhes do Orçamento</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-gray-400 uppercase">Total</label>
+                  <p className="text-lg font-bold text-brand-yellow">€{Number(card.total_geral || 0).toFixed(2)}</p>
+                </div>
+                {card.data_emissao && (
+                  <div>
+                    <label className="block text-xs text-gray-400 uppercase">Data de Emissão</label>
+                    <p className="text-sm text-gray-300 mt-1">
+                      {new Date(card.data_emissao).toLocaleDateString('pt-PT')}
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <label className="block text-xs text-gray-400 uppercase">Itens</label>
+                  <p className="text-sm text-gray-300 mt-1">{card.itens_count ?? card.itens_orcamento?.length ?? 0}</p>
+                </div>
+              </div>
+
+              <div className="mt-4 border-t border-indigo-700 pt-3">
+                <h5 className="text-xs font-semibold text-indigo-200 uppercase mb-2">Itens do Orçamento</h5>
+                <div className="space-y-2">
+                  {Array.isArray(card.itens_orcamento) && card.itens_orcamento.length > 0 ? (
+                    card.itens_orcamento.map(item => (
+                      <div key={item.id} className="flex items-center justify-between text-sm text-gray-300">
+                        <span className="truncate pr-3">{item.descricao}</span>
+                        <span className="text-gray-400">x{item.quantidade}</span>
+                        <span className="font-mono text-brand-yellow">€{Number(item.valor_total).toFixed(2)}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-400">Sem itens associados.</p>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
@@ -383,17 +424,6 @@ export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTi
             </div>
           )}
 
-          {/* Read-Only Notice */}
-          {isReadOnly && (
-            <div className="bg-blue-900/30 border border-blue-800 p-3 rounded">
-              <p className="text-xs text-blue-200 flex items-center">
-                <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M13.477 14.89A6 6 0 11.5 9a.75.75 0 00-1.5 0 7.5 7.5 0 1115.384 2.11a.75.75 0 00-1.472.224 6 6 0 01-11.834 1.755z"/>
-                </svg>
-                <strong>Modo Visualização:</strong> Esta informação é apenas para leitura. Os estados sincronizam automaticamente com as mudanças na ordem de trabalho.
-              </p>
-            </div>
-          )}
         </div>
 
         <div className="flex justify-end space-x-3 mt-8 pt-4 border-t border-gray-700">

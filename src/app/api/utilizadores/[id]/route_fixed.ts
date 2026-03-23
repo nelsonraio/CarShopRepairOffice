@@ -1,7 +1,7 @@
-import { PrismaClient } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
-
-const prisma = new PrismaClient();
+import { db } from '@/db/connection';
+import { utilizadores } from '@/db/schema';
+import { eq, and, ne } from 'drizzle-orm';
 
 export async function GET(
   request: NextRequest,
@@ -11,19 +11,9 @@ export async function GET(
     const { id } = await params;
     const userId = parseInt(id);
 
-    const utilizador = await prisma.utilizadores.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        nome_utilizador: true,
-        email: true,
-        nome_completo: true,
-        papel: true,
-        ativo: true,
-        ultimo_login: true,
-        criado_em: true,
-      },
-    });
+    const result = await db.select().from(utilizadores)
+      .where(eq(utilizadores.id, userId));
+    const utilizador = result[0];
 
     if (!utilizador) {
       return NextResponse.json(
@@ -32,7 +22,17 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(utilizador);
+    // Normalizar campos para manter compatibilidade
+    return NextResponse.json({
+      id: utilizador.id,
+      nome_utilizador: utilizador.nomeUtilizador,
+      email: utilizador.email,
+      nome_completo: utilizador.nomeCompleto,
+      papel: utilizador.papel,
+      ativo: !!utilizador.ativo,
+      ultimo_login: utilizador.ultimoLogin,
+      criado_em: utilizador.criadoEm,
+    });
   } catch (error) {
     console.error('Erro ao buscar utilizador:', error);
     return NextResponse.json({ error: 'Erro ao buscar utilizador' }, { status: 500 });
@@ -67,10 +67,8 @@ export async function PUT(
     }
 
     // Verificar se utilizador existe
-    const utilizador = await prisma.utilizadores.findUnique({
-      where: { id: userId },
-    });
-
+    const result = await db.select().from(utilizadores).where(eq(utilizadores.id, userId));
+    const utilizador = result[0];
     if (!utilizador) {
       return NextResponse.json(
         { error: 'Utilizador não encontrado' },
@@ -80,14 +78,9 @@ export async function PUT(
 
     // Verificar se email já existe (em outro utilizador)
     if (email !== utilizador.email) {
-      const emailExistente = await prisma.utilizadores.findFirst({
-        where: {
-          email,
-          NOT: { id: userId },
-        },
-      });
-
-      if (emailExistente) {
+      const emailExistente = await db.select().from(utilizadores)
+        .where(and(eq(utilizadores.email, email), ne(utilizadores.id, userId)));
+      if (emailExistente.length > 0) {
         return NextResponse.json(
           { error: 'Email já existe' },
           { status: 409 }
@@ -96,25 +89,29 @@ export async function PUT(
     }
 
     // Atualizar utilizador
-    const atualizado = await prisma.utilizadores.update({
-      where: { id: userId },
-      data: {
+    await db.update(utilizadores)
+      .set({
         email,
-        nome_completo,
-        papel: papel as any,
-      },
-      select: {
-        id: true,
-        nome_utilizador: true,
-        email: true,
-        nome_completo: true,
-        papel: true,
-        ativo: true,
-        criado_em: true,
-      },
-    });
+        nomeCompleto: nome_completo,
+        papel,
+      })
+      .where(eq(utilizadores.id, userId));
 
-    return NextResponse.json(atualizado);
+    // Buscar atualizado
+    const atualizadoArr = await db.select().from(utilizadores).where(eq(utilizadores.id, userId));
+    if (!atualizadoArr || atualizadoArr.length === 0) {
+      return NextResponse.json({ error: 'Erro ao atualizar utilizador' }, { status: 500 });
+    }
+    const atualizado = atualizadoArr[0]!;
+    return NextResponse.json({
+      id: atualizado.id,
+      nome_utilizador: atualizado.nomeUtilizador,
+      email: atualizado.email,
+      nome_completo: atualizado.nomeCompleto,
+      papel: atualizado.papel,
+      ativo: !!atualizado.ativo,
+      criado_em: atualizado.criadoEm,
+    });
   } catch (error) {
     console.error('Erro ao atualizar utilizador:', error);
     return NextResponse.json({ error: 'Erro ao atualizar utilizador' }, { status: 500 });
@@ -130,10 +127,8 @@ export async function DELETE(
     const userId = parseInt(id);
 
     // Verificar se utilizador existe
-    const utilizador = await prisma.utilizadores.findUnique({
-      where: { id: userId },
-    });
-
+    const result = await db.select().from(utilizadores).where(eq(utilizadores.id, userId));
+    const utilizador = result[0];
     if (!utilizador) {
       return NextResponse.json(
         { error: 'Utilizador não encontrado' },
@@ -142,9 +137,7 @@ export async function DELETE(
     }
 
     // Eliminar utilizador
-    await prisma.utilizadores.delete({
-      where: { id: userId },
-    });
+    await db.delete(utilizadores).where(eq(utilizadores.id, userId));
 
     return NextResponse.json({ message: 'Utilizador eliminado com sucesso' });
   } catch (error) {

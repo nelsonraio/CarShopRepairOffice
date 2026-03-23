@@ -1,253 +1,140 @@
-import { PrismaClient } from '@prisma/client';
-import { NextRequest, NextResponse } from 'next/server';
 
-const prisma = new PrismaClient();
+export const dynamic = "force-dynamic";
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/db/connection';
+import { ordensTrabalho, veiculos, clientes, itensOrdemTrabalho } from '@/db/schema';
+import { eq, and, desc, inArray } from 'drizzle-orm';
 
 // Simula API da TOQ Online - Listar Ordens de Trabalho para Faturar
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const clienteId = searchParams.get('cliente_id');
-    const estado = searchParams.get('estado');
 
-    const where: any = {};
-
-    const normalizeEstado = (value?: string | null) =>
-      (value || '')
-        .trim()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase();
-
+    // Montar filtro base
+    const where = [];
     if (clienteId) {
-      where.cliente_id = parseInt(clienteId);
+      where.push(eq(ordensTrabalho.clienteId, Number(clienteId)));
     }
 
-    const ordensTrabalho = await prisma.ordens_trabalho.findMany({
-      where,
-      include: {
-        veiculo: {
-          include: {
-            cliente: true
-          }
-        }
-      },
-      orderBy: { data_conclusao: 'desc' },
-      take: 100
+    // Buscar ordens de trabalho (máx 100, ordenadas por data_conclusao desc)
+    const ordensTrabalhoList = await db.select().from(ordensTrabalho)
+      .where(where.length ? and(...where) : undefined)
+      .orderBy(desc(ordensTrabalho.dataConclusao))
+      .limit(100);
+
+    // Buscar veiculos e clientes relacionados
+    const veiculoIds = ordensTrabalhoList.map(ot => ot.veiculoId).filter((id): id is number => !!id);
+    const veiculosList = veiculoIds.length
+      ? await db.select().from(veiculos).where(inArray(veiculos.id, veiculoIds))
+      : [];
+    const clienteIds = veiculosList.map(v => v.clienteId).filter((id): id is number => !!id);
+    const clientesList = clienteIds.length
+      ? await db.select().from(clientes).where(inArray(clientes.id, clienteIds))
+      : [];
+
+    // Montar resposta
+    const response = ordensTrabalhoList.map(ot => {
+      const veiculo = veiculosList.find(v => v.id === ot.veiculoId);
+      const cliente = veiculo ? clientesList.find(c => c.id === veiculo.clienteId) : undefined;
+      return {
+        ordem_trabalho_id: ot.id,
+        ref_ordem_trabalho: ot.refOrdemTrabalho,
+        cliente_id: cliente?.id ?? null,
+        cliente_nome: cliente?.nome ?? '',
+        cliente_nif: cliente?.nif ?? '',
+        cliente_email: cliente?.email ?? '',
+        cliente_telefone: cliente?.telefone ?? '',
+        cliente_morada: cliente?.endereco ?? '',
+        cliente_cidade: '', // Campo não disponível em clientes
+        cliente_pais: '', // Campo não disponível em clientes
+        matricula: veiculo?.matricula ?? '',
+        veiculo_marca: veiculo?.marca ?? '',
+        veiculo_modelo: veiculo?.modelo ?? '',
+        veiculo_id: veiculo?.id ?? null,
+        data_conclusao: ot.dataConclusao,
+        total_pecas: parseFloat(ot.totalPecas?.toString() || '0'),
+        total_mao_obra: parseFloat(ot.totalMaoObra?.toString() || '0'),
+        total_desconto: parseFloat(ot.totalDesconto?.toString() || '0'),
+        total_geral: parseFloat(ot.totalGeral?.toString() || '0'),
+        estado: ot.estado,
+        criado_em: ot.criadoEm
+      };
     });
 
-    const ordensFiltradasPorEstado = ordensTrabalho.filter((ot: typeof ordensTrabalho[number]) => {
-      const estadoNormalizado = normalizeEstado(ot.estado);
-
-      if (estado) {
-        return estadoNormalizado === normalizeEstado(estado);
-      }
-
-      // Sem filtro explícito, considerar concluído/concluída independentemente de acentos/maiúsculas/espaços
-      return estadoNormalizado.startsWith('concluid');
-    });
-
-    // Defesa extra: excluir ordens que já tenham fatura pela tabela faturas
-    const faturasComOrdem = await prisma.faturas.findMany({
-      where: { ordem_trabalho_id: { not: null } },
-      select: { id: true, ordem_trabalho_id: true }
-    });
-
-    const faturaIdsExistentes = new Set(
-      faturasComOrdem.map((f: { id: bigint }) => Number(f.id))
-    );
-
-    const ordensJaFaturadas = new Set(
-      faturasComOrdem
-        .map((f: { ordem_trabalho_id: number | null }) => f.ordem_trabalho_id)
-        .filter((id: number | null): id is number => typeof id === 'number')
-    );
-
-    // Limpar vínculos órfãos (ordens com fatura_id apontando para fatura inexistente)
-    const ordensComVinculoOrfao = ordensFiltradasPorEstado.filter((ot: typeof ordensTrabalho[number]) => {
-      if (!ot.fatura_id) return false;
-      return !faturaIdsExistentes.has(Number(ot.fatura_id));
-    });
-
-    if (ordensComVinculoOrfao.length > 0) {
-      const idsParaLimpar = ordensComVinculoOrfao.map((ot: typeof ordensTrabalho[number]) => Number(ot.id));
-      await prisma.ordens_trabalho.updateMany({
-        where: { id: { in: idsParaLimpar.map((id: number) => BigInt(id)) } },
-        data: { fatura_id: null }
-      });
-      console.warn('⚠️ Vínculos órfãos removidos de ordens_trabalho.fatura_id:', idsParaLimpar);
-    }
-
-    const formatadas = ordensFiltradasPorEstado
-      .filter((ot: typeof ordensTrabalho[number]) => {
-        const jaFaturadaPorTabelaFaturas = ordensJaFaturadas.has(Number(ot.id));
-        const temVinculoValidoPorFaturaId = !!ot.fatura_id && faturaIdsExistentes.has(Number(ot.fatura_id));
-        return !jaFaturadaPorTabelaFaturas && !temVinculoValidoPorFaturaId;
-      })
-      .map((ot: typeof ordensTrabalho[number]) => ({
-      id: Number(ot.id),
-      ref_ordem_trabalho: ot.ref_ordem_trabalho,
-      cliente_id: ot.cliente_id,
-      cliente_nome: ot.veiculo?.cliente?.nome,
-      cliente_nif: ot.veiculo?.cliente?.nif,
-      matricula: ot.veiculo?.matricula,
-      veiculo_marca: ot.veiculo?.marca,
-      veiculo_modelo: ot.veiculo?.modelo,
-      veiculo_id: Number(ot.veiculo_id),
-      data_conclusao: ot.data_conclusao,
-      total_pecas: parseFloat(ot.total_pecas?.toString() || '0'),
-      total_mao_obra: parseFloat(ot.total_mao_obra?.toString() || '0'),
-      total_desconto: parseFloat(ot.total_desconto?.toString() || '0'),
-      total_imposto: parseFloat(ot.total_imposto?.toString() || '0'),
-      total_geral: parseFloat(ot.total_geral.toString()),
-      estado: ot.estado,
-      criado_em: ot.criado_em
-    }));
-
-    console.log('📊 [Ordens para faturar] Totais:');
-    console.log('   Ordens sem fatura_id:', ordensTrabalho.length);
-    console.log('   Após filtro de estado:', ordensFiltradasPorEstado.length);
-    console.log('   Excluídas por já faturadas:', ordensFiltradasPorEstado.length - formatadas.length);
-    console.log('   Resultado final:', formatadas.length);
-
-    return NextResponse.json({
-      success: true,
-      data: formatadas,
-      total: formatadas.length
-    });
+    return NextResponse.json({ success: true, data: response });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Erro ao listar ordens de trabalho:', error);
-    return NextResponse.json(
-      { success: false, error: 'Erro ao listar ordens de trabalho' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }
 }
 
-// POST - Obter dados de uma ordem de trabalho específica para pré-preencher fatura
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { ordem_trabalho_id } = body;
+    const ordemTrabalhoId = Number(body?.ordem_trabalho_id);
 
-    const ordemTrabalho = await prisma.ordens_trabalho.findUnique({
-      where: { id: BigInt(ordem_trabalho_id) },
-      include: {
-        veiculo: {
-          include: {
-            cliente: true
-          }
-        },
-        itens_ordem_trabalho: true
-      }
+    if (!Number.isFinite(ordemTrabalhoId) || ordemTrabalhoId <= 0) {
+      return NextResponse.json({ success: false, error: 'ordem_trabalho_id inválido' }, { status: 400 });
+    }
+
+    const ordem = await db.query.ordensTrabalho.findFirst({
+      where: (ot, { eq }) => eq(ot.id, ordemTrabalhoId)
     });
 
-    if (!ordemTrabalho) {
-      return NextResponse.json(
-        { success: false, error: 'Ordem de trabalho não encontrada' },
-        { status: 404 }
-      );
+    if (!ordem) {
+      return NextResponse.json({ success: false, error: 'Ordem de trabalho não encontrada' }, { status: 404 });
     }
 
-    if (ordemTrabalho.fatura_id) {
-      const faturaPorVinculo = await prisma.faturas.findUnique({
-        where: { id: ordemTrabalho.fatura_id },
-        select: { id: true, numero_fatura: true }
-      });
+    const veiculo = ordem.veiculoId
+      ? await db.query.veiculos.findFirst({ where: (v, { eq }) => eq(v.id, ordem.veiculoId as number) })
+      : null;
 
-      if (faturaPorVinculo) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: `Esta ordem de trabalho já está associada à fatura ${faturaPorVinculo.numero_fatura}.`
-          },
-          { status: 409 }
-        );
-      }
+    const clienteId = ordem.clienteId ?? veiculo?.clienteId ?? null;
+    const cliente = clienteId
+      ? await db.query.clientes.findFirst({ where: (c, { eq }) => eq(c.id, clienteId as number) })
+      : null;
 
-      // Vínculo órfão: limpar e continuar
-      await prisma.ordens_trabalho.update({
-        where: { id: ordemTrabalho.id },
-        data: { fatura_id: null }
-      });
-      console.warn('⚠️ Vínculo órfão limpo em ordem_trabalho:', Number(ordemTrabalho.id));
-    }
-
-    const faturaExistente = await prisma.faturas.findFirst({
-      where: { ordem_trabalho_id: Number(ordemTrabalho.id) },
-      select: { id: true, numero_fatura: true }
+    const itens = await db.query.itensOrdemTrabalho.findMany({
+      where: (item, { eq }) => eq(item.ordemTrabalhoId, ordemTrabalhoId)
     });
 
-    if (faturaExistente) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Esta ordem de trabalho já foi faturada (fatura ${faturaExistente.numero_fatura}).`
-        },
-        { status: 409 }
-      );
-    }
+    const itensFormatados = itens.map((item) => ({
+      id: Number(item.id),
+      tipo: item.tipoItem === 'servico' ? 'servico' : 'peca',
+      descricao: item.descricao || '',
+      quantidade: Number(item.quantidade) || 0,
+      preco_unitario: Number(item.precoUnitario) || 0,
+      valor_total: Number(item.valorTotal) || 0,
+    }));
 
     return NextResponse.json({
       success: true,
       data: {
-        ordem_trabalho_id: Number(ordemTrabalho.id),
-        ref_ordem_trabalho: ordemTrabalho.ref_ordem_trabalho,
-        cliente_id: ordemTrabalho.cliente_id,
-        cliente_nome: ordemTrabalho.veiculo?.cliente?.nome,
-        cliente_nif: ordemTrabalho.veiculo?.cliente?.nif,
-        cliente_email: ordemTrabalho.veiculo?.cliente?.email,
-        cliente_telefone: ordemTrabalho.veiculo?.cliente?.telefone,
-        cliente_morada: ordemTrabalho.veiculo?.cliente?.endereco,
-        cliente_cidade: '', // Campo não disponível em clientes
-        cliente_pais: '', // Campo não disponível em clientes
-        cliente_codigo_postal: '', // Campo não disponível em clientes
-        matricula: ordemTrabalho.veiculo?.matricula,
-        veiculo_marca: ordemTrabalho.veiculo?.marca,
-        veiculo_modelo: ordemTrabalho.veiculo?.modelo,
-        data_conclusao: ordemTrabalho.data_conclusao,
-        total_pecas: parseFloat(ordemTrabalho.total_pecas?.toString() || '0'),
-        total_mao_obra: parseFloat(ordemTrabalho.total_mao_obra?.toString() || '0'),
-        total_desconto: parseFloat(ordemTrabalho.total_desconto?.toString() || '0'),
-        total_imposto: parseFloat(ordemTrabalho.total_imposto?.toString() || '0'),
-        total_geral: parseFloat(ordemTrabalho.total_geral.toString()),
-        descricao_problema: ordemTrabalho.descricao_problema,
-        trabalho_realizado: ordemTrabalho.trabalho_realizado,
-        itens: ordemTrabalho.itens_ordem_trabalho.map(item => ({
-          tipo: item.tipo_item,
-          descricao: item.descricao,
-          quantidade: parseFloat(item.quantidade?.toString() || '1'),
-          preco_unitario: parseFloat(item.preco_unitario.toString()),
-          valor_total: parseFloat(item.valor_total.toString())
-        }))
+        ordem_trabalho_id: ordem.id,
+        ref_ordem_trabalho: ordem.refOrdemTrabalho,
+        cliente_id: cliente?.id ?? null,
+        cliente_nome: cliente?.nome ?? '',
+        cliente_nif: cliente?.nif ?? '',
+        cliente_morada: cliente?.endereco ?? '',
+        cliente_cidade: '',
+        cliente_pais: '',
+        cliente_codigo_postal: '',
+        matricula: veiculo?.matricula ?? '',
+        veiculo_marca: veiculo?.marca ?? '',
+        veiculo_modelo: veiculo?.modelo ?? '',
+        veiculo_id: veiculo?.id ?? null,
+        trabalho_realizado: ordem.trabalhoRealizado ?? '',
+        total_pecas: parseFloat(ordem.totalPecas?.toString() || '0'),
+        total_mao_obra: parseFloat(ordem.totalMaoObra?.toString() || '0'),
+        total_desconto: parseFloat(ordem.totalDesconto?.toString() || '0'),
+        total_geral: parseFloat(ordem.totalGeral?.toString() || '0'),
+        data_conclusao: ordem.dataConclusao,
+        itens: itensFormatados,
       }
     });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isDbOffline =
-      errorMessage.includes("reach database server") ||
-      errorMessage.includes("ECONNREFUSED");
-
-    if (isDbOffline) {
-      return NextResponse.json(
-        { error: "Database unavailable. Please start the database server and try again." },
-        { status: 503 }
-      );
-    }
-    console.error('Erro ao obter ordem de trabalho:', error);
     return NextResponse.json(
-      { success: false, error: 'Erro ao obter ordem de trabalho' },
+      { success: false, error: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

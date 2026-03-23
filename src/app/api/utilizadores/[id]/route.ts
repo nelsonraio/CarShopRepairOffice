@@ -1,9 +1,9 @@
-import { PrismaClient } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { registarAuditoria } from '@/lib/auditoria';
-
-const prisma = new PrismaClient();
+import { db } from '@/db/connection';
+import { utilizadores } from '@/db/schema';
+import { eq, and, ne } from 'drizzle-orm';
 
 export async function GET(
   request: NextRequest,
@@ -20,19 +20,9 @@ export async function GET(
       );
     }
 
-    const utilizador = await prisma.utilizadores.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        nome_utilizador: true,
-        email: true,
-        nome_completo: true,
-        papel: true,
-        ativo: true,
-        ultimo_login: true,
-        criado_em: true,
-      },
-    });
+    const result = await db.select().from(utilizadores)
+      .where(eq(utilizadores.id, userId));
+    const utilizador = result[0];
 
     if (!utilizador) {
       return NextResponse.json(
@@ -41,7 +31,16 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(utilizador);
+    return NextResponse.json({
+      id: utilizador.id,
+      nome_utilizador: utilizador.nomeUtilizador,
+      email: utilizador.email,
+      nome_completo: utilizador.nomeCompleto,
+      papel: utilizador.papel,
+      ativo: !!utilizador.ativo,
+      ultimo_login: utilizador.ultimoLogin,
+      criado_em: utilizador.criadoEm,
+    });
   } catch (error) {
     console.error('Erro ao buscar utilizador:', error);
     return NextResponse.json({ error: 'Erro ao buscar utilizador' }, { status: 500 });
@@ -84,10 +83,8 @@ export async function PUT(
     }
 
     // Verificar se utilizador existe
-    const utilizador = await prisma.utilizadores.findUnique({
-      where: { id: userId },
-    });
-
+    const result = await db.select().from(utilizadores).where(eq(utilizadores.id, userId));
+    const utilizador = result[0];
     if (!utilizador) {
       return NextResponse.json(
         { error: 'Utilizador não encontrado' },
@@ -97,14 +94,9 @@ export async function PUT(
 
     // Verificar se email já existe (em outro utilizador)
     if (email !== utilizador.email) {
-      const emailExistente = await prisma.utilizadores.findFirst({
-        where: {
-          email,
-          NOT: { id: userId },
-        },
-      });
-
-      if (emailExistente) {
+      const emailExistente = await db.select().from(utilizadores)
+        .where(and(eq(utilizadores.email, email), ne(utilizadores.id, userId)));
+      if (emailExistente.length > 0) {
         return NextResponse.json(
           { error: 'Email já existe' },
           { status: 409 }
@@ -115,33 +107,38 @@ export async function PUT(
     // Preparar dados de atualização
     const updateData: any = {
       email,
-      nome_completo,
-      papel: papel as any,
+      nomeCompleto: nome_completo,
+      papel,
     };
 
     // Se foi fornecida nova palavra-passe, fazer hash
     if (body.hash_palavra_passe && body.hash_palavra_passe.trim()) {
-      updateData.hash_palavra_passe = await bcrypt.hash(body.hash_palavra_passe, 10);
+      updateData.hashPalavraPasse = await bcrypt.hash(body.hash_palavra_passe, 10);
     }
 
     // Atualizar utilizador
-    const atualizado = await prisma.utilizadores.update({
-      where: { id: userId },
-      data: updateData,
-      select: {
-        id: true,
-        nome_utilizador: true,
-        email: true,
-        nome_completo: true,
-        papel: true,
-        ativo: true,
-        criado_em: true,
-      },
-    });
+    await db.update(utilizadores)
+      .set(updateData)
+      .where(eq(utilizadores.id, userId));
+
+    // Buscar atualizado
+    const atualizadoArr = await db.select().from(utilizadores).where(eq(utilizadores.id, userId));
+    if (!atualizadoArr || atualizadoArr.length === 0) {
+      return NextResponse.json({ error: 'Erro ao atualizar utilizador' }, { status: 500 });
+    }
+    const atualizado = atualizadoArr[0]!;
 
     await registarAuditoria('UPDATE', 'utilizadores', userId, { email: utilizador.email, papel: utilizador.papel }, { email, nome_completo, papel }, request);
 
-    return NextResponse.json(atualizado);
+    return NextResponse.json({
+      id: atualizado.id,
+      nome_utilizador: atualizado.nomeUtilizador,
+      email: atualizado.email,
+      nome_completo: atualizado.nomeCompleto,
+      papel: atualizado.papel,
+      ativo: !!atualizado.ativo,
+      criado_em: atualizado.criadoEm,
+    });
   } catch (error) {
     console.error('Erro ao atualizar utilizador:', error);
     return NextResponse.json({ error: 'Erro ao atualizar utilizador' }, { status: 500 });
@@ -164,10 +161,8 @@ export async function DELETE(
     }
 
     // Verificar se utilizador existe
-    const utilizador = await prisma.utilizadores.findUnique({
-      where: { id: userId },
-    });
-
+    const result = await db.select().from(utilizadores).where(eq(utilizadores.id, userId));
+    const utilizador = result[0];
     if (!utilizador) {
       return NextResponse.json(
         { error: 'Utilizador não encontrado' },
@@ -177,11 +172,8 @@ export async function DELETE(
 
     // Nunca permitir remover o último admin para evitar bloqueio de acesso.
     if (utilizador.papel === 'admin') {
-      const totalAdmins = await prisma.utilizadores.count({
-        where: { papel: 'admin' },
-      });
-
-      if (totalAdmins <= 1) {
+      const totalAdminsArr = await db.select().from(utilizadores).where(eq(utilizadores.papel, 'admin'));
+      if (totalAdminsArr.length <= 1) {
         return NextResponse.json(
           { error: 'Não é permitido eliminar o último utilizador com perfil admin.' },
           { status: 409 }
@@ -190,11 +182,9 @@ export async function DELETE(
     }
 
     // Eliminar utilizador
-    await prisma.utilizadores.delete({
-      where: { id: userId },
-    });
+    await db.delete(utilizadores).where(eq(utilizadores.id, userId));
 
-    await registarAuditoria('DELETE', 'utilizadores', userId, { nome_utilizador: utilizador.nome_utilizador, email: utilizador.email }, null, request);
+    await registarAuditoria('DELETE', 'utilizadores', userId, { nome_utilizador: utilizador.nomeUtilizador, email: utilizador.email }, null, request);
 
     return NextResponse.json({ message: 'Utilizador eliminado com sucesso' });
   } catch (error) {

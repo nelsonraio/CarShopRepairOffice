@@ -1,7 +1,7 @@
-import { PrismaClient } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
-
-const prisma = new PrismaClient();
+import { db } from '@/db/connection';
+import { faturas } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://api7.toconline.pt';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -20,10 +20,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     console.log('📄 Buscando PDF do recibo:', id);
     console.log('   Token (primeiros 20):', token.substring(0, 20) + '...');
 
-    // Buscar fatura para obter o recibo_toconline_id
-    const fatura = await prisma.faturas.findUnique({
-      where: { id: BigInt(id) }
-    });
+
+    // Buscar fatura para obter o reciboToconlineId
+    const faturaArr = await db.select().from(faturas).where(eq(faturas.id, Number(id)));
+    const fatura = faturaArr[0];
 
     if (!fatura) {
       return NextResponse.json(
@@ -32,17 +32,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       );
     }
 
-    if (!fatura.recibo_toconline_id) {
+    if (!fatura.reciboToconlineId) {
       return NextResponse.json(
         { success: false, error: 'Recibo não emitido. Primeiro emita o recibo antes de tentar obter o PDF.' },
         { status: 400 }
       );
     }
 
-    // Sincronizar numero_fatura local com TOConline quando houver vínculo
-    if (fatura.toconline_id) {
+    // Sincronizar numeroFatura local com TOConline quando houver vínculo
+    if (fatura.toconlineId) {
       try {
-        const documentoRes = await fetch(`${BASE_URL}/api/v1/commercial_sales_documents/${fatura.toconline_id}`, {
+        const documentoRes = await fetch(`${BASE_URL}/api/v1/commercial_sales_documents/${fatura.toconlineId}`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -56,14 +56,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           documentoData?.attributes?.document_number ||
           null;
 
-        if (documentoRes.ok && numeroFaturaToconline && numeroFaturaToconline !== fatura.numero_fatura) {
-          await prisma.faturas.update({
-            where: { id: BigInt(id) },
-            data: {
-              numero_fatura: numeroFaturaToconline,
-              atualizado_em: new Date()
-            }
-          });
+        if (documentoRes.ok && numeroFaturaToconline && numeroFaturaToconline !== fatura.numeroFatura) {
+          await db.update(faturas)
+            .set({ numeroFatura: numeroFaturaToconline, atualizadoEm: new Date().toISOString().slice(0, 19).replace('T', ' ') })
+            .where(eq(faturas.id, Number(id)));
           console.log('🔄 Numero fatura local sincronizado:', numeroFaturaToconline);
         }
       } catch (syncError) {
@@ -71,14 +67,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       }
     }
 
-    console.log('   Recibo ID a procurar:', fatura.recibo_toconline_id);
+    console.log('   Recibo ID a procurar:', fatura.reciboToconlineId);
 
     // Tentar obter PDF com diferentes filtros (Document e Receipt)
     let lastPdfData: any = null;
     for (const filterType of ['Document', 'Receipt']) {
       console.log(`📡 Tentando obter PDF do recibo com filter[type]=${filterType}...`);
       
-      const pdfRes = await fetch(`${BASE_URL}/api/url_for_print/${fatura.recibo_toconline_id}?filter[type]=${filterType}`, {
+      const pdfRes = await fetch(`${BASE_URL}/api/url_for_print/${fatura.reciboToconlineId}?filter[type]=${filterType}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -120,7 +116,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         return NextResponse.json({
           success: true,
           pdfUrl: pdfUrl,
-          recibo_id: fatura.recibo_toconline_id
+          recibo_id: fatura.reciboToconlineId
         });
       }
     }

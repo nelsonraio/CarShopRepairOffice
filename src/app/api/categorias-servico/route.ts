@@ -1,14 +1,8 @@
-import { successResponse, handleDatabaseError, serializeBigInt } from '@/lib/api-utils';
-import { PrismaClient } from '@prisma/client';
+import { successResponse, handleDatabaseError } from '@/lib/api-utils';
+import { db } from '@/db/connection';
+import { categoriasServico } from '@/db/schema';
+import { asc, eq } from 'drizzle-orm';
 import { registarAuditoria } from '@/lib/auditoria';
-
-/**
- * Initialize Prisma Client for database operations
- */
-// @ts-ignore
-const prisma = new PrismaClient({
-  log: ['error'],
-});
 
 /**
  * GET: Fetch all service categories or active only
@@ -20,20 +14,10 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const all = searchParams.get('all') === 'true';
 
-    const query: any = {
-      orderBy: { nome: 'asc' }
-    };
-
-    if (!all) {
-      query.where = { ativo: true };
-    }
-
-    const categorias = await prisma.categorias_servico.findMany(query);
-
-    // Serialize BigInt fields
-    const serializedCategorias = categorias.map(serializeBigInt);
-
-    return successResponse(serializedCategorias);
+    const categorias = all
+      ? await db.select().from(categoriasServico).orderBy(asc(categoriasServico.nome))
+      : await db.select().from(categoriasServico).where(eq(categoriasServico.ativo, 1)).orderBy(asc(categoriasServico.nome));
+    return successResponse(categorias);
   } catch (error) {
     return handleDatabaseError(error as Error);
   }
@@ -47,22 +31,25 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    
-    const categoria = await prisma.categorias_servico.create({
-      data: {
-        nome: body.nome,
-        descricao: body.descricao || null,
-        duracao_estimada: body.duracao_estimada || null,
-        ativo: body.ativo !== undefined ? body.ativo : true
-      }
-    });
-
-    // Serialize BigInt fields
-    const serialized = serializeBigInt(categoria);
-
-    await registarAuditoria('CREATE', 'categorias_servico', Number(categoria.id), null, { nome: body.nome }, request);
-
-    return successResponse(serialized, 201);
+    const { nome, descricao, duracao_estimada, ativo } = body;
+    if (!nome || typeof nome !== 'string' || nome.trim() === '') {
+      return Response.json({ error: 'Nome é obrigatório' }, { status: 400 });
+    }
+    const [inserted] = await db
+      .insert(categoriasServico)
+      .values({
+        nome: nome.trim(),
+        descricao: descricao || null,
+        duracaoEstimada: duracao_estimada || null,
+        ativo: ativo !== undefined ? ativo : 1
+      });
+    // Buscar a categoria criada para devolver o objeto completo
+    const [categoria] = await db
+      .select()
+      .from(categoriasServico)
+      .where(eq(categoriasServico.nome, nome.trim()));
+    await registarAuditoria('CREATE', 'categorias_servico', categoria?.id, null, { nome: nome.trim() }, request);
+    return successResponse(categoria, 201);
   } catch (error) {
     return handleDatabaseError(error as Error);
   }

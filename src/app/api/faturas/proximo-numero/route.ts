@@ -1,7 +1,4 @@
-import { PrismaClient } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
-
-const prisma = new PrismaClient();
 
 // Simula API da TOQ Online - Obter próximo número de fatura
 export async function GET(req: NextRequest) {

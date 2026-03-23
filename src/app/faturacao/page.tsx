@@ -247,22 +247,41 @@ export default function FaturacaoPage() {
     const [authReasonMsg, setAuthReasonMsg] = useState<string>('');
     const [showAuthToast, setShowAuthToast] = useState(false);
 
-    const TOCONLINE_REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI || 'https://pond-computer-hear-initiatives.trycloudflare.com/callbackr';
+    const getToconlineRedirectUri = useCallback(() => {
+      const envRedirectUri = process.env.NEXT_PUBLIC_REDIRECT_URI || '';
+      if (envRedirectUri) {
+        return envRedirectUri;
+      }
+
+      if (typeof window !== 'undefined') {
+        return `${window.location.origin}/callback`;
+      }
+
+      return '';
+    }, []);
 
     const iniciarFluxoOAuth = useCallback(() => {
       const clientId = process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID || 'pt999999990_c101423-6604ef0f5744561b';
+      const redirectUri = getToconlineRedirectUri();
+
+      if (!redirectUri) {
+        setAuthStatus('error');
+        setAuthReasonMsg('redirect_uri não configurado para OAuth.');
+        return;
+      }
+
       const authUrl =
         'https://app7.toconline.pt/oauth/auth?' +
         new URLSearchParams({
           client_id: clientId,
-          redirect_uri: TOCONLINE_REDIRECT_URI,
+          redirect_uri: redirectUri,
           response_type: 'code',
           scope: 'commercial'
         }).toString();
 
       setAuthStatus('pending');
       window.location.assign(authUrl);
-    }, [TOCONLINE_REDIRECT_URI]);
+    }, [getToconlineRedirectUri]);
 
   const carregarFaturasCombinadas = useCallback(async () => {
     await refetch();

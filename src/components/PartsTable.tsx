@@ -41,7 +41,22 @@ const getCategoryLabel = (category: string) => {
   return categoryMap[category] || category;
 };
 
-const getStockColor = (stockStatus: string, stock: number) => {
+const getStockStatus = (part: Part): Part['stockStatus'] => {
+  const stock = Number(part.stock) || 0;
+  const minStock = Number(part.minStock) || 0;
+
+  if (stock <= 0) {
+    return 'esgotado';
+  }
+
+  if (stock <= minStock) {
+    return 'baixo_stock';
+  }
+
+  return 'em_stock';
+};
+
+const getStockColorClass = (stockStatus: Part['stockStatus']) => {
   switch (stockStatus) {
     case 'em_stock':
       return 'text-green-400';
@@ -54,12 +69,8 @@ const getStockColor = (stockStatus: string, stock: number) => {
   }
 };
 
-// determina a classe de background da linha com base no stock
-const getRowBgClass = (stockStatus: string, stock: number) => {
-  // especial: se houver apenas uma unidade, destacamos com tom amarelado/laranja
-  if (stock === 1) {
-    return 'bg-yellow-800/30';
-  }
+// determina a classe de background da linha com base no estado do stock
+const getRowBgClass = (stockStatus: Part['stockStatus']) => {
   switch (stockStatus) {
     case 'baixo_stock':
       return 'bg-yellow-900/30';
@@ -87,8 +98,11 @@ export default function PartsTable({ parts, onEdit, onReferenceClick, onDelete }
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-600">
-            {parts.map((part) => (
-              <tr key={part.id} className={`hover:bg-gray-600 transition-colors ${getRowBgClass(part.stockStatus, part.stock)}` }>
+            {parts.map((part) => {
+              const computedStatus = getStockStatus(part);
+
+              return (
+                <tr key={part.id} className={`hover:bg-gray-600 transition-colors ${getRowBgClass(computedStatus)}`}>
                 <td className="px-6 py-4 font-medium text-gray-200 font-mono">
                   {part.notas && part.notas !== '' ? (
                     <span className="flex items-center gap-1">
@@ -124,7 +138,7 @@ export default function PartsTable({ parts, onEdit, onReferenceClick, onDelete }
                     {part.category?.nome || 'N/A'}
                   </span>
                 </td>
-                <td className="px-6 py-4 font-bold" style={{ color: getStockColor(part.stockStatus, part.stock).split(' ')[1] }}>
+                <td className={`px-6 py-4 font-bold ${getStockColorClass(computedStatus)}`}>
                   {part.stock} un.
                 </td>
                 <td className="px-6 py-4 text-right font-medium text-gray-200">
@@ -155,8 +169,9 @@ export default function PartsTable({ parts, onEdit, onReferenceClick, onDelete }
                     </button>
                   </div>
                 </td>
-              </tr>
-            ))}
+                </tr>
+              );
+            })}
             {parts.length === 0 && (
               <tr>
                 <td colSpan={8} className="text-center py-12 text-gray-500">

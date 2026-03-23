@@ -11,7 +11,8 @@
     "target": "esnext",
     "baseUrl": "src",
     "paths": {
-      "@/*": ["*"]
+      "@/*": ["*"],
+      "@/drizzle/schema": ["../drizzle/migrations/schema"]
     },
     "types": [],
     // For nodejs:

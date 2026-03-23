@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import * as XLSX from 'xlsx';
 import Sidebar from "@/components/Sidebar";
 import PartsTable from "@/components/PartsTable";
 import AddPartModal from "@/components/AddPartModal";
@@ -18,12 +19,40 @@ interface Part {
   stock: number;
   minStock?: number;
   price: number;
+  custo_unitario?: number;
   stockStatus: 'em_stock' | 'baixo_stock' | 'esgotado';
   margem_lucro?: number;
   notas?: string;
+  supplier?: string;
+  supplierName?: string;
+  ativo?: boolean | number;
 }
 
 const ITEMS_PER_PAGE = 20;
+
+function toNumber(value: unknown): number {
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : 0;
+}
+
+function isInactive(value: unknown): boolean {
+  return value === false || value === 0 || value === '0';
+}
+
+function getPartStockStatus(peca: any): Part['stockStatus'] {
+  const stock = toNumber(peca.quantidade_stock);
+  const minStock = toNumber(peca.nivel_stock_minimo);
+
+  if (isInactive(peca.ativo) || stock <= 0) {
+    return 'esgotado';
+  }
+
+  if (stock <= minStock) {
+    return 'baixo_stock';
+  }
+
+  return 'em_stock';
+}
 
 // Part detail labels
 const PART_DETAIL_LABELS: Record<string, string> = {
@@ -52,25 +81,30 @@ export default function PartsPage() {
   const { data: categorias = [] } = useFetch<string[]>('/api/categorias-pecas');
 
   // Map raw API data to Part interface
-  const parts: Part[] = (rawParts || []).map((peca: any) => ({
-    id: peca.id,
-    reference: peca.referencia,
-    name: peca.nome,
-    category: typeof peca.category === 'object' && peca.category !== null
-      ? { id: Number(peca.category.id ?? 0), nome: String(peca.category.nome ?? '') }
-      : { id: 0, nome: '' },
-    supplier: peca.fornecedor_nome || '',
-    supplierId: peca.fornecedor_id ? String(peca.fornecedor_id) : '',
-    supplierName: peca.fornecedor_nome || '',
-    stock: peca.quantidade_stock || 0,
-    minStock: peca.nivel_stock_minimo || 0,
-    price: parseFloat(peca.preco_venda) || 0,
-    stockStatus: peca.ativo === false ? 'esgotado' : 
-                (peca.quantidade_stock || 0) === 0 ? 'esgotado' :
-                (peca.quantidade_stock || 0) <= (peca.nivel_stock_minimo || 0) ? 'baixo_stock' : 'em_stock',
-    margem_lucro: typeof peca.margem_lucro === 'number' ? peca.margem_lucro : (peca.margem_lucro ? Number(peca.margem_lucro) : 0),
-    notas: peca.notas ?? ''
-  }));
+  const parts: Part[] = (rawParts || []).map((peca: any) => {
+    const stock = toNumber(peca.quantidade_stock);
+    const minStock = toNumber(peca.nivel_stock_minimo);
+
+    return {
+      id: peca.id,
+      reference: peca.referencia,
+      name: peca.nome,
+      category: typeof peca.category === 'object' && peca.category !== null
+        ? { id: Number(peca.category.id ?? 0), nome: String(peca.category.nome ?? '') }
+        : { id: 0, nome: '' },
+      supplier: peca.fornecedor_nome || '',
+      supplierId: peca.fornecedor_id ? String(peca.fornecedor_id) : '',
+      supplierName: peca.fornecedor_nome || '',
+      stock,
+      minStock,
+      price: toNumber(peca.preco_venda),
+      custo_unitario: toNumber(peca.custo_unitario),
+      stockStatus: getPartStockStatus(peca),
+      ativo: peca.ativo,
+      margem_lucro: typeof peca.margem_lucro === 'number' ? peca.margem_lucro : toNumber(peca.margem_lucro),
+      notas: peca.notas ?? ''
+    };
+  });
 
   const fornecedores = Array.isArray(rawSuppliers) ? rawSuppliers : [];
 
@@ -98,18 +132,7 @@ export default function PartsPage() {
     stock: filterPredicates.exact('stockStatus'),
   };
 
-  const { filters, setFilter } = useFilters(parts, filterConfig);
-
-  // Apply filters
-
-  console.log('DEBUG filters:', filters);
-  const filteredParts = parts.filter(part =>
-    filterConfig.search(part, filters.search ?? "") &&
-    filterConfig.category(part, filters.category ?? "") &&
-    filterConfig.stock(part, filters.stock ?? "")
-  );
-
-  console.log('DEBUG filteredParts:', filteredParts);
+  const { filters, setFilter, filteredItems: filteredParts } = useFilters(parts, filterConfig);
 
   // Pagination with filter reset
   const { currentPage, totalPages, paginatedItems: paginatedParts, nextPage, prevPage } = 
@@ -124,7 +147,7 @@ export default function PartsPage() {
         body: JSON.stringify({
           nome: newPart.name,
           referencia: newPart.reference,
-          categoria: newPart.category,
+          categoriaId: newPart.category.id,
           stock: newPart.stock,
           minStock: newPart.minStock || 0,
           price: newPart.price,
@@ -192,6 +215,154 @@ export default function PartsPage() {
     closeModal('isOrdersModalOpen');
   };
 
+  // Export para Excel no formato AT (SAF-T PT / Portaria 321-A/2007)
+  const exportToExcel = () => {
+    const IVA_RATE = 23; // Taxa normal IVA Portugal (pecas auto)
+    const VALUATION_METHOD = 'CMP'; // Custo Medio Ponderado
+    const UNIT = 'un.';
+    const TIPO_ARTIGO = 'M'; // M = Mercadoria
+
+    const companyName = process.env.NEXT_PUBLIC_COMPANY_NAME || 'N/D';
+    const companyNIF = process.env.NEXT_PUBLIC_COMPANY_NIF || 'N/D';
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('pt-PT');
+    const dateISO = today.toISOString().slice(0, 10);
+
+    // Calcular totais
+    let totalQty = 0;
+    let totalValorSemIVA = 0;
+    let totalIVA = 0;
+    let totalValorComIVA = 0;
+
+    const dataRows = filteredParts.map((p: any) => {
+      const qty = Number(p.stock) || 0;
+      const custo = Number(p.custo_unitario) || 0;
+      const valorSemIVA = Math.round(qty * custo * 100) / 100;
+      const valorIVA = Math.round(valorSemIVA * IVA_RATE) / 100;
+      const valorComIVA = Math.round((valorSemIVA + valorIVA) * 100) / 100;
+
+      totalQty += qty;
+      totalValorSemIVA += valorSemIVA;
+      totalIVA += valorIVA;
+      totalValorComIVA += valorComIVA;
+
+      return [
+        p.reference,
+        p.name,
+        p.category?.nome || '',
+        TIPO_ARTIGO,
+        UNIT,
+        p.supplierName || p.supplier || '',
+        qty,
+        Number(p.minStock) || 0,
+        custo,
+        valorSemIVA,
+        IVA_RATE,
+        Math.round(valorIVA * 100) / 100,
+        valorComIVA,
+        Number(p.price) || 0,
+        p.margem_lucro != null ? Number(p.margem_lucro) : '',
+        p.ativo === false || p.ativo === 0 || p.ativo === '0' ? 'Inativo' : 'Ativo',
+        VALUATION_METHOD,
+        p.notas || '',
+        dateISO,
+      ];
+    });
+
+    const headers = [
+      'Código do Artigo',
+      'Descrição do Artigo',
+      'Categoria',
+      'Tipo',
+      'Unidade de Medida',
+      'Fornecedor',
+      'Quantidade em Stock',
+      'Nível Mínimo de Stock',
+      'Custo Unitário (€)',
+      'Valor Inventário s/ IVA (€)',
+      'Taxa IVA (%)',
+      'Valor IVA (€)',
+      'Valor Inventário c/ IVA (€)',
+      'Preço de Venda (€)',
+      'Margem de Lucro (%)',
+      'Estado',
+      'Método de Valorização',
+      'Notas',
+      'Data de Referência',
+    ];
+
+    const totalsRow = [
+      'TOTAIS',
+      '',
+      '',
+      '',
+      '',
+      `${filteredParts.length} artigo(s)`,
+      totalQty,
+      '',
+      '',
+      Math.round(totalValorSemIVA * 100) / 100,
+      '',
+      Math.round(totalIVA * 100) / 100,
+      Math.round(totalValorComIVA * 100) / 100,
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+    ];
+
+    // Construir folha com cabecalho AT
+    const sheetData: any[][] = [
+      [`LISTAGEM DE EXISTÊNCIAS - ${companyName}`],
+      [`NIF: ${companyNIF} | Data do Inventário: ${dateStr} | Método de Valorização: ${VALUATION_METHOD} | Regime IVA: Normal`],
+      [`Documento gerado para efeitos da Portaria n.º 321-A/2007 de 26 de Março (SAF-T PT)`],
+      [], // linha em branco
+      headers,
+      ...dataRows,
+      [], // linha em branco
+      totalsRow,
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+
+    // Larguras das colunas
+    ws['!cols'] = [
+      { wch: 18 }, // Codigo
+      { wch: 35 }, // Descricao
+      { wch: 20 }, // Categoria
+      { wch: 6  }, // Tipo
+      { wch: 8  }, // Unidade
+      { wch: 25 }, // Fornecedor
+      { wch: 10 }, // Qty
+      { wch: 10 }, // MinStock
+      { wch: 14 }, // Custo Unit
+      { wch: 18 }, // Valor s/IVA
+      { wch: 10 }, // Taxa IVA
+      { wch: 14 }, // Valor IVA
+      { wch: 18 }, // Valor c/IVA
+      { wch: 14 }, // Preco Venda
+      { wch: 14 }, // Margem
+      { wch: 10 }, // Estado
+      { wch: 20 }, // Metodo Valorizacao
+      { wch: 30 }, // Notas
+      { wch: 16 }, // Data
+    ];
+
+    // Merge do titulo nas primeiras 3 linhas
+    ws['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } },
+      { s: { r: 1, c: 0 }, e: { r: 1, c: headers.length - 1 } },
+      { s: { r: 2, c: 0 }, e: { r: 2, c: headers.length - 1 } },
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Listagem de Existências');
+
+    XLSX.writeFile(wb, `listagem-existencias-${dateISO}.xlsx`);
+  };
+
   // Pagination info
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, filteredParts.length);
@@ -213,6 +384,17 @@ export default function PartsPage() {
             <p className="mt-1 text-gray-400">Gerencie o inventário e preços</p>
           </div>
           <div className="flex gap-3">
+            <button
+              onClick={exportToExcel}
+              disabled={filteredParts.length === 0}
+              className="px-4 py-2 bg-green-700 text-gray-200 font-bold hover:bg-green-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors rounded-none flex items-center shadow-md border border-green-600"
+              title={`Exportar ${filteredParts.length} peças para Excel`}
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Exportar Excel
+            </button>
             <button
               onClick={() => openModal('isOrdersModalOpen')}
               className="px-4 py-2 bg-blue-700 text-gray-200 font-bold hover:bg-blue-600 transition-colors rounded-none flex items-center shadow-md border border-blue-600"
@@ -369,7 +551,10 @@ export default function PartsPage() {
 
       <OrderPartsModal
         isOpen={modals.isOrderModalOpen}
-        onClose={() => closeModal('isOrderModalOpen')}
+        onClose={async () => {
+          closeModal('isOrderModalOpen');
+          await refetch();
+        }}
         parts={parts}
         onOrderParts={handleOrderParts}
         initialSelectedParts={reorderSelectedParts ?? []}
@@ -395,7 +580,10 @@ export default function PartsPage() {
 
       <OrdersModal
         isOpen={modals.isOrdersModalOpen}
-        onClose={() => closeModal('isOrdersModalOpen')}
+        onClose={async () => {
+          closeModal('isOrdersModalOpen');
+          await refetch();
+        }}
         parts={parts}
         onReorder={handleReorder}
       />

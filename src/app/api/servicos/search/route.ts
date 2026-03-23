@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-// @ts-ignore
-const prisma = new PrismaClient({
-  log: ['error'],
-});
+import { db } from '../../../../db/connection';
+import { servicos } from '../../../../db/schema';
+import { like, eq, and } from 'drizzle-orm';
 
 export async function GET(request: Request) {
   try {
@@ -15,27 +12,25 @@ export async function GET(request: Request) {
       return NextResponse.json([]);
     }
 
-    const servicos = await prisma.servicos.findMany({
-      where: {
-        AND: [
-          { ativo: true },
-          { nome: { contains: query } }
-        ]
-      },
-      select: {
-        id: true,
-        nome: true,
-        preco_base: true
-      },
-      orderBy: { nome: 'asc' },
-      take: 10
-    });
+    // Drizzle ORM: buscar servicos ativos e nome contendo query
+    const results = await db.select({
+      id: servicos.id,
+      nome: servicos.nome,
+      preco_base: servicos.precoBase
+    })
+      .from(servicos)
+      .where(and(
+        eq(servicos.ativo, 1),
+        like(servicos.nome, `%${query}%`)
+      ))
+      .orderBy(servicos.nome)
+      .limit(10);
 
-    // Convert BigInt id to string for JSON serialization
-    const serializedServicos = servicos.map((servico: typeof servicos[number]) => ({
+    // Serializar para JSON
+    const serializedServicos = results.map((servico) => ({
       id: String(servico.id),
       nome: servico.nome,
-      preco_base: servico.preco_base ? servico.preco_base.toNumber() : 0
+      preco_base: servico.preco_base ? Number(servico.preco_base) : 0
     }));
 
     return NextResponse.json(serializedServicos);

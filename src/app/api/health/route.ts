@@ -1,11 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-/**
- * Cliente Prisma para acesso à base de dados
- * Apenas loga erros para minimizar output desnecessário
- */
-const prisma = new PrismaClient({ log: ['error'] });
+import { db } from '@/db/connection';
 
 /**
  * GET /api/health
@@ -27,9 +21,9 @@ const prisma = new PrismaClient({ log: ['error'] });
  */
 export async function GET() {
   try {
+
     // Query simples para verificar conectividade à DB
-    // SELECT 1 é a forma mais rápida de testar conexão
-    await prisma.$queryRaw`SELECT 1`;
+    await db.execute('SELECT 1');
 
     return NextResponse.json({
       ok: true,

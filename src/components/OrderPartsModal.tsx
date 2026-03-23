@@ -54,7 +54,7 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
   });
   const [selectedFornecedor, setSelectedFornecedor] = useState("");
   // Dynamic part categories
-  const [dynamicCategories, setDynamicCategories] = useState<string[]>([]);
+  const [dynamicCategories, setDynamicCategories] = useState<{ id: number | string; nome: string }[]>([]);
 
   // Load categories when opening new part form
   useEffect(() => {
@@ -98,11 +98,13 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
   }, [orderItems]);
 
   const handleItemToggle = (partId: string) => {
-    setOrderItems(currentItems =>
-      currentItems.map(item =>
-        item.part.id === partId ? { ...item, selected: !item.selected } : item
-      )
-    );
+    setOrderItems(currentItems => {
+      const updated = currentItems.map(item =>
+        item.part.id.toString() === partId.toString() ? { ...item, selected: !item.selected } : item
+      );
+      console.log('[DEBUG] handleItemToggle', { partId, updated });
+      return updated;
+    });
   };
 
   const handleQuantityChange = (partId: string, quantity: number) => {
@@ -122,11 +124,24 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
     window.open(`https://wa.me/?text=${text}`, '_blank');
   };
 
-  const filteredItems = orderItems.filter(item =>
-    item.part.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.part.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (item.part.supplierName ? item.part.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) : false)
-  );
+  // Estado para filtro de stock
+  const [stockFilter, setStockFilter] = useState<'todos' | 'baixo_stock' | 'em_stock' | 'esgotado'>('todos');
+
+  // Filtragem principal
+  const filteredItems = orderItems.filter(item => {
+    // Filtro de texto
+    const matchesText =
+      item.part.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.part.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.part.supplierName ? item.part.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) : false);
+
+    // Filtro de stock por status visual
+    if (stockFilter === 'baixo_stock') {
+      return matchesText && item.part.stockStatus === 'baixo_stock';
+    }
+    // Outros filtros podem ser adicionados aqui
+    return matchesText;
+  });
 
   const handleAddNewPart = () => {
     // require name, supplier and reference
@@ -167,6 +182,7 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
     setOrderItems(prevItems => [...prevItems, newOrderItem]);
     setNewPart({ name: "", reference: "", categoryId: "", categoryName: "", quantity: 1 });
     setShowNewPartForm(false);
+    setSearchTerm("");
     setSuccessMsg("Nova peça personalizada adicionada. Será criada no stock com quantidade 0.");
   };
 
@@ -210,7 +226,7 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
           part: {
             name: item.part.name,
             reference: item.part.reference,
-            category: item.part.category || 'custom'
+            category_id: item.part.category?.id || '',
           }
         };
       } else {
@@ -355,7 +371,7 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
                     <select value={newPart.categoryId} onChange={e => setNewPart({ ...newPart, categoryId: e.target.value })} className="w-full bg-gray-800 border border-gray-500 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow outline-none">
                       <option value="">Selecione uma categoria...</option>
                       {dynamicCategories.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
+                        <option key={cat.id} value={cat.id}>{cat.nome}</option>
                       ))}
                     </select>
                   </div>
@@ -379,7 +395,7 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
                     <p className="text-sm font-medium text-gray-200">{item.part.name}</p>
                     <p className="text-xs text-gray-400">Ref: {item.part.reference} | Fornecedor: {item.part.supplierName || ""}</p>
                   </div>
-                  <button onClick={() => handleItemToggle(String(item.part.id))} className="px-3 py-1 bg-green-600 text-white text-xs font-bold hover:bg-green-700 transition-colors rounded-none flex items-center">
+                  <button onClick={() => handleItemToggle(item.part.id.toString())} className="px-3 py-1 bg-green-600 text-white text-xs font-bold hover:bg-green-700 transition-colors rounded-none flex items-center">
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
                     Add
                   </button>
@@ -393,20 +409,21 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
             </div>
           </div>
 
-          <div className="w-5/12 flex flex-col pl-6 border-l border-gray-700">
-            <h4 className="text-lg font-semibold text-white mb-4">Resumo da Encomenda</h4>
-            <div className="flex-1 overflow-y-auto pr-2 space-y-3">
-              {orderItems.filter(item => item.selected).map((item) => (
-                <div key={item.part.id} className="bg-gray-900/50 p-3 border border-gray-700">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-sm font-medium text-gray-100">{item.part.name}</p>
-                      <p className="text-xs text-gray-400">Ref: {item.part.reference}</p>
+            <div className="w-5/12 flex flex-col pl-6 border-l border-gray-700">
+              <h4 className="text-lg font-semibold text-white mb-4">Resumo da Encomenda</h4>
+              {(() => { console.log('[DEBUG] Render Resumo', { orderItems }); return null; })()}
+              <div className="flex-1 overflow-y-auto pr-2 space-y-3">
+                {orderItems.filter(item => item.selected).map((item) => (
+                  <div key={item.part.id} className="bg-gray-900/50 p-3 border border-gray-700">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-sm font-medium text-gray-100">{item.part.name}</p>
+                        <p className="text-xs text-gray-400">Ref: {item.part.reference}</p>
+                      </div>
+                      <button onClick={() => handleItemToggle(String(item.part.id))} className="text-gray-500 hover:text-red-400 transition-colors">
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>
+                      </button>
                     </div>
-                    <button onClick={() => handleItemToggle(String(item.part.id))} className="text-gray-500 hover:text-red-400 transition-colors">
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>
-                    </button>
-                  </div>
                   <div className="flex items-center justify-end mt-2">
                     <label className="text-xs text-gray-400 mr-2">Qtd:</label>
                     <input type="number" min="1" value={item.quantity} onChange={(e) => handleQuantityChange(String(item.part.id), parseInt(e.target.value) || 1)} className="w-20 bg-gray-800 border border-gray-500 text-white text-sm px-2 py-1 rounded-none focus:ring-1 focus:ring-brand-yellow outline-none" />

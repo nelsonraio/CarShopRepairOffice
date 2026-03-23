@@ -1,27 +1,26 @@
-import { PrismaClient } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { registarAuditoria } from '@/lib/auditoria';
-
-const prisma = new PrismaClient();
+import { db } from '@/db/connection';
+import { utilizadores } from '@/db/schema';
+import { desc, eq, or } from 'drizzle-orm';
 
 export async function GET() {
   try {
-    const utilizadores = await prisma.utilizadores.findMany({
-      select: {
-        id: true,
-        nome_utilizador: true,
-        email: true,
-        nome_completo: true,
-        papel: true,
-        ativo: true,
-        ultimo_login: true,
-        criado_em: true,
-      },
-      orderBy: { nome_utilizador: 'asc' },
-    });
+    const results = await db.select({
+      id: utilizadores.id,
+      nome_utilizador: utilizadores.nomeUtilizador,
+      email: utilizadores.email,
+      nome_completo: utilizadores.nomeCompleto,
+      papel: utilizadores.papel,
+      ativo: utilizadores.ativo,
+      ultimo_login: utilizadores.ultimoLogin,
+      criado_em: utilizadores.criadoEm,
+    })
+      .from(utilizadores)
+      .orderBy(utilizadores.nomeUtilizador);
 
-    return NextResponse.json(utilizadores);
+    return NextResponse.json(results);
   } catch (error) {
     console.error('Erro ao listar utilizadores:', error);
     return NextResponse.json({ error: 'Erro ao listar utilizadores' }, { status: 500 });
@@ -51,16 +50,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar se utilizador já existe
-    const existente = await prisma.utilizadores.findFirst({
-      where: {
-        OR: [
-          { nome_utilizador },
-          { email },
-        ],
-      },
-    });
+    const existente = await db.select().from(utilizadores)
+      .where(
+        or(
+          eq(utilizadores.nomeUtilizador, nome_utilizador),
+          eq(utilizadores.email, email)
+        )
+      ).limit(1);
 
-    if (existente) {
+    if (existente && existente.length > 0) {
       return NextResponse.json(
         { error: 'Nome de utilizador ou email já existe' },
         { status: 409 }
@@ -71,25 +69,32 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await bcrypt.hash(hash_palavra_passe, 10);
 
     // Criar utilizador
-    const novoUtilizador = await prisma.utilizadores.create({
-      data: {
-        nome_utilizador,
-        email,
-        nome_completo,
-        papel: papel as any,
-        hash_palavra_passe: hashedPassword,
-        ativo: true,
-      },
-      select: {
-        id: true,
-        nome_utilizador: true,
-        email: true,
-        nome_completo: true,
-        papel: true,
-        ativo: true,
-        criado_em: true,
-      },
+    await db.insert(utilizadores).values({
+      nomeUtilizador: nome_utilizador,
+      email,
+      nomeCompleto: nome_completo,
+      papel,
+      hashPalavraPasse: hashedPassword,
+      ativo: 1,
     });
+
+    const [novoUtilizador] = await db.select({
+      id: utilizadores.id,
+      nome_utilizador: utilizadores.nomeUtilizador,
+      email: utilizadores.email,
+      nome_completo: utilizadores.nomeCompleto,
+      papel: utilizadores.papel,
+      ativo: utilizadores.ativo,
+      criado_em: utilizadores.criadoEm,
+    })
+      .from(utilizadores)
+      .where(eq(utilizadores.email, email))
+      .orderBy(desc(utilizadores.id))
+      .limit(1);
+
+    if (!novoUtilizador) {
+      return NextResponse.json({ error: 'Erro ao criar utilizador' }, { status: 500 });
+    }
 
     await registarAuditoria('CREATE', 'utilizadores', novoUtilizador.id, null, { nome_utilizador, email, papel }, request);
 

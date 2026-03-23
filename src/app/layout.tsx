@@ -6,22 +6,9 @@ import type { Metadata } from "next";
  */
 export const dynamic = 'force-dynamic';
 
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { getAppStatus } from "@/lib/appStatus";
 import OfflineGuard from "@/components/OfflineGuard";
-
-// Fonte sans-serif padrão (Geist)
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-// Fonte monospace para códigos (Geist Mono)
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 /**
  * Metadata para SEO e meta tags
@@ -53,7 +40,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className="antialiased"
       >
         {status.enabled ? (
           <>

@@ -20,7 +20,6 @@ CREATE TABLE `agendamentos` (
     `contacto_nome` VARCHAR(100) NULL,
     `contacto_telefone` VARCHAR(20) NULL,
     `contacto_email` VARCHAR(255) NULL,
-
     UNIQUE INDEX `id`(`id`),
     INDEX `agendamentos_cliente_id_fkey`(`cliente_id`),
     PRIMARY KEY (`id`)

@@ -1,15 +1,67 @@
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/db/connection';
+import { veiculos, clientes } from '@/db/schema';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 import { successResponse, handleDatabaseError } from '@/lib/api-utils';
 import { registarAuditoria } from '@/lib/auditoria';
 
-const prisma = new PrismaClient();
+const normalizeText = (value: unknown) => String(value ?? '').trim().replace(/\s+/g, ' ');
+const normalizeNullable = (value: unknown) => {
+  const normalized = normalizeText(value);
+  return normalized || null;
+};
+
+type ClientPayload = {
+  clientName?: unknown;
+  clientEmail?: unknown;
+  clientPhone?: unknown;
+  clientNif?: unknown;
+  clientAddress?: unknown;
+  clientProfile?: unknown;
+};
+
+async function findMatchingClient(payload: ClientPayload) {
+  const clientName = normalizeText(payload.clientName);
+  const clientEmail = normalizeNullable(payload.clientEmail);
+  const clientPhone = normalizeNullable(payload.clientPhone);
+  const clientNif = normalizeNullable(payload.clientNif);
+
+  if (clientNif) {
+    const [clientePorNif] = await db.select().from(clientes).where(eq(clientes.nif, clientNif)).limit(1);
+    if (clientePorNif) return { client: clientePorNif, reason: 'nif' as const };
+  }
+
+  if (clientEmail) {
+    const [clientePorEmail] = await db.select().from(clientes).where(eq(clientes.email, clientEmail)).limit(1);
+    if (clientePorEmail) return { client: clientePorEmail, reason: 'email' as const };
+  }
+
+  if (clientPhone && clientName) {
+    const [clientePorNomeTelefone] = await db.select().from(clientes)
+      .where(and(eq(clientes.nome, clientName), eq(clientes.telefone, clientPhone)))
+      .limit(1);
+    if (clientePorNomeTelefone) return { client: clientePorNomeTelefone, reason: 'name_phone' as const };
+  }
+
+  if (clientName) {
+    const clientesPorNome = await db.select().from(clientes).where(eq(clientes.nome, clientName)).limit(2);
+    if (clientesPorNome.length === 1) {
+      return { client: clientesPorNome[0], reason: 'name' as const };
+    }
+
+    if (clientesPorNome.length > 1) {
+      return { client: null, reason: 'ambiguous_name' as const };
+    }
+  }
+
+  return { client: null, reason: null };
+}
 
 /**
  * Formata veículo para retorno na API
  */
 const formatVeiculoResponse = (veiculo: any, cliente: any = null) => ({
   id: veiculo.id,
-  clientId: veiculo.cliente_id || '',
+  clientId: veiculo.clienteId || '',
   clientName: cliente?.nome || 'Cliente não encontrado',
   clientProfile: formatPerfilCliente(cliente?.perfil),
   make: veiculo.marca,
@@ -17,8 +69,8 @@ const formatVeiculoResponse = (veiculo: any, cliente: any = null) => ({
   licensePlate: veiculo.matricula,
   year: veiculo.ano || new Date().getFullYear(),
   status: veiculo.estado === 'na_oficina' ? 'na_oficina' : 'disponivel',
-  lastIntervention: veiculo.ultima_intervencao
-    ? veiculo.ultima_intervencao.toLocaleDateString('pt-PT')
+  lastIntervention: veiculo.ultimaIntervencao
+    ? new Date(veiculo.ultimaIntervencao).toLocaleDateString('pt-PT')
     : ''
 });
 
@@ -54,31 +106,14 @@ const normalizePerfil = (rawPerfil: unknown): 'Normal' | 'TVDE_Interno' | 'TVDE_
  */
 export async function GET() {
   try {
-    const veiculos = await prisma.veiculos.findMany({
-      include: { cliente: true },
-      orderBy: { criado_em: 'desc' }
-    });
-
-    const transformados = veiculos.map(v => formatVeiculoResponse(v, v.cliente));
+    const veiculosArr = await db.select().from(veiculos).orderBy(desc(veiculos.criadoEm));
+    // Get all client IDs
+    const clientIds = veiculosArr.map(v => v.clienteId).filter((id): id is number => id != null);
+    const clientesArr = clientIds.length ? await db.select().from(clientes).where(inArray(clientes.id, clientIds)) : [];
+    const clienteMap = new Map(clientesArr.map(c => [c.id, c]));
+    const transformados = veiculosArr.map(v => formatVeiculoResponse(v, v.clienteId != null ? clienteMap.get(v.clienteId) : undefined));
     return successResponse(transformados);
   } catch (error) {
-    // Prisma unique constraint error for VIN (numero_chassis)
-    if (
-      error &&
-      typeof error === 'object' &&
-      'code' in error &&
-      error.code === 'P2002' &&
-      'meta' in error &&
-      typeof (error as any).meta === 'object' &&
-      'target' in (error as any).meta &&
-      Array.isArray((error as any).meta.target) &&
-      (error as any).meta.target.includes('numero_chassis')
-    ) {
-      return new Response(
-        JSON.stringify({ error: 'Já existe um veículo com o mesmo número de chassis (VIN).' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
     return handleDatabaseError(error as Error);
   }
 }
@@ -101,43 +136,92 @@ export async function POST(request: Request) {
     // Converter ou criar cliente
     let vehicleClientId = clientId ? parseInt(clientId) : null;
     if (!vehicleClientId) {
-      const newClient = await prisma.clientes.create({
-        data: {
-          nome: clientName,
-          email: clientEmail || null,
-          telefone: clientPhone || '',
-          nif: clientNif || null,
-          endereco: clientAddress || null,
-          perfil_id: clientProfile ? parseInt(clientProfile) : null,
-          ativo: true,
-          data_registo: new Date(),
-          total_gasto: 0,
-          visitas: 0
-        }
+      const existingClientMatch = await findMatchingClient({
+        clientName,
+        clientEmail,
+        clientPhone,
+        clientNif,
+        clientAddress,
+        clientProfile,
       });
-      vehicleClientId = newClient.id;
+
+      if (existingClientMatch.reason === 'ambiguous_name') {
+        return successResponse(
+          { error: 'Já existem vários clientes com este nome. Selecione o cliente existente na pesquisa ou preencha NIF, email ou telefone para identificar corretamente.' },
+          409
+        );
+      }
+
+      if (existingClientMatch.client) {
+        vehicleClientId = existingClientMatch.client.id;
+      }
     }
 
-    // Criar veículo
-    const veiculo = await prisma.veiculos.create({
-      data: {
-        cliente_id: vehicleClientId,
-        marca: make,
-        modelo: model,
-        matricula: licensePlate,
-        ano: year ? parseInt(year) : null,
-        numero_chassis: vin || null,
-        estado: 'disponivel',
-        criado_em: new Date(),
-        atualizado_em: new Date()
-      },
-      include: { cliente: true }
+    if (!vehicleClientId) {
+      // Corrigir campos opcionais para evitar NaN
+      let perfilIdNum = clientProfile ? parseInt(clientProfile) : null;
+      if (perfilIdNum !== null && Number.isNaN(perfilIdNum)) perfilIdNum = null;
+      const values = {
+        nome: normalizeText(clientName),
+        email: normalizeNullable(clientEmail),
+        telefone: normalizeText(clientPhone),
+        nif: normalizeNullable(clientNif),
+        endereco: normalizeNullable(clientAddress),
+        perfilId: perfilIdNum,
+        ativo: 1,
+        dataRegisto: new Date().toISOString().slice(0, 10),
+        totalGasto: '0.00',
+        visitas: 0
+      };
+      const [result]: any = await db.insert(clientes).values(values);
+      if (!result?.insertId) {
+        return handleDatabaseError(new Error('Falha ao inserir cliente. insertId indefinido.'));
+      }
+      vehicleClientId = result.insertId;
+    }
+
+    // Corrigir formato de data para MySQL (YYYY-MM-DD HH:mm:ss)
+    function toMySQLDateTime(date: Date): string {
+      const pad = (n: number) => n.toString().padStart(2, '0');
+      return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    }
+    const now = new Date();
+    const [resultVeiculo]: any = await db.insert(veiculos).values({
+      clienteId: vehicleClientId,
+      marca: make,
+      modelo: model,
+      matricula: licensePlate,
+      ano: year ? parseInt(year) : null,
+      estado: 'disponivel',
+      criadoEm: toMySQLDateTime(now),
+      atualizadoEm: toMySQLDateTime(now)
     });
-
+    let veiculo;
+    if (resultVeiculo?.insertId) {
+      // Caminho normal: insertId disponível
+      [veiculo] = await db.select().from(veiculos).where(eq(veiculos.id, resultVeiculo.insertId));
+    } else {
+      // Fallback: buscar pelo maior id para cliente, marca, modelo e matrícula
+      const veiculosPossiveis = vehicleClientId != null
+        ? await db.select().from(veiculos)
+          .where(eq(veiculos.clienteId, vehicleClientId))
+          .orderBy(desc(veiculos.id))
+        : [];
+      veiculo = veiculosPossiveis.find(v =>
+        v.marca === make &&
+        v.modelo === model &&
+        v.matricula === licensePlate
+      );
+    }
+    if (!veiculo) {
+      return handleDatabaseError(new Error('Veículo não encontrado após inserção.'));
+    }
+    const [cliente] = vehicleClientId != null
+      ? await db.select().from(clientes).where(eq(clientes.id, vehicleClientId))
+      : [];
     await registarAuditoria('CREATE', 'veiculos', Number(veiculo.id), null, { marca: make, modelo: model, matricula: licensePlate, cliente_id: vehicleClientId }, request);
-
     return successResponse(
-      formatVeiculoResponse(veiculo, veiculo.cliente),
+      formatVeiculoResponse(veiculo, cliente),
       201
     );
   } catch (error) {

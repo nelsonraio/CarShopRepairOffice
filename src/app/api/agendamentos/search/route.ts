@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient({
-  log: ['error'],
-});
+import { NextResponse } from 'next/server';
+import { db } from '@/db/connection';
+import { agendamentos, clientes, perfisClientes } from '@/db/schema';
+import { eq, desc } from 'drizzle-orm';
+
 
 export async function GET(request: Request) {
   try {
@@ -14,31 +14,38 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Matrícula is required' }, { status: 400 });
     }
 
-    // Find any appointment for this license plate (remove status and date filters)
-    const agendamentos = await prisma.agendamentos.findMany({
-      where: {
-        matricula: matricula
-      },
-      include: {
-        cliente: { include: { perfil_cliente: true } }
-      },
-      orderBy: {
-        data_agendamento: 'desc' // Get the most recent appointment
-      },
-      take: 1 // Just get the first one
-    });
-
-    if (agendamentos.length === 0) {
+    // Buscar agendamento mais recente para a matrícula
+    const ags = await db.select().from(agendamentos).where(eq(agendamentos.matricula, matricula)).orderBy(desc(agendamentos.dataAgendamento));
+    if (!ags.length) {
       return NextResponse.json({ found: false });
     }
-
-    const agendamento = agendamentos[0];
-
+    const agendamento = ags[0];
     if (!agendamento) {
       return NextResponse.json({ found: false });
     }
 
-    // Return the vehicle and service data
+    // Buscar cliente e perfil
+    let cliente = null;
+    let perfil = 'Normal';
+    if (agendamento.clienteId) {
+      const [cli] = await db.select().from(clientes).where(eq(clientes.id, agendamento.clienteId));
+      if (cli) {
+        cliente = {
+          id: cli.id.toString(),
+          nome: cli.nome,
+          telefone: cli.telefone,
+          email: cli.email || '',
+          nif: cli.nif || '',
+          endereco: cli.endereco || '',
+          perfil_id: cli.perfilId || null,
+        };
+        if (cli.perfilId) {
+          const [perfilObj] = await db.select().from(perfisClientes).where(eq(perfisClientes.id, cli.perfilId));
+          if (perfilObj) perfil = perfilObj.nome;
+        }
+      }
+    }
+
     const result = {
       found: true,
       id: agendamento.id.toString(),
@@ -46,22 +53,13 @@ export async function GET(request: Request) {
       marca: agendamento.marca || '',
       modelo: agendamento.modelo || '',
       ano: agendamento.ano?.toString() || '',
-      tipoServico: agendamento.titulo.includes(' - ') ? agendamento.titulo.split(' - ')[0] : agendamento.titulo,
+      tipoServico: agendamento.titulo && agendamento.titulo.includes(' - ') ? agendamento.titulo.split(' - ')[0] : agendamento.titulo,
       notas: agendamento.descricao || '',
-      descricao: agendamento.descricao ? agendamento.descricao : (agendamento.titulo.includes(' - ') ? agendamento.titulo.split(' - ')[0] : agendamento.titulo),
-      contacto_nome: agendamento.contacto_nome || null,
-      contacto_telefone: agendamento.contacto_telefone || null,
-      contacto_email: agendamento.contacto_email || null,
-        cliente: agendamento.cliente ? {
-          id: agendamento.cliente.id.toString(),
-          nome: agendamento.cliente.nome,
-          telefone: agendamento.cliente.telefone,
-          email: agendamento.cliente.email || '',
-          nif: agendamento.cliente.nif || '',
-          endereco: agendamento.cliente.endereco || '',
-          perfil_id: agendamento.cliente.perfil_id || null,
-          perfil: agendamento.cliente.perfil_cliente ? agendamento.cliente.perfil_cliente.nome : 'Normal'
-        } : null
+      descricao: agendamento.descricao ? agendamento.descricao : (agendamento.titulo && agendamento.titulo.includes(' - ') ? agendamento.titulo.split(' - ')[0] : agendamento.titulo),
+      contacto_nome: agendamento.contactoNome || null,
+      contacto_telefone: agendamento.contactoTelefone || null,
+      contacto_email: agendamento.contactoEmail || null,
+      cliente: cliente ? { ...cliente, perfil } : null
     };
 
     return NextResponse.json(result);

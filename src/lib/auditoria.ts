@@ -1,9 +1,8 @@
-import { PrismaClient } from '@prisma/client';
 import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
 import type { JWTPayload } from 'jose';
-
-const prisma = new PrismaClient();
+import { db } from '@/db/connection';
+import { logAuditoria } from '../../drizzle/migrations/schema';
 const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
 interface UserPayload extends JWTPayload {
@@ -59,17 +58,15 @@ export async function registarAuditoria(
       agente_utilizador = request.headers.get('user-agent') || null;
     }
 
-    await prisma.log_auditoria.create({
-      data: {
-        utilizador_id,
-        acao,
-        nome_tabela: nome_tabela || null,
-        id_registo: id_registo || null,
-        valores_antigos: valores_antigos ? JSON.parse(JSON.stringify(valores_antigos)) : undefined,
-        valores_novos: valores_novos ? JSON.parse(JSON.stringify(valores_novos)) : undefined,
-        endereco_ip,
-        agente_utilizador,
-      },
+    await db.insert(logAuditoria).values({
+      utilizadorId: utilizador_id,
+      acao,
+      nomeTabela: nome_tabela || null,
+      idRegisto: id_registo || null,
+      valoresAntigos: valores_antigos ? JSON.parse(JSON.stringify(valores_antigos)) : undefined,
+      valoresNovos: valores_novos ? JSON.parse(JSON.stringify(valores_novos)) : undefined,
+      enderecoIp: endereco_ip,
+      agenteUtilizador: agente_utilizador,
     });
   } catch (error) {
     // Nunca bloquear a operação principal por falha no log

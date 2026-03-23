@@ -1,7 +1,7 @@
-import { PrismaClient } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
-
-const prisma = new PrismaClient();
+import { db } from '@/db/connection';
+import { faturas } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://api7.toconline.pt';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -20,10 +20,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     console.log('📄 Buscando PDF da fatura:', id);
     console.log('   Token (primeiros 20):', token.substring(0, 20) + '...');
 
-    // Buscar fatura para obter o toconline_id
-    const fatura = await prisma.faturas.findUnique({
-      where: { id: BigInt(id) }
-    });
+
+    // Buscar fatura para obter o toconlineId
+    const faturaArr = await db.select().from(faturas).where(eq(faturas.id, Number(id)));
+    const fatura = faturaArr[0];
 
     if (!fatura) {
       return NextResponse.json(
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       );
     }
 
-    if (!fatura.toconline_id) {
+    if (!fatura.toconlineId) {
       return NextResponse.json(
         { success: false, error: 'Fatura não possui ID do TOConline. Apenas faturas criadas via TOConline têm PDF disponível.' },
         { status: 400 }
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     // Buscar URL do PDF no TOConline
-    const pdfRes = await fetch(`${BASE_URL}/api/url_for_print/${fatura.toconline_id}?filter[type]=Document`, {
+    const pdfRes = await fetch(`${BASE_URL}/api/url_for_print/${fatura.toconlineId}?filter[type]=Document`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({
       success: true,
       pdfUrl: pdfUrl,
-      toconline_id: fatura.toconline_id
+      toconline_id: fatura.toconlineId
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-// @ts-ignore
-const prisma = new PrismaClient({
-  log: ['error'],
-});
+import { db } from '@/db/connection';
+import { modelos } from '../../../../../drizzle/migrations/schema';
+import { and, like, eq } from 'drizzle-orm';
 
 export async function GET(request: Request) {
   try {
@@ -16,30 +13,19 @@ export async function GET(request: Request) {
       return NextResponse.json([]);
     }
 
-    const whereClause: any = {
-      AND: [
-        { ativo: true },
-        { nome: { contains: query } }
-      ]
-    };
+    // Montar filtro
+    let whereArr = [eq(modelos.ativo, 1), like(modelos.nome, `%${query}%`)];
+    if (marcaId) whereArr.push(eq(modelos.marcaId, parseInt(marcaId)));
 
-    if (marcaId) {
-      whereClause.AND.push({ marca_id: BigInt(marcaId) });
-    }
-
-    const modelos = await prisma.modelos.findMany({
-      where: whereClause,
-      select: {
-        id: true,
-        nome: true,
-        marca_id: true
-      },
-      orderBy: { nome: 'asc' },
-      take: 10
-    });
+    const result = await db
+      .select({ id: modelos.id, nome: modelos.nome, marca_id: modelos.marcaId })
+      .from(modelos)
+      .where(and(...whereArr))
+      .orderBy(modelos.nome)
+      .limit(10);
 
     // Convert BigInt id to string for JSON serialization
-    const serializedModelos = modelos.map((modelo: any) => ({
+    const serializedModelos = result.map((modelo: any) => ({
       id: String(modelo.id),
       nome: modelo.nome,
       marca_id: String(modelo.marca_id)

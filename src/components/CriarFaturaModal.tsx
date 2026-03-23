@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 
 interface OrdemTrabalho {
-  id: number;
+  ordem_trabalho_id: number;
   ref_ordem_trabalho: string;
   cliente_nome: string;
   cliente_nif: string;
@@ -149,6 +149,7 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess, oauthToke
   const [itens, setItens] = useState<any[]>([]);
 
   const round2 = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+  const getOrdemTrabalhoId = (ordem: OrdemTrabalho) => ordem.ordem_trabalho_id;
 
   // Carregar ordens de trabalho
   useEffect(() => {
@@ -185,10 +186,11 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess, oauthToke
   const handleSelecionarOrdem = async (ordem: OrdemTrabalho) => {
     setLoading(true);
     try {
+      const ordemTrabalhoId = getOrdemTrabalhoId(ordem);
       const response = await fetch('/api/faturas/ordens-trabalho', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ordem_trabalho_id: ordem.id })
+        body: JSON.stringify({ ordem_trabalho_id: ordemTrabalhoId })
       });
 
       const data = await response.json();
@@ -222,7 +224,7 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess, oauthToke
 
         setFormData({
           cliente_id: dados.cliente_id,
-          ordem_trabalho_id: ordem.id,
+          ordem_trabalho_id: ordemTrabalhoId,
           cliente_nif: dados.cliente_nif || '',
           cliente_nome: dados.cliente_nome || '',
           cliente_morada: dados.cliente_morada || '',
@@ -426,7 +428,7 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess, oauthToke
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {ordensTrabalho.map(ordem => (
                   <button
-                    key={ordem.id}
+                    key={getOrdemTrabalhoId(ordem)}
                     onClick={() => handleSelecionarOrdem(ordem)}
                     disabled={loading}
                     className="w-full flex items-start justify-between p-4 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-none text-left transition-colors disabled:opacity-50 cursor-pointer"

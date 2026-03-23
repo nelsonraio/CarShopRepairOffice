@@ -34,6 +34,7 @@ interface CatalogItem {
   price: number;
   unit: string;
   margem_lucro?: number;
+  referencia?: string;
 }
 
 interface BudgetItem {
@@ -172,7 +173,8 @@ const NewBudgetPage = () => {
           type: 'part' as const,
           price: parseFloat(part.preco_venda) || 0,
           unit: 'un',
-          margem_lucro: typeof part.margem_lucro === 'number' ? part.margem_lucro : (part.margem_lucro ? Number(part.margem_lucro) : 0)
+          margem_lucro: typeof part.margem_lucro === 'number' ? part.margem_lucro : (part.margem_lucro ? Number(part.margem_lucro) : 0),
+          referencia: part.referencia || ''
         }));
         setParts(formattedParts);
       }
@@ -205,7 +207,8 @@ const NewBudgetPage = () => {
         type: 'part' as const,
         price: parseFloat(part.preco_venda) || 0,
         unit: 'un',
-        margem_lucro: typeof part.margem_lucro === 'number' ? part.margem_lucro : (part.margem_lucro ? Number(part.margem_lucro) : 0)
+        margem_lucro: typeof part.margem_lucro === 'number' ? part.margem_lucro : (part.margem_lucro ? Number(part.margem_lucro) : 0),
+        referencia: part.referencia || ''
       }));
 
       const combinedResults = [...formattedServices, ...formattedParts];
@@ -898,7 +901,7 @@ const NewBudgetPage = () => {
                         <div className="flex justify-between items-center">
                           <div>
                             <div className="font-medium text-gray-200">{item.name}</div>
-                            <div className="text-xs text-gray-400">{item.id} • {item.type === 'service' ? 'Serviço' : 'Peça'}</div>
+                            <div className="text-xs text-gray-400">{item.referencia ? `${item.referencia} • ` : ''}{item.type === 'service' ? 'Serviço' : 'Peça'}</div>
                           </div>
                           <div className="text-brand-yellow font-mono">€{item.price.toFixed(2)}</div>
                         </div>

@@ -1,50 +1,42 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import {
-  successResponse,
-  errorResponse,
-  handleDatabaseError,
-  parseNum,
-  toDateString,
-  calculateDaysDelay
-} from '@/lib/api-utils';
+import { db } from '@/db/connection';
+import { fornecedores, pecas } from '@/db/schema';
+import { categoriasPeca, encomendasPecas, itensEncomendaPeca } from '../../../../drizzle/migrations/schema';
+import { eq, desc, sql } from 'drizzle-orm';
+import { successResponse, errorResponse, handleDatabaseError } from '@/lib/api-utils';
 import { registarAuditoria } from '@/lib/auditoria';
-
-// @ts-ignore
-const prisma = new PrismaClient({
-  log: ['error', 'warn', 'info']
-});
-const prismaAny = prisma as any;
+import { parseNum } from '@/lib/api-utils';
 
 /**
  * Format order item for API response
  */
 const formatOrderItem = (item: any) => ({
   id: String(item.id),
-  peca_id: item.peca_id !== null ? String(item.peca_id) : null,
-  quantidade_encomendada: item.quantidade_encomendada,
-  quantidade_recebida: item.quantidade_recebida,
-  preco_unitario: Number(item.preco_unitario),
+  peca_id: item.pecaId !== null ? String(item.pecaId) : null,
+  quantidade_encomendada: item.quantidadeEncomendada,
+  quantidade_recebida: item.quantidadeRecebida,
+  preco_unitario: Number(item.precoUnitario),
+  preco_total: Number(item.precoTotal),
   estado: item.estado,
-  nome: item.peca?.nome || item.peca_descricao || '',
-  referencia: item.peca?.referencia || item.referencia || ''
+  notas: item.notas || '',
+  descricao: item.descricao || '',
+  referencia: item.referencia || ''
 });
 
 /**
  * Format encomienda for API response
  */
-const formatEncomienda = (enc: any) => ({
+const formatEncomienda = (enc: any, fornecedorNome: string, itens: any[]) => ({
   id: String(enc.id),
-  numero_encomenda: enc.numero_encomenda,
-  fornecedor_id: String(enc.fornecedor_id),
-  fornecedor_nome: enc.fornecedor?.nome || '',
-  data_encomenda: toDateString(enc.data_encomenda),
-  data_entrega_estimada: toDateString(enc.data_entrega_estimada),
-  data_entrega_real: toDateString(enc.data_entrega_real),
+  numero_encomenda: enc.numeroEncomenda || enc.numero_encomenda,
+  fornecedor_id: String(enc.fornecedorId || enc.fornecedor_id),
+  fornecedor_nome: fornecedorNome,
+  data_encomenda: enc.dataEncomenda || enc.data_encomenda,
+  data_entrega_estimada: enc.dataEntregaEstimada || enc.data_entrega_estimada,
+  data_entrega_real: enc.dataEntregaReal || enc.data_entrega_real,
   estado: enc.estado,
-  custo_total: Number(enc.custo_total),
-  dias_atraso: calculateDaysDelay(enc.data_entrega_estimada, enc.data_entrega_real, enc.estado),
-  itens: (enc.itens || []).map(formatOrderItem)
+  custo_total: Number(enc.custoTotal ?? enc.custo_total),
+  notas: enc.notas || '',
+  itens: itens.map(formatOrderItem)
 });
 
 /**
@@ -52,10 +44,9 @@ const formatEncomienda = (enc: any) => ({
  */
 const inferSupplierFromPart = async (pecaId: string): Promise<number | null> => {
   if (!pecaId || String(pecaId).startsWith('custom')) return null;
-  
-  const part = await prisma.pecas.findUnique({
-    where: { id: BigInt(pecaId) },
-    select: { fornecedor_id: true }
+  const part = await db.query.pecas.findFirst({
+    where: eq(pecas.id, Number(pecaId)),
+    columns: { fornecedor_id: true }
   });
   return part?.fornecedor_id || null;
 };
@@ -65,16 +56,17 @@ const inferSupplierFromPart = async (pecaId: string): Promise<number | null> => 
  */
 const generateOrderNumber = async (tx: any): Promise<string> => {
   const year = new Date().getFullYear();
-  const lastOrder = await tx.encomendas_pecas.findFirst({
-    where: { numero_encomenda: { startsWith: `ENC-${year}-` } },
-    orderBy: { id: 'desc' },
-    select: { numero_encomenda: true }
-  });
-  
-  const lastSeq = lastOrder?.numero_encomenda
-    ? Number(lastOrder.numero_encomenda.split('-').pop())
+  // Buscar o maior número sequencial do ano
+  const prefix = `ENC-${year}-`;
+  const lastOrder = await tx
+    .select()
+    .from(encomendasPecas)
+    .where(sql`LEFT(${encomendasPecas.numeroEncomenda}, ${prefix.length}) = ${prefix}`)
+    .orderBy(desc(encomendasPecas.id))
+    .limit(1);
+  const lastSeq = lastOrder[0]?.numeroEncomenda
+    ? Number(lastOrder[0].numeroEncomenda.split('-').pop())
     : 0;
-  
   return `ENC-${year}-${String(lastSeq + 1).padStart(6, '0')}`;
 };
 
@@ -89,12 +81,12 @@ const createOrderItem = async (tx: any, encomendaId: number, item: any): Promise
   if (item.peca_id && !String(item.peca_id).startsWith('custom')) {
     // Link to existing part
     return {
-      encomenda_id: encomendaId,
-      peca_id: BigInt(item.peca_id),
-      quantidade_encomendada: quantity,
-      quantidade_recebida: 0,
-      preco_unitario: parseNum(price),
-      preco_total: parseNum(total),
+      encomendaId: encomendaId,
+      pecaId: Number(item.peca_id),
+      quantidadeEncomendada: quantity,
+      quantidadeRecebida: 0,
+      precoUnitario: parseNum(price),
+      precoTotal: parseNum(total),
       estado: 'pendente'
     };
   }
@@ -106,41 +98,50 @@ const createOrderItem = async (tx: any, encomendaId: number, item: any): Promise
 
   const reference = item.part.reference.trim();
   const name = item.part.name.trim();
-  const category = item.part.category || 'custom';
-  
+  let categoryId = item.part.category_id ? Number(item.part.category_id) : null;
+  // Se não houver category_id, buscar categoria 'Custom' ou 'Genérica'
+  if (!categoryId) {
+    const categoria = await tx.select().from(categoriasPeca)
+      .where(sql`LOWER(${categoriasPeca.nome}) IN ('custom', 'genérica', 'generica')`)
+      .limit(1);
+    if (!categoria[0]) {
+      throw new Error("Não existe categoria 'Custom' ou 'Genérica' na base de dados. Crie uma categoria padrão para peças customizadas.");
+    }
+    categoryId = categoria[0].id;
+  }
+  const descricao = item.part.description ? String(item.part.description) : '';
   let supplierId: number | null = null;
   if (item.part.supplier) {
-    const supplier = await tx.fornecedores.findFirst({
-      where: { nome: item.part.supplier }
-    });
-    supplierId = supplier?.id || null;
+    const supplier = await tx.select().from(fornecedores).where(eq(fornecedores.nome, item.part.supplier)).limit(1);
+    supplierId = supplier[0]?.id || null;
   }
-
-  console.log(`📦 Creating custom part: nome=${name}, referencia=${reference}`);
-  
-  const createdPart = await tx.pecas.create({
-    data: {
-      nome: name,
-      referencia: reference,
-      categoria: category,
-      quantidade_stock: 0,
-      nivel_stock_minimo: 0,
-      preco_venda: 0,
-      custo_unitario: 0,
-      ativo: true,
-      fornecedor_id: supplierId
-    }
+  // Criar peça customizada
+  const insertResult = await tx.insert(pecas).values({
+    nome: name,
+    referencia: reference,
+    categoria_id: categoryId,
+    quantidade_stock: 0,
+    nivel_stock_minimo: 0,
+    preco_venda: 0,
+    custo_unitario: 0,
+    descricao: descricao,
+    ativo: 1,
+    fornecedor_id: supplierId,
+    margem_lucro: null,
+    veiculos_compativeis: null,
+    notas: null
   });
-
-  console.log(`✅ Custom part created: id=${createdPart.id}`);
-
+  const createdPartId = insertResult.insertId || insertResult[0]?.insertId || insertResult[0]?.id;
+  if (!createdPartId || typeof createdPartId !== 'number') {
+    throw new Error('Failed to create custom part: no ID returned');
+  }
   return {
-    encomenda_id: encomendaId,
-    peca_id: BigInt(createdPart.id),
-    quantidade_encomendada: quantity,
-    quantidade_recebida: 0,
-    preco_unitario: parseNum(price),
-    preco_total: parseNum(total),
+    encomendaId: encomendaId,
+    pecaId: createdPartId,
+    quantidadeEncomendada: quantity,
+    quantidadeRecebida: 0,
+    precoUnitario: parseNum(price),
+    precoTotal: parseNum(total),
     estado: 'pendente'
   };
 };
@@ -150,22 +151,41 @@ const createOrderItem = async (tx: any, encomendaId: number, item: any): Promise
  */
 export async function GET() {
   try {
-    const encomendas = await prismaAny.encomendas_pecas.findMany({
-      include: {
-        fornecedor: true,
-        itens: { include: { peca: true } }
-      },
-      orderBy: { criado_em: 'desc' }
+    const encomendas = await db.select().from(encomendasPecas).orderBy(desc(encomendasPecas.criadoEm));
+    const fornecedoresList = await db.select().from(fornecedores);
+    const fornecedoresMap = new Map(fornecedoresList.map(f => [f.id, f.nome]));
+    // Buscar itens + info da peça (descricao, referencia)
+    const allItens = await db
+      .select({
+        id: itensEncomendaPeca.id,
+        encomendaId: itensEncomendaPeca.encomendaId,
+        pecaId: itensEncomendaPeca.pecaId,
+        quantidadeEncomendada: itensEncomendaPeca.quantidadeEncomendada,
+        quantidadeRecebida: itensEncomendaPeca.quantidadeRecebida,
+        precoUnitario: itensEncomendaPeca.precoUnitario,
+        precoTotal: itensEncomendaPeca.precoTotal,
+        estado: itensEncomendaPeca.estado,
+        notas: itensEncomendaPeca.notas,
+        descricao: pecas.descricao,
+        referencia: pecas.referencia
+      })
+      .from(itensEncomendaPeca)
+      .leftJoin(pecas, eq(itensEncomendaPeca.pecaId, pecas.id));
+    const groupedItens = new Map();
+    allItens.forEach(item => {
+      if (!groupedItens.has(item.encomendaId)) groupedItens.set(item.encomendaId, []);
+      groupedItens.get(item.encomendaId).push(item);
     });
-
-    const serialized = encomendas.map(formatEncomienda);
+    const serialized = encomendas.map(enc =>
+      formatEncomienda(
+        enc,
+        fornecedoresMap.get(enc.fornecedorId) || '',
+        groupedItens.get(enc.id) || []
+      )
+    );
     return successResponse(serialized);
   } catch (error) {
-    console.error('Error fetching order list:', error);
-    if (error instanceof Error) {
-      return handleDatabaseError(error);
-    }
-    return errorResponse('Failed to fetch orders', 500);
+    return handleDatabaseError(error as Error);
   }
 }
 
@@ -197,59 +217,63 @@ export async function POST(request: Request) {
 
     console.log(`📊 Order total cost: ${totalCost}`);
 
-    // Create order with transaction
-    const created = await prismaAny.$transaction(async (tx: any) => {
-      console.log('🔄 Starting transaction...');
-
-      // Generate order number
-      const numero_encomenda = await generateOrderNumber(tx);
-      console.log(`📝 Order number generated: ${numero_encomenda}`);
-
-      // Create order header
-      const encomenda = await tx.encomendas_pecas.create({
-        data: {
-          numero_encomenda,
-          fornecedor_id: supplierId ? parseInt(supplierId) : null,
+    // Criar encomenda e itens em transação
+    let createdId: number | null = null;
+    let createdNumero: string | null = null;
+    await db.transaction(async (tx) => {
+      // Gerar número da encomenda
+      const numeroEncomenda = await generateOrderNumber(tx);
+      // Criar encomenda
+      // Try both camelCase and snake_case keys for Drizzle compatibility
+      let insertObj: any = {
+        numeroEncomenda: numeroEncomenda,
+        fornecedorId: supplierId ? Number(supplierId) : null,
+        dataEncomenda: new Date(),
+        dataEntregaEstimada: data_entrega_estimada ? new Date(data_entrega_estimada) : null,
+        estado: 'pendente',
+        custoTotal: parseNum(totalCost)
+      };
+      let insertResult;
+      try {
+        insertResult = await tx.insert(encomendasPecas).values(insertObj);
+      } catch (e) {
+        insertObj = {
+          numero_encomenda: numeroEncomenda,
+          fornecedor_id: supplierId ? Number(supplierId) : null,
           data_encomenda: new Date(),
-          data_entrega_estimada: data_entrega_estimada
-            ? new Date(data_entrega_estimada)
-            : null,
+          data_entrega_estimada: data_entrega_estimada ? new Date(data_entrega_estimada) : null,
           estado: 'pendente',
           custo_total: parseNum(totalCost)
-        }
-      });
-
-      console.log(`✅ Order created with ID: ${encomenda.id}`);
-
-      // Create order items
+        };
+        insertResult = await tx.insert(encomendasPecas).values(insertObj);
+      }
+      // Drizzle MySqlRawQueryResult não retorna insertId. Buscar pelo campo único (numeroEncomenda)
+      // Certifique-se de que numeroEncomenda está definido no escopo
+      const [lastEncomenda] = await db.select().from(encomendasPecas).where(eq(encomendasPecas.numeroEncomenda, numeroEncomenda));
+      const insertedId = lastEncomenda?.id;
+      if (!insertedId || typeof insertedId !== 'number') {
+        throw new Error('Failed to create order: no ID returned');
+      }
+      createdId = insertedId;
+      createdNumero = numeroEncomenda;
+      // Criar itens
       const itensData = [];
       for (const item of itens) {
-        const itemData = await createOrderItem(tx, encomenda.id, item);
+        const itemData = await createOrderItem(tx, createdId, item);
         itensData.push(itemData);
       }
-
-      console.log(`📦 Creating ${itensData.length} items...`);
-
       if (itensData.length > 0) {
-        await tx.itens_encomenda_peca.createMany({ data: itensData });
-        console.log(`✅ ${itensData.length} items created`);
+        await tx.insert(itensEncomendaPeca).values(itensData);
       }
-
-      return encomenda;
     });
-
-    console.log(`🎉 Transaction completed successfully. ID: ${created?.id}`);
-
-    if (!created?.id) {
+    if (!createdId) {
       return errorResponse('Order created but missing ID', 500);
     }
-
-    await registarAuditoria('CREATE', 'encomendas_pecas', Number(created.id), null, { numero_encomenda: created.numero_encomenda, fornecedor_id: supplierId }, request);
-
+    await registarAuditoria('CREATE', 'encomendas_pecas', Number(createdId), null, { numero_encomenda: createdNumero, fornecedor_id: supplierId }, request);
     return successResponse(
       {
-        id: String(created.id),
-        numero_encomenda: created.numero_encomenda
+        id: String(createdId),
+        numero_encomenda: createdNumero
       },
       201
     );

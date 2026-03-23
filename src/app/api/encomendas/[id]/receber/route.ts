@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/db/connection';
+import { encomendasPecas, itensEncomendaPeca, pecas } from '@/db/schema';
 import { registarAuditoria } from '@/lib/auditoria';
-
-// @ts-ignore
-const prisma = new PrismaClient({
-  log: ['error']
-});
-const prismaAny = prisma as any;
+import { eq } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 
 export async function POST(
   request: NextRequest,
@@ -19,65 +16,52 @@ export async function POST(
     const selectedItems: Array<{ id: string; quantity?: number }> =
       body?.items && Array.isArray(body.items) ? body.items : [];
 
-    const encomenda = await prismaAny.encomendas_pecas.findUnique({
-      where: { id: BigInt(id) },
-      include: { itens: true }
-    });
 
+    // Buscar encomenda e itens
+    const [encomenda] = await db.select().from(encomendasPecas).where(eq(encomendasPecas.id, Number(id)));
     if (!encomenda) {
       return NextResponse.json({ error: 'Encomenda nao encontrada' }, { status: 404 });
     }
+    const itens = await db.select().from(itensEncomendaPeca).where(eq(itensEncomendaPeca.encomendaId, Number(id)));
 
-    await prismaAny.$transaction(async (tx: any) => {
-      for (const item of encomenda.itens) {
-        const totalOrdered = Number(item.quantidade_encomendada) || 0;
-        let qtyToReceive = totalOrdered;
+    for (const item of itens) {
+      const totalOrdered = Number(item.quantidadeEncomendada) || 0;
+      let qtyToReceive = totalOrdered;
 
-        if (selectedItems.length > 0) {
-          const sel = selectedItems.find((s: any) => String(s.id) === String(item.id));
-          if (!sel) {
-            // user did not select this part, skip entirely
-            continue;
-          }
-          qtyToReceive = Number(sel.quantity ?? 0);
-          if (isNaN(qtyToReceive) || qtyToReceive <= 0) {
-            continue;
-          }
+      if (selectedItems.length > 0) {
+        const sel = selectedItems.find((s: any) => String(s.id) === String(item.id));
+        if (!sel) {
+          // user did not select this part, skip entirely
+          continue;
         }
-
-        // never exceed originally ordered quantity
-        if (qtyToReceive > totalOrdered) {
-          qtyToReceive = totalOrdered;
+        qtyToReceive = Number(sel.quantity ?? 0);
+        if (isNaN(qtyToReceive) || qtyToReceive <= 0) {
+          continue;
         }
-
-        if (qtyToReceive > 0) {
-          await tx.pecas.update({
-            where: { id: item.peca_id },
-            data: {
-              quantidade_stock: {
-                increment: qtyToReceive
-              }
-            }
-          });
-        }
-
-        await tx.itens_encomenda_peca.update({
-          where: { id: item.id },
-          data: {
-            quantidade_recebida: qtyToReceive,
-            estado: 'recebido'
-          }
-        });
       }
 
-      await tx.encomendas_pecas.update({
-        where: { id: BigInt(id) },
-        data: {
-          estado: 'recebido',
-          data_entrega_real: new Date()
-        }
-      });
-    });
+      // never exceed originally ordered quantity
+      if (qtyToReceive > totalOrdered) {
+        qtyToReceive = totalOrdered;
+      }
+
+      if (qtyToReceive > 0) {
+        // Atualizar stock da peça
+        await db.update(pecas)
+          .set({ quantidade_stock: sql`quantidade_stock + ${qtyToReceive}` })
+          .where(eq(pecas.id, Number(item.pecaId)));
+      }
+
+      // Atualizar item da encomenda
+      await db.update(itensEncomendaPeca)
+        .set({ quantidadeRecebida: qtyToReceive, estado: 'recebido' })
+        .where(eq(itensEncomendaPeca.id, item.id));
+    }
+
+    // Atualizar encomenda para recebida
+    await db.update(encomendasPecas)
+      .set({ estado: 'recebido', dataEntregaReal: new Date().toISOString().slice(0, 10) })
+      .where(eq(encomendasPecas.id, Number(id)));
 
     await registarAuditoria('UPDATE', 'encomendas_pecas', Number(id), null, { estado: 'recebido' }, request);
 

@@ -1,7 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/db/connection';
+import { faturas } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 
-const prisma = new PrismaClient();
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api7.toconline.pt';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -22,10 +23,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     console.log('   Primeiros 20 chars:', token.substring(0, 20) + '...');
     console.log('   Últimos 10 chars:', '...' + token.substring(token.length - 10));
 
+
     // Buscar fatura
-    const fatura = await prisma.faturas.findUnique({
-      where: { id: BigInt(id) }
-    });
+    const [fatura] = await db.select().from(faturas).where(eq(faturas.id, Number(id)));
 
     if (!fatura) {
       return NextResponse.json(
@@ -36,8 +36,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     console.log('📋 Fatura encontrada:');
     console.log('   ID local:', fatura.id);
-    console.log('   Número fatura local:', fatura.numero_fatura);
-    console.log('   TOConline ID:', fatura.toconline_id);
+    console.log('   Número fatura local:', fatura.numeroFatura);
+    console.log('   TOConline ID:', fatura.toconlineId);
     console.log('   Estado:', fatura.estado);
 
     if (fatura.estado !== 'pendente') {
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     // Validar se fatura tem toconline_id (necessário para emitir recibo no TOConline)
-    if (!fatura.toconline_id) {
+    if (!fatura.toconlineId) {
       return NextResponse.json(
         { 
           success: false, 
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // Sincronizar numero_fatura local com o numero real no TOConline
     let numeroFaturaToconline: string | null = null;
     try {
-      const documentoRes = await fetch(`${BASE_URL}/api/v1/commercial_sales_documents/${fatura.toconline_id}`, {
+      const documentoRes = await fetch(`${BASE_URL}/api/v1/commercial_sales_documents/${fatura.toconlineId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     // Calcular totais - arredondar para 2 casas decimais para evitar erros de ponto flutuante
-    const grossTotal = parseFloat(parseFloat(fatura.valor_total.toString()).toFixed(2));
+    const grossTotal = parseFloat(parseFloat(fatura.valorTotal.toString()).toFixed(2));
     const netTotal = parseFloat(parseFloat(fatura.subtotal.toString()).toFixed(2));
     const retentionTotal = parseFloat((grossTotal - netTotal).toFixed(2));
 
@@ -98,10 +98,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       payment_mechanism: 'MO',
       gross_total: grossTotal,
       net_total: netTotal,
-      customer_id: parseInt(fatura.toconline_customer_id || '0'),
+      customer_id: parseInt(fatura.toconlineCustomerId || '0'),
       lines: [{
         receivable_type: 'Document',
-        receivable_id: parseInt(fatura.toconline_id),
+        receivable_id: parseInt(fatura.toconlineId),
         received_value: grossTotal,
         settlement_percentage: 0,
         gross_total: grossTotal,
@@ -112,7 +112,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     };
 
     console.log('📤 Emitindo recibo no TOConline...');
-    console.log('   Fatura ID TOConline:', fatura.toconline_id);
+    console.log('   Fatura ID TOConline:', fatura.toconlineId);
     console.log('   Token usado (primeiros 20):', token.substring(0, 20) + '...');
     console.log('Payload:', JSON.stringify(reciboPayload, null, 2));
 
@@ -162,21 +162,25 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }));
     
     // Atualizar fatura: marcar como paga e guardar ID do recibo
-    const faturaAtualizada = await prisma.faturas.update({
-      where: { id: BigInt(id) },
-      data: {
-        numero_fatura: numeroFaturaToconline || fatura.numero_fatura,
+
+    await db.update(faturas)
+      .set({
+        numeroFatura: numeroFaturaToconline || fatura.numeroFatura,
         estado: 'paga',
-        data_pagamento: new Date(),
-        valor_pago: fatura.valor_total,
-        recibo_toconline_id: reciboId ? String(reciboId) : null,
-        atualizado_em: new Date()
-      }
-    });
+        dataPagamento: new Date().toISOString().slice(0, 10),
+        valorPago: fatura.valorTotal,
+        reciboToconlineId: reciboId ? String(reciboId) : null,
+        atualizadoEm: new Date().toISOString().slice(0, 19).replace('T', ' ')
+      })
+      .where(eq(faturas.id, Number(id)));
+    const [faturaAtualizada] = await db.select().from(faturas).where(eq(faturas.id, Number(id)));
+    if (!faturaAtualizada) {
+      return NextResponse.json({ success: false, error: 'Fatura não encontrada' }, { status: 404 });
+    }
 
     console.log('✅ Fatura atualizada:');
     console.log('   ID:', Number(faturaAtualizada.id));
-    console.log('   Número fatura:', faturaAtualizada.numero_fatura);
+    console.log('   Número fatura:', faturaAtualizada.numeroFatura);
     console.log('   Estado:', faturaAtualizada.estado);
     console.log('   Recibo ID armazenado:', reciboId);
 
@@ -184,9 +188,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       success: true,
       data: {
         id: Number(faturaAtualizada.id),
-        numero_fatura: faturaAtualizada.numero_fatura,
+        numero_fatura: faturaAtualizada.numeroFatura,
         estado: faturaAtualizada.estado,
-        valor_pago: parseFloat(faturaAtualizada.valor_pago?.toString() || '0'),
+        valor_pago: parseFloat(faturaAtualizada.valorPago?.toString() || '0'),
         recibo_id: reciboId,
         mensagem: 'Recibo emitido com sucesso e fatura marcada como paga'
       }
