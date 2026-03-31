@@ -1,5 +1,5 @@
 import { db } from '@/db/connection';
-import { faturas, clientes, ordensTrabalho } from '@/db/schema';
+import { faturas, clientes, ordensTrabalho, veiculos } from '@/db/schema';
 import { and, desc, eq, inArray, ne, sql } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
 import { 
@@ -37,9 +37,9 @@ type OrderInfo = {
   id?: number;
   refOrdemTrabalho?: string;
   veiculo?: {
-    marca?: string;
-    modelo?: string;
-    matricula?: string;
+    marca: string | undefined;
+    modelo: string | undefined;
+    matricula: string | undefined;
   } | null;
 };
 
@@ -121,12 +121,47 @@ export async function GET(req: Request) {
         ? db.select({ id: clientes.id, nome: clientes.nome, nif: clientes.nif }).from(clientes).where(inArray(clientes.id, clienteIds))
         : [],
       orderIds.length
-        ? db.select({ id: ordensTrabalho.id, refOrdemTrabalho: ordensTrabalho.refOrdemTrabalho }).from(ordensTrabalho).where(inArray(ordensTrabalho.id, orderIds))
+        ? db.select({
+            id: ordensTrabalho.id,
+            refOrdemTrabalho: ordensTrabalho.refOrdemTrabalho,
+            veiculoId: ordensTrabalho.veiculoId,
+          }).from(ordensTrabalho).where(inArray(ordensTrabalho.id, orderIds))
         : []
     ]);
 
+    const veiculoIds = ordensTrabalhoList
+      .map(ordem => Number(ordem.veiculoId))
+      .filter((id): id is number => Number.isFinite(id) && id > 0);
+
+    const veiculosList = veiculoIds.length
+      ? await db
+          .select({ id: veiculos.id, marca: veiculos.marca, modelo: veiculos.modelo, matricula: veiculos.matricula })
+          .from(veiculos)
+          .where(inArray(veiculos.id, veiculoIds))
+      : [];
+
     const clientMap = new Map<number, ClientInfo>(clientesList.map(cliente => [cliente.id, cliente]));
-    const orderMap = new Map<number, OrderInfo>(ordensTrabalhoList.map(ordem => [Number(ordem.id), ordem]));
+    const vehicleMap = new Map<number, { marca: string | undefined; modelo: string | undefined; matricula: string | undefined }>(
+      veiculosList.map(veiculo => [
+        Number(veiculo.id),
+        {
+          marca: veiculo.marca ?? undefined,
+          modelo: veiculo.modelo ?? undefined,
+          matricula: veiculo.matricula ?? undefined,
+        },
+      ])
+    );
+
+    const orderMap = new Map<number, OrderInfo>(
+      ordensTrabalhoList.map(ordem => [
+        Number(ordem.id),
+        {
+          id: Number(ordem.id),
+          refOrdemTrabalho: ordem.refOrdemTrabalho,
+          veiculo: vehicleMap.get(Number(ordem.veiculoId)) || null,
+        },
+      ])
+    );
 
     // Format and return response
     const faturasFormatadas = faturasList.map(f => formatInvoice(f, clientMap, orderMap));

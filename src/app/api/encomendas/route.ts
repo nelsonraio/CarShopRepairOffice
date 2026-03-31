@@ -17,6 +17,7 @@ const formatOrderItem = (item: any) => ({
   preco_unitario: Number(item.precoUnitario),
   preco_total: Number(item.precoTotal),
   estado: item.estado,
+  nome: item.nome || '',
   notas: item.notas || '',
   descricao: item.descricao || '',
   referencia: item.referencia || ''
@@ -166,6 +167,7 @@ export async function GET() {
         precoTotal: itensEncomendaPeca.precoTotal,
         estado: itensEncomendaPeca.estado,
         notas: itensEncomendaPeca.notas,
+        nome: pecas.nome,
         descricao: pecas.descricao,
         referencia: pecas.referencia
       })
@@ -247,9 +249,12 @@ export async function POST(request: Request) {
         };
         insertResult = await tx.insert(encomendasPecas).values(insertObj);
       }
-      // Drizzle MySqlRawQueryResult não retorna insertId. Buscar pelo campo único (numeroEncomenda)
-      // Certifique-se de que numeroEncomenda está definido no escopo
-      const [lastEncomenda] = await db.select().from(encomendasPecas).where(eq(encomendasPecas.numeroEncomenda, numeroEncomenda));
+      // Em alguns drivers, insert não devolve insertId de forma consistente.
+      // Buscar dentro da mesma transação garante visibilidade do registo recém-criado.
+      const [lastEncomenda] = await tx
+        .select()
+        .from(encomendasPecas)
+        .where(eq(encomendasPecas.numeroEncomenda, numeroEncomenda));
       const insertedId = lastEncomenda?.id;
       if (!insertedId || typeof insertedId !== 'number') {
         throw new Error('Failed to create order: no ID returned');

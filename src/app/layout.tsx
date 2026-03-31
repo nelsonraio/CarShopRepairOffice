@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import "./globals.css";
 import { getAppStatus } from "@/lib/appStatus";
 import OfflineGuard from "@/components/OfflineGuard";
+import DevServiceWorkerReset from "@/components/DevServiceWorkerReset";
 
 /**
  * Metadata para SEO e meta tags
@@ -44,6 +45,7 @@ export default async function RootLayout({
       >
         {status.enabled ? (
           <>
+            <DevServiceWorkerReset />
             {/* Guard que monitora conectividade */}
             <OfflineGuard />
             {children}

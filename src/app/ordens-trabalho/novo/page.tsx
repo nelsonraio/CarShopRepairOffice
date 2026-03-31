@@ -35,6 +35,7 @@ interface Mechanic {
 interface CatalogItem {
   id: string;
   name: string;
+  reference?: string | undefined;
   type: 'service' | 'part';
   price: number;
   unit: string;
@@ -43,6 +44,7 @@ interface CatalogItem {
 interface WorkOrderItem {
   id: string;
   name: string;
+  reference?: string | undefined;
   quantity: number;
   unitPrice: number;
   unit: string;
@@ -80,7 +82,8 @@ const NewWorkOrderPage = () => {
   const [customItem, setCustomItem] = useState({
     name: '',
     quantity: 1,
-    unitPrice: 0
+    unitPrice: 0,
+    tipo: 'service' as 'service' | 'part'
   });
 
   const [formData, setFormData] = useState({
@@ -149,6 +152,7 @@ const NewWorkOrderPage = () => {
         const formattedParts: CatalogItem[] = data.map((part: any) => ({
           id: part.id,
           name: part.nome,
+          reference: part.referencia || part.reference || '',
           type: 'part' as const,
           price: parseFloat(part.preco_venda) || 0,
           unit: 'un'
@@ -181,6 +185,7 @@ const NewWorkOrderPage = () => {
       const formattedParts: CatalogItem[] = partsData.map((part: any) => ({
         id: part.id,
         name: part.nome,
+        reference: part.referencia || part.reference || '',
         type: 'part' as const,
         price: parseFloat(part.preco_venda) || 0,
         unit: 'un'
@@ -200,6 +205,7 @@ const NewWorkOrderPage = () => {
     const newItem: WorkOrderItem = {
       id: item.id,
       name: item.name,
+      reference: item.reference,
       quantity: 1,
       unitPrice: markupPrice,
       unit: item.unit,
@@ -669,7 +675,10 @@ const NewWorkOrderPage = () => {
                         <div className="flex justify-between items-center">
                           <div>
                             <div className="font-medium text-gray-200">{item.name}</div>
-                            <div className="text-xs text-gray-400">{item.id} • {item.type === 'service' ? 'Serviço' : 'Peça'}</div>
+                            <div className="text-xs text-gray-400">
+                              {item.type === 'part' && item.reference ? `Ref: ${item.reference} • ` : ''}
+                              {item.id} • {item.type === 'service' ? 'Serviço' : 'Peça'}
+                            </div>
                           </div>
                           <div className="text-brand-yellow font-mono">€{item.price.toFixed(2)}</div>
                         </div>
@@ -682,7 +691,7 @@ const NewWorkOrderPage = () => {
               {/* Custom Item Form */}
               <div className="bg-gray-800 p-4 border border-gray-600 rounded-none mb-4">
                 <h4 className="text-lg font-semibold text-gray-200 mb-4">Adicionar Item Personalizado</h4>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-400 mb-1">Descrição *</label>
                     <input
@@ -692,6 +701,17 @@ const NewWorkOrderPage = () => {
                       className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
                       placeholder="Descrição do item personalizado"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Tipo *</label>
+                    <select
+                      value={customItem.tipo}
+                      onChange={(e) => setCustomItem(prev => ({ ...prev, tipo: e.target.value as 'service' | 'part' }))}
+                      className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
+                    >
+                      <option value="service">Serviço</option>
+                      <option value="part">Peça</option>
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-1">Quantidade *</label>
@@ -736,17 +756,16 @@ const NewWorkOrderPage = () => {
                           name: customItem.name,
                           quantity: customItem.quantity,
                           unitPrice: customItem.unitPrice,
-                          unit: 'h',
+                          unit: customItem.tipo === 'part' ? 'un' : 'h',
                           total: customItem.quantity * customItem.unitPrice,
-                          type: 'service',
-                          servico_id: '',
-                          peca_id: '',
+                          type: customItem.tipo,
                           descricao: customItem.name,
-                          tipo_item: 'servico'
+                          tipo_item: customItem.tipo === 'part' ? 'peca' : 'servico',
+                          ...(customItem.tipo === 'service' ? { servico_id: '' } : { peca_id: '' })
                         };
 
                         setWorkOrderItems([...workOrderItems, newItem]);
-                        setCustomItem({ name: '', quantity: 1, unitPrice: 0 });
+                        setCustomItem({ name: '', quantity: 1, unitPrice: 0, tipo: 'service' });
                       }}
                       className="w-full px-4 py-2 bg-brand-yellow text-gray-900 font-bold hover:bg-brand-yellow-dark transition-colors rounded-none"
                     >
@@ -784,6 +803,9 @@ const NewWorkOrderPage = () => {
                         <tr key={index} className="bg-gray-800 hover:bg-gray-700 transition-colors">
                           <td className="px-6 py-4">
                             <div className="font-medium text-gray-200">{item.name}</div>
+                            {item.type === 'part' && item.reference && (
+                              <div className="text-xs text-gray-400">Ref: {item.reference}</div>
+                            )}
                             <div className="text-xs text-gray-500">{item.type === 'service' ? 'Serviço' : 'Peça'}</div>
                           </td>
                           <td className="px-6 py-4 text-right">

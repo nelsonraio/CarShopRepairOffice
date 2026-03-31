@@ -72,7 +72,8 @@ const NewBudgetPage = () => {
   const [customItem, setCustomItem] = useState({
     name: '',
     quantity: 1,
-    unitPrice: 0
+    unitPrice: 0,
+    tipo: 'service' as 'service' | 'part'
   });
   const [alternateContact, setAlternateContact] = useState({
     nome: '',
@@ -914,7 +915,7 @@ const NewBudgetPage = () => {
               {/* Custom Item Form */}
               <div className="bg-gray-800 p-4 border border-gray-600 rounded-none mb-4">
                 <h4 className="text-lg font-semibold text-gray-200 mb-4">Adicionar Item Personalizado</h4>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-400 mb-1">Descrição *</label>
                     <input
@@ -924,6 +925,17 @@ const NewBudgetPage = () => {
                       className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
                       placeholder="Descrição do item personalizado"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Tipo *</label>
+                    <select
+                      value={customItem.tipo}
+                      onChange={(e) => setCustomItem(prev => ({ ...prev, tipo: e.target.value as 'service' | 'part' }))}
+                      className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
+                    >
+                      <option value="service">Serviço</option>
+                      <option value="part">Peça</option>
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-1">Quantidade *</label>
@@ -968,13 +980,13 @@ const NewBudgetPage = () => {
                           name: customItem.name,
                           quantity: customItem.quantity,
                           unitPrice: customItem.unitPrice,
-                          unit: 'h',
+                          unit: customItem.tipo === 'part' ? 'un' : 'h',
                           total: customItem.quantity * customItem.unitPrice,
-                          type: 'service'
+                          type: customItem.tipo
                         };
 
                         setBudgetItems([...budgetItems, newItem]);
-                        setCustomItem({ name: '', quantity: 1, unitPrice: 0 });
+                        setCustomItem({ name: '', quantity: 1, unitPrice: 0, tipo: 'service' });
                       }}
                       className="w-full px-4 py-2 bg-brand-yellow text-gray-900 font-bold hover:bg-brand-yellow-dark transition-colors rounded-none"
                     >

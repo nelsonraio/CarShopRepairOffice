@@ -39,7 +39,12 @@ const mapApiPriorityToUi = (priority: string): WorkOrder['priority'] => {
 const normalizeWorkOrder = (order: RawWorkOrder): WorkOrder => {
   const waitingPartsArr = Array.isArray(order.waitingParts) ? order.waitingParts : [];
   const waitingPartsText = waitingPartsArr
-    .map((item: any) => item?.descricao)
+    .map((item: any) => {
+      const description = typeof item?.descricao === 'string' ? item.descricao.trim() : '';
+      const reference = typeof item?.referencia === 'string' ? item.referencia.trim() : '';
+      if (!description) return '';
+      return reference ? `${description} (${reference})` : description;
+    })
     .filter((v: unknown): v is string => typeof v === 'string' && v.trim().length > 0)
     .join('\n');
 
@@ -64,6 +69,7 @@ interface WorkOrderItem {
   id: string | number;
   tipo_item: string;
   descricao: string;
+  referencia?: string | undefined;
   quantidade: number | string;
   [key: string]: any;
 }
@@ -213,7 +219,7 @@ const WorkOrdersPage = () => {
           data.itens_ordem_trabalho.forEach((item: any) => {
             if (item.tipo_item === 'peca' && item.aguarda_peca === true) {
               waitingPartsSet.add(String(item.id));
-              waitingPartsList.push(item.descricao);
+              waitingPartsList.push(item.referencia ? `${item.descricao} (${item.referencia})` : item.descricao);
             }
           });
           
@@ -341,7 +347,7 @@ const WorkOrdersPage = () => {
     // Gerar as linhas da tabela dinamicamente
     const rows = workOrderItems.length > 0 ? workOrderItems.map(item => `
       <tr>
-        <td>${item.descricao}</td>
+        <td>${item.referencia ? `${item.descricao} (${item.referencia})` : item.descricao}</td>
         <td>${item.quantidade}</td>
         <td></td>
       </tr>
@@ -695,7 +701,7 @@ const WorkOrdersPage = () => {
                       {detailsItems.map((item) => (
                         <tr key={item.id} className="border-t border-gray-700">
                           <td className="px-2 py-1">{item.tipo_item || '-'}</td>
-                          <td className="px-2 py-1">{item.descricao || '-'}</td>
+                          <td className="px-2 py-1">{item.referencia ? `${item.descricao} (${item.referencia})` : item.descricao || '-'}</td>
                           <td className="px-2 py-1">{item.quantidade || '-'}</td>
                           <td className="px-2 py-1">{item.preco_unitario ?? '-'}</td>
                           <td className="px-2 py-1">{item.valor_total ?? '-'}</td>
@@ -780,7 +786,7 @@ const WorkOrdersPage = () => {
                           // Also update the text
                           const allParts = workOrderItems
                             .filter(item => item.tipo_item === 'peca')
-                            .map(item => item.descricao)
+                            .map(item => item.referencia ? `${item.descricao} (${item.referencia})` : item.descricao)
                             .join('\n');
                           setWaitingParts(allParts);
                         }}
@@ -809,11 +815,11 @@ const WorkOrdersPage = () => {
                             const selectedItems = workOrderItems.filter(i => 
                               i.tipo_item === 'peca' && newSelectedParts.has(String(i.id))
                             );
-                            setWaitingParts(selectedItems.map(i => i.descricao).join('\n'));
+                            setWaitingParts(selectedItems.map(i => i.referencia ? `${i.descricao} (${i.referencia})` : i.descricao).join('\n'));
                           }}
                         />
                         <label htmlFor={`part-${item.id}`} className="text-sm text-gray-300 cursor-pointer select-none">
-                          {item.descricao || ''} <span className="text-gray-500 text-xs">({item.quantidade})</span>
+                          {item.referencia ? `${item.descricao} (${item.referencia})` : item.descricao || ''} <span className="text-gray-500 text-xs">({item.quantidade})</span>
                         </label>
                       </div>
                     ))}

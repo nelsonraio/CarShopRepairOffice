@@ -21,6 +21,7 @@ type WorkOrderItemLike = {
   id?: number | bigint;
   tipo_item?: string;
   descricao?: string | null;
+  referencia?: string | null;
   quantidade?: number | string | null;
   preco_unitario?: number | string | null;
   valor_total?: number | string | null;
@@ -77,6 +78,7 @@ const formatWorkOrderItem = (item: WorkOrderItemLike) => ({
   id: Number(item.id),
   tipo_item: item.tipo_item,
   descricao: item.descricao ?? '',
+  referencia: item.referencia ?? '',
   quantidade: Number(item.quantidade) || 0,
   preco_unitario: Number(item.preco_unitario) || 0,
   valor_total: Number(item.valor_total) || 0
@@ -409,13 +411,27 @@ export async function GET(request: Request) {
       }
 
       // Buscar itens relacionados
-      const items = await db.query.itensOrdemTrabalho.findMany({ where: (i, { eq }) => eq(i.ordemTrabalhoId, Number(order.id)) });
+      const items = await db
+        .select({
+          id: itensOrdemTrabalho.id,
+          tipoItem: itensOrdemTrabalho.tipoItem,
+          descricao: itensOrdemTrabalho.descricao,
+          quantidade: itensOrdemTrabalho.quantidade,
+          precoUnitario: itensOrdemTrabalho.precoUnitario,
+          valorTotal: itensOrdemTrabalho.valorTotal,
+          aguardaPeca: itensOrdemTrabalho.aguardaPeca,
+          referencia: pecas.referencia,
+        })
+        .from(itensOrdemTrabalho)
+        .leftJoin(pecas, eq(itensOrdemTrabalho.pecaId, pecas.id))
+        .where(eq(itensOrdemTrabalho.ordemTrabalhoId, Number(order.id)));
 
       // Mapear itens para formato esperado pelo frontend
       const itens_ordem_trabalho = items.map(item => ({
         id: item.id,
         tipo_item: item.tipoItem,
         descricao: item.descricao,
+        referencia: item.referencia ?? '',
         quantidade: Number(item.quantidade) || 0,
         preco_unitario: Number(item.precoUnitario) || 0,
         valor_total: Number(item.valorTotal) || 0,
@@ -485,11 +501,19 @@ export async function GET(request: Request) {
       .filter(o => o.estado === 'aguarda_peca')
       .map(o => Number(o.id));
 
-    const waitingItemsMap = new Map<number, Array<{ id: number; descricao: string; quantidade: number; valor_total: number }>>();
+    const waitingItemsMap = new Map<number, Array<{ id: number; descricao: string; referencia: string; quantidade: number; valor_total: number }>>();
     if (aguardaPecaIds.length > 0) {
       const waitingItems = await db
-        .select()
+        .select({
+          id: itensOrdemTrabalho.id,
+          ordemTrabalhoId: itensOrdemTrabalho.ordemTrabalhoId,
+          descricao: itensOrdemTrabalho.descricao,
+          referencia: pecas.referencia,
+          quantidade: itensOrdemTrabalho.quantidade,
+          valorTotal: itensOrdemTrabalho.valorTotal,
+        })
         .from(itensOrdemTrabalho)
+        .leftJoin(pecas, eq(itensOrdemTrabalho.pecaId, pecas.id))
         .where(
           and(
             inArray(itensOrdemTrabalho.ordemTrabalhoId, aguardaPecaIds),
@@ -503,6 +527,7 @@ export async function GET(request: Request) {
         waitingItemsMap.get(ordId)!.push({
           id: Number(item.id),
           descricao: item.descricao ?? '',
+          referencia: item.referencia ?? '',
           quantidade: Number(item.quantidade) || 0,
           valor_total: Number(item.valorTotal) || 0
         });
@@ -514,6 +539,7 @@ export async function GET(request: Request) {
       id: number;
       tipo_item: string;
       descricao: string;
+      referencia: string;
       quantidade: number;
       preco_unitario: number;
       valor_total: number;
@@ -522,8 +548,19 @@ export async function GET(request: Request) {
 
     if (filteredOrderIds.length > 0) {
       const orderItems = await db
-        .select()
+        .select({
+          id: itensOrdemTrabalho.id,
+          ordemTrabalhoId: itensOrdemTrabalho.ordemTrabalhoId,
+          tipoItem: itensOrdemTrabalho.tipoItem,
+          descricao: itensOrdemTrabalho.descricao,
+          referencia: pecas.referencia,
+          quantidade: itensOrdemTrabalho.quantidade,
+          precoUnitario: itensOrdemTrabalho.precoUnitario,
+          valorTotal: itensOrdemTrabalho.valorTotal,
+          aguardaPeca: itensOrdemTrabalho.aguardaPeca,
+        })
         .from(itensOrdemTrabalho)
+        .leftJoin(pecas, eq(itensOrdemTrabalho.pecaId, pecas.id))
         .where(inArray(itensOrdemTrabalho.ordemTrabalhoId, filteredOrderIds));
 
       orderItems.forEach((item) => {
@@ -536,6 +573,7 @@ export async function GET(request: Request) {
           id: Number(item.id),
           tipo_item: item.tipoItem ?? '',
           descricao: item.descricao ?? '',
+          referencia: item.referencia ?? '',
           quantidade: Number(item.quantidade) || 0,
           preco_unitario: Number(item.precoUnitario) || 0,
           valor_total: Number(item.valorTotal) || 0,
