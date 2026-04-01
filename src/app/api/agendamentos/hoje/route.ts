@@ -1,7 +1,30 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db/connection';
-import { agendamentos, clientes, orcamentos } from '../../../../../drizzle/migrations/schema';
+import { agendamentos, clientes, mecanicos, orcamentos } from '../../../../../drizzle/migrations/schema';
 import { eq, and, gte, lt } from 'drizzle-orm';
+
+function formatLocalDate(value: Date) {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function normalizeDateValue(value: unknown) {
+  if (!value) {
+    return null;
+  }
+
+  if (typeof value === 'string') {
+    return value.slice(0, 10);
+  }
+
+  if (value instanceof Date) {
+    return formatLocalDate(value);
+  }
+
+  return null;
+}
 
 export async function GET() {
   try {
@@ -9,6 +32,8 @@ export async function GET() {
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
+    const todayStr = formatLocalDate(today);
+    const tomorrowStr = formatLocalDate(tomorrow);
 
     // Fetch agendamentos for today, join with clientes
     const agendamentosHoje = await db.select({
@@ -25,15 +50,18 @@ export async function GET() {
       contactoNome: agendamentos.contactoNome,
       contactoTelefone: agendamentos.contactoTelefone,
       contactoEmail: agendamentos.contactoEmail,
+      mecanico_nome: mecanicos.nome,
       cliente_nome: clientes.nome,
       cliente_telefone: clientes.telefone,
-      cliente_email: clientes.email
+      cliente_email: clientes.email,
+      dataAgendamento: agendamentos.dataAgendamento // <-- campo necessário para o Kanban
     })
       .from(agendamentos)
       .leftJoin(clientes, eq(agendamentos.clienteId, clientes.id))
+      .leftJoin(mecanicos, eq(agendamentos.mecanicoId, mecanicos.id))
       .where(and(
-        gte(agendamentos.dataAgendamento, today.toISOString().slice(0, 10)),
-        lt(agendamentos.dataAgendamento, tomorrow.toISOString().slice(0, 10))
+        gte(agendamentos.dataAgendamento, todayStr),
+        lt(agendamentos.dataAgendamento, tomorrowStr)
       ))
       .orderBy(agendamentos.horaInicio);
 
@@ -48,7 +76,10 @@ export async function GET() {
     // Original logic was broken; removed veiculo relation dependency
 
     // Map to UI format
-    const mapped = agendamentosHoje.map((agendamento) => ({
+    const mapped = agendamentosHoje.map((agendamento) => {
+      const normalizedDate = normalizeDateValue(agendamento.dataAgendamento);
+
+      return {
       id: agendamento.id ? agendamento.id.toString() : '',
       ref_agendamento: agendamento.id ? `AGD-${agendamento.id}` : '',
       cliente_nome: agendamento.cliente_nome || null,
@@ -63,11 +94,14 @@ export async function GET() {
       titulo: agendamento.titulo,
       descricao: agendamento.descricao || '',
       hora_agendamento: agendamento.horaInicio,
-      mecanico_nome: 'N/A', // Mecânico ainda não atribuído
+      mecanico_nome: agendamento.mecanico_nome || null,
       contacto_nome: agendamento.contactoNome || agendamento.cliente_nome || null,
       contacto_telefone: agendamento.contactoTelefone || agendamento.cliente_telefone || null,
-      contacto_email: agendamento.contactoEmail || agendamento.cliente_email || null    
-    }));
+      contacto_email: agendamento.contactoEmail || agendamento.cliente_email || null,
+      dataAgendamento: normalizedDate,
+      data_agendamento: normalizedDate,
+    };
+    });
 
     return NextResponse.json(mapped);
   } catch (error) {

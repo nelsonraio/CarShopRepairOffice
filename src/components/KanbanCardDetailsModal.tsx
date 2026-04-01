@@ -8,6 +8,8 @@ interface KanbanCardData {
   proc: string;
   plate?: string;
   model?: string;
+  veiculo_marca?: string;
+  veiculo_ano?: string;
   mechanic?: string;
   avatar?: string;
   estado?: string;
@@ -64,6 +66,7 @@ interface KanbanCardDetailsModalProps {
 export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTitle }: KanbanCardDetailsModalProps) {
     const [clientModalOpen, setClientModalOpen] = React.useState(false);
     const [clientDetails, setClientDetails] = React.useState<any | null>(null);
+  const vehicleModelLabel = [card?.veiculo_marca, card?.model].filter(Boolean).join(' ').trim() || card?.model || 'N/A';
 
     const handleClientClick = async () => {
       if (!card || !card.cliente_nome) return;
@@ -158,27 +161,33 @@ export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTi
         <div className="space-y-6">
           {/* Info Geral */}
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-gray-500 uppercase">Matrícula</label>
-              <p className="text-lg font-medium text-white">{card.plate}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-500 uppercase">Modelo</label>
-              <p className="text-lg font-medium text-white">{card.model}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-500 uppercase">Cliente</label>
-              {card.cliente_nome ? (
-                <button
-                  className="text-sm text-brand-yellow underline hover:text-yellow-400 focus:outline-none"
-                  onClick={handleClientClick}
-                >
-                  {card.cliente_nome}
-                </button>
-              ) : (
-                <p className="text-sm text-gray-300">N/A</p>
-              )}
-            </div>
+            {card.estado !== 'em_recepcao' && (
+              <>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 uppercase">Matrícula</label>
+                  <p className="text-lg font-medium text-white">{card.plate}</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 uppercase">Veículo</label>
+                  <p className="text-lg font-medium text-white">{vehicleModelLabel}</p>
+                </div>
+              </>
+            )}
+            {card.estado !== 'em_recepcao' && (
+              <div>
+                <label className="block text-xs font-medium text-gray-500 uppercase">Cliente</label>
+                {card.cliente_nome ? (
+                  <button
+                    className="text-sm text-brand-yellow underline hover:text-yellow-400 focus:outline-none"
+                    onClick={handleClientClick}
+                  >
+                    {card.cliente_nome}
+                  </button>
+                ) : (
+                  <p className="text-sm text-gray-300">N/A</p>
+                )}
+              </div>
+            )}
             {/* Mostrar contacto destacado para agendamentos em recepção */}
             {card.estado === 'em_recepcao' && (
               <div className="bg-purple-400/10 border border-purple-400/30 rounded p-3">
@@ -405,6 +414,24 @@ export default function KanbanCardDetailsModal({ isOpen, onClose, card, columnTi
             <div className="bg-purple-900/30 border border-purple-800 p-4 rounded">
               <h4 className="text-sm font-bold text-purple-200 mb-4">Detalhes do Agendamento</h4>
               <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 uppercase mb-1">Matrícula</label>
+                    <p className="text-sm text-gray-200">{card.plate || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 uppercase mb-1">Marca</label>
+                    <p className="text-sm text-gray-200">{card.veiculo_marca || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 uppercase mb-1">Modelo</label>
+                    <p className="text-sm text-gray-200">{card.model || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 uppercase mb-1">Ano</label>
+                    <p className="text-sm text-gray-200">{card.veiculo_ano || 'N/A'}</p>
+                  </div>
+                </div>
                 {card.hora_agendamento && (
                   <div>
                     <label className="block text-xs font-medium text-gray-400 uppercase mb-1">Hora Agendada</label>

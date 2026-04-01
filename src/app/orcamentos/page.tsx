@@ -62,7 +62,7 @@ const BudgetsPage = () => {
 
     const matchesSearch =
       budget.cliente?.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      `${budget.veiculo?.marca} ${budget.veiculo?.modelo} | ${budget.veiculo?.matricula}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      `${budget.veiculo?.matricula} | ${budget.veiculo?.marca} ${budget.veiculo?.modelo}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
       budget.ref_orcamento?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = statusFilter === '' || budget.estado === statusFilter;
@@ -592,7 +592,7 @@ const BudgetsPage = () => {
                             {budget.ref_orcamento}
                           </button>
                         </td>
-                        <td className="px-6 py-4 text-gray-400">{budget.veiculo ? `${budget.veiculo.marca} ${budget.veiculo.modelo} | ${budget.veiculo.matricula}` : 'Veículo não informado'}</td>
+                        <td className="px-6 py-4 text-gray-400">{budget.veiculo ? `${budget.veiculo.matricula} | ${budget.veiculo.marca} ${budget.veiculo.modelo}` : 'Veículo não informado'}</td>
 
                         <td className="px-6 py-4">{budget.cliente?.nome || 'Cliente não informado'}</td>
                         <td className="px-6 py-4 text-gray-400">

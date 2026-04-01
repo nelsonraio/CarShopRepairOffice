@@ -30,7 +30,7 @@ export async function GET(
     const transformedAgendamento = {
       id: agendamento.id.toString(),
       clientId: agendamento.clienteId?.toString() || '',
-      client: cliente?.nome || '',
+      client: agendamento.contactoNome || cliente?.nome || '',
       marca: agendamento.marca || '',
       modelo: agendamento.modelo || '',
       ano: agendamento.ano?.toString() || '',
@@ -74,13 +74,6 @@ export async function PUT(
     const { id } = await context.params;
     const body = await request.json();
 
-    // Buscar cliente pelo nome
-    let clienteId = null;
-    if (body.cliente) {
-      const clienteArr = await db.select().from(clientes).where(eq(clientes.nome, body.cliente));
-      clienteId = clienteArr[0]?.id || null;
-    }
-
     // Buscar mecânico pelo nome
     let mecanicoId = null;
     if (body.mecanico) {
@@ -117,12 +110,12 @@ export async function PUT(
       matricula: body.matricula || null,
       descricao: body.notas || null,
       estado: 'agendado',
+      clienteId: null,
       contactoNome: body.contacto_nome || null,
       contactoTelefone: body.contacto_telefone || null,
       contactoEmail: body.contacto_email || null
     };
 
-    if (clienteId) updateData.clienteId = clienteId;
     if (mecanicoId) updateData.mecanicoId = mecanicoId;
 
     // Atualizar agendamento

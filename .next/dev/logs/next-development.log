@@ -1,2 +1,163 @@
-[00:00:02.102] Server  WARN    ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
-[00:00:02.440] Server  LOG     ✓ Ready in 1931ms
+[00:00:02.256] Server  WARN    ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[00:00:02.576] Server  LOG     ✓ Ready in 2s
+[00:00:13.150] Browser LOG     Drag started: {"card":{"avatar":"https://i.pravatar.cc/40?u=26","cliente_nome":null,"contacto_email":"montesquaresmalda@outlook.com","contacto_nome":"teste","contacto_telefone":"914383441","descricao":"testester ewrtwert wertw ert\n- teste\n- teste","estado":"em_recepcao","hora_agendamento":"10:00:00","id":"26","mechanic":"Bruno Abrantes","model":"Golf","plate":"90-91-MZ","prioridade":"normal","proc":"AGD-26","titulo":"Revisão Geral - Volkswagen Golf (90-91-MZ)","total_geral":0,"veiculo_marca":"Volkswagen"},"fromColumnId":"em_recepcao"}
+[00:00:13.599] Browser LOG     === Drag from Recepção to Aprovação ===
+[00:00:13.599] Browser LOG     Card completo: {"avatar":"https://i.pravatar.cc/40?u=26","cliente_nome":null,"contacto_email":"montesquaresmalda@outlook.com","contacto_nome":"teste","contacto_telefone":"914383441","descricao":"testester ewrtwert wertw ert\n- teste\n- teste","estado":"em_recepcao","hora_agendamento":"10:00:00","id":"26","mechanic":"Bruno Abrantes","model":"Golf","plate":"90-91-MZ","prioridade":"normal","proc":"AGD-26","titulo":"Revisão Geral - Volkswagen Golf (90-91-MZ)","total_geral":0,"veiculo_marca":"Volkswagen"}
+[00:00:13.599] Browser LOG     Matricula: 90-91-MZ
+[00:00:13.599] Browser LOG     Cliente: 
+[00:00:13.599] Browser LOG     Marca: Volkswagen
+[00:00:13.599] Browser LOG     Modelo: Golf
+[00:00:13.599] Browser LOG     Ano: 
+[00:00:13.600] Browser LOG     card.veiculo_marca: Volkswagen
+[00:00:13.600] Browser LOG     card.model: Golf
+[00:00:13.600] Browser LOG     card.veiculo_ano: undefined
+[00:00:13.600] Browser LOG     === Document Drop Event ===
+[00:00:13.600] Browser LOG     isInsideColumn: true
+[00:00:13.600] Browser LOG     draggedCard: {"card":{"avatar":"https://i.pravatar.cc/40?u=26","cliente_nome":null,"contacto_email":"montesquaresmalda@outlook.com","contacto_nome":"teste","contacto_telefone":"914383441","descricao":"testester ewrtwert wertw ert\n- teste\n- teste","estado":"em_recepcao","hora_agendamento":"10:00:00","id":"26","mechanic":"Bruno Abrantes","model":"Golf","plate":"90-91-MZ","prioridade":"normal","proc":"AGD-26","titulo":"Revisão Geral - Volkswagen Golf (90-91-MZ)","total_geral":0,"veiculo_marca":"Volkswagen"},"fromColumnId":"em_recepcao"}
+[00:00:13.600] Browser LOG     target: kanban-column-content flex flex-col space-y-3 transition-all 
+[00:00:13.600] Browser LOG     ⚠ Não foi drop fora ou draggedCard é null
+[00:00:13.752] Browser LOG     URL params: agendamento_id=26&matricula=90-91-MZ&cliente=&from=kanban&marca=Volkswagen&modelo=Golf
+[00:00:13.752] Browser LOG     Redirecting to: /orcamentos/novo?agendamento_id=26&matricula=90-91-MZ&cliente=&from=kanban&marca=Volkswagen&modelo=Golf
+[00:00:13.967] Browser LOG     🔍 URL Params (searchParams): {"ano":null,"cliente":"","marca":"Volkswagen","matricula":"90-91-MZ","modelo":"Golf"}
+[00:00:13.967] Browser LOG     📝 Setting formData: {"ano":"","cliente":"","marca":"Volkswagen","matricula":"90-91-MZ","modelo":"Golf"}
+[00:00:13.967] Browser LOG     ✅ Marca e modelo presentes nos URL params - marcando como auto-preenchido
+[00:00:13.967] Browser LOG     🔎 searchVehicleByLicensePlateKeepData chamada com: 90-91-MZ {"ano":"","marca":"Volkswagen","modelo":"Golf"}
+[00:00:13.967] Browser LOG     [2;38;2;124;124;124m%s[0m 🔍 URL Params (searchParams): {"ano":null,"cliente":"","marca":"Volkswagen","matricula":"90-91-MZ","modelo":"Golf"}
+[00:00:13.967] Browser LOG     [2;38;2;124;124;124m%s[0m 📝 Setting formData: {"ano":"","cliente":"","marca":"Volkswagen","matricula":"90-91-MZ","modelo":"Golf"}
+[00:00:13.967] Browser LOG     [2;38;2;124;124;124m%s[0m ✅ Marca e modelo presentes nos URL params - marcando como auto-preenchido
+[00:00:13.967] Browser LOG     [2;38;2;124;124;124m%s[0m 🔎 searchVehicleByLicensePlateKeepData chamada com: 90-91-MZ {"ano":"","marca":"Volkswagen","modelo":"Golf"}
+[00:00:14.091] Browser LOG     ✅ Veículo encontrado na BD, usando ID e cliente, mantendo dados URL
+[00:00:14.274] Browser LOG     ✅ Veículo encontrado na BD, usando ID e cliente, mantendo dados URL
+[00:00:44.727] Browser LOG     Drag started: {"card":{"cliente_nome":"Cliente Genérico Particular","contacto_email":null,"contacto_nome":"nelson raio","contacto_telefone":"914383441","data_emissao":"2026-04-01","estado":"em_aprovacao","id":"21","itens_count":1,"itens_orcamento":[{"criadoEm":"2026-04-01 19:23:10","descricao":"FILTRO DE AR","id":28,"notas":null,"orcamentoId":21,"orcamento_id":21,"pecaId":41,"peca_id":41,"percentualDesconto":"0.00","percentualImposto":"23.00","precoUnitario":"15.50","preco_unitario":15.5,"quantidade":1,"servicoId":null,"servico_id":null,"tipoItem":"peca","tipo_item":"peca","valorDesconto":"0.00","valorImposto":"0.00","valorTotal":"15.50","valor_total":15.5}],"mechanic":"N/A","model":"Volkswagen Golf","plate":"90-91-MZ","prioridade":"normal","proc":"OR-2026-C0001","total_geral":15.5},"fromColumnId":"em_aprovacao"}
+[00:00:45.266] Browser LOG     === Document Drop Event ===
+[00:00:45.266] Browser LOG     isInsideColumn: true
+[00:00:45.266] Browser LOG     draggedCard: {"card":{"cliente_nome":"Cliente Genérico Particular","contacto_email":null,"contacto_nome":"nelson raio","contacto_telefone":"914383441","data_emissao":"2026-04-01","estado":"em_aprovacao","id":"21","itens_count":1,"itens_orcamento":[{"criadoEm":"2026-04-01 19:23:10","descricao":"FILTRO DE AR","id":28,"notas":null,"orcamentoId":21,"orcamento_id":21,"pecaId":41,"peca_id":41,"percentualDesconto":"0.00","percentualImposto":"23.00","precoUnitario":"15.50","preco_unitario":15.5,"quantidade":1,"servicoId":null,"servico_id":null,"tipoItem":"peca","tipo_item":"peca","valorDesconto":"0.00","valorImposto":"0.00","valorTotal":"15.50","valor_total":15.5}],"mechanic":"N/A","model":"Volkswagen Golf","plate":"90-91-MZ","prioridade":"normal","proc":"OR-2026-C0001","total_geral":15.5},"fromColumnId":"em_aprovacao"}
+[00:00:45.266] Browser LOG     target: kanban-column-content flex flex-col space-y-3 transition-all 
+[00:00:45.266] Browser LOG     ⚠ Não foi drop fora ou draggedCard é null
+[00:00:50.934] Browser LOG     DEBUG - Card data: {"estado":"aguarda_peca","hasWaitingParts":true,"ref":"OT-2026-C0001","waitingParts":[{"descricao":"FILTRO DE AR","id":23,"quantidade":1,"referencia":"DP1110.10.0548","valor_total":15.5}]}
+[00:00:50.934] Browser LOG     DEBUG - Assigned waiting_parts to card: [{"descricao":"FILTRO DE AR","id":23,"quantidade":1,"referencia":"DP1110.10.0548","valor_total":15.5}]
+[00:00:50.934] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:00:52.109] Browser LOG     Drag started: {"card":{"avatar":"https://i.pravatar.cc/40?u=OT-2026-C0001","cliente_nome":"Cliente Genérico Particular","contacto_email":"","contacto_nome":"nelson raio","contacto_telefone":"914383441","data_inicio":"2026-04-01","estado":"aguarda_peca","id":"OT-2026-C0001","mechanic":"Bruno Abrantes","model":"Volkswagen Golf","plate":"90-91-MZ","prioridade":"normal","proc":"OT-2026-C0001","total_geral":15.5,"waiting_parts":[{"descricao":"FILTRO DE AR","id":23,"quantidade":1,"referencia":"DP1110.10.0548","valor_total":15.5}],"work_order_items":[{"aguarda_peca":true,"descricao":"FILTRO DE AR","id":23,"preco_unitario":15.5,"quantidade":1,"referencia":"DP1110.10.0548","tipo_item":"peca","valor_total":15.5}]},"fromColumnId":"aguarda_peca"}
+[00:00:52.628] Browser LOG     === Document Drop Event ===
+[00:00:52.628] Browser LOG     isInsideColumn: true
+[00:00:52.628] Browser LOG     draggedCard: {"card":{"avatar":"https://i.pravatar.cc/40?u=OT-2026-C0001","cliente_nome":"Cliente Genérico Particular","contacto_email":"","contacto_nome":"nelson raio","contacto_telefone":"914383441","data_inicio":"2026-04-01","estado":"aguarda_peca","id":"OT-2026-C0001","mechanic":"Bruno Abrantes","model":"Volkswagen Golf","plate":"90-91-MZ","prioridade":"normal","proc":"OT-2026-C0001","total_geral":15.5,"waiting_parts":[{"descricao":"FILTRO DE AR","id":23,"quantidade":1,"referencia":"DP1110.10.0548","valor_total":15.5}],"work_order_items":[{"aguarda_peca":true,"descricao":"FILTRO DE AR","id":23,"preco_unitario":15.5,"quantidade":1,"referencia":"DP1110.10.0548","tipo_item":"peca","valor_total":15.5}]},"fromColumnId":"aguarda_peca"}
+[00:00:52.628] Browser LOG     target: kanban-column-content flex flex-col space-y-3 transition-all 
+[00:00:52.628] Browser LOG     ⚠ Não foi drop fora ou draggedCard é null
+[00:01:00.230] Browser LOG     Drag started: {"card":{"avatar":"https://i.pravatar.cc/40?u=OT-2026-C0001","cliente_nome":"Cliente Genérico Particular","contacto_email":"","contacto_nome":"nelson raio","contacto_telefone":"914383441","data_inicio":"2026-04-01","estado":"em_andamento","id":"OT-2026-C0001","mechanic":"Bruno Abrantes","model":"Volkswagen Golf","plate":"90-91-MZ","prioridade":"normal","proc":"OT-2026-C0001","total_geral":15.5,"waiting_parts":[{"descricao":"FILTRO DE AR","id":23,"quantidade":1,"referencia":"DP1110.10.0548","valor_total":15.5}],"work_order_items":[{"aguarda_peca":true,"descricao":"FILTRO DE AR","id":23,"preco_unitario":15.5,"quantidade":1,"referencia":"DP1110.10.0548","tipo_item":"peca","valor_total":15.5}]},"fromColumnId":"em_andamento"}
+[00:01:00.676] Browser LOG     === Document Drop Event ===
+[00:01:00.676] Browser LOG     isInsideColumn: true
+[00:01:00.676] Browser LOG     draggedCard: {"card":{"avatar":"https://i.pravatar.cc/40?u=OT-2026-C0001","cliente_nome":"Cliente Genérico Particular","contacto_email":"","contacto_nome":"nelson raio","contacto_telefone":"914383441","data_inicio":"2026-04-01","estado":"em_andamento","id":"OT-2026-C0001","mechanic":"Bruno Abrantes","model":"Volkswagen Golf","plate":"90-91-MZ","prioridade":"normal","proc":"OT-2026-C0001","total_geral":15.5,"waiting_parts":[{"descricao":"FILTRO DE AR","id":23,"quantidade":1,"referencia":"DP1110.10.0548","valor_total":15.5}],"work_order_items":[{"aguarda_peca":true,"descricao":"FILTRO DE AR","id":23,"preco_unitario":15.5,"quantidade":1,"referencia":"DP1110.10.0548","tipo_item":"peca","valor_total":15.5}]},"fromColumnId":"em_andamento"}
+[00:01:00.676] Browser LOG     target: kanban-column-content flex flex-col space-y-3 transition-all 
+[00:01:00.676] Browser LOG     ⚠ Não foi drop fora ou draggedCard é null
+[00:01:02.069] Browser LOG     DEBUG - Card data: {"estado":"concluido","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:01:02.069] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:01:02.975] Browser LOG     Drag started: {"card":{"avatar":"https://i.pravatar.cc/40?u=OT-2026-C0001","cliente_nome":"Cliente Genérico Particular","contacto_email":"","contacto_nome":"nelson raio","contacto_telefone":"914383441","data_conclusao":"2026-04-01","data_inicio":"2026-04-01","estado":"concluido","id":"OT-2026-C0001","mechanic":"Bruno Abrantes","model":"Volkswagen Golf","plate":"90-91-MZ","prioridade":"normal","proc":"OT-2026-C0001","total_geral":15.5,"work_order_items":[{"aguarda_peca":false,"descricao":"FILTRO DE AR","id":23,"preco_unitario":15.5,"quantidade":1,"referencia":"DP1110.10.0548","tipo_item":"peca","valor_total":15.5}]},"fromColumnId":"concluido"}
+[00:01:04.693] Browser LOG     === Document Drop Event ===
+[00:01:04.693] Browser LOG     isInsideColumn: false
+[00:01:04.693] Browser LOG     draggedCard: {"card":{"avatar":"https://i.pravatar.cc/40?u=OT-2026-C0001","cliente_nome":"Cliente Genérico Particular","contacto_email":"","contacto_nome":"nelson raio","contacto_telefone":"914383441","data_conclusao":"2026-04-01","data_inicio":"2026-04-01","estado":"concluido","id":"OT-2026-C0001","mechanic":"Bruno Abrantes","model":"Volkswagen Golf","plate":"90-91-MZ","prioridade":"normal","proc":"OT-2026-C0001","total_geral":15.5,"work_order_items":[{"aguarda_peca":false,"descricao":"FILTRO DE AR","id":23,"preco_unitario":15.5,"quantidade":1,"referencia":"DP1110.10.0548","tipo_item":"peca","valor_total":15.5}]},"fromColumnId":"concluido"}
+[00:01:04.693] Browser LOG     target: mb-4 flex justify-between items-center
+[00:01:04.693] Browser LOG     ✓ Drop fora detectado! {"card":{"avatar":"https://i.pravatar.cc/40?u=OT-2026-C0001","cliente_nome":"Cliente Genérico Particular","contacto_email":"","contacto_nome":"nelson raio","contacto_telefone":"914383441","data_conclusao":"2026-04-01","data_inicio":"2026-04-01","estado":"concluido","id":"OT-2026-C0001","mechanic":"Bruno Abrantes","model":"Volkswagen Golf","plate":"90-91-MZ","prioridade":"normal","proc":"OT-2026-C0001","total_geral":15.5,"work_order_items":[{"aguarda_peca":false,"descricao":"FILTRO DE AR","id":23,"preco_unitario":15.5,"quantidade":1,"referencia":"DP1110.10.0548","tipo_item":"peca","valor_total":15.5}]},"fromColumnId":"concluido"}
+[00:01:04.693] Browser LOG     fromColumnId: concluido
+[00:13:54.640] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:13:54.640] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:14:31.573] Server  LOG     DEBUG - data recebida: "2026-04-01"
+[00:14:31.575] Server  LOG     DEBUG - dataAgendamento gravada: "2026-03-31"
+[00:14:31.616] Browser LOG     Data enviada para API: 2026-04-01
+[00:15:08.652] Server  LOG     DEBUG - data recebida: "2026-04-08"
+[00:15:08.653] Server  LOG     DEBUG - dataAgendamento gravada: "2026-04-07"
+[00:15:08.680] Browser LOG     Data enviada para API: 2026-04-08
+[00:15:37.529] Server  LOG     DEBUG - data recebida: "2026-04-15"
+[00:15:37.530] Server  LOG     DEBUG - dataAgendamento gravada: "2026-04-14"
+[00:15:37.576] Browser LOG     Data enviada para API: 2026-04-15
+[00:15:40.230] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:15:40.230] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:15:40.230] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:15:40.230] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:15:46.294] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:15:46.294] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:15:46.294] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:15:46.294] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:15:52.337] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:15:52.338] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:15:52.338] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:15:52.338] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:17:54.485] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:17:54.485] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:17:54.485] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:17:54.485] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:18:18.589] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:18:18.590] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:18:18.590] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:18:18.590] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:18:23.707] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:18:23.707] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:18:23.707] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:18:23.707] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:19:23.872] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:19:23.872] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:19:23.872] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:19:23.872] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:21:27.876] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:21:27.876] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:21:27.876] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:21:27.876] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:21:39.886] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:21:39.886] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:21:39.886] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:21:39.886] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:31:45.686] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:31:45.687] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:32:07.174] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:32:07.174] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:32:07.174] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:32:07.174] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:32:23.621] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:32:23.621] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:32:23.621] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:32:23.621] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:35:04.918] Browser LOG     🔍 URL Params (searchParams): {"ano":null,"cliente":null,"marca":null,"matricula":null,"modelo":null}
+[00:35:04.918] Browser LOG     [2;38;2;124;124;124m%s[0m 🔍 URL Params (searchParams): {"ano":null,"cliente":null,"marca":null,"matricula":null,"modelo":null}
+[00:35:55.793] Browser LOG     🔎 searchVehicleByLicensePlate chamada com: 90-91-MZ
+[00:35:55.857] Browser LOG     📦 Resposta da API: {"client":{"email":null,"endereco":null,"id":"7","nif":null,"nome":"Cliente Genérico Particular","perfil":"Normal","perfil_id":null,"telefone":""},"found":true,"vehicle":{"ano":null,"id":"120","marca":"Volkswagen","matricula":"90-91-MZ","modelo":"Golf"}}
+[00:35:55.857] Browser LOG     ✅ Veículo encontrado: {"ano":null,"marca":"Volkswagen","modelo":"Golf"}
+[00:36:28.825] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:36:28.825] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:36:28.825] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:36:28.825] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:36:32.746] Browser LOG     Drag started: {"card":{"cliente_nome":"Cliente Genérico Particular","contacto_email":"montesquaresmalda@outlook.com","contacto_nome":"nelson raio","contacto_telefone":"914383441","data_emissao":"2026-03-30","estado":"em_aprovacao","id":"22","itens_count":1,"itens_orcamento":[{"criadoEm":"2026-04-01 19:58:51","descricao":"teste","id":29,"notas":null,"orcamentoId":22,"orcamento_id":22,"pecaId":null,"peca_id":null,"percentualDesconto":"0.00","percentualImposto":"23.00","precoUnitario":"10.00","preco_unitario":10,"quantidade":1,"servicoId":null,"servico_id":null,"tipoItem":"servico","tipo_item":"servico","valorDesconto":"0.00","valorImposto":"0.00","valorTotal":"10.00","valor_total":10}],"mechanic":"N/A","model":"Volkswagen Golf","plate":"90-91-MZ","prioridade":"normal","proc":"OR-2026-C0002","total_geral":10},"fromColumnId":"em_aprovacao"}
+[00:36:33.911] Browser LOG     === Document Drop Event ===
+[00:36:33.911] Browser LOG     isInsideColumn: true
+[00:36:33.911] Browser LOG     draggedCard: {"card":{"cliente_nome":"Cliente Genérico Particular","contacto_email":"montesquaresmalda@outlook.com","contacto_nome":"nelson raio","contacto_telefone":"914383441","data_emissao":"2026-03-30","estado":"em_aprovacao","id":"22","itens_count":1,"itens_orcamento":[{"criadoEm":"2026-04-01 19:58:51","descricao":"teste","id":29,"notas":null,"orcamentoId":22,"orcamento_id":22,"pecaId":null,"peca_id":null,"percentualDesconto":"0.00","percentualImposto":"23.00","precoUnitario":"10.00","preco_unitario":10,"quantidade":1,"servicoId":null,"servico_id":null,"tipoItem":"servico","tipo_item":"servico","valorDesconto":"0.00","valorImposto":"0.00","valorTotal":"10.00","valor_total":10}],"mechanic":"N/A","model":"Volkswagen Golf","plate":"90-91-MZ","prioridade":"normal","proc":"OR-2026-C0002","total_geral":10},"fromColumnId":"em_aprovacao"}
+[00:36:33.911] Browser LOG     target: font-bold text-base text-white
+[00:36:33.911] Browser LOG     ⚠ Não foi drop fora ou draggedCard é null
+[00:36:34.984] Browser LOG     Drag started: {"card":{"cliente_nome":"Cliente Genérico Particular","contacto_email":"montesquaresmalda@outlook.com","contacto_nome":"nelson raio","contacto_telefone":"914383441","data_emissao":"2026-03-30","estado":"em_aprovacao","id":"22","itens_count":1,"itens_orcamento":[{"criadoEm":"2026-04-01 19:58:51","descricao":"teste","id":29,"notas":null,"orcamentoId":22,"orcamento_id":22,"pecaId":null,"peca_id":null,"percentualDesconto":"0.00","percentualImposto":"23.00","precoUnitario":"10.00","preco_unitario":10,"quantidade":1,"servicoId":null,"servico_id":null,"tipoItem":"servico","tipo_item":"servico","valorDesconto":"0.00","valorImposto":"0.00","valorTotal":"10.00","valor_total":10}],"mechanic":"N/A","model":"Volkswagen Golf","plate":"90-91-MZ","prioridade":"normal","proc":"OR-2026-C0002","total_geral":10},"fromColumnId":"em_aprovacao"}
+[00:36:35.810] Browser LOG     === Document Drop Event ===
+[00:36:35.810] Browser LOG     isInsideColumn: true
+[00:36:35.810] Browser LOG     draggedCard: {"card":{"cliente_nome":"Cliente Genérico Particular","contacto_email":"montesquaresmalda@outlook.com","contacto_nome":"nelson raio","contacto_telefone":"914383441","data_emissao":"2026-03-30","estado":"em_aprovacao","id":"22","itens_count":1,"itens_orcamento":[{"criadoEm":"2026-04-01 19:58:51","descricao":"teste","id":29,"notas":null,"orcamentoId":22,"orcamento_id":22,"pecaId":null,"peca_id":null,"percentualDesconto":"0.00","percentualImposto":"23.00","precoUnitario":"10.00","preco_unitario":10,"quantidade":1,"servicoId":null,"servico_id":null,"tipoItem":"servico","tipo_item":"servico","valorDesconto":"0.00","valorImposto":"0.00","valorTotal":"10.00","valor_total":10}],"mechanic":"N/A","model":"Volkswagen Golf","plate":"90-91-MZ","prioridade":"normal","proc":"OR-2026-C0002","total_geral":10},"fromColumnId":"em_aprovacao"}
+[00:36:35.810] Browser LOG     target: kanban-column-content flex flex-col space-y-3 transition-all 
+[00:36:35.810] Browser LOG     ⚠ Não foi drop fora ou draggedCard é null
+[00:36:57.406] Browser LOG     Drag started: {"card":{"cliente_nome":"Cliente Genérico Particular","contacto_email":"montesquaresmalda@outlook.com","contacto_nome":"nelson raio","contacto_telefone":"914383441","data_emissao":"2026-03-30","estado":"em_andamento","id":"22","itens_count":1,"itens_orcamento":[{"criadoEm":"2026-04-01 19:58:51","descricao":"teste","id":29,"notas":null,"orcamentoId":22,"orcamento_id":22,"pecaId":null,"peca_id":null,"percentualDesconto":"0.00","percentualImposto":"23.00","precoUnitario":"10.00","preco_unitario":10,"quantidade":1,"servicoId":null,"servico_id":null,"tipoItem":"servico","tipo_item":"servico","valorDesconto":"0.00","valorImposto":"0.00","valorTotal":"10.00","valor_total":10}],"mechanic":"N/A","model":"Volkswagen Golf","plate":"90-91-MZ","prioridade":"normal","proc":"OT-2026-C0002","total_geral":10},"fromColumnId":"em_andamento"}
+[00:36:57.961] Browser LOG     === Document Drop Event ===
+[00:36:57.961] Browser LOG     isInsideColumn: true
+[00:36:57.961] Browser LOG     draggedCard: {"card":{"cliente_nome":"Cliente Genérico Particular","contacto_email":"montesquaresmalda@outlook.com","contacto_nome":"nelson raio","contacto_telefone":"914383441","data_emissao":"2026-03-30","estado":"em_andamento","id":"22","itens_count":1,"itens_orcamento":[{"criadoEm":"2026-04-01 19:58:51","descricao":"teste","id":29,"notas":null,"orcamentoId":22,"orcamento_id":22,"pecaId":null,"peca_id":null,"percentualDesconto":"0.00","percentualImposto":"23.00","precoUnitario":"10.00","preco_unitario":10,"quantidade":1,"servicoId":null,"servico_id":null,"tipoItem":"servico","tipo_item":"servico","valorDesconto":"0.00","valorImposto":"0.00","valorTotal":"10.00","valor_total":10}],"mechanic":"N/A","model":"Volkswagen Golf","plate":"90-91-MZ","prioridade":"normal","proc":"OT-2026-C0002","total_geral":10},"fromColumnId":"em_andamento"}
+[00:36:57.961] Browser LOG     target: kanban-column-content flex flex-col space-y-3 transition-all 
+[00:36:57.961] Browser LOG     ⚠ Não foi drop fora ou draggedCard é null
+[00:37:02.715] Browser LOG     DEBUG - Card data: {"estado":"concluido","hasWaitingParts":false,"ref":"OT-2026-C0002","waitingParts":[]}
+[00:37:02.715] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0002"}
+[00:37:02.715] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:37:02.715] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:37:59.507] Browser LOG     DEBUG - Card data: {"estado":"concluido","hasWaitingParts":false,"ref":"OT-2026-C0002","waitingParts":[]}
+[00:37:59.507] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0002"}
+[00:37:59.507] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:37:59.507] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:37:59.507] Browser LOG     DEBUG - Card data: {"estado":"concluido","hasWaitingParts":false,"ref":"OT-2026-C0002","waitingParts":[]}
+[00:37:59.507] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0002"}
+[00:37:59.507] Browser LOG     DEBUG - Card data: {"estado":"entregue","hasWaitingParts":false,"ref":"OT-2026-C0001","waitingParts":[]}
+[00:37:59.507] Browser LOG     Work Order Card: {"budgetItems":0,"items":1,"mechanic":"Bruno Abrantes","ref":"OT-2026-C0001"}
+[00:38:01.027] Browser LOG     Drag started: {"card":{"avatar":"https://i.pravatar.cc/40?u=OT-2026-C0002","cliente_nome":"Cliente Genérico Particular","contacto_email":"montesquaresmalda@outlook.com","contacto_nome":"nelson raio","contacto_telefone":"914383441","data_conclusao":"2026-03-29","data_inicio":"2026-04-01","estado":"concluido","id":"OT-2026-C0002","mechanic":"Bruno Abrantes","model":"Volkswagen Golf","plate":"90-91-MZ","prioridade":"normal","proc":"OT-2026-C0002","total_geral":10,"work_order_items":[{"aguarda_peca":false,"descricao":"teste","id":24,"preco_unitario":10,"quantidade":1,"referencia":"","tipo_item":"servico","valor_total":10}]},"fromColumnId":"concluido"}
+[00:38:02.967] Browser LOG     === Document Drop Event ===
+[00:38:02.967] Browser LOG     isInsideColumn: false
+[00:38:02.967] Browser LOG     draggedCard: {"card":{"avatar":"https://i.pravatar.cc/40?u=OT-2026-C0002","cliente_nome":"Cliente Genérico Particular","contacto_email":"montesquaresmalda@outlook.com","contacto_nome":"nelson raio","contacto_telefone":"914383441","data_conclusao":"2026-03-29","data_inicio":"2026-04-01","estado":"concluido","id":"OT-2026-C0002","mechanic":"Bruno Abrantes","model":"Volkswagen Golf","plate":"90-91-MZ","prioridade":"normal","proc":"OT-2026-C0002","total_geral":10,"work_order_items":[{"aguarda_peca":false,"descricao":"teste","id":24,"preco_unitario":10,"quantidade":1,"referencia":"","tipo_item":"servico","valor_total":10}]},"fromColumnId":"concluido"}
+[00:38:02.967] Browser LOG     target: mb-4 flex justify-between items-center
+[00:38:02.967] Browser LOG     ✓ Drop fora detectado! {"card":{"avatar":"https://i.pravatar.cc/40?u=OT-2026-C0002","cliente_nome":"Cliente Genérico Particular","contacto_email":"montesquaresmalda@outlook.com","contacto_nome":"nelson raio","contacto_telefone":"914383441","data_conclusao":"2026-03-29","data_inicio":"2026-04-01","estado":"concluido","id":"OT-2026-C0002","mechanic":"Bruno Abrantes","model":"Volkswagen Golf","plate":"90-91-MZ","prioridade":"normal","proc":"OT-2026-C0002","total_geral":10,"work_order_items":[{"aguarda_peca":false,"descricao":"teste","id":24,"preco_unitario":10,"quantidade":1,"referencia":"","tipo_item":"servico","valor_total":10}]},"fromColumnId":"concluido"}
+[00:38:02.967] Browser LOG     fromColumnId: concluido

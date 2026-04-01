@@ -75,6 +75,8 @@ interface Appointment {
   titulo: string;
   descricao: string;
   hora_agendamento: string;
+  dataAgendamento?: string | null;
+  data_agendamento?: string | null;
 }
 
 interface Budget {
@@ -162,6 +164,13 @@ interface KanbanColumnData {
   color: string;
   cards: KanbanCard[];
 }
+
+const formatLocalDate = (value: Date) => {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 const parsePtDateToIso = (value?: string) => {
   if (!value) return undefined;
@@ -474,16 +483,21 @@ export default function KanbanBoard() {
 
         // Then process appointments - only add if not already in em_aprovacao (budget takes priority)
         // and not already in an active work order
+        // Filtrar apenas agendamentos com data de hoje
+        const todayStr = formatLocalDate(new Date());
         appointments.forEach(appt => {
           // Skip if this plate already has a budget in em_aprovacao or an active work order
           if (budgetPlates.has(appt.veiculo_matricula) || workOrderPlates.has(appt.veiculo_matricula)) {
             return;
           }
-          
+          // Verifica se existe campo data_agendamento ou equivalente
+          const apptDate = appt.data_agendamento || appt.dataAgendamento || appt.data_agendamento || null;
+          if (apptDate && apptDate !== todayStr) {
+            return;
+          }
           if (!grouped['em_recepcao']) {
             grouped['em_recepcao'] = [];
           }
-          
           const card: KanbanCard = {
             id: appt.id,
             proc: appt.ref_agendamento,

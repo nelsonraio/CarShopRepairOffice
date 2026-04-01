@@ -4,13 +4,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Sidebar from '../../../components/Sidebar';
 
-interface Client {
-  id: string;
-  nome: string;
-  telefone: string;
-  email: string;
-}
-
 interface Brand {
   id: string;
   nome: string;
@@ -36,7 +29,6 @@ const NewAppointmentPage = () => {
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0];
   const [formData, setFormData] = useState({
-    cliente: '',
     marca: '',
     modelo: '',
     ano: '',
@@ -52,13 +44,10 @@ const NewAppointmentPage = () => {
   });
   const [vehicleFound, setVehicleFound] = useState<boolean>(true);
 
-  const [clients, setClients] = useState<Client[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [models, setModels] = useState<Model[]>([]);
   const [mechanics, setMechanics] = useState<Mechanic[]>([]);
   const [services, setServices] = useState<Service[]>([]);
-  const [clientSuggestions, setClientSuggestions] = useState<Client[]>([]);
-  const [showClientSuggestions, setShowClientSuggestions] = useState(false);
   const [brandSuggestions, setBrandSuggestions] = useState<Brand[]>([]);
   const [showBrandSuggestions, setShowBrandSuggestions] = useState(false);
   const [modelSuggestions, setModelSuggestions] = useState<Model[]>([]);
@@ -124,19 +113,6 @@ const NewAppointmentPage = () => {
     return [];
   };
 
-  const searchClients = async (query: string) => {
-    try {
-      const response = await fetch(`/api/clientes/search?q=${encodeURIComponent(query)}`);
-      if (response.ok) {
-        const data = await response.json();
-        setClientSuggestions(data);
-        setShowClientSuggestions(true);
-      }
-    } catch (error) {
-      console.error('Failed to search clients:', error);
-    }
-  };
-
   const searchBrands = async (query: string) => {
     try {
       const response = await fetch(`/api/marcas/search?q=${encodeURIComponent(query)}`);
@@ -177,7 +153,6 @@ const NewAppointmentPage = () => {
             marca: data.vehicle.marca,
             modelo: data.vehicle.modelo,
             ano: data.vehicle.ano ? data.vehicle.ano.toString() : '',
-            cliente: data.client.nome,
             // Preserve contact fields if already filled
             contacto_nome: prev.contacto_nome || '',
             contacto_telefone: prev.contacto_telefone || '',
@@ -223,14 +198,6 @@ const NewAppointmentPage = () => {
       ...prev,
       [name]: value
     }));
-
-    // Handle client search
-    if (name === 'cliente' && value && value.length >= 2) {
-      searchClients(value);
-    } else if (name === 'cliente' && (!value || value.length < 2)) {
-      setClientSuggestions([]);
-      setShowClientSuggestions(false);
-    }
 
     // Handle brand search
     if (name === 'marca' && value && value.length >= 2) {
@@ -285,16 +252,6 @@ const NewAppointmentPage = () => {
       }
       return;
     }
-  };
-
-  const selectClient = (client: Client) => {
-    setFormData(prev => ({
-      ...prev,
-      cliente: client.nome,
-      contacto_telefone: client.telefone ? client.telefone : prev.contacto_telefone
-    }));
-    setClientSuggestions([]);
-    setShowClientSuggestions(false);
   };
 
   const selectBrand = (brand: Brand) => {
@@ -471,35 +428,6 @@ const NewAppointmentPage = () => {
                     placeholder="Ano"
                   />
                 </div>
-              </div>
-
-              <div className="relative">
-                <label className="block text-sm font-medium text-gray-400 mb-1">Cliente *</label>
-                <input
-                  type="text"
-                  name="cliente"
-                  value={formData.cliente}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-                  placeholder="Pesquisar cliente..."
-                  required
-                />
-                {showClientSuggestions && clientSuggestions.length > 0 && (
-                  <div className="absolute z-10 w-full bg-gray-800 border border-gray-600 mt-1 max-h-40 overflow-y-auto">
-                    {clientSuggestions.map((client) => (
-                      <div
-                        key={client.id}
-                        className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
-                        onClick={() => selectClient(client)}
-                      >
-                        <div className="font-medium">{client.nome}</div>
-                        <div className="text-sm text-gray-400">
-                          {client.telefone} {client.email && `• ${client.email}`}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">

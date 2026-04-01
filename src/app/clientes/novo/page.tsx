@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Sidebar from '../../../components/Sidebar';
 
@@ -11,8 +11,22 @@ const NewClientPage = () => {
     telefone: '',
     email: '',
     endereco: '',
-    perfil: 'Normal'
+    perfil_id: ''
   });
+
+  const [perfis, setPerfis] = useState<{ id: number; nome: string }[]>([]);
+
+  useEffect(() => {
+    // Buscar perfis de cliente da API
+    fetch('/api/perfis-clientes')
+      .then(res => res.json())
+      .then(data => {
+        setPerfis(data);
+        if (data.length > 0) {
+          setFormData(prev => ({ ...prev, perfil_id: String(data[0].id) }));
+        }
+      });
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -39,7 +53,10 @@ const NewClientPage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          perfil_id: formData.perfil_id ? Number(formData.perfil_id) : undefined
+        }),
       });
       if (response.ok) {
         setSubmitSuccess('Cliente criado com sucesso!');
@@ -149,15 +166,15 @@ const NewClientPage = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-1">Perfil de Cliente</label>
                 <select
-                  name="perfil"
-                  value={formData.perfil}
+                  name="perfil_id"
+                  value={formData.perfil_id}
                   onChange={handleInputChange}
                   className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
+                  required
                 >
-                  <option value="Normal">Normal</option>
-                  <option value="TVDE_Interno">TVDE Interno</option>
-                  <option value="TVDE_Externo">TVDE Externo</option>
-                  <option value="Empresa">Empresa</option>
+                  {perfis.map(perfil => (
+                    <option key={perfil.id} value={perfil.id}>{perfil.nome}</option>
+                  ))}
                 </select>
               </div>
             </form>

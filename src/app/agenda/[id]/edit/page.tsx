@@ -5,13 +5,6 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import Sidebar from '../../../../components/Sidebar';
 
-interface Client {
-  id: string;
-  nome: string;
-  telefone: string;
-  email: string;
-}
-
 interface Brand {
   id: string;
   nome: string;
@@ -38,7 +31,6 @@ const EditAppointmentPage = () => {
   const id = params.id as string;
 
   const [formData, setFormData] = useState({
-    cliente: '',
     marca: '',
     modelo: '',
     ano: '',
@@ -54,14 +46,11 @@ const EditAppointmentPage = () => {
   });
   const [vehicleFound, setVehicleFound] = useState<boolean>(true);
 
-  const [clients, setClients] = useState<Client[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [models, setModels] = useState<Model[]>([]);
   const [mechanics, setMechanics] = useState<Mechanic[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [clientSuggestions, setClientSuggestions] = useState<Client[]>([]);
-  const [showClientSuggestions, setShowClientSuggestions] = useState(false);
   const [brandSuggestions, setBrandSuggestions] = useState<Brand[]>([]);
   const [showBrandSuggestions, setShowBrandSuggestions] = useState(false);
   const [modelSuggestions, setModelSuggestions] = useState<Model[]>([]);
@@ -129,19 +118,6 @@ const EditAppointmentPage = () => {
     return [];
   };
 
-  const searchClients = async (query: string) => {
-    try {
-      const response = await fetch(`/api/clientes/search?q=${encodeURIComponent(query)}`);
-      if (response.ok) {
-        const data = await response.json();
-        setClientSuggestions(data);
-        setShowClientSuggestions(true);
-      }
-    } catch (error) {
-      console.error('Failed to search clients:', error);
-    }
-  };
-
   const searchBrands = async (query: string) => {
     try {
       const response = await fetch(`/api/marcas/search?q=${encodeURIComponent(query)}`);
@@ -185,7 +161,6 @@ const EditAppointmentPage = () => {
         }
 
         setFormData({
-          cliente: data.client || '',
           marca: data.marca || '',
           modelo: data.modelo || '',
           ano: data.ano || '',
@@ -228,7 +203,6 @@ const EditAppointmentPage = () => {
             marca: data.vehicle.marca,
             modelo: data.vehicle.modelo,
             ano: data.vehicle.ano ? data.vehicle.ano.toString() : '',
-            cliente: data.client.nome
           }));
         } else {
           setVehicleFound(false);
@@ -270,14 +244,6 @@ const EditAppointmentPage = () => {
       ...prev,
       [name]: value
     }));
-
-    // Handle client search
-    if (name === 'cliente' && value && value.length >= 2) {
-      searchClients(value);
-    } else if (name === 'cliente' && (!value || value.length < 2)) {
-      setClientSuggestions([]);
-      setShowClientSuggestions(false);
-    }
 
     // Handle brand search
     if (name === 'marca' && value && value.length >= 2) {
@@ -334,15 +300,6 @@ const EditAppointmentPage = () => {
     }
   };
 
-  const selectClient = (client: Client) => {
-    setFormData(prev => ({
-      ...prev,
-      cliente: client.nome
-    }));
-    setClientSuggestions([]);
-    setShowClientSuggestions(false);
-  };
-
   const selectBrand = (brand: Brand) => {
     setFormData(prev => ({
       ...prev,
@@ -385,9 +342,6 @@ const EditAppointmentPage = () => {
     }
     if (!formData.matricula.trim()) {
       newErrors.matricula = 'A matrícula é obrigatória.';
-    }
-    if (!formData.cliente.trim()) {
-      newErrors.cliente = 'O cliente é obrigatório.';
     }
     if (!formData.data.trim()) {
       newErrors.data = 'A data é obrigatória.';
@@ -518,36 +472,6 @@ const EditAppointmentPage = () => {
                     placeholder="Ano"
                   />
                 </div>
-              </div>
-
-              <div className="relative">
-                <label className="block text-sm font-medium text-gray-400 mb-1">Cliente *</label>
-                <input
-                  type="text"
-                  name="cliente"
-                  value={formData.cliente}
-                  onChange={handleInputChange}
-                  className={`w-full bg-gray-900 border ${errors.cliente ? 'border-red-500' : 'border-gray-600'} text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600`}
-                  placeholder="Pesquisar cliente..."
-                  required
-                />
-                {errors.cliente && <p className="text-xs text-red-400 mt-1">{errors.cliente}</p>}
-                {showClientSuggestions && clientSuggestions.length > 0 && (
-                  <div className="absolute z-10 w-full bg-gray-800 border border-gray-600 mt-1 max-h-40 overflow-y-auto">
-                    {clientSuggestions.map((client) => (
-                      <div
-                        key={client.id}
-                        className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
-                        onClick={() => selectClient(client)}
-                      >
-                        <div className="font-medium">{client.nome}</div>
-                        <div className="text-sm text-gray-400">
-                          {client.telefone} {client.email && `• ${client.email}`}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">

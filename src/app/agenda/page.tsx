@@ -30,7 +30,7 @@ export default function AgendaPage() {
 
   // Filtering configuration
   const filterConfig = {
-    search: filterPredicates.search(['client', 'matricula']),
+    search: filterPredicates.search(['contacto_nome', 'contacto_telefone', 'matricula']),
   };
 
   const { filters, setFilter } = useFilters(appointments, filterConfig);
@@ -40,7 +40,8 @@ export default function AgendaPage() {
     // Search filter
     const searchTerm = filters.search || '';
     const matchesSearch = searchTerm === '' ||
-      appointment.client?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      appointment.contacto_nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      appointment.contacto_telefone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       appointment.matricula?.toLowerCase().includes(searchTerm.toLowerCase());
 
     // Date range filter
@@ -187,7 +188,7 @@ export default function AgendaPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Pesquisar (Cliente/Matrícula)</label>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Pesquisar (Contacto/Telemóvel/Matrícula)</label>
                 <input
                   type="text"
                   value={filters.search || ''}
@@ -227,7 +228,8 @@ export default function AgendaPage() {
                     <th className="px-6 py-3">ID</th>
                     <th className="px-6 py-3">Data</th>
                     <th className="px-6 py-3">Hora</th>
-                    <th className="px-6 py-3">Cliente</th>
+                    <th className="px-6 py-3">Contacto</th>
+                    <th className="px-6 py-3">Telemóvel</th>
                     <th className="px-6 py-3">Detalhes do Veículo</th>
                     <th className="px-6 py-3">Mecânico</th>
                     <th className="px-6 py-3 text-center">Ações</th>
@@ -247,8 +249,9 @@ export default function AgendaPage() {
                       </td>
                       <td className="px-6 py-4 font-mono text-brand-yellow">{appointment.date}</td>
                       <td className="px-6 py-4 font-mono">{appointment.time}</td>
-                      <td className="px-6 py-4 text-gray-100 font-bold">{appointment.client || 'N/A'}</td>
-                      <td className="px-6 py-4 font-mono text-gray-100">{appointment.marca && appointment.modelo ? `${appointment.marca} ${appointment.modelo}${appointment.ano ? ` ${appointment.ano}` : ''}${appointment.matricula ? ` - ${appointment.matricula}` : ''}` : appointment.matricula || 'N/A'}</td>
+                      <td className="px-6 py-4 text-gray-100 font-bold">{appointment.contacto_nome || 'N/A'}</td>
+                      <td className="px-6 py-4 font-mono text-gray-100">{appointment.contacto_telefone || 'N/A'}</td>
+                      <td className="px-6 py-4 font-mono text-gray-100">{appointment.matricula ? `${appointment.matricula}${appointment.marca && appointment.modelo ? ` - ${appointment.marca} ${appointment.modelo}${appointment.ano ? ` ${appointment.ano}` : ''}` : ''}` : appointment.marca && appointment.modelo ? `${appointment.marca} ${appointment.modelo}${appointment.ano ? ` ${appointment.ano}` : ''}` : 'N/A'}</td>
                       <td className="px-6 py-4 text-gray-100">{appointment.mechanic}</td>
                       <td className="px-6 py-4 text-center">
                         <div className="flex justify-center space-x-2">
@@ -287,9 +290,10 @@ export default function AgendaPage() {
                     <span className="font-mono text-brand-yellow text-lg">{appointment.time}</span>
                     <span className="bg-blue-900 text-blue-200 px-2 py-1 text-xs font-bold rounded">{appointment.status || ''}</span>
                   </div>
-                  <div className="text-gray-100 font-bold text-base">{appointment.marca && appointment.modelo ? `${appointment.marca} ${appointment.modelo}${appointment.ano ? ` ${appointment.ano}` : ''}` : appointment.modelo || appointment.model || ''}</div>
                   <div className="font-mono text-gray-300 text-xs">Matrícula: {appointment.matricula || appointment.plate || ''}</div>
-                  <div className="text-gray-200 text-sm">Cliente: {appointment.client || 'N/A'}</div>
+                  <div className="text-gray-100 font-bold text-base">{appointment.marca && appointment.modelo ? `${appointment.marca} ${appointment.modelo}${appointment.ano ? ` ${appointment.ano}` : ''}` : appointment.modelo || appointment.model || ''}</div>
+                  <div className="text-gray-200 text-sm">Contacto: {appointment.contacto_nome || 'N/A'}</div>
+                  <div className="text-gray-400 text-xs">Telefone: {appointment.contacto_telefone || 'N/A'}</div>
                   {appointment.descricao && <div className="text-xs text-gray-400">{appointment.descricao}</div>}
                   {appointment.mechanic && <div className="text-xs text-gray-400">Mecânico: {appointment.mechanic}</div>}
                   {appointment.priority && <div className="text-xs text-gray-400">Prioridade: {appointment.priority}</div>}

@@ -53,9 +53,9 @@ function formatAgendamentoResponse(agendamento: any, cliente?: any, mecanico?: a
   return {
     id: agendamento.id.toString(),
     clientId: agendamento.cliente_id?.toString() || agendamento.clienteId?.toString() || '',
-    client: cliente?.nome || '',
-    clientPhone: cliente?.telefone || '',
-    clientEmail: cliente?.email || '',
+    client: agendamento.contacto_nome || agendamento.contactoNome || cliente?.nome || '',
+    clientPhone: agendamento.contacto_telefone || agendamento.contactoTelefone || cliente?.telefone || '',
+    clientEmail: agendamento.contacto_email || agendamento.contactoEmail || cliente?.email || '',
     marca: agendamento.marca || '',
     modelo: agendamento.modelo || '',
     ano: agendamento.ano?.toString() || '',
@@ -71,18 +71,6 @@ function formatAgendamentoResponse(agendamento: any, cliente?: any, mecanico?: a
     contacto_telefone: agendamento.contacto_telefone || agendamento.contactoTelefone || '',
     contacto_email: agendamento.contacto_email || agendamento.contactoEmail || ''
   };
-}
-
-/**
- * Helper: Find or create client by name
- */
-async function getOrCreateCliente(clienteNome?: string) {
-  if (clienteNome) {
-    const [cliente] = await db.select().from(clientes).where(eq(clientes.nome, clienteNome));
-    return cliente || null;
-  }
-  // Não cria cliente novo, retorna null
-  return null;
 }
 
 /**
@@ -155,23 +143,22 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { cliente, marca, modelo, ano, matricula, data, hora, tipoServico, mecanico, descricao, notas, contacto_nome, contacto_telefone, contacto_email } = body;
+    const { marca, modelo, ano, matricula, data, hora, tipoServico, mecanico, descricao, notas, contacto_nome, contacto_telefone, contacto_email } = body;
 
     // Validação obrigatória da hora
     if (!hora || typeof hora !== 'string' || !/^\d{2}:\d{2}$/.test(hora)) {
       return new Response(JSON.stringify({ error: 'O campo hora é obrigatório e deve estar no formato HH:MM.' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
-    const clienteRec = await getOrCreateCliente(cliente);
     const mecanicoRec = await getOrCreateMecanico(mecanico);
     const dateObj = parseDateString(data);
     console.log('DEBUG - data recebida:', data);
     console.log('DEBUG - dataAgendamento gravada:', dateObj.toISOString().slice(0, 10));
     const horaInicio = parseTimeString(hora, dateObj);
     const result = await db.insert(agendamentos).values({
-      clienteId: clienteRec ? clienteRec.id : null,
+      clienteId: null,
       mecanicoId: mecanicoRec?.id || null,
-      titulo: cliente ? `${tipoServico || 'Agendamento'} - ${cliente}` : (tipoServico || 'Agendamento'),
+      titulo: contacto_nome ? `${tipoServico || 'Agendamento'} - ${contacto_nome}` : (tipoServico || 'Agendamento'),
       descricao: notas || descricao || '',
       dataAgendamento: data,
       horaInicio: horaInicio.toTimeString().slice(0, 5),
@@ -186,7 +173,7 @@ export async function POST(request: Request) {
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const insertedId = (result as any)?.[0]?.insertId ?? null;
-    await registarAuditoria('CREATE', 'agendamentos', Number(insertedId), null, { cliente: body.cliente, titulo: body.titulo, data: body.data, hora: body.hora }, request);
+    await registarAuditoria('CREATE', 'agendamentos', Number(insertedId), null, { contacto_nome: body.contacto_nome, titulo: body.titulo, data: body.data, hora: body.hora }, request);
     return successResponse({ success: true, id: String(insertedId) }, 201);
   } catch (error) {
     return handleDatabaseError(error as Error);
@@ -199,20 +186,19 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { id, cliente, marca, modelo, ano, matricula, data, hora, tipoServico, mecanico, descricao, notas, contacto_nome, contacto_telefone, contacto_email } = body;
+    const { id, marca, modelo, ano, matricula, data, hora, tipoServico, mecanico, descricao, notas, contacto_nome, contacto_telefone, contacto_email } = body;
 
     if (!id) {
       return successResponse({ error: 'ID is required' }, 400);
     }
 
-    const clienteRec = await getOrCreateCliente(cliente);
     const mecanicoRec = await getOrCreateMecanico(mecanico);
 
     const dateObj = parseDateString(data);
     const horaInicio = parseTimeString(hora, dateObj);
 
     const updateData: any = {
-      titulo: cliente ? `${tipoServico || 'Agendamento'} - ${cliente}` : (tipoServico || 'Agendamento'),
+      titulo: contacto_nome ? `${tipoServico || 'Agendamento'} - ${contacto_nome}` : (tipoServico || 'Agendamento'),
       descricao: notas || descricao || '',
       data_agendamento: dateObj,
       hora_inicio: horaInicio,
@@ -223,12 +209,9 @@ export async function PUT(request: Request) {
       contacto_nome: contacto_nome || null,
       contacto_telefone: contacto_telefone || null,
       contacto_email: contacto_email || null,
-      mecanico_id: mecanicoRec?.id || null
+      mecanico_id: mecanicoRec?.id || null,
+      cliente_id: null
     };
-
-    if (clienteRec) {
-      updateData.cliente_id = clienteRec.id;
-    }
 
     await db.update(agendamentos)
       .set(updateData)

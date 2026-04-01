@@ -8,6 +8,7 @@ interface WorkOrder {
   id: string;
   client: string;
   vehicle: string;
+  plate: string;
   mechanic: string;
   openDate: string;
   closeDate: string;
@@ -55,6 +56,7 @@ const normalizeWorkOrder = (order: RawWorkOrder): WorkOrder => {
     id: ref || numericId,
     client: String(order.cliente_nome || order.client || ''),
     vehicle: String(order.veiculo_modelo || order.vehicle || ''),
+    plate: String(order.veiculo_matricula || order.plate || ''),
     mechanic: String(order.mecanico_nome || order.mechanic || ''),
     openDate: String(order.data_inicio || order.openDate || ''),
     closeDate: String(order.data_conclusao || order.closeDate || ''),
@@ -568,7 +570,7 @@ const WorkOrdersPage = () => {
                             </button>
                           </td>
                           
-                          <td className="px-6 py-4 text-gray-400">{workOrder.vehicle}</td>
+                          <td className="px-6 py-4 text-gray-400">{workOrder.plate ? `${workOrder.plate} | ${workOrder.vehicle}` : workOrder.vehicle}</td>
                           <td className="px-6 py-4">{workOrder.client}</td>
                           <td className="px-6 py-4 text-gray-400">{workOrder.mechanic}</td>
                           <td className="px-6 py-4 text-gray-400">{workOrder.openDate}</td>

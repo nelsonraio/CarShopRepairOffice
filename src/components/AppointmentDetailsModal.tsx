@@ -9,12 +9,23 @@ interface AppointmentDetailsModalProps {
 export default function AppointmentDetailsModal({ appointment, isOpen, onClose }: AppointmentDetailsModalProps) {
   if (!isOpen || !appointment) return null;
 
+  const vehicleLabel = [appointment.marca, appointment.modelo || appointment.model]
+    .filter(Boolean)
+    .join(' ')
+    || appointment.car
+    || appointment.vehicle
+    || appointment.modelo
+    || appointment.model
+    || '';
+
   // Info principal para card
   const mainInfo = {
-    Hora: appointment.time || appointment.hora || appointment.date || '',
-    Veículo: appointment.car || appointment.vehicle || appointment.modelo || appointment.model || '',
+    Hora: appointment.time || appointment.hora || '',
+    Data: appointment.date || appointment.data || appointment.dataAgendamento || appointment.data_agendamento || '',
+    Veículo: vehicleLabel,
     Matrícula: appointment.plate || appointment.matricula || appointment.licensePlate || '',
-    Cliente: appointment.client || appointment.clientName || appointment.cliente_nome || '',
+    Contacto: appointment.contacto_nome || appointment.client || appointment.clientName || appointment.cliente_nome || '',
+    Telefone: appointment.contacto_telefone || appointment.clientPhone || '',
     Descrição: appointment.descricao || appointment.description || '',
     Mecânico: appointment.mechanic || appointment.mecanico_nome || '',
     Prioridade: appointment.priority || '',
@@ -31,9 +42,11 @@ export default function AppointmentDetailsModal({ appointment, isOpen, onClose }
               <span className="font-mono text-brand-yellow text-lg">{mainInfo.Hora}</span>
               <span className="bg-blue-900 text-blue-200 px-2 py-1 text-xs font-bold rounded">{mainInfo.Estado}</span>
             </div>
+            {mainInfo.Data && <div className="font-mono text-gray-300 text-xs">Data: {mainInfo.Data}</div>}
             <div className="text-gray-100 font-bold text-base">{mainInfo.Veículo}</div>
             <div className="font-mono text-gray-300 text-xs">Matrícula: {mainInfo.Matrícula}</div>
-            <div className="text-gray-200 text-sm">Cliente: {mainInfo.Cliente}</div>
+            <div className="text-gray-200 text-sm">Contacto: {mainInfo.Contacto}</div>
+            {mainInfo.Telefone && <div className="text-xs text-gray-400">Telefone: {mainInfo.Telefone}</div>}
             {mainInfo.Descrição && <div className="text-xs text-gray-400">{mainInfo.Descrição}</div>}
             {mainInfo.Mecânico && <div className="text-xs text-gray-400">Mecânico: {mainInfo.Mecânico}</div>}
             {mainInfo.Prioridade && <div className="text-xs text-gray-400">Prioridade: {mainInfo.Prioridade}</div>}
