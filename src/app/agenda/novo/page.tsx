@@ -322,32 +322,29 @@ const NewAppointmentPage = () => {
     setShowModelSuggestions(false);
   };
 
+
+  // Estado para erros de validação
+  const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Debug: Verificar valor enviado no campo data
+    console.log('Data enviada para API:', formData.data);
 
-    // Validate contact name is required
+    // Validação inline
+    const errors: { [key: string]: string } = {};
     if (!formData.contacto_nome.trim()) {
-      alert('O nome de contacto é obrigatório.');
-      return;
+      errors.contacto_nome = 'O nome de contacto é obrigatório.';
     }
-
-    // Validate contact phone is required
-    if (!formData.contacto_telefone.trim()) {
-      alert('O telefone de contacto é obrigatório.');
-      return;
-    }
-
-    // Validate that notes are required when "Outro" is selected
     if (formData.tipoServico === 'Outro' && !formData.notas.trim()) {
-      alert('As notas são obrigatórias quando o tipo de serviço é "Outro".');
-      return;
+      errors.notas = 'A descrição é obrigatória para o tipo de serviço "Outro".';
     }
-
-    // Validate that phone is required when vehicle is not found
     if (!vehicleFound && !formData.contacto_telefone.trim()) {
-      alert('O telefone de contacto é obrigatório quando o veículo não está registado.');
-      return;
+      errors.contacto_telefone = 'O telefone é obrigatório quando o veículo não está registado.';
     }
+    setValidationErrors(errors);
+    if (Object.keys(errors).length > 0) return;
 
     try {
       const response = await fetch('/api/agendamentos', {
@@ -358,16 +355,16 @@ const NewAppointmentPage = () => {
         body: JSON.stringify(formData),
       });
 
+
       if (response.ok) {
-        alert('Agendamento criado com sucesso!');
-        // Redireciona para a grelha de agendamento
+        // Redireciona após sucesso
         window.location.href = '/agenda';
       } else {
-        alert('Erro ao criar agendamento');
+        setValidationErrors({ geral: 'Erro ao criar agendamento' });
       }
     } catch (error) {
       console.error('Error creating appointment:', error);
-      alert('Erro ao criar agendamento');
+      setValidationErrors({ geral: 'Erro ao criar agendamento' });
     }
   };
 
@@ -375,6 +372,10 @@ const NewAppointmentPage = () => {
     <div className="flex h-screen bg-gray-800">
       <Sidebar activePage="agenda" />
       <main className="flex-1 relative overflow-y-auto focus:outline-none p-8">
+        {/* Mensagem de erro geral */}
+        {validationErrors.geral && (
+          <div className="mb-4 text-center text-red-500 font-semibold">{validationErrors.geral}</div>
+        )}
         <div className="max-w-5xl mx-auto bg-gray-700 rounded-none shadow-lg border border-gray-600">
           <header className="bg-gray-900 rounded-t-none p-6 border-b border-gray-600">
             <div className="flex justify-between items-center">
@@ -388,21 +389,13 @@ const NewAppointmentPage = () => {
                   </svg>
                   Voltar
                 </Link>
-                <button
-                  onClick={handleSubmit}
-                  className="px-4 py-2 bg-brand-yellow-dark text-white font-bold hover:bg-yellow-600 transition-colors rounded-none flex items-center shadow-md"
-                >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
-                  </svg>
-                  Agendar
-                </button>
               </div>
             </div>
           </header>
 
           <div className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
+            
               <div className="grid grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1">Matrícula *</label>
@@ -603,15 +596,19 @@ const NewAppointmentPage = () => {
                 <h3 className="text-sm font-semibold text-gray-300 mb-3">Informações de Contacto</h3>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1">Nome de Contacto</label>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Nome de Contacto *</label>
                     <input
                       type="text"
                       name="contacto_nome"
                       value={formData.contacto_nome}
                       onChange={handleInputChange}
-                      className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-                      placeholder="Nome do contacto *"
+                      className={`w-full bg-gray-900 border ${validationErrors.contacto_nome ? 'border-red-500' : 'border-gray-600'} text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600`}
+                      placeholder="Nome do contacto"
+                      required
                     />
+                    {validationErrors.contacto_nome && (
+                      <p className="text-xs text-red-400 mt-1">{validationErrors.contacto_nome}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-1">
@@ -622,12 +619,15 @@ const NewAppointmentPage = () => {
                       name="contacto_telefone"
                       value={formData.contacto_telefone}
                       onChange={handleInputChange}
-                      className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-                      placeholder="Telefone de contacto *"
-                      required={!vehicleFound}
+                      className={`w-full bg-gray-900 border ${(validationErrors.contacto_telefone) ? 'border-red-500' : 'border-gray-600'} text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600`}
+                      placeholder="Telefone de contacto"
+                      required={false}
                     />
                     {!vehicleFound && (
                       <p className="text-xs text-orange-400 mt-1">⚠ Obrigatório - Veículo não registado</p>
+                    )}
+                    {validationErrors.contacto_telefone && (
+                      <p className="text-xs text-red-400 mt-1">{validationErrors.contacto_telefone}</p>
                     )}
                   </div>
                   <div>
@@ -653,8 +653,30 @@ const NewAppointmentPage = () => {
                   value={formData.notas}
                   onChange={handleInputChange}
                   rows={2}
-                  className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                  className={`w-full bg-gray-900 border ${(validationErrors.notas) ? 'border-red-500' : 'border-gray-600'} text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600`}
+                  required={formData.tipoServico === 'Outro'}
                 />
+                {validationErrors.notas && (
+                  <p className="text-xs text-red-400 mt-1">{validationErrors.notas}</p>
+                )}
+              </div>
+                {/* Botões apenas no final do formulário */}
+              <div className="flex justify-between items-center mb-4">
+                <Link href="/agenda" className="px-4 py-2 bg-gray-600 text-gray-200 font-medium hover:bg-gray-500 transition-colors rounded-none flex items-center">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                  </svg>
+                  Voltar
+                </Link>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-brand-yellow-dark text-white font-bold hover:bg-yellow-600 transition-colors rounded-none flex items-center shadow-md"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                  </svg>
+                  Agendar
+                </button>
               </div>
             </form>
           </div>

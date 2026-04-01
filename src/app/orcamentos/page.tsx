@@ -287,9 +287,9 @@ const BudgetsPage = () => {
             }
 
             /* Assinaturas */
-            .signatures-section { margin-top: 50px; }
-            .sig-block { margin-bottom: 40px; font-size: 12px; }
-            .sig-line { border-bottom: 1px solid #000; width: 250px; margin-top: 35px; }
+            .signatures-section { margin-top: 50px; text-align: center; }
+            .sig-block { margin-bottom: 40px; font-size: 12px; display: flex; flex-direction: column; align-items: center; }
+            .sig-line { border-bottom: 1px solid #000; width: 250px; margin: 35px auto 0 auto; display: block; }
             
             @media print {
               body { margin: 20mm; }
@@ -320,13 +320,18 @@ const BudgetsPage = () => {
 
           <div class="doc-info">
             <div class="doc-title">Folha de Orçamento: ${budget.ref_orcamento}</div>
-            <div class="client-details">
-              <p>Cliente: ${budget.cliente?.nome || ''}</p>
-              <p>Matrícula: ${budget.veiculo?.matricula || ''}</p>
-              <p>Data: ${budget.data_emissao ? (() => {
-                const date = new Date(budget.data_emissao);
-                return !isNaN(date.getTime()) ? date.toLocaleDateString('pt-PT') : '-';
-              })() : '-'}</p>
+            <div class="client-details" style="display: flex; flex-wrap: wrap; gap: 40px; align-items: center;">
+              <div>
+                <p>Cliente: ${budget.cliente?.nome || ''}</p>
+                <p>Data: ${budget.data_emissao ? (() => {
+                  const date = new Date(budget.data_emissao);
+                  return !isNaN(date.getTime()) ? date.toLocaleDateString('pt-PT') : '-';
+                })() : '-'}</p>
+              </div>
+              <div>
+                <p>Matrícula: <b>${budget.veiculo?.matricula || ''}</b></p>
+                <p>Veículo: ${budget.veiculo ? `${budget.veiculo.marca} ${budget.veiculo.modelo}` : ''}</p>
+              </div>
             </div>
           </div>
 
@@ -350,15 +355,7 @@ const BudgetsPage = () => {
 
           <div class="signatures-section">
             <div class="sig-block">
-              <p>Responsável pela Manutenção:</p>
-              <div class="sig-line"></div>
-            </div>
-            <div class="sig-block">
-              <p>Supervisor da Manutenção:</p>
-              <div class="sig-line"></div>
-            </div>
-            <div class="sig-block">
-              <p>Recebido por:</p>
+              <p>Assinatura da Empresa:</p>
               <div class="sig-line"></div>
             </div>
           </div>
@@ -462,11 +459,16 @@ const BudgetsPage = () => {
 
           <div class="doc-info">
             <div class="doc-title">Ordem de Trabalho: ${workOrderRef}</div>
-            <div class="client-details">
-              <p>Orçamento de Origem: ${budget.ref_orcamento}</p>
-              <p>Cliente: ${budget.cliente?.nome || ''}</p>
-              <p>Veículo: ${budget.veiculo ? `${budget.veiculo.marca} ${budget.veiculo.modelo} | ${budget.veiculo.matricula}` : ''}</p>
-              <p>Data: ${new Date().toLocaleDateString('pt-PT')}</p>
+            <div class="client-details" style="display: flex; flex-wrap: wrap; gap: 40px; align-items: center;">
+              <div>
+                <p>Orçamento de Origem: ${budget.ref_orcamento}</p>
+                <p>Cliente: ${budget.cliente?.nome || ''}</p>
+                <p>Data: ${new Date().toLocaleDateString('pt-PT')}</p>
+              </div>
+              <div>
+                <p>Matrícula: <b>${budget.veiculo?.matricula || ''}</b></p>
+                <p>Veículo: ${budget.veiculo ? `${budget.veiculo.marca} ${budget.veiculo.modelo}` : ''}</p>
+              </div>
             </div>
           </div>
 
@@ -483,22 +485,9 @@ const BudgetsPage = () => {
             </tbody>
           </table>
 
-          <div class="mechanic-section">
-            <div class="mechanic-label">Mecânico Responsável:</div>
-            <div class="mechanic-name">${mechanicName || '_____________________________'}</div>
-          </div>
-
           <div class="signatures-section">
             <div class="sig-block">
-              <p>Assinatura do Mecânico:</p>
-              <div class="sig-line"></div>
-            </div>
-            <div class="sig-block">
-              <p>Assinatura do Supervisor:</p>
-              <div class="sig-line"></div>
-            </div>
-            <div class="sig-block">
-              <p>Data de Conclusão:</p>
+              <p>Assinatura da Empresa:</p>
               <div class="sig-line"></div>
             </div>
           </div>

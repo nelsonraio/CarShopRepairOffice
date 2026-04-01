@@ -346,19 +346,21 @@ const NewVehiclePage = () => {
     setShowModelSuggestions(false);
   };
 
+  const [submitError, setSubmitError] = useState('');
+  const [submitSuccess, setSubmitSuccess] = useState('');
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    setSubmitError('');
+    setSubmitSuccess('');
     const form = e.currentTarget as HTMLFormElement;
     if (!form.reportValidity()) {
+      setSubmitError('Por favor preencha todos os campos obrigatórios.');
       return;
     }
-
     if (licensePlateExists) {
-      alert('Não é possível criar o veículo porque a matrícula já existe na tabela de veículos.');
+      setSubmitError('Não é possível criar o veículo porque a matrícula já existe na tabela de veículos.');
       return;
     }
-
     try {
       const payload = {
         clientId: selectedClient?.id,
@@ -374,7 +376,6 @@ const NewVehiclePage = () => {
         year: formData.year,
         vin: formData.vin && formData.vin.trim() !== '' ? formData.vin : undefined
       };
-
       const response = await fetch('/api/veiculos', {
         method: 'POST',
         headers: {
@@ -382,11 +383,9 @@ const NewVehiclePage = () => {
         },
         body: JSON.stringify(payload),
       });
-
-
       if (response.ok) {
-        alert('Veículo criado com sucesso!');
-        router.push('/veiculos');
+        setSubmitSuccess('Veículo criado com sucesso!');
+        setTimeout(() => { router.push('/veiculos'); }, 1200);
       } else {
         const errorData = await response.json();
         if (
@@ -395,16 +394,14 @@ const NewVehiclePage = () => {
           errorData.error.toLowerCase().includes('unique constraint') &&
           errorData.error.toLowerCase().includes('numero_chassis')
         ) {
-          alert('Já existe um veículo com o mesmo número de chassis (VIN).');
+          setSubmitError('Já existe um veículo com o mesmo número de chassis (VIN).');
         } else {
-          alert(`Erro ao criar veículo: ${errorData.error || 'Erro desconhecido'}`);
+          setSubmitError(`Erro ao criar veículo: ${errorData.error || 'Erro desconhecido'}`);
         }
       }
-
-
     } catch (error) {
       console.error('Error creating vehicle:', error);
-      alert('Erro ao criar veículo');
+      setSubmitError('Erro ao criar veículo');
     }
   };
 
@@ -430,6 +427,8 @@ const NewVehiclePage = () => {
           </header>
           {/* Vehicle Information (Ordem igual ao editar) */}
           <form onSubmit={handleSubmit}>
+            {submitError && <div className="text-red-400 text-sm mb-2">{submitError}</div>}
+            {submitSuccess && <div className="text-green-400 text-sm mb-2">{submitSuccess}</div>}
             <div className="border-b border-gray-600 pb-6">
               <h4 className="text-lg font-semibold text-gray-100 mb-4">Dados do Veículo</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

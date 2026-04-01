@@ -165,13 +165,15 @@ export async function POST(request: Request) {
     const clienteRec = await getOrCreateCliente(cliente);
     const mecanicoRec = await getOrCreateMecanico(mecanico);
     const dateObj = parseDateString(data);
+    console.log('DEBUG - data recebida:', data);
+    console.log('DEBUG - dataAgendamento gravada:', dateObj.toISOString().slice(0, 10));
     const horaInicio = parseTimeString(hora, dateObj);
     const result = await db.insert(agendamentos).values({
       clienteId: clienteRec ? clienteRec.id : null,
       mecanicoId: mecanicoRec?.id || null,
       titulo: cliente ? `${tipoServico || 'Agendamento'} - ${cliente}` : (tipoServico || 'Agendamento'),
       descricao: notas || descricao || '',
-      dataAgendamento: dateObj.toISOString().slice(0, 10),
+      dataAgendamento: data,
       horaInicio: horaInicio.toTimeString().slice(0, 5),
       estado: 'agendado',
       marca: marca || null,

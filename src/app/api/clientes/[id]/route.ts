@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db/connection';
-import { clientes, perfisClientes, mecanicos, veiculos, ordens_trabalho } from '@/db/schema';
+import { clientes, perfisClientes, mecanicos, veiculos } from '@/db/schema';
+import { ordensTrabalho } from '@/../drizzle/migrations/schema';
 import { eq, and } from 'drizzle-orm';
 import { registarAuditoria } from '@/lib/auditoria';
 
@@ -47,7 +48,7 @@ export async function GET(
     const veiculosArr = await db.select().from(veiculos).where(eq(veiculos.clienteId, clientId));
 
     // Fetch work orders for service history
-    const ordensArr = await db.select().from(ordens_trabalho).where(eq(ordens_trabalho.clienteId, clientId));
+    const ordensArr = await db.select().from(ordensTrabalho).where(eq(ordensTrabalho.clienteId, clientId));
 
     // Get unique vehicle and mechanic IDs
     const veiculoIds = Array.from(new Set(ordensArr.map((o: any) => o.veiculoId).filter((v: any) => v != null)));

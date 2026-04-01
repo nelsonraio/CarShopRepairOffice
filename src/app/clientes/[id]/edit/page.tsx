@@ -120,8 +120,16 @@ const EditClientPage = () => {
    * 3. Se sucesso: alerta e redireciona para lista
    * 4. Se erro: mostra mensagem de erro
    */
+  const [submitError, setSubmitError] = useState('');
+  const [submitSuccess, setSubmitSuccess] = useState('');
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setSubmitError('');
+    setSubmitSuccess('');
+    if (!formData.nome.trim()) {
+      setSubmitError('O nome do cliente é obrigatório.');
+      return;
+    }
     const payload = {
       ...formData,
       perfil_id: formData.perfilId || null,
@@ -134,17 +142,15 @@ const EditClientPage = () => {
         },
         body: JSON.stringify(payload),
       });
-
       if (!response.ok) {
-        alert('Erro ao atualizar cliente');
+        setSubmitError('Erro ao atualizar cliente');
         return;
       }
-
-      alert('Cliente atualizado com sucesso!');
-      window.location.href = '/clientes'; // Redireciona após sucesso
+      setSubmitSuccess('Cliente atualizado com sucesso!');
+      setTimeout(() => { window.location.href = '/clientes'; }, 1200);
     } catch (error) {
       console.error('Error updating client:', error);
-      alert('Erro ao atualizar cliente');
+      setSubmitError('Erro ao atualizar cliente');
     }
   };
 
@@ -209,6 +215,8 @@ const EditClientPage = () => {
 
           <div className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
+              {submitError && <div className="text-red-400 text-sm mb-2">{submitError}</div>}
+              {submitSuccess && <div className="text-green-400 text-sm mb-2">{submitSuccess}</div>}
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-1">Nome Completo *</label>
                 <input

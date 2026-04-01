@@ -59,6 +59,7 @@ const EditAppointmentPage = () => {
   const [models, setModels] = useState<Model[]>([]);
   const [mechanics, setMechanics] = useState<Mechanic[]>([]);
   const [services, setServices] = useState<Service[]>([]);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [clientSuggestions, setClientSuggestions] = useState<Client[]>([]);
   const [showClientSuggestions, setShowClientSuggestions] = useState(false);
   const [brandSuggestions, setBrandSuggestions] = useState<Brand[]>([]);
@@ -369,36 +370,30 @@ const EditAppointmentPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Validate contact name is required
+    const newErrors: { [key: string]: string } = {};
     if (!formData.contacto_nome.trim()) {
-      alert('O nome de contacto é obrigatório.');
-      return;
+      newErrors.contacto_nome = 'O nome de contacto é obrigatório.';
     }
-
-    // Validate contact phone is required
-    if (!formData.contacto_telefone.trim()) {
-      alert('O telefone de contacto é obrigatório.');
-      return;
-    }
-
-    // Validate that notes are required when "Outro" is selected
     if (formData.tipoServico === 'Outro' && !formData.notas.trim()) {
-      alert('As notas são obrigatórias quando o tipo de serviço é "Outro".');
-      return;
+      newErrors.notas = 'A descrição é obrigatória quando o tipo de serviço é "Outro".';
     }
-
-    // Validate that phone is required when vehicle is not found
     if (!vehicleFound && !formData.contacto_telefone.trim()) {
-      alert('O telefone de contacto é obrigatório quando o veículo não está registado.');
-      return;
+      newErrors.contacto_telefone = 'O telefone é obrigatório quando o veículo não está registado.';
     }
-
-    // Validate hora
     if (!formData.hora.trim()) {
-      alert('A hora é obrigatória.');
-      return;
+      newErrors.hora = 'A hora é obrigatória.';
     }
+    if (!formData.matricula.trim()) {
+      newErrors.matricula = 'A matrícula é obrigatória.';
+    }
+    if (!formData.cliente.trim()) {
+      newErrors.cliente = 'O cliente é obrigatório.';
+    }
+    if (!formData.data.trim()) {
+      newErrors.data = 'A data é obrigatória.';
+    }
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
 
     try {
       const response = await fetch(`/api/agendamentos/${id}`, {
@@ -410,16 +405,15 @@ const EditAppointmentPage = () => {
       });
 
       if (response.ok) {
-        alert('Agendamento atualizado com sucesso!');
         // Redirect to agenda page
         window.location.href = '/agenda';
       } else {
         const errData = await response.json().catch(() => ({}));
-        alert(errData?.error || 'Erro ao atualizar agendamento');
+        setErrors({ submit: errData?.error || 'Erro ao atualizar agendamento' });
       }
     } catch (error) {
       console.error('Error updating appointment:', error);
-      alert('Erro ao atualizar agendamento');
+      setErrors({ submit: 'Erro ao atualizar agendamento' });
     }
   };
 
@@ -433,28 +427,21 @@ const EditAppointmentPage = () => {
               <div>
                 <h1 className="text-3xl font-bold text-gray-100">Editar Agendamento</h1>
               </div>
-              <div className="flex space-x-3">
+              <div>
                 <Link href="/agenda" className="px-4 py-2 bg-gray-600 text-gray-200 font-medium hover:bg-gray-500 transition-colors rounded-none flex items-center">
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                   </svg>
                   Voltar
                 </Link>
-                <button
-                  onClick={handleSubmit}
-                  className="px-4 py-2 bg-brand-yellow-dark text-white font-bold hover:bg-yellow-600 transition-colors rounded-none flex items-center shadow-md"
-                >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
-                  </svg>
-                  Atualizar Agendamento
-                </button>
               </div>
             </div>
           </header>
 
           <div className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Botões no final do formulário */}
+           
               <div className="grid grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1">Matrícula *</label>
@@ -463,10 +450,11 @@ const EditAppointmentPage = () => {
                     name="matricula"
                     value={formData.matricula}
                     onChange={handleInputChange}
-                    className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                    className={`w-full bg-gray-900 border ${errors.matricula ? 'border-red-500' : 'border-gray-600'} text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600`}
                     placeholder="XX-XX-XX"
                     required
                   />
+                  {errors.matricula && <p className="text-xs text-red-400 mt-1">{errors.matricula}</p>}
                 </div>
                 <div className="relative">
                   <label className="block text-sm font-medium text-gray-400 mb-1">Marca</label>
@@ -539,10 +527,11 @@ const EditAppointmentPage = () => {
                   name="cliente"
                   value={formData.cliente}
                   onChange={handleInputChange}
-                  className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                  className={`w-full bg-gray-900 border ${errors.cliente ? 'border-red-500' : 'border-gray-600'} text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600`}
                   placeholder="Pesquisar cliente..."
                   required
                 />
+                {errors.cliente && <p className="text-xs text-red-400 mt-1">{errors.cliente}</p>}
                 {showClientSuggestions && clientSuggestions.length > 0 && (
                   <div className="absolute z-10 w-full bg-gray-800 border border-gray-600 mt-1 max-h-40 overflow-y-auto">
                     {clientSuggestions.map((client) => (
@@ -569,9 +558,10 @@ const EditAppointmentPage = () => {
                     name="data"
                     value={formData.data}
                     onChange={handleInputChange}
-                    className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                    className={`w-full bg-gray-900 border ${errors.data ? 'border-red-500' : 'border-gray-600'} text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600`}
                     required
                   />
+                  {errors.data && <p className="text-xs text-red-400 mt-1">{errors.data}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1">Hora *</label>
@@ -580,9 +570,10 @@ const EditAppointmentPage = () => {
                     name="hora"
                     value={formData.hora}
                     onChange={handleInputChange}
-                    className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                    className={`w-full bg-gray-900 border ${errors.hora ? 'border-red-500' : 'border-gray-600'} text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600`}
                     required
                   />
+                  {errors.hora && <p className="text-xs text-red-400 mt-1">{errors.hora}</p>}
                 </div>
               </div>
 
@@ -655,15 +646,17 @@ const EditAppointmentPage = () => {
                 <h3 className="text-sm font-semibold text-gray-300 mb-3">Informações de Contacto</h3>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1">Nome de Contacto</label>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Nome de Contacto *</label>
                     <input
                       type="text"
                       name="contacto_nome"
                       value={formData.contacto_nome}
                       onChange={handleInputChange}
-                      className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-                      placeholder="Nome do contacto *"
+                      className={`w-full bg-gray-900 border ${errors.contacto_nome ? 'border-red-500' : 'border-gray-600'} text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600`}
+                      placeholder="Nome do contacto"
+                      required
                     />
+                    {errors.contacto_nome && <p className="text-xs text-red-400 mt-1">{errors.contacto_nome}</p>}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-1">
@@ -674,12 +667,12 @@ const EditAppointmentPage = () => {
                       name="contacto_telefone"
                       value={formData.contacto_telefone}
                       onChange={handleInputChange}
-                      className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-                      placeholder="Telefone de contacto *"
-                      required={!vehicleFound}
+                      className={`w-full bg-gray-900 border ${(errors.contacto_telefone) ? 'border-red-500' : 'border-gray-600'} text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600`}
+                      placeholder="Telefone de contacto"
+                      required={false}
                     />
                     {!vehicleFound && (
-                      <p className="text-xs text-orange-400 mt-1">⚠ Obrigatório - Veículo não registado</p>
+                      <p className={`text-xs ${errors.contacto_telefone ? 'text-red-400' : 'text-orange-400'} mt-1`}>{errors.contacto_telefone ? errors.contacto_telefone : '⚠ Obrigatório - Veículo não registado'}</p>
                     )}
                   </div>
                   <div>
@@ -705,8 +698,27 @@ const EditAppointmentPage = () => {
                   value={formData.notas}
                   onChange={handleInputChange}
                   rows={2}
-                  className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                  className={`w-full bg-gray-900 border ${errors.notas ? 'border-red-500' : 'border-gray-600'} text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600`}
                 />
+                {errors.notas && <p className="text-xs text-red-400 mt-1">{errors.notas}</p>}
+              </div>
+                {errors.submit && <p className="text-xs text-red-400 mb-2">{errors.submit}</p>}
+                <div className="flex justify-between items-center mb-4">
+                <Link href="/agenda" className="px-4 py-2 bg-gray-600 text-gray-200 font-medium hover:bg-gray-500 transition-colors rounded-none flex items-center">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                  </svg>
+                  Voltar
+                </Link>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-brand-yellow-dark text-white font-bold hover:bg-yellow-600 transition-colors rounded-none flex items-center shadow-md"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                  </svg>
+                  Atualizar Agendamento
+                </button>
               </div>
             </form>
           </div>

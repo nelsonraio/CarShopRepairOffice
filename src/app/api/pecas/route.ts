@@ -124,9 +124,17 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const { nome, referencia, categoriaId, stock, minStock, price, fornecedor_id, descricao, margem_lucro, notas } = await request.json();
+    // Se faltar nome ou referência, retornar erro para o frontend exibir de forma amigável (inline ou global)
+    // O frontend deve mostrar esta mensagem junto aos campos obrigatórios, não em alert().
+    // Exemplo de tratamento no frontend:
+    // if (res.error) setErrorMsg(res.error); // mostrar mensagem junto ao campo ou no topo do formulário
     if (!nome || !referencia) return successResponse({ error: 'Nome e referência são obrigatórios' }, 400);
+    // Se stock ou minStock for negativo, retornar erro para o frontend exibir de forma amigável
+    // O frontend deve mostrar esta mensagem junto ao campo stock/minStock.
     if ((stock ?? 0) < 0 || (minStock ?? 0) < 0) return successResponse({ error: 'Stock não pode ser negativo' }, 400);
     const existente = await db.select().from(pecas).where(eq(pecas.referencia, referencia));
+    // Se já existir referência, retornar erro para o frontend exibir de forma amigável
+    // O frontend deve mostrar esta mensagem junto ao campo referência.
     if (existente.length > 0) return successResponse({ error: 'Já existe referência com este valor' }, 400);
     await db.insert(pecas).values({
       nome,

@@ -404,8 +404,17 @@ const EditVehiclePage = () => {
     setShowModelSuggestions(false);
   };
 
+  const [submitError, setSubmitError] = useState('');
+  const [submitSuccess, setSubmitSuccess] = useState('');
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError('');
+    setSubmitSuccess('');
+    const form = e.currentTarget as HTMLFormElement;
+    if (!form.reportValidity()) {
+      setSubmitError('Por favor preencha todos os campos obrigatórios.');
+      return;
+    }
     const payload = {
       ...formData,
       perfil_id: formData.clientProfileId || null,
@@ -419,14 +428,14 @@ const EditVehiclePage = () => {
         body: JSON.stringify(payload),
       });
       if (response.ok) {
-        alert('Veículo atualizado com sucesso!');
-        router.push('/veiculos');
+        setSubmitSuccess('Veículo atualizado com sucesso!');
+        setTimeout(() => { router.push('/veiculos'); }, 1200);
       } else {
-        alert('Erro ao atualizar veículo');
+        setSubmitError('Erro ao atualizar veículo');
       }
     } catch (error) {
       console.error('Error updating vehicle:', error);
-      alert('Erro ao atualizar veículo');
+      setSubmitError('Erro ao atualizar veículo');
     }
   };
 
@@ -475,6 +484,8 @@ const EditVehiclePage = () => {
 
           <div className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
+              {submitError && <div className="text-red-400 text-sm mb-2">{submitError}</div>}
+              {submitSuccess && <div className="text-green-400 text-sm mb-2">{submitSuccess}</div>}
                  {/* Vehicle Information */}
               <div className="border-b border-gray-600 pb-6">
                 <h4 className="text-lg font-semibold text-gray-100 mb-4">Dados do Veículo</h4>

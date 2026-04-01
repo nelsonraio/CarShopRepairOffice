@@ -1,4 +1,38 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+// Modal de aviso customizado
+
+const WarningModal = ({ message, onClose }: { message: string, onClose: () => void }) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === 'Escape') {
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  const handleClickOutside = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (modalRef.current && e.target === modalRef.current) {
+      onClose();
+    }
+  };
+
+
+  return (
+    <div ref={modalRef} onClick={handleClickOutside} className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+      <div className="bg-gray-800 border border-gray-600 p-6 rounded shadow-xl min-w-[280px] max-w-xs text-center">
+        <div className="text-white mb-4">{message}</div>
+        <button
+          className="px-4 py-2 bg-brand-yellow-dark text-white font-bold hover:bg-yellow-600 transition-colors rounded"
+          onClick={onClose}
+        >OK</button>
+      </div>
+    </div>
+  );
+};
 
 interface Agendamento {
   id?: string;
@@ -356,6 +390,7 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onClose, ap
 
 
   const [horaError, setHoraError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -370,7 +405,7 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onClose, ap
 
     // Validate that notes are required when "Outro" is selected
     if (formData.tipoServico === 'Outro' && !formData.notas.trim()) {
-      alert('As notas são obrigatórias quando o tipo de serviço é "Outro".');
+      setWarning('As notas são obrigatórias quando o tipo de serviço é "Outro".');
       return;
     }
 
@@ -384,229 +419,86 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onClose, ap
     }
   };
 
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-      <div className="bg-gray-800 border border-gray-600 w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 shadow-2xl relative">
-
-        <h3 className="text-xl font-bold text-gray-100 mb-6 border-b border-gray-700 pb-2">
-          {appointment ? `Editar Agendamento - ${appointment.client} - ${appointment.date}` : 'Novo Agendamento'}
-        </h3>
-        <form onSubmit={handleSubmit} className="space-y-4">
-
-          <div className="relative">
-            <label className="block text-sm font-medium text-gray-400 mb-1">Cliente</label>
-            <input
-              type="text"
-              name="cliente"
-              value={formData.cliente}
-              onChange={handleInputChange}
-              className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-              placeholder="Pesquisar cliente..."
-              required
-            />
-            {showSuggestions && clientSuggestions.length > 0 && (
-              <div className="absolute z-10 w-full bg-gray-800 border border-gray-600 mt-1 max-h-40 overflow-y-auto">
-                {clientSuggestions.map((client) => (
-                  <div
-                    key={client.id}
-                    className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
-                    onClick={() => selectClient(client)}
-                  >
-                    <div className="font-medium">{client.nome}</div>
-                    <div className="text-sm text-gray-400">
-                      {client.telefone} {client.email && `• ${client.email}`}
-                    </div>
+    <>
+      {warning && (
+        <WarningModal message={warning} onClose={() => setWarning(null)} />
+      )}
+      <div className="fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+        <div className="bg-gray-800 border border-gray-600 w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 shadow-2xl relative">
+          <h3 className="text-xl font-bold text-gray-100 mb-6 border-b border-gray-700 pb-2">
+            {appointment ? `Editar Agendamento - ${appointment.client} - ${appointment.date}` : 'Novo Agendamento'}
+          </h3>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* ...existing code... */}
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-400 mb-1">Cliente</label>
+              <input
+                type="text"
+                name="cliente"
+                value={formData.cliente}
+                          onChange={handleInputChange}
+                          className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
+                          placeholder="Pesquisar cliente..."
+                          required
+                        />
+                        {showSuggestions && clientSuggestions.length > 0 && (
+                          <div className="absolute z-10 w-full bg-gray-800 border border-gray-600 mt-1 max-h-40 overflow-y-auto">
+                            {clientSuggestions.map((client) => (
+                              <div
+                                key={client.id}
+                                className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
+                                onClick={() => selectClient(client)}
+                              >
+                                <div className="font-medium">{client.nome}</div>
+                                <div className="text-sm text-gray-400">
+                                  {client.telefone} {client.email && `• ${client.email}`}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {/* ...existing code... */}
+                      <div className="grid grid-cols-4 gap-4">
+                        {/* ...existing code... */}
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* ...existing code... */}
+                      </div>
+                      <div>
+                        {/* ...existing code... */}
+                      </div>
+                      <div>
+                        {/* ...existing code... */}
+                      </div>
+                      <div>
+                        {/* ...existing code... */}
+                      </div>
+                      <div>
+                        {/* ...existing code... */}
+                      </div>
+                      <div className="flex justify-end space-x-3 mt-8 pt-4 border-t border-gray-700">
+                        <button
+                          type="button"
+                          onClick={onClose}
+                          className="px-4 py-2 bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors rounded-none border border-gray-600"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-4 py-2 bg-brand-yellow-dark text-white font-bold hover:bg-yellow-600 transition-colors rounded-none flex items-center shadow-md"
+                        >
+                          {appointment ? 'Atualizar' : 'Agendar'}
+                        </button>
+                      </div>
+                    </form>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-
-          <div className="grid grid-cols-4 gap-4">
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-400 mb-1">Marca</label>
-              <input
-                type="text"
-                name="marca"
-                value={formData.marca}
-                onChange={handleInputChange}
-                className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-                placeholder="Pesquisar marca..."
-              />
-              {showBrandSuggestions && brandSuggestions.length > 0 && (
-                <div className="absolute z-10 w-full bg-gray-800 border border-gray-600 mt-1 max-h-40 overflow-y-auto">
-                  {brandSuggestions.map((brand) => (
-                    <div
-                      key={brand.id}
-                      className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
-                      onClick={() => selectBrand(brand)}
-                    >
-                      <div className="font-medium">{brand.nome}</div>
-                      <div className="text-sm text-gray-400">{brand.pais_origem}</div>
-                    </div>
-                  ))}
                 </div>
-              )}
-            </div>
-
-
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-400 mb-1">Modelo</label>
-              <input
-                type="text"
-                name="modelo"
-                value={formData.modelo}
-                onChange={handleInputChange}
-                disabled={!formData.marca}
-                className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                placeholder={formData.marca ? "Pesquisar modelo..." : "Selecione uma marca primeiro"}
-              />
-              {showModelSuggestions && modelSuggestions.length > 0 && (
-                <div className="absolute z-10 w-full bg-gray-800 border border-gray-600 mt-1 max-h-40 overflow-y-auto">
-                  {modelSuggestions.map((model) => (
-                    <div
-                      key={model.id}
-                      className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
-                      onClick={() => selectModel(model)}
-                    >
-                      <div className="font-medium">{model.nome}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">Ano</label>
-              <input
-                type="number"
-                name="ano"
-                value={formData.ano}
-                onChange={handleInputChange}
-                className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-                placeholder="Ano"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">Matrícula</label>
-              <input
-                type="text"
-                name="matricula"
-                value={formData.matricula}
-                onChange={handleInputChange}
-                className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-                placeholder="Matrícula"
-              />
-            </div>
-
-
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">Data</label>
-              <input
-                type="date"
-                name="data"
-                value={formData.data}
-                onChange={handleInputChange}
-                className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">Hora</label>
-              <input
-                type="time"
-                name="hora"
-                value={formData.hora}
-                onChange={handleInputChange}
-                className={`w-full bg-gray-900 border ${horaError ? 'border-red-500' : 'border-gray-600'} text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600`}
-                required
-              />
-              {horaError && (
-                <p className="text-red-500 text-xs mt-1">{horaError}</p>
-              )}
-            </div>
-
-
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">Tipo de Serviço</label>
-            <select
-              name="tipoServico"
-              value={formData.tipoServico}
-              onChange={handleInputChange}
-              className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
-            >
-              {services.map((service) => (
-                <option key={service.id} value={service.nome}>
-                  {service.nome}
-                </option>
-              ))}
-            </select>
-          </div>
-
-
-
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">Mecânico Preferencial</label>
-            <select
-              name="mecanico"
-              value={formData.mecanico}
-              onChange={handleInputChange}
-              className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
-            >
-              <option value="">Qualquer</option>
-              {mechanics.map((mechanic) => (
-                <option key={mechanic.id} value={mechanic.nome}>
-                  {mechanic.nome}
-                </option>
-              ))}
-            </select>
-          </div>
-
-
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">
-              Notas {formData.tipoServico === 'Outro' && <span className="text-red-500">*</span>}
-            </label>
-            <textarea
-              name="notas"
-              value={formData.notas}
-              onChange={handleInputChange}
-              rows={2}
-              required={formData.tipoServico === 'Outro'}
-              className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
-            />
-          </div>
-
-
-          <div className="flex justify-end space-x-3 mt-8 pt-4 border-t border-gray-700">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors rounded-none border border-gray-600"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-brand-yellow-dark text-white font-bold hover:bg-yellow-600 transition-colors rounded-none flex items-center shadow-md"
-            >
-              {appointment ? 'Atualizar' : 'Agendar'}
-            </button>
-
-          </div>
-        </form>
-      </div>
-    </div>
-
-
-  );
-};
-
-export default AppointmentModal;
+              </>
+            )
+}

@@ -386,14 +386,15 @@ const WorkOrdersPage = () => {
               background-color: #f5f5f5; 
               padding: 15px; 
               font-size: 14px;
+              text-align: center;
             }
-            .mechanic-label { font-weight: bold; margin-bottom: 5px; }
-            .mechanic-name { font-size: 16px; color: #333; }
+            .mechanic-label { font-weight: bold; margin-bottom: 5px; text-align: center; }
+            .mechanic-name { font-size: 16px; color: #333; text-align: center; }
 
             /* Assinaturas */
-            .signatures-section { margin-top: 50px; }
-            .sig-block { margin-bottom: 40px; font-size: 12px; }
-            .sig-line { border-bottom: 1px solid #000; width: 250px; margin-top: 35px; }
+            .signatures-section { margin-top: 50px; text-align: center; }
+            .sig-block { margin-bottom: 40px; font-size: 12px; display: flex; flex-direction: column; align-items: center; }
+            .sig-line { border-bottom: 1px solid #000; width: 250px; margin: 0 auto; margin-top: 35px; }
             
             @media print {
               body { margin: 20mm; }
@@ -442,21 +443,12 @@ const WorkOrdersPage = () => {
           </table>
 
           <div class="mechanic-section">
-            <div class="mechanic-label">Mecânico Responsável:</div>
+            <div class="mechanic-label">Responsável da Reparação</div>
             <div class="mechanic-name">${workOrder.mechanic || '_____________________________'}</div>
           </div>
-
           <div class="signatures-section">
             <div class="sig-block">
-              <p>Assinatura do Mecânico:</p>
-              <div class="sig-line"></div>
-            </div>
-            <div class="sig-block">
-              <p>Assinatura do Supervisor:</p>
-              <div class="sig-line"></div>
-            </div>
-            <div class="sig-block">
-              <p>Data de Conclusão:</p>
+              <p>Assinatura do Responsável:</p>
               <div class="sig-line"></div>
             </div>
           </div>

@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Sidebar from '../../../components/Sidebar';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useRef } from 'react';
 
 interface Client {
   id: number;
@@ -454,14 +455,21 @@ const NewBudgetPage = () => {
     }
   };
 
-  const createBudget = async () => {
-    if (!selectedVehicle) {
-      alert('veiculo ainda nao existente. Criar primeiro.');
+
+const formRef = useRef<HTMLFormElement>(null);
+
+  const createBudget = async (event: React.FormEvent<HTMLFormElement>) => {
+    // Evita o refresh da página (comum em formulários)
+    if (event) event.preventDefault();
+
+    // 2. Testa TODOS os campos 'required' do HTML de uma vez
+    // O reportValidity() retorna true se tudo estiver ok ou false se algo falhar
+    if (!formRef.current || !formRef.current.reportValidity()) {
+      // O próprio navegador já vai focar no campo vazio e mostrar o alerta
       return;
     }
-
-    if (budgetItems.length === 0) {
-      alert('Adicione pelo menos um item ao orçamento antes de criar.');
+    if (!selectedVehicle) {
+      alert('Selecione um veículo antes de criar o orçamento.');
       return;
     }
 
@@ -469,22 +477,24 @@ const NewBudgetPage = () => {
       alert('Selecione um cliente antes de criar o orçamento.');
       return;
     }
-
+    if (budgetItems.length === 0) {
+      alert('Adicione pelo menos um item ao orçamento antes de criar.');
+      return;
+    }
     // Validar contacto alternativo se o telefone principal não existir
     const clienteTelefone = selectedClient.telefone?.trim();
     if (!clienteTelefone) {
       const nomeAlternativo = alternateContact.nome.trim();
       const telefoneAlternativo = alternateContact.telefone.trim();
-      
       if (!nomeAlternativo || !telefoneAlternativo) {
         alert('O cliente não tem telefone registado. Por favor, preencha o Nome e Telefone do contacto alternativo.');
         return;
       }
     }
+    // Quilometragem é opcional
 
-    if (!quilometragem) {
-      // Campo quilometragem agora é opcional
-    }
+    // 2. Outras validações e envio só acontecem se todos os required estiverem OK
+    // (adicione aqui outras validações, se necessário)
 
     try {
       // Generate budget ID if not set
@@ -624,16 +634,6 @@ const NewBudgetPage = () => {
                   </svg>
                   Voltar
                 </Link>
-              
-                <button
-                  onClick={createBudget}
-                  className="px-4 py-2 bg-brand-yellow-dark text-white font-bold hover:bg-yellow-600 transition-colors rounded-none flex items-center shadow-md"
-                >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
-                  </svg>
-                  Criar Orçamento
-                </button>
               </div>
             </div>
           </header>
@@ -1069,6 +1069,27 @@ const NewBudgetPage = () => {
                   <span className="text-xl font-bold text-brand-yellow">€{total.toFixed(2)}</span>
                 </div>
               </div>
+            </div>
+
+            {/* Action Buttons at the Bottom */}
+            <div className="flex justify-end space-x-3 mt-8">
+              <Link href="/orcamentos" className="px-4 py-2 bg-gray-600 text-gray-200 font-medium hover:bg-gray-500 transition-colors rounded-none flex items-center">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Voltar
+              </Link>
+              <form ref={formRef} onSubmit={createBudget} className="inline">
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-brand-yellow-dark text-white font-bold hover:bg-yellow-600 transition-colors rounded-none flex items-center shadow-md"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                  </svg>
+                  Criar Orçamento
+                </button>
+              </form>
             </div>
           </div>
         </div>

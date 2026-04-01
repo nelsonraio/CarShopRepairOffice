@@ -22,9 +22,17 @@ const NewClientPage = () => {
     }));
   };
 
+
+  const [submitError, setSubmitError] = useState('');
+  const [submitSuccess, setSubmitSuccess] = useState('');
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    setSubmitError('');
+    setSubmitSuccess('');
+    if (!formData.nome.trim()) {
+      setSubmitError('O nome do cliente é obrigatório.');
+      return;
+    }
     try {
       const response = await fetch('/api/clientes', {
         method: 'POST',
@@ -33,17 +41,16 @@ const NewClientPage = () => {
         },
         body: JSON.stringify(formData),
       });
-
       if (response.ok) {
-        alert('Cliente criado com sucesso!');
-        window.location.href = '/clientes'; // Redireciona após sucesso
+        setSubmitSuccess('Cliente criado com sucesso!');
+        setTimeout(() => { window.location.href = '/clientes'; }, 1200);
       } else {
         const error = await response.json();
-        alert(`Erro ao criar cliente: ${error.error || 'Erro desconhecido'}`);
+        setSubmitError(`Erro ao criar cliente: ${error.error || 'Erro desconhecido'}`);
       }
     } catch (error) {
       console.error('Error creating client:', error);
-      alert('Erro ao criar cliente: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
+      setSubmitError('Erro ao criar cliente.');
     }
   };
 
@@ -79,6 +86,8 @@ const NewClientPage = () => {
 
           <div className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
+              {submitError && <div className="text-red-400 text-sm mb-2">{submitError}</div>}
+              {submitSuccess && <div className="text-green-400 text-sm mb-2">{submitSuccess}</div>}
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-1">Nome Completo *</label>
                 <input
