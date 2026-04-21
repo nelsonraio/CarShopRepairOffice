@@ -121,8 +121,8 @@ const EditVehiclePage = () => {
       const response = await fetch(`/api/veiculos/${params.id}`);
       if (response.ok) {
         const data = await response.json();
-        // Set selected client from the vehicle data
-        setSelectedClient({
+        const hasClient = Boolean(data.clientId);
+        setSelectedClient(hasClient ? {
           id: data.clientId,
           nome: data.clientName,
           telefone: data.clientPhone,
@@ -131,7 +131,8 @@ const EditVehiclePage = () => {
           endereco: data.clientAddress || '',
           perfil: data.clientProfile || 'Normal',
           perfil_id: data.clientProfileId || ''
-        });
+        } : null);
+        setIsNewClient(!hasClient);
 
         // Normaliza o perfil para corresponder ao nome de um dos perfis disponíveis
         let normalizedProfile = 'Normal';
@@ -416,7 +417,17 @@ const EditVehiclePage = () => {
       return;
     }
     const payload = {
-      ...formData,
+      clientId: selectedClient?.id || null,
+      clientName: formData.clientSearch.trim(),
+      clientPhone: formData.clientPhone,
+      clientEmail: formData.clientEmail,
+      clientNif: formData.clientNif,
+      clientAddress: formData.clientAddress,
+      make: formData.make,
+      model: formData.model,
+      licensePlate: formData.licensePlate,
+      year: formData.year,
+      vin: formData.vin,
       perfil_id: formData.clientProfileId || null,
     };
     try {
@@ -586,7 +597,7 @@ const EditVehiclePage = () => {
                 <h4 className="text-lg font-semibold text-gray-100 mb-4">Dados do Cliente</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="relative">
-                    <label className="block text-sm font-medium text-gray-400 mb-1">Cliente *</label>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Cliente</label>
                     <input
                       type="text"
                       name="clientSearch"
@@ -594,7 +605,6 @@ const EditVehiclePage = () => {
                       onChange={handleClientSearchChange}
                       className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
                       placeholder="Pesquisar cliente existente ou digite um novo..."
-                      required
                     />
 
                     {showClientSuggestions && clientSuggestions.length > 0 && (

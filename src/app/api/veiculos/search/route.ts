@@ -22,20 +22,21 @@ export async function GET(request: Request) {
     if (!veiculo) {
       return NextResponse.json({ found: false }, { status: 200 });
     }
-    // Buscar cliente associado
-    if (veiculo.clienteId == null) {
-      return NextResponse.json({ found: false }, { status: 200 });
+
+    // Buscar cliente associado, se existir
+    let cliente = null;
+    if (veiculo.clienteId != null) {
+      const [clienteEncontrado] = await db.select().from(clientes).where(eq(clientes.id, veiculo.clienteId));
+      cliente = clienteEncontrado ?? null;
     }
-    const [cliente] = await db.select().from(clientes).where(eq(clientes.id, veiculo.clienteId));
-    if (!cliente) {
-      return NextResponse.json({ found: false }, { status: 200 });
-    }
+
     // Buscar perfil_cliente associado (se existir)
     let perfilNome = 'Normal';
-    if (cliente.perfilId) {
+    if (cliente?.perfilId) {
       const [perfil] = await db.select().from(perfisClientes).where(eq(perfisClientes.id, cliente.perfilId));
       if (perfil) perfilNome = perfil.nome;
     }
+
     const result = {
       found: true,
       vehicle: {
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
         ano: veiculo.ano,
         matricula: veiculo.matricula
       },
-      client: {
+      client: cliente ? {
         id: cliente.id.toString(),
         nome: cliente.nome,
         telefone: cliente.telefone,
@@ -54,7 +55,7 @@ export async function GET(request: Request) {
         endereco: cliente.endereco,
         perfil_id: cliente.perfilId || null,
         perfil: perfilNome
-      }
+      } : null
     };
     return NextResponse.json(result);
   } catch (error) {

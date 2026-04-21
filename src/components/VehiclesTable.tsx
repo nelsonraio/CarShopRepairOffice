@@ -84,7 +84,9 @@ export default function VehiclesTable({ vehicles, onViewHistory, onEdit, onDelet
                   </td>
                 </tr>
               ) : filteredVehicles.map((vehicle) => {
-                const clientName = vehicle.clientName || 'Cliente não encontrado';
+                const clientName = !vehicle.clientName || vehicle.clientName === 'Cliente não encontrado'
+                  ? 'N/A'
+                  : vehicle.clientName;
                 return (
                   <tr key={`${vehicle.id}_${vehicle.licensePlate}`} className="hover:bg-gray-600 transition-colors">
                     <td className="px-6 py-4 font-medium text-gray-100 font-mono">

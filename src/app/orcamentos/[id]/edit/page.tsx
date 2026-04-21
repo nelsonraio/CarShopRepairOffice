@@ -71,10 +71,15 @@ const EditBudgetPage = () => {
   const [searchResults, setSearchResults] = useState<CatalogItem[]>([]);
   const [isVehicleAutoFilled, setIsVehicleAutoFilled] = useState(false);
   const [clientSearch, setClientSearch] = useState('');
-  const [customItem, setCustomItem] = useState({
+  const [customItem, setCustomItem] = useState<{
+    name: string;
+    quantity: number;
+    unitPrice: number | '';
+    tipo: 'service' | 'part';
+  }>({
     name: '',
     quantity: 1,
-    unitPrice: 0,
+    unitPrice: '',
     tipo: 'service' as 'service' | 'part'
   });
   const [quilometragem, setQuilometragem] = useState<number | ''>('');
@@ -306,8 +311,10 @@ const EditBudgetPage = () => {
     const updatedItems = [...budgetItems];
     const item = updatedItems[index];
     if (!item) return;
-    item.quantity = quantity;
-    item.total = quantity * item.unitPrice;
+    const isCustomPart = item.id.startsWith('custom-') && item.type === 'part';
+    const nextQuantity = isCustomPart ? Math.max(1, Math.round(quantity)) : quantity;
+    item.quantity = nextQuantity;
+    item.total = nextQuantity * item.unitPrice;
     setBudgetItems(updatedItems);
   };
 
@@ -319,6 +326,8 @@ const EditBudgetPage = () => {
   const handleClientSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setClientSearch(value);
+    setSelectedClient(null);
+    setClientVehicles([]);
 
     if (value && value.length >= 2) {
       searchClients(value);
@@ -401,7 +410,13 @@ const EditBudgetPage = () => {
           setQuilometragem(vehicle.quilometragem ? vehicle.quilometragem : '');
           setIsVehicleAutoFilled(true);
           setSelectedVehicle(vehicle.id);
-          selectClient(client);
+          if (client) {
+            selectClient(client);
+          } else {
+            setSelectedClient(null);
+            setClientSearch('');
+            setClientVehicles([]);
+          }
         } else {
           setFormData(prev => ({
             ...prev,
@@ -426,23 +441,7 @@ const EditBudgetPage = () => {
       alert('Adicione pelo menos um item ao orçamento antes de guardar.');
       return;
     }
-
-    if (!selectedClient) {
-      alert('Selecione um cliente antes de guardar o orçamento.');
-      return;
-    }
-
-    // Validar contacto alternativo se o telefone principal nao existir
-    const clienteTelefone = selectedClient.telefone?.trim();
-    if (!clienteTelefone) {
-      const nomeAlternativo = alternateContact.nome.trim();
-      const telefoneAlternativo = alternateContact.telefone.trim();
-
-      if (!nomeAlternativo || !telefoneAlternativo) {
-        alert('O cliente nao tem telefone registado. Por favor, preencha o Nome e Telefone do contacto alternativo.');
-        return;
-      }
-    }
+    const resolvedClientName = clientSearch.trim() || 'N/A';
 
     try {
       const totalPecas = budgetItems
@@ -455,7 +454,8 @@ const EditBudgetPage = () => {
 
       const budgetData = {
         ref_orcamento: budgetId,
-        cliente_id: selectedClient.id,
+        cliente_id: selectedClient?.id ?? null,
+        cliente_nome_livre: resolvedClientName,
         veiculo_id: selectedVehicle ? parseInt(selectedVehicle) : null,
         preparado_por: null,
         data_emissao: dataEmissao || new Date().toISOString().split('T')[0],
@@ -597,14 +597,13 @@ const EditBudgetPage = () => {
               <h3 className="text-lg font-semibold text-gray-200 mb-4">Dados do Cliente</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="relative">
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Cliente *</label>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Cliente</label>
                   <input
                     type="text"
                     value={clientSearch}
                     onChange={handleClientSearchChange}
                     className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
                     placeholder="Pesquisar cliente..."
-                    required
                   />
                   {showClientSuggestions && clientSuggestions.length > 0 && (
                     <div className="absolute z-10 w-full bg-gray-700 border border-gray-600 shadow-lg max-h-60 overflow-y-auto mt-1">
@@ -703,16 +702,9 @@ const EditBudgetPage = () => {
 
             <div className="bg-gray-800 p-4 border border-gray-600 rounded-none mb-8">
               <h4 className="text-lg font-semibold text-gray-200 mb-4">Contacto Alternativo</h4>
-              {selectedClient && !selectedClient.telefone?.trim() && (
-                <div className="bg-yellow-900/20 border border-yellow-600 text-yellow-200 px-4 py-2 rounded mb-4">
-                  <p className="text-sm">O cliente nao tem telefone registado. E obrigatorio preencher o Nome e Telefone alternativo.</p>
-                </div>
-              )}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">
-                    Nome {selectedClient && !selectedClient.telefone?.trim() && <span className="text-red-400">*</span>}
-                  </label>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Nome</label>
                   <input
                     type="text"
                     value={alternateContact.nome}
@@ -722,9 +714,7 @@ const EditBudgetPage = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">
-                    Telefone {selectedClient && !selectedClient.telefone?.trim() && <span className="text-red-400">*</span>}
-                  </label>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Telefone</label>
                   <input
                     type="text"
                     value={alternateContact.telefone}
@@ -828,9 +818,16 @@ const EditBudgetPage = () => {
                     <input
                       type="number"
                       value={customItem.quantity}
-                      onChange={(e) => setCustomItem(prev => ({ ...prev, quantity: parseFloat(e.target.value) || 1 }))}
-                      min="0.1"
-                      step="0.1"
+                      onChange={(e) => {
+                        const raw = parseFloat(e.target.value);
+                        const parsed = Number.isNaN(raw) ? 1 : raw;
+                        const nextQuantity = customItem.tipo === 'part'
+                          ? Math.max(1, Math.round(parsed))
+                          : parsed;
+                        setCustomItem(prev => ({ ...prev, quantity: nextQuantity }));
+                      }}
+                      min={customItem.tipo === 'part' ? '1' : '0.1'}
+                      step={customItem.tipo === 'part' ? '1' : '0.1'}
                       className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
                       placeholder="1"
                     />
@@ -840,7 +837,7 @@ const EditBudgetPage = () => {
                     <input
                       type="number"
                       value={customItem.unitPrice}
-                      onChange={(e) => setCustomItem(prev => ({ ...prev, unitPrice: parseFloat(e.target.value) || 0 }))}
+                      onChange={(e) => setCustomItem(prev => ({ ...prev, unitPrice: e.target.value === '' ? '' : parseFloat(e.target.value) }))}
                       min="0"
                       step="0.01"
                       className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600 mb-2"
@@ -852,11 +849,13 @@ const EditBudgetPage = () => {
                     />
                     <button
                       onClick={() => {
+                        const parsedUnitPrice = customItem.unitPrice === '' ? NaN : customItem.unitPrice;
+
                         if (!customItem.name.trim()) {
                           alert('Por favor, insira uma descrição para o item.');
                           return;
                         }
-                        if (customItem.unitPrice <= 0) {
+                        if (!(parsedUnitPrice > 0)) {
                           alert('Por favor, insira um preço válido.');
                           return;
                         }
@@ -864,15 +863,19 @@ const EditBudgetPage = () => {
                         const newItem: BudgetItem = {
                           id: `custom-${Date.now()}`,
                           name: customItem.name,
-                          quantity: customItem.quantity,
-                          unitPrice: customItem.unitPrice,
+                          quantity: customItem.tipo === 'part'
+                            ? Math.max(1, Math.round(customItem.quantity))
+                            : customItem.quantity,
+                          unitPrice: parsedUnitPrice,
                           unit: customItem.tipo === 'part' ? 'un' : 'h',
-                          total: customItem.quantity * customItem.unitPrice,
+                          total: (customItem.tipo === 'part'
+                            ? Math.max(1, Math.round(customItem.quantity))
+                            : customItem.quantity) * parsedUnitPrice,
                           type: customItem.tipo
                         };
 
                         setBudgetItems([...budgetItems, newItem]);
-                        setCustomItem({ name: '', quantity: 1, unitPrice: 0, tipo: 'service' });
+                        setCustomItem({ name: '', quantity: 1, unitPrice: '', tipo: 'service' });
                       }}
                       className="w-full px-4 py-2 bg-brand-yellow text-gray-900 font-bold hover:bg-brand-yellow-dark transition-colors rounded-none"
                     >
@@ -916,8 +919,8 @@ const EditBudgetPage = () => {
                             <input
                               type="number"
                               value={item.quantity}
-                              min="0.1"
-                              step="0.1"
+                              min={item.id.startsWith('custom-') && item.type === 'part' ? '1' : '0.1'}
+                              step={item.id.startsWith('custom-') && item.type === 'part' ? '1' : '0.1'}
                               className="w-20 bg-gray-900 border border-gray-600 text-white px-2 py-1 text-right rounded-none focus:ring-1 focus:ring-brand-yellow outline-none"
                               onChange={(e) => updateItemQuantity(index, parseFloat(e.target.value) || 0)}
                             />

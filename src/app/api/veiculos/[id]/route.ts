@@ -136,24 +136,29 @@ export async function PUT(
       return NextResponse.json({ error: 'Vehicle not found' }, { status: 404 });
     }
     const body = await request.json();
+    const clientName = normalizeText(body.clientName ?? body.clientSearch);
+    const clientProfileId = body.perfil_id ?? body.clientProfileId;
     let clientId: number | null = body.clientId ? parseInt(body.clientId) : null;
     // Handle client creation/update if client data is provided
-    if (body.clientName) {
+    if (clientName) {
       if (clientId) {
         // Update existing client
         await db.update(clientes)
           .set({
-            nome: body.clientName,
+            nome: clientName,
             telefone: body.clientPhone || '',
             email: body.clientEmail || '',
             nif: body.clientNif || '',
             endereco: body.clientAddress || '',
-            perfilId: body.perfil_id ? parseInt(body.perfil_id) : null,
+            perfilId: clientProfileId ? parseInt(clientProfileId) : null,
             atualizadoEm: new Date().toISOString().slice(0, 19).replace('T', ' ')
           })
           .where(eq(clientes.id, clientId));
       } else {
-        const existingClientMatch = await findMatchingClient(body);
+        const existingClientMatch = await findMatchingClient({
+          ...body,
+          clientName,
+        });
         if (existingClientMatch.reason === 'ambiguous_name') {
           return NextResponse.json(
             { error: 'Já existem vários clientes com este nome. Selecione o cliente existente na pesquisa ou preencha NIF, email ou telefone para identificar corretamente.' },
@@ -169,12 +174,12 @@ export async function PUT(
       if (!clientId) {
         // Create new client
         const insertResult: any = await db.insert(clientes).values({
-          nome: normalizeText(body.clientName),
+          nome: clientName,
           telefone: normalizeText(body.clientPhone),
           email: normalizeNullable(body.clientEmail),
           nif: normalizeNullable(body.clientNif),
           endereco: normalizeNullable(body.clientAddress),
-          perfilId: body.perfil_id ? parseInt(body.perfil_id) : null,
+          perfilId: clientProfileId ? parseInt(clientProfileId) : null,
           dataRegisto: new Date().toISOString().slice(0, 10),
           visitas: 0,
           totalGasto: '0.00',
@@ -192,10 +197,7 @@ export async function PUT(
       ano: body.year ? parseInt(body.year) : null,
       atualizadoEm: new Date().toISOString().slice(0, 19).replace('T', ' ')
     };
-    // Only update cliente_id if we have a valid clientId
-    if (clientId !== null) {
-      updateData.clienteId = clientId;
-    }
+    updateData.clienteId = clientId;
     await db.update(veiculos)
       .set(updateData)
       .where(eq(veiculos.id, vehicleId));

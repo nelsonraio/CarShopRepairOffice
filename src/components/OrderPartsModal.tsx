@@ -90,7 +90,8 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
 
     let text = "Olá, gostaria de encomendar as seguintes peças:\n\n";
     selectedItems.forEach(item => {
-      text += `- ${item.quantity}x ${item.part.name} (Ref: ${item.part.reference})\n`;
+      const refLabel = item.part.reference?.trim() ? item.part.reference : 'PENDENTE';
+      text += `- ${item.quantity}x ${item.part.name} (Ref: ${refLabel})\n`;
     });
 
     text += "\nObrigado,\nMQAuto";
@@ -144,14 +145,10 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
   });
 
   const handleAddNewPart = () => {
-    // require name, supplier and reference
+    // require name and category only
 
     if (!newPart.name) {
       setErrorMsg("Informe o nome da peça");
-      return;
-    }
-    if (!newPart.reference) {
-      setErrorMsg("Informe a referência da peça");
       return;
     }
     // fornecedor não é mais obrigatório para peça
@@ -205,16 +202,6 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
 
     try {
       console.log("📨 Enviando envelope para API...");
-
-      // ensure custom items have reference
-      for (const item of selectedParts) {
-        const partId = String(item.part.id);
-        if (typeof partId === 'string' && partId.startsWith('custom') && !item.part.reference) {
-          setErrorMsg('Referência obrigatória para peças novas');
-          setLoading(false);
-          return;
-        }
-      }
 
     const itens = selectedParts.map(item => {
       const partId = String(item.part.id);
@@ -393,7 +380,7 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
                 <div key={item.part.id} className="flex items-center justify-between bg-gray-700 p-3 border border-gray-600">
                   <div>
                     <p className="text-sm font-medium text-gray-200">{item.part.name}</p>
-                    <p className="text-xs text-gray-400">Ref: {item.part.reference} | Fornecedor: {item.part.supplierName || ""}</p>
+                    <p className="text-xs text-gray-400">Ref: {item.part.reference?.trim() || 'pendente'} | Fornecedor: {item.part.supplierName || ""}</p>
                   </div>
                   <button onClick={() => handleItemToggle(item.part.id.toString())} className="px-3 py-1 bg-green-600 text-white text-xs font-bold hover:bg-green-700 transition-colors rounded-none flex items-center">
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
@@ -418,7 +405,7 @@ export default function OrderPartsModal({ isOpen, onClose, parts, onOrderParts, 
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="text-sm font-medium text-gray-100">{item.part.name}</p>
-                        <p className="text-xs text-gray-400">Ref: {item.part.reference}</p>
+                        <p className="text-xs text-gray-400">Ref: {item.part.reference?.trim() || 'pendente'}</p>
                       </div>
                       <button onClick={() => handleItemToggle(String(item.part.id))} className="text-gray-500 hover:text-red-400 transition-colors">
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>

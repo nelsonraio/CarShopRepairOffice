@@ -23,6 +23,7 @@ interface ItemEncomenda {
   peca_nome?: string;
   quantidade_encomendada: number;
   preco_unitario: number;
+  is_new_part?: boolean;
 }
 
 interface EncomendaModalProps {
@@ -47,6 +48,9 @@ const EncomendaModal: React.FC<EncomendaModalProps> = ({
   const [items, setItems] = useState<ItemEncomenda[]>([]);
   const [selectedPecaId, setSelectedPecaId] = useState('');
   const [selectedQuantity, setSelectedQuantity] = useState(1);
+  const [isNewPart, setIsNewPart] = useState(false);
+  const [newPartNome, setNewPartNome] = useState('');
+  const [newPartPreco, setNewPartPreco] = useState('0');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -57,12 +61,36 @@ const EncomendaModal: React.FC<EncomendaModalProps> = ({
       setItems([]);
       setSelectedPecaId('');
       setSelectedQuantity(1);
+      setIsNewPart(false);
+      setNewPartNome('');
+      setNewPartPreco('0');
       setError('');
       setSuccess('');
     }
   }, [isOpen]);
 
   const handleAddItem = () => {
+    if (isNewPart) {
+      if (!newPartNome.trim()) {
+        setError('Introduza o nome da peça');
+        return;
+      }
+      const tempId = `custom_${Date.now()}`;
+      const newItem: ItemEncomenda = {
+        peca_id: tempId,
+        peca_nome: newPartNome.trim(),
+        quantidade_encomendada: selectedQuantity,
+        preco_unitario: parseFloat(newPartPreco) || 0,
+        is_new_part: true,
+      };
+      setItems([...items, newItem]);
+      setNewPartNome('');
+      setNewPartPreco('0');
+      setSelectedQuantity(1);
+      setError('');
+      return;
+    }
+
     if (!selectedPecaId) {
       setError('Selecione uma peça');
       return;
@@ -137,7 +165,17 @@ const EncomendaModal: React.FC<EncomendaModalProps> = ({
       const payload = {
         fornecedor_id: formData.fornecedor_id,
         data_entrega_estimada: formData.data_entrega_estimada || null,
-        itens: items,
+        itens: items.map(item => {
+          if (item.is_new_part) {
+            return {
+              peca_id: item.peca_id,
+              quantidade_encomendada: item.quantidade_encomendada,
+              preco_unitario: item.preco_unitario,
+              part: { name: item.peca_nome || '', reference: '' },
+            };
+          }
+          return item;
+        }),
       };
       
       console.log('📤 Enviando encomenda:', JSON.stringify(payload, null, 2));
@@ -278,26 +316,78 @@ const EncomendaModal: React.FC<EncomendaModalProps> = ({
 
           {/* Item Selection */}
           <div className="bg-gray-700 p-4 rounded border border-gray-600">
-            <h3 className="text-lg font-semibold text-white mb-4">Adicionar Peças</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-white">Adicionar Peças</h3>
+              {/* Toggle existing / new part */}
+              <div className="flex rounded overflow-hidden border border-gray-500 text-sm">
+                <button
+                  type="button"
+                  onClick={() => { setIsNewPart(false); setError(''); }}
+                  className={`px-3 py-1 font-medium transition-colors ${!isNewPart ? 'bg-brand-yellow text-gray-900' : 'bg-gray-800 text-gray-300 hover:bg-gray-600'}`}
+                >
+                  Peça existente
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setIsNewPart(true); setError(''); }}
+                  className={`px-3 py-1 font-medium transition-colors ${isNewPart ? 'bg-brand-yellow text-gray-900' : 'bg-gray-800 text-gray-300 hover:bg-gray-600'}`}
+                >
+                  + Nova peça
+                </button>
+              </div>
+            </div>
 
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Peça
-                </label>
-                <select
-                  value={selectedPecaId}
-                  onChange={(e) => setSelectedPecaId(e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-900 border border-gray-600 text-white rounded focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow"
-                >
-                  <option value="">Selecione uma peça...</option>
-                  {pecas.map(p => (
-                    <option key={p.codigo} value={p.codigo}>
-                      {p.nome} (Ref: {p.reference}) - €{p.preco?.toFixed(2) ?? '0.00'}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {!isNewPart ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Peça
+                  </label>
+                  <select
+                    value={selectedPecaId}
+                    onChange={(e) => setSelectedPecaId(e.target.value)}
+                    className="w-full px-4 py-2 bg-gray-900 border border-gray-600 text-white rounded focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow"
+                  >
+                    <option value="">Selecione uma peça...</option>
+                    {pecas.map(p => (
+                      <option key={p.codigo} value={p.codigo}>
+                        {p.nome} (Ref: {p.reference}) - €{p.preco?.toFixed(2) ?? '0.00'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="bg-yellow-900/30 border border-yellow-700/50 text-yellow-300 text-xs px-3 py-2 rounded">
+                    A referência será pedida quando a encomenda for recebida.
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                      Nome da peça *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Correia dentada motor X"
+                      value={newPartNome}
+                      onChange={(e) => setNewPartNome(e.target.value)}
+                      className="w-full px-4 py-2 bg-gray-900 border border-gray-600 text-white rounded focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                      Preço unitário estimado (€)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={newPartPreco}
+                      onChange={(e) => setNewPartPreco(e.target.value)}
+                      className="w-full px-4 py-2 bg-gray-900 border border-gray-600 text-white rounded focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow"
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -324,7 +414,7 @@ const EncomendaModal: React.FC<EncomendaModalProps> = ({
                 </div>
               </div>
 
-              {selectedPeca && (
+              {!isNewPart && selectedPeca && (
                 <div className="bg-gray-900 p-2 text-sm text-gray-400">
                   Subtotal: €{(selectedQuantity * selectedPeca.preco).toFixed(2)}
                 </div>
@@ -343,7 +433,12 @@ const EncomendaModal: React.FC<EncomendaModalProps> = ({
                     className="bg-gray-800 p-3 flex justify-between items-center border border-gray-600 rounded"
                   >
                     <div className="flex-1">
-                      <p className="text-white font-medium">{item.peca_nome}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-white font-medium">{item.peca_nome}</p>
+                        {item.is_new_part && (
+                          <span className="text-xs bg-yellow-800/60 text-yellow-300 border border-yellow-700/50 px-2 py-0.5 rounded">ref. pendente</span>
+                        )}
+                      </div>
                       <p className="text-gray-400 text-sm">€{item.preco_unitario?.toFixed(2) ?? '0.00'}/un</p>
                     </div>
 

@@ -48,6 +48,7 @@ const OrdersModal: React.FC<OrdersModalProps> = ({ isOpen, onClose, parts, onReo
   const [expandedOrders, setExpandedOrders] = useState<string[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
+  const [pendingRefs, setPendingRefs] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (isOpen) {
@@ -116,12 +117,12 @@ const OrdersModal: React.FC<OrdersModalProps> = ({ isOpen, onClose, parts, onReo
       alert('Erro ao apagar encomenda.');
     }
   };
-  const handleAddToStock = async (orderId: string, itemId: string, quantity: number) => {
+  const handleAddToStock = async (orderId: string, itemId: string, quantity: number, referencia?: string) => {
     try {
       const response = await fetch(`/api/encomendas/${orderId}/adicionar-stock`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: [{ id: itemId, quantity }] })
+        body: JSON.stringify({ items: [{ id: itemId, quantity, referencia: referencia || undefined }] })
       });
 
       if (response.ok) {
@@ -257,9 +258,16 @@ const OrdersModal: React.FC<OrdersModalProps> = ({ isOpen, onClose, parts, onReo
                           return (
                             <div key={index} className="flex justify-between items-center bg-gray-800 p-3 border border-gray-700">
                               <div className="flex-1">
-                                <p className="text-white font-medium">{item.nome || part?.name || `Peça ID: ${item.peca_id}`}</p>
-                                {item.referencia && <p className="text-gray-400 text-sm">Ref: {item.referencia}</p>}
-                                {part && <p className="text-gray-400 text-sm">Ref: {part.reference}</p>}
+                                <div className="flex items-center gap-2">
+                                  <p className="text-white font-medium">{item.nome || part?.name || `Peça ID: ${item.peca_id}`}</p>
+                                  {!item.referencia && (
+                                    <span className="text-xs bg-yellow-800/60 text-yellow-300 border border-yellow-700/50 px-2 py-0.5 rounded">ref. pendente</span>
+                                  )}
+                                </div>
+                                {item.referencia
+                                  ? <p className="text-gray-400 text-sm">Ref: {item.referencia}</p>
+                                  : part && <p className="text-gray-400 text-sm">Ref: {part.reference}</p>
+                                }
                               </div>
                               <div className="text-right mr-6">
                                 <p className="text-white">{item.quantidade_encomendada} un. × €{item.preco_unitario.toFixed(2)}</p>
@@ -273,16 +281,32 @@ const OrdersModal: React.FC<OrdersModalProps> = ({ isOpen, onClose, parts, onReo
                               </div>
                               {/* Botão Adicionar ao Stock - só aparece se estado for 'recebido' e houver quantidade restante */}
                               {order.estado === 'recebido' && remaining > 0 && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleAddToStock(order.id, item.id, remaining);
-                                  }}
-                                  className="ml-4 px-3 py-1 bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold rounded transition-colors"
-                                  title="Adicionar esta peça ao stock"
-                                >
-                                  Adicionar ao Stock
-                                </button>
+                                <div className="ml-4 flex flex-col items-end gap-1">
+                                  {!item.referencia && (
+                                    <input
+                                      type="text"
+                                      placeholder="Referência *"
+                                      value={pendingRefs[item.id] ?? ''}
+                                      onChange={e => setPendingRefs(prev => ({ ...prev, [item.id]: e.target.value }))}
+                                      onClick={e => e.stopPropagation()}
+                                      className="w-32 px-2 py-1 bg-gray-900 border border-yellow-600 text-white text-xs rounded placeholder-gray-500 focus:ring-1 focus:ring-yellow-500"
+                                    />
+                                  )}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (!item.referencia && !pendingRefs[item.id]?.trim()) {
+                                        alert('Introduza a referência da peça antes de adicionar ao stock.');
+                                        return;
+                                      }
+                                      handleAddToStock(order.id, item.id, remaining, pendingRefs[item.id]?.trim() || undefined);
+                                    }}
+                                    className="px-3 py-1 bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold rounded transition-colors"
+                                    title="Adicionar esta peça ao stock"
+                                  >
+                                    Adicionar ao Stock
+                                  </button>
+                                </div>
                               )}
                             </div>
                           );

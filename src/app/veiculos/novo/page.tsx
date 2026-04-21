@@ -527,7 +527,7 @@ const NewVehiclePage = () => {
               <h4 className="text-lg font-semibold text-gray-100 mb-4">Dados do Cliente</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="relative">
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Cliente *</label>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Cliente</label>
                   <input
                     type="text"
                     name="clientSearch"
@@ -535,7 +535,6 @@ const NewVehiclePage = () => {
                     onChange={handleClientSearchChange}
                     className="w-full bg-gray-900 border border-gray-600 text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600"
                     placeholder="Pesquisar cliente..."
-                    required
                   />
                   {showClientSuggestions && clientSuggestions.length > 0 && (
                     <div className="absolute z-10 w-full bg-gray-800 border border-gray-600 mt-1 max-h-40 overflow-y-auto">

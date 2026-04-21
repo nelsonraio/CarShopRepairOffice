@@ -124,20 +124,21 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const { clientId, clientName, clientEmail, clientPhone, clientNif, clientAddress, clientProfile, make, model, licensePlate, year, vin } = await request.json();
+    const normalizedClientName = normalizeText(clientName);
 
     // Validação básica
-    if (!clientName || !make || !model || !licensePlate) {
+    if (!make || !model || !licensePlate) {
       return successResponse(
-        { error: 'Cliente, marca, modelo e matrícula são obrigatórios' },
+        { error: 'Marca, modelo e matrícula são obrigatórios' },
         400
       );
     }
 
     // Converter ou criar cliente
     let vehicleClientId = clientId ? parseInt(clientId) : null;
-    if (!vehicleClientId) {
+    if (!vehicleClientId && normalizedClientName) {
       const existingClientMatch = await findMatchingClient({
-        clientName,
+        clientName: normalizedClientName,
         clientEmail,
         clientPhone,
         clientNif,
@@ -157,12 +158,12 @@ export async function POST(request: Request) {
       }
     }
 
-    if (!vehicleClientId) {
+    if (!vehicleClientId && normalizedClientName) {
       // Corrigir campos opcionais para evitar NaN
       let perfilIdNum = clientProfile ? parseInt(clientProfile) : null;
       if (perfilIdNum !== null && Number.isNaN(perfilIdNum)) perfilIdNum = null;
       const values = {
-        nome: normalizeText(clientName),
+        nome: normalizedClientName,
         email: normalizeNullable(clientEmail),
         telefone: normalizeText(clientPhone),
         nif: normalizeNullable(clientNif),

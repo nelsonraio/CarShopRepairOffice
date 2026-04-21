@@ -328,14 +328,8 @@ const EditAppointmentPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: { [key: string]: string } = {};
-    if (!formData.contacto_nome.trim()) {
-      newErrors.contacto_nome = 'O nome de contacto é obrigatório.';
-    }
     if (formData.tipoServico === 'Outro' && !formData.notas.trim()) {
       newErrors.notas = 'A descrição é obrigatória quando o tipo de serviço é "Outro".';
-    }
-    if (!vehicleFound && !formData.contacto_telefone.trim()) {
-      newErrors.contacto_telefone = 'O telefone é obrigatório quando o veículo não está registado.';
     }
     if (!formData.hora.trim()) {
       newErrors.hora = 'A hora é obrigatória.';
@@ -570,7 +564,7 @@ const EditAppointmentPage = () => {
                 <h3 className="text-sm font-semibold text-gray-300 mb-3">Informações de Contacto</h3>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1">Nome de Contacto *</label>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Nome de Contacto</label>
                     <input
                       type="text"
                       name="contacto_nome"
@@ -578,13 +572,12 @@ const EditAppointmentPage = () => {
                       onChange={handleInputChange}
                       className={`w-full bg-gray-900 border ${errors.contacto_nome ? 'border-red-500' : 'border-gray-600'} text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600`}
                       placeholder="Nome do contacto"
-                      required
                     />
                     {errors.contacto_nome && <p className="text-xs text-red-400 mt-1">{errors.contacto_nome}</p>}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-1">
-                      Telefone {!vehicleFound && <span className="text-red-500">*</span>}
+                      Telefone
                     </label>
                     <input
                       type="tel"
@@ -596,7 +589,7 @@ const EditAppointmentPage = () => {
                       required={false}
                     />
                     {!vehicleFound && (
-                      <p className={`text-xs ${errors.contacto_telefone ? 'text-red-400' : 'text-orange-400'} mt-1`}>{errors.contacto_telefone ? errors.contacto_telefone : '⚠ Obrigatório - Veículo não registado'}</p>
+                      <p className="text-xs text-orange-400 mt-1">Veículo não registado. Pode preencher o telefone se necessário.</p>
                     )}
                   </div>
                   <div>

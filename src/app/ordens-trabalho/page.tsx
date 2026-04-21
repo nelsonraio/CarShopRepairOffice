@@ -9,6 +9,7 @@ interface WorkOrder {
   client: string;
   vehicle: string;
   plate: string;
+  kms?: number | null;
   mechanic: string;
   openDate: string;
   closeDate: string;
@@ -57,6 +58,7 @@ const normalizeWorkOrder = (order: RawWorkOrder): WorkOrder => {
     client: String(order.cliente_nome || order.client || ''),
     vehicle: String(order.veiculo_modelo || order.vehicle || ''),
     plate: String(order.veiculo_matricula || order.plate || ''),
+    kms: order.kms == null ? null : Number(order.kms),
     mechanic: String(order.mecanico_nome || order.mechanic || ''),
     openDate: String(order.data_inicio || order.openDate || ''),
     closeDate: String(order.data_conclusao || order.closeDate || ''),
@@ -131,10 +133,10 @@ const WorkOrdersPage = () => {
         refetch();
       }
     };
-    
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', refetch);
-    
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', refetch);
@@ -165,7 +167,7 @@ const WorkOrdersPage = () => {
   });
 
   // Pagination with filter reset
-  const { currentPage, totalPages, paginatedItems: paginatedWorkOrders, nextPage, prevPage } = 
+  const { currentPage, totalPages, paginatedItems: paginatedWorkOrders, nextPage, prevPage } =
     usePagination(filteredWorkOrders, ITEMS_PER_PAGE, [filters.search, filters.status, filters.priority]);
 
   // Pagination info
@@ -214,7 +216,7 @@ const WorkOrdersPage = () => {
         const data = await response.json();
         if (data.itens_ordem_trabalho && Array.isArray(data.itens_ordem_trabalho)) {
           setWorkOrderItems(data.itens_ordem_trabalho);
-          
+
           // Pre-select waiting parts
           const waitingPartsSet = new Set<string>();
           const waitingPartsList: string[] = [];
@@ -224,7 +226,7 @@ const WorkOrdersPage = () => {
               waitingPartsList.push(item.referencia ? `${item.descricao} (${item.referencia})` : item.descricao);
             }
           });
-          
+
           setSelectedParts(waitingPartsSet);
           if (waitingPartsList.length > 0) {
             setWaitingParts(waitingPartsList.join('\n'));
@@ -308,7 +310,7 @@ const WorkOrdersPage = () => {
   };
 
   const getStatusColor = (status: string) => {
-    switch(status) {
+    switch (status) {
       case 'Em Andamento': return 'text-yellow-400 bg-yellow-900/30 border border-yellow-900';
       case 'Aguardando Peças': return 'text-orange-400 bg-orange-900/30 border border-orange-900';
       case 'Concluída': return 'text-green-400 bg-green-900/30 border border-green-900';
@@ -319,7 +321,7 @@ const WorkOrdersPage = () => {
   };
 
   const getPriorityColor = (priority: string) => {
-    switch(priority) {
+    switch (priority) {
       case 'Baixa': return 'text-gray-400 bg-gray-900/30 border border-gray-900';
       case 'Normal': return 'text-blue-400 bg-blue-900/30 border border-blue-900';
       case 'Alta': return 'text-orange-400 bg-orange-900/30 border border-orange-900';
@@ -363,12 +365,12 @@ const WorkOrdersPage = () => {
             body { font-family: Arial, sans-serif; margin: 40px; color: #000; }
             
             /* Cabeçalho */
-            .header-container { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-            .logo-section { display: flex; align-items: center; }
-            .logo-section img { width: 70px; margin-right: 15px; }
-            .company-name h1 { margin: 0; font-size: 20px; font-weight: bold; }
+            .header-container { display: flex; align-items: flex-start; margin-bottom: 20px; }
+            .logo-section { display: flex; align-items: center; margin-left: -12px; }
+            .logo-section img { width: 92px; margin-right: 4px; }
+            .company-name h1 { margin: 0; font-size: 24px; font-weight: bold; }
             .company-name p { margin: 0; font-size: 14px; }
-            .contacts-section { text-align: right; font-size: 12px; line-height: 1.4; }
+            .contacts-section { margin-left: auto; text-align: right; font-size: 12px; line-height: 1.4; }
 
             /* Dados da Ordem de Trabalho */
             .doc-info { margin-top: 10px; margin-bottom: 20px; line-height: 1.6; }
@@ -394,9 +396,9 @@ const WorkOrdersPage = () => {
             .mechanic-name { font-size: 16px; color: #333; text-align: center; }
 
             /* Assinaturas */
-            .signatures-section { margin-top: 50px; text-align: center; }
-            .sig-block { margin-bottom: 40px; font-size: 12px; display: flex; flex-direction: column; align-items: center; }
-            .sig-line { border-bottom: 1px solid #000; width: 250px; margin: 0 auto; margin-top: 35px; }
+            .signatures-section { margin-top: 50px; width: 100%; text-align: center; }
+            .sig-block { margin: 0 auto 40px; font-size: 12px; width: 250px; text-align: center; }
+            .sig-line { border-bottom: 1px solid #000; width: 250px; margin: 65px auto 0; }
             
             @media print {
               body { margin: 20mm; }
@@ -408,8 +410,8 @@ const WorkOrdersPage = () => {
         <body>
           <div class="header-container">
             <div class="logo-section">
-              <div style="background: white; padding: 5px; border-radius: 4px; display: inline-block; margin-right: 15px;">
-                <img src="/logoblack.jpg" alt="MQAuto Logo" style="width: 50px; height: 50px; object-fit: contain; display: block;" />
+              <div style="background: white; padding: 5px; border-radius: 4px; display: inline-block; margin-right: 4px;">
+                <img src="/logoblack.jpg" alt="MQAuto Logo" style="width: 72px; height: 72px; object-fit: contain; display: block;" />
               </div>
               <div class="company-name">
                 <h1>MQ Auto</h1>
@@ -424,10 +426,18 @@ const WorkOrdersPage = () => {
 
           <div class="doc-info">
             <div class="doc-title">Ordem de Trabalho: ${workOrder.id}</div>
-            <div class="client-details">
-              <p>Cliente: ${workOrder.client || ''}</p>
-              <p>Veículo: ${workOrder.vehicle || ''}</p>
-              <p>Data: ${new Date().toLocaleDateString('pt-PT')}</p>
+            <div class="client-details" style="display: flex; flex-wrap: wrap; gap: 40px; align-items: center;">
+              <div>
+                <p>Cliente: ${workOrder.client || ''}</p>
+                <p>Data: ${workOrder.openDate ? (() => {
+        const date = new Date(workOrder.openDate);
+        return !isNaN(date.getTime()) ? date.toLocaleDateString('pt-PT') : '-';
+      })() : new Date().toLocaleDateString('pt-PT')}</p>
+              </div>
+              <div>
+                <p>Veículo: <b>${workOrder.plate || '-'}</b>${workOrder.vehicle ? ` (${workOrder.vehicle})` : ''}</p>
+                <p>Quilometragem: ${workOrder.kms != null ? `${workOrder.kms} km` : '-'}</p>
+              </div>
             </div>
           </div>
 
@@ -569,7 +579,7 @@ const WorkOrdersPage = () => {
                               {workOrder.id}
                             </button>
                           </td>
-                          
+
                           <td className="px-6 py-4 text-gray-400">{workOrder.plate ? `${workOrder.plate} | ${workOrder.vehicle}` : workOrder.vehicle}</td>
                           <td className="px-6 py-4">{workOrder.client}</td>
                           <td className="px-6 py-4 text-gray-400">{workOrder.mechanic}</td>
@@ -665,7 +675,7 @@ const WorkOrdersPage = () => {
                 if (key === 'waitingParts' && detailsWorkOrder.status !== 'Aguardando Peças') {
                   return null;
                 }
-                const label = WORK_ORDER_FIELD_LABELS[key] 
+                const label = WORK_ORDER_FIELD_LABELS[key]
                   || (key === 'mecanico_nome' ? 'Mecânico' : key.replace(/_/g, ' ').toUpperCase());
                 return (
                   <div className="text-gray-100" key={key}>
@@ -727,10 +737,10 @@ const WorkOrdersPage = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
           <div className="bg-gray-800 border border-gray-600 rounded-none p-6 w-96 max-w-full mx-4 shadow-2xl">
             <h3 className="text-xl font-bold text-white mb-4">Alterar Estado - {selectedWorkOrder.id}</h3>
-            
+
             <div className="mb-4">
               <label className="block text-gray-400 mb-2 text-sm">Novo Estado</label>
-              <select 
+              <select
                 className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-none focus:ring-2 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
                 value={newStatus}
                 onChange={(e) => setNewStatus(e.target.value)}
@@ -746,8 +756,8 @@ const WorkOrdersPage = () => {
             {(newStatus === 'Concluída' || newStatus === 'Entregue') && (
               <div className="mb-4">
                 <label className="block text-gray-400 mb-2 text-sm">Data de Conclusão</label>
-                <input 
-                  type="date" 
+                <input
+                  type="date"
                   className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-none focus:ring-2 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
                   value={completionDate}
                   onChange={(e) => setCompletionDate(e.target.value)}
@@ -758,14 +768,14 @@ const WorkOrdersPage = () => {
             {newStatus === 'Aguardando Peças' && (
               <div className="mb-4">
                 <label className="block text-gray-400 mb-2 text-sm">Peças em Espera</label>
-                
+
                 {loadingItems ? (
                   <div className="text-gray-500 text-sm mb-2">Carregando peças...</div>
                 ) : workOrderItems.filter(item => item.tipo_item === 'peca').length > 0 ? (
                   <div className="mb-3 bg-gray-700 p-2 border border-gray-600 max-h-40 overflow-y-auto">
                     <div className="flex justify-between items-center mb-2">
                       <p className="text-xs text-gray-400">Selecione as peças em falta:</p>
-                      <button 
+                      <button
                         type="button"
                         className="text-xs text-brand-yellow hover:text-white transition-colors"
                         onClick={() => {
@@ -776,7 +786,7 @@ const WorkOrdersPage = () => {
                               .map(item => String(item.id))
                           );
                           setSelectedParts(allPartIds);
-                          
+
                           // Also update the text
                           const allParts = workOrderItems
                             .filter(item => item.tipo_item === 'peca')
@@ -790,8 +800,8 @@ const WorkOrdersPage = () => {
                     </div>
                     {workOrderItems.filter(item => item.tipo_item === 'peca').map(item => (
                       <div key={item.id} className="flex items-center mb-1">
-                        <input 
-                          type="checkbox" 
+                        <input
+                          type="checkbox"
                           id={`part-${item.id}`}
                           className="mr-2"
                           checked={selectedParts.has(String(item.id))}
@@ -804,9 +814,9 @@ const WorkOrdersPage = () => {
                               newSelectedParts.delete(itemId);
                             }
                             setSelectedParts(newSelectedParts);
-                            
+
                             // Update waitingParts text based on selection
-                            const selectedItems = workOrderItems.filter(i => 
+                            const selectedItems = workOrderItems.filter(i =>
                               i.tipo_item === 'peca' && newSelectedParts.has(String(i.id))
                             );
                             setWaitingParts(selectedItems.map(i => i.referencia ? `${i.descricao} (${i.referencia})` : i.descricao).join('\n'));
@@ -822,7 +832,7 @@ const WorkOrdersPage = () => {
                   <div className="text-gray-500 text-xs italic mb-2">Nenhuma peça encontrada nesta ordem de trabalho.</div>
                 )}
 
-                <textarea 
+                <textarea
                   className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-none focus:ring-2 focus:ring-brand-yellow focus:border-brand-yellow outline-none"
                   rows={3}
                   placeholder="Liste as peças necessárias..."

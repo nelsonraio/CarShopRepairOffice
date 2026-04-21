@@ -1137,6 +1137,10 @@ export default function KanbanBoard() {
         throw new Error('Failed to approve budget');
       }
 
+      const mechanicName = mechanics.find(m => String(m.id) === String(selectedMechanic))?.nome
+        || pendingCard?.mechanic
+        || 'N/A';
+
       // Gerar a referência OT a partir do orçamento
       const workOrderRef = pendingCard?.proc
         .replace(/^ORC/, 'OT')
@@ -1181,11 +1185,11 @@ export default function KanbanBoard() {
         setLoadingItems(true);
         
         // Atualizar o pendingCard com a referência OT
-        const mechanicName = mechanics.find(m => m.id === parseInt(selectedMechanic))?.nome || 'N/A';
         setPendingCard({
           ...pendingCard,
           proc: workOrderRef,
           mechanic: mechanicName,
+          work_order_mechanic: mechanicName,
           work_order_ref: workOrderRef
         });
         
@@ -1258,12 +1262,15 @@ export default function KanbanBoard() {
         // Atualizar a referência do card para usar a OT em vez do OR
         const updatedCard = {
           ...pendingCard,
-          proc: workOrderRef
+          proc: workOrderRef,
+          mechanic: mechanicName,
+          work_order_mechanic: mechanicName
         };
         
         // Remover da coluna "em_aprovacao" e adicionar na coluna "em_andamento"
         updateCardState(updatedCard, pendingTargetColumn || 'em_andamento');
         setPendingCard(null);
+        await fetchData();
       }
     } catch (err) {
       alert('Erro ao aprovar orçamento: ' + (err instanceof Error ? err.message : 'Erro desconhecido'));

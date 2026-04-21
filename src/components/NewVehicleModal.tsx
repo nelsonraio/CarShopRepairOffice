@@ -640,7 +640,7 @@ export default function NewVehicleModal({ isOpen, onClose, onSuccess, vehicle, i
             
             {/* Client Name with Autocomplete */}
             <div className="relative mb-6">
-              <label htmlFor="clientName" className="block text-sm font-medium text-gray-300">Nome do Cliente *</label>
+              <label htmlFor="clientName" className="block text-sm font-medium text-gray-300">Nome do Cliente</label>
               <input
                 type="text"
                 id="clientName"
@@ -649,7 +649,6 @@ export default function NewVehicleModal({ isOpen, onClose, onSuccess, vehicle, i
                 onChange={handleInputChange}
                 className="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-none shadow-sm focus:ring-brand-yellow focus:border-brand-yellow"
                 placeholder="Pesquisar cliente..."
-                required
               />
               {showClientSuggestions && clientSuggestions.length > 0 && (
                 <div className="absolute z-10 w-full bg-gray-800 border border-gray-600 mt-1 max-h-40 overflow-y-auto">

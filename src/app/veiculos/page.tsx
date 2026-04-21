@@ -91,11 +91,14 @@ export default function VeiculosPage() {
    * Converte VehicleData para formato Vehicle esperado pelo modal
    */
   const handleViewHistory = useCallback((vehicle: VehicleData) => {
+    const clientLabel = !vehicle.clientName || vehicle.clientName === 'Cliente não encontrado'
+      ? 'N/A'
+      : vehicle.clientName;
     const vehicleForModal: Vehicle = {
       id: vehicle.id,
       plate: vehicle.licensePlate,
       makeModel: `${vehicle.make} ${vehicle.model}`,
-      client: vehicle.clientName || 'Cliente não encontrado',
+      client: clientLabel,
       year: vehicle.year,
       lastIntervention: vehicle.lastIntervention,
     };

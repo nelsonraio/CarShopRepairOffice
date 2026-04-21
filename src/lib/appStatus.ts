@@ -33,6 +33,44 @@ export type AppStatus = {
  */
 const DEFAULT_KEY: string = '';
 
+let keystartEnsured = false;
+
+function isMissingTableError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.toLowerCase().includes("doesn't exist") ||
+    message.toLowerCase().includes('unknown table')
+  );
+}
+
+async function ensureKeystartTable(): Promise<void> {
+  if (keystartEnsured) return;
+
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS keystart (
+      id int NOT NULL AUTO_INCREMENT,
+      chave varchar(255),
+      ativo tinyint NOT NULL DEFAULT 1,
+      atualizado_em timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id)
+    )
+  `);
+
+  keystartEnsured = true;
+}
+
+async function getLatestKeystartRecord() {
+  try {
+    return await db.select().from(keystart).orderBy(desc(keystart.id)).limit(1);
+  } catch (error) {
+    if (isMissingTableError(error)) {
+      await ensureKeystartTable();
+      return await db.select().from(keystart).orderBy(desc(keystart.id)).limit(1);
+    }
+    throw error;
+  }
+}
+
 /**
  * Lê estado atual da aplicação da base de dados
  * 
@@ -53,7 +91,7 @@ const DEFAULT_KEY: string = '';
 export async function getAppStatus(): Promise<AppStatus> {
   try {
     // Busca o registro mais recente da tabela keystart (ORDER BY id DESC LIMIT 1)
-    const recs = await db.select().from(keystart).orderBy(desc(keystart.id)).limit(1);
+    const recs = await getLatestKeystartRecord();
     const rec = recs[0];
 
     if (!rec) {
@@ -91,11 +129,7 @@ export async function getAppStatus(): Promise<AppStatus> {
 export async function setAppStatus(enabled: boolean): Promise<AppStatus> {
   try {
     // Busca registo existente
-    const [rec] = await db
-      .select()
-      .from(keystart)
-      .orderBy(desc(keystart.id))
-      .limit(1);
+    const [rec] = await getLatestKeystartRecord();
     let updated;
     const now = new Date().toISOString().slice(0, 19).replace('T', ' '); // formato datetime MySQL
     const ativoValue = enabled ? 1 : 0;
@@ -146,7 +180,7 @@ export async function setAppStatus(enabled: boolean): Promise<AppStatus> {
 export async function validateKey(key?: string): Promise<boolean> {
   try {
     // Busca registo mais recente
-    const [rec] = await db.select().from(keystart).orderBy(desc(keystart.id)).limit(1);
+    const [rec] = await getLatestKeystartRecord();
     if (!rec) {
       return false;
     }

@@ -93,11 +93,11 @@ const createOrderItem = async (tx: any, encomendaId: number, item: any): Promise
   }
 
   // Create custom part
-  if (!item.part || !item.part.name || !item.part.reference) {
-    throw new Error('Custom part must include name and reference');
+  if (!item.part || !item.part.name) {
+    throw new Error('Custom part must include name');
   }
 
-  const reference = item.part.reference.trim();
+  const reference = item.part.reference ? item.part.reference.trim() : '';
   const name = item.part.name.trim();
   let categoryId = item.part.category_id ? Number(item.part.category_id) : null;
   // Se não houver category_id, buscar categoria 'Custom' ou 'Genérica'

@@ -23,6 +23,7 @@ interface BudgetItem {
 interface Budget {
   id: number;
   ref_orcamento: string;
+  kms?: number | null;
   cliente: {
     nome: string;
   };
@@ -71,7 +72,7 @@ const BudgetsPage = () => {
   });
 
   // Pagination
-  const { currentPage, totalPages, paginatedItems: paginatedBudgets, nextPage, prevPage } = 
+  const { currentPage, totalPages, paginatedItems: paginatedBudgets, nextPage, prevPage } =
     usePagination(filteredBudgets, ITEMS_PER_PAGE, [filters.search, filters.status]);
 
   // Mechanic modal states (keep separate as they're dependent on button click)
@@ -79,7 +80,7 @@ const BudgetsPage = () => {
     showMechanicModal: false,
   });
 
-  const [mechanics, setMechanics] = useState<{id: string, nome: string}[]>([]);
+  const [mechanics, setMechanics] = useState<{ id: string, nome: string }[]>([]);
   const [selectedMechanic, setSelectedMechanic] = useState<string>('');
   const [selectedMechanicName, setSelectedMechanicName] = useState<string>('');
   const [pendingBudgetId, setPendingBudgetId] = useState<number | null>(null);
@@ -92,10 +93,10 @@ const BudgetsPage = () => {
         refetch();
       }
     };
-    
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', refetch);
-    
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', refetch);
@@ -121,6 +122,93 @@ const BudgetsPage = () => {
     } catch (err) {
       alert('Erro ao eliminar orçamento: ' + (err instanceof Error ? err.message : 'Erro desconhecido'));
     }
+  };
+
+  const numberToPortugueseWords = (value: number): string => {
+    const units = ['zero', 'um', 'dois', 'tres', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
+    const teens = ['dez', 'onze', 'doze', 'treze', 'catorze', 'quinze', 'dezasseis', 'dezassete', 'dezoito', 'dezanove'];
+    const tens = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
+    const hundreds = ['', 'cento', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
+
+    const convertBelowHundred = (number: number): string => {
+      if (number < 10) return units[number] ?? '';
+      if (number < 20) return teens[number - 10] ?? '';
+
+      const ten = Math.floor(number / 10);
+      const unit = number % 10;
+      const tenText = tens[ten] ?? '';
+      const unitText = units[unit] ?? '';
+      return unit === 0 ? tenText : `${tenText} e ${unitText}`;
+    };
+
+    const convertBelowThousand = (number: number): string => {
+      if (number === 0) return '';
+      if (number < 100) return convertBelowHundred(number);
+      if (number === 100) return 'cem';
+
+      const hundred = Math.floor(number / 100);
+      const remainder = number % 100;
+      const hundredText = hundreds[hundred] ?? '';
+      return remainder === 0 ? hundredText : `${hundredText} e ${convertBelowHundred(remainder)}`;
+    };
+
+    const joinWithAnd = (left: string, right: string, rightNumber: number): string => {
+      if (!left) return right;
+      if (!right) return left;
+      return rightNumber < 100 ? `${left} e ${right}` : `${left} ${right}`;
+    };
+
+    if (value === 0) return 'zero';
+
+    const millions = Math.floor(value / 1000000);
+    const thousands = Math.floor((value % 1000000) / 1000);
+    const remainder = value % 1000;
+
+    let result = '';
+
+    if (millions > 0) {
+      const millionText = millions === 1 ? 'um milhao' : `${numberToPortugueseWords(millions)} milhoes`;
+      result = millionText;
+    }
+
+    if (thousands > 0) {
+      const thousandText = thousands === 1 ? 'mil' : `${convertBelowThousand(thousands)} mil`;
+      result = joinWithAnd(result, thousandText, thousands);
+    }
+
+    if (remainder > 0) {
+      result = joinWithAnd(result, convertBelowThousand(remainder), remainder);
+    }
+
+    return result;
+  };
+
+  const formatCurrencyInWords = (amount: number): string => {
+    const normalizedAmount = Number.isFinite(amount) ? amount : 0;
+    const roundedAmount = Math.round(normalizedAmount * 100) / 100;
+    const euros = Math.floor(roundedAmount);
+    const cents = Math.round((roundedAmount - euros) * 100);
+
+    const euroText = `${numberToPortugueseWords(euros)} ${euros === 1 ? 'euro' : 'euros'}`;
+    if (cents === 0) {
+      return euroText;
+    }
+
+    const centsText = `${numberToPortugueseWords(cents)} ${cents === 1 ? 'cêntimo' : 'cêntimos'}`;
+    return `${euroText} e ${centsText}`;
+  };
+
+  const formatAmountWordsForPrint = (amount: number): string => {
+    return formatCurrencyInWords(amount)
+      .split(' ')
+      .map((word) => {
+        if (word === 'e') {
+          return word;
+        }
+
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      })
+      .join(' ');
   };
 
   const getStatusColor = (status: string) => {
@@ -158,7 +246,7 @@ const BudgetsPage = () => {
   const handleApproveBudget = async (budgetId: number, currentStatus: string) => {
     const isApproved = currentStatus.toLowerCase() === 'aprovado';
     const newStatus = isApproved ? 'Pendente' : 'Aprovado';
-    
+
     // If approving (not reverting), show mechanic selection modal
     if (newStatus === 'Aprovado') {
       setPendingBudgetId(budgetId);
@@ -207,7 +295,7 @@ const BudgetsPage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           estado: 'Aprovado',
           mecanico_id: parseInt(selectedMechanic)
         }),
@@ -219,7 +307,7 @@ const BudgetsPage = () => {
 
       // Refresh data after successful update
       await refetch();
-      
+
       // Close modal and clear states
       closeMechanicModal('showMechanicModal');
       setSelectedMechanic('');
@@ -246,9 +334,7 @@ const BudgetsPage = () => {
       </tr>
     `).join('') : '<tr><td>-</td><td>-</td><td>-</td></tr>';
 
-
-      // Se tiveres uma função para converter o total em extenso, podes usá-la aqui
-      const totalExtenso = ""; // Ex: "Setenta e Nove Euros e Trinta e Seis Cêntimos"
+      const totalExtenso = formatAmountWordsForPrint(budget.total_geral);
 
       printWindow.document.write(`
       <html>
@@ -258,12 +344,12 @@ const BudgetsPage = () => {
             body { font-family: Arial, sans-serif; margin: 40px; color: #000; }
             
             /* Cabeçalho */
-            .header-container { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-            .logo-section { display: flex; align-items: center; }
-            .logo-section img { width: 70px; margin-right: 15px; }
-            .company-name h1 { margin: 0; font-size: 20px; font-weight: bold; }
+            .header-container { display: flex; align-items: flex-start; margin-bottom: 20px; }
+            .logo-section { display: flex; align-items: center; margin-left: -12px; }
+            .logo-section img { width: 92px; margin-right: 4px; }
+            .company-name h1 { margin: 0; font-size: 24px; font-weight: bold; }
             .company-name p { margin: 0; font-size: 14px; }
-            .contacts-section { text-align: right; font-size: 12px; line-height: 1.4; }
+            .contacts-section { margin-left: auto; text-align: right; font-size: 12px; line-height: 1.4; }
 
             /* Dados do Orçamento */
             .doc-info { margin-top: 10px; margin-bottom: 20px; line-height: 1.6; }
@@ -289,7 +375,7 @@ const BudgetsPage = () => {
             /* Assinaturas */
             .signatures-section { margin-top: 50px; text-align: center; }
             .sig-block { margin-bottom: 40px; font-size: 12px; display: flex; flex-direction: column; align-items: center; }
-            .sig-line { border-bottom: 1px solid #000; width: 250px; margin: 35px auto 0 auto; display: block; }
+            .sig-line { border-bottom: 1px solid #000; width: 250px; margin: 50px auto 0 auto; display: block; }
             
             @media print {
               body { margin: 20mm; }
@@ -303,8 +389,8 @@ const BudgetsPage = () => {
         <body>
           <div class="header-container">
             <div class="logo-section">
-              <div style="background: white; padding: 5px; border-radius: 4px; display: inline-block; margin-right: 15px;">
-                <img src="/logoblack.jpg" alt="MQAuto Logo" style="width: 50px; height: 50px; object-fit: contain; display: block;" />
+              <div style="background: white; padding: 5px; border-radius: 4px; display: inline-block; margin-right: 4px;">
+                <img src="/logoblack.jpg" alt="MQAuto Logo" style="width: 72px; height: 72px; object-fit: contain; display: block;" />
               </div>
               <div class="company-name">
                 <h1>MQ Auto</h1>
@@ -324,13 +410,13 @@ const BudgetsPage = () => {
               <div>
                 <p>Cliente: ${budget.cliente?.nome || ''}</p>
                 <p>Data: ${budget.data_emissao ? (() => {
-                  const date = new Date(budget.data_emissao);
-                  return !isNaN(date.getTime()) ? date.toLocaleDateString('pt-PT') : '-';
-                })() : '-'}</p>
+          const date = new Date(budget.data_emissao);
+          return !isNaN(date.getTime()) ? date.toLocaleDateString('pt-PT') : '-';
+        })() : '-'}</p>
               </div>
               <div>
-                <p>Matrícula: <b>${budget.veiculo?.matricula || ''}</b></p>
-                <p>Veículo: ${budget.veiculo ? `${budget.veiculo.marca} ${budget.veiculo.modelo}` : ''}</p>
+                <p>Veículo: <b>${budget.veiculo?.matricula || '-'}</b>${budget.veiculo ? ` (${budget.veiculo.marca} ${budget.veiculo.modelo})` : ''}</p>
+                <p>Quilometragem: ${budget.kms != null ? `${budget.kms} km` : '-'}</p>
               </div>
             </div>
           </div>
@@ -352,8 +438,7 @@ const BudgetsPage = () => {
           <div class="total-container">
             TOTAL = ${budget.total_geral.toFixed(2)}€ ${totalExtenso ? `(${totalExtenso})` : ''}
           </div>
-
-          <div class="signatures-section">
+          <div class="signatures-section" style="margin-top: 50px; width: 100%; text-align: center;">        
             <div class="sig-block">
               <p>Assinatura da Empresa:</p>
               <div class="sig-line"></div>
@@ -399,12 +484,12 @@ const BudgetsPage = () => {
             body { font-family: Arial, sans-serif; margin: 40px; color: #000; }
             
             /* Cabeçalho */
-            .header-container { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-            .logo-section { display: flex; align-items: center; }
-            .logo-section img { width: 70px; margin-right: 15px; }
-            .company-name h1 { margin: 0; font-size: 20px; font-weight: bold; }
+            .header-container { display: flex; align-items: flex-start; margin-bottom: 20px; }
+            .logo-section { display: flex; align-items: center; margin-left: -12px; }
+            .logo-section img { width: 92px; margin-right: 4px; }
+            .company-name h1 { margin: 0; font-size: 24px; font-weight: bold; }
             .company-name p { margin: 0; font-size: 14px; }
-            .contacts-section { text-align: right; font-size: 12px; line-height: 1.4; }
+            .contacts-section { margin-left: auto; text-align: right; font-size: 12px; line-height: 1.4; }
 
             /* Dados da Ordem de Trabalho */
             .doc-info { margin-top: 10px; margin-bottom: 20px; line-height: 1.6; }
@@ -424,14 +509,15 @@ const BudgetsPage = () => {
               background-color: #f5f5f5; 
               padding: 15px; 
               font-size: 14px;
+              text-align: center;
             }
-            .mechanic-label { font-weight: bold; margin-bottom: 5px; }
-            .mechanic-name { font-size: 16px; color: #333; }
+            .mechanic-label { font-weight: bold; margin-bottom: 5px; text-align: center; }
+            .mechanic-name { font-size: 16px; color: #333; text-align: center; }
 
             /* Assinaturas */
-            .signatures-section { margin-top: 50px; }
-            .sig-block { margin-bottom: 40px; font-size: 12px; }
-            .sig-line { border-bottom: 1px solid #000; width: 250px; margin-top: 35px; }
+            .signatures-section { margin-top: 50px; width: 100%; text-align: center; }
+            .sig-block { margin: 0 auto 40px; font-size: 12px; width: 250px; text-align: center; }
+            .sig-line { border-bottom: 1px solid #000; width: 250px; margin: 65px auto 0; }
             
             @media print {
               body { margin: 20mm; }
@@ -443,8 +529,8 @@ const BudgetsPage = () => {
         <body>
           <div class="header-container">
             <div class="logo-section">
-              <div style="background: white; padding: 5px; border-radius: 4px; display: inline-block; margin-right: 15px;">
-                <img src="/logoblack.jpg" alt="MQAuto Logo" style="width: 50px; height: 50px; object-fit: contain; display: block;" />
+              <div style="background: white; padding: 5px; border-radius: 4px; display: inline-block; margin-right: 4px;">
+                <img src="/logoblack.jpg" alt="MQAuto Logo" style="width: 72px; height: 72px; object-fit: contain; display: block;" />
               </div>
               <div class="company-name">
                 <h1>MQ Auto</h1>
@@ -461,13 +547,15 @@ const BudgetsPage = () => {
             <div class="doc-title">Ordem de Trabalho: ${workOrderRef}</div>
             <div class="client-details" style="display: flex; flex-wrap: wrap; gap: 40px; align-items: center;">
               <div>
-                <p>Orçamento de Origem: ${budget.ref_orcamento}</p>
                 <p>Cliente: ${budget.cliente?.nome || ''}</p>
-                <p>Data: ${new Date().toLocaleDateString('pt-PT')}</p>
+                <p>Data: ${budget.data_emissao ? (() => {
+          const date = new Date(budget.data_emissao);
+          return !isNaN(date.getTime()) ? date.toLocaleDateString('pt-PT') : '-';
+        })() : '-'}</p>
               </div>
               <div>
-                <p>Matrícula: <b>${budget.veiculo?.matricula || ''}</b></p>
-                <p>Veículo: ${budget.veiculo ? `${budget.veiculo.marca} ${budget.veiculo.modelo}` : ''}</p>
+                <p>Veículo: <b>${budget.veiculo?.matricula || '-'}</b>${budget.veiculo ? ` (${budget.veiculo.marca} ${budget.veiculo.modelo})` : ''}</p>
+                <p>Quilometragem: ${budget.kms != null ? `${budget.kms} km` : '-'}</p>
               </div>
             </div>
           </div>
@@ -485,9 +573,13 @@ const BudgetsPage = () => {
             </tbody>
           </table>
 
+          <div class="mechanic-section">
+            <div class="mechanic-label">Responsável da Reparação</div>
+            <div class="mechanic-name">${mechanicName || '_____________________________'}</div>
+          </div>
           <div class="signatures-section">
             <div class="sig-block">
-              <p>Assinatura da Empresa:</p>
+              <p>Assinatura do Responsável:</p>
               <div class="sig-line"></div>
             </div>
           </div>
@@ -704,56 +796,56 @@ const BudgetsPage = () => {
       </main>
 
       {/* Modal de Detalhes do Orçamento */}
-            {budgetModalOpen && budgetDetails && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 w-full max-w-2xl mx-4">
-                  <h3 className="text-xl font-bold text-white mb-4">Detalhes do Orçamento</h3>
-                  <div className="space-y-2 text-gray-200">
-                    <div><span className="font-semibold">ID:</span> {budgetDetails.ref_orcamento}</div>
-                    <div><span className="font-semibold">Cliente:</span> {budgetDetails.cliente?.nome || '-'}</div>
-                    <div><span className="font-semibold">Veículo:</span> {budgetDetails.veiculo ? `${budgetDetails.veiculo.marca} ${budgetDetails.veiculo.modelo} | ${budgetDetails.veiculo.matricula}` : '-'}</div>
-                    <div><span className="font-semibold">Data:</span> {budgetDetails.data_emissao ? (() => {
-                      const date = new Date(budgetDetails.data_emissao);
-                      return !isNaN(date.getTime()) ? date.toLocaleDateString('pt-PT') : '-';
-                    })() : '-'}</div>
-                    <div><span className="font-semibold">Total:</span> €{budgetDetails.total_geral.toFixed(2)}</div>
-                    <div><span className="font-semibold">Estado:</span> {getStatusLabel(budgetDetails.estado)}</div>
-                    <div><span className="font-semibold">Mecânico:</span> {budgetDetails.mecanico_nome || '-'}</div>
-                    <div>
-                      <span className="font-semibold">Itens:</span>
-                      <ul className="mt-2 space-y-1">
-                        {budgetDetails.itens_orcamento && budgetDetails.itens_orcamento.length > 0 ? (
-                          budgetDetails.itens_orcamento.map((item, idx) => (
-                            <li key={idx} className="border border-gray-700 rounded p-2">
-                              <div><span className="font-semibold">Descrição:</span> {item.descricao}</div>
-                              <div><span className="font-semibold">Quantidade:</span> {item.quantidade}</div>
-                              <div><span className="font-semibold">Valor Total:</span> €{item.valor_total.toFixed(2)}</div>
-                              {item.notas && <div><span className="font-semibold">Notas:</span> {item.notas}</div>}
-                            </li>
-                          ))
-                        ) : (
-                          <li className="text-gray-400">Nenhum item.</li>
-                        )}
-                      </ul>
-                    </div>
-                  </div>
-                  <div className="flex justify-end mt-6">
-                    <button
-                      onClick={closeBudgetModal}
-                      className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
-                    >
-                      Fechar
-                    </button>
-                  </div>
-                </div>
+      {budgetModalOpen && budgetDetails && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 w-full max-w-2xl mx-4">
+            <h3 className="text-xl font-bold text-white mb-4">Detalhes do Orçamento</h3>
+            <div className="space-y-2 text-gray-200">
+              <div><span className="font-semibold">ID:</span> {budgetDetails.ref_orcamento}</div>
+              <div><span className="font-semibold">Cliente:</span> {budgetDetails.cliente?.nome || '-'}</div>
+              <div><span className="font-semibold">Veículo:</span> {budgetDetails.veiculo ? `${budgetDetails.veiculo.marca} ${budgetDetails.veiculo.modelo} | ${budgetDetails.veiculo.matricula}` : '-'}</div>
+              <div><span className="font-semibold">Data:</span> {budgetDetails.data_emissao ? (() => {
+                const date = new Date(budgetDetails.data_emissao);
+                return !isNaN(date.getTime()) ? date.toLocaleDateString('pt-PT') : '-';
+              })() : '-'}</div>
+              <div><span className="font-semibold">Total:</span> €{budgetDetails.total_geral.toFixed(2)}</div>
+              <div><span className="font-semibold">Estado:</span> {getStatusLabel(budgetDetails.estado)}</div>
+              <div><span className="font-semibold">Mecânico:</span> {budgetDetails.mecanico_nome || '-'}</div>
+              <div>
+                <span className="font-semibold">Itens:</span>
+                <ul className="mt-2 space-y-1">
+                  {budgetDetails.itens_orcamento && budgetDetails.itens_orcamento.length > 0 ? (
+                    budgetDetails.itens_orcamento.map((item, idx) => (
+                      <li key={idx} className="border border-gray-700 rounded p-2">
+                        <div><span className="font-semibold">Descrição:</span> {item.descricao}</div>
+                        <div><span className="font-semibold">Quantidade:</span> {item.quantidade}</div>
+                        <div><span className="font-semibold">Valor Total:</span> €{item.valor_total.toFixed(2)}</div>
+                        {item.notas && <div><span className="font-semibold">Notas:</span> {item.notas}</div>}
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-gray-400">Nenhum item.</li>
+                  )}
+                </ul>
               </div>
-            )}
+            </div>
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={closeBudgetModal}
+                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {mechanicModals.showMechanicModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 w-96 max-w-full mx-4">
             <h3 className="text-xl font-bold text-white mb-4">Atribuir Mecânico</h3>
             <p className="text-gray-400 mb-4">Selecione o mecânico para esta ordem de trabalho:</p>
-            
+
             <select
               className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded mb-4 focus:ring-2 focus:ring-brand-yellow focus:border-brand-yellow"
               value={selectedMechanic}
@@ -789,11 +881,10 @@ const BudgetsPage = () => {
               <button
                 onClick={confirmApproveWithMechanic}
                 disabled={!selectedMechanic}
-                className={`px-4 py-2 text-white rounded transition-colors ${
-                  selectedMechanic 
-                    ? 'bg-brand-yellow-dark hover:bg-yellow-600' 
+                className={`px-4 py-2 text-white rounded transition-colors ${selectedMechanic
+                    ? 'bg-brand-yellow-dark hover:bg-yellow-600'
                     : 'bg-gray-500 cursor-not-allowed'
-                }`}
+                  }`}
               >
                 Aprovar e Atribuir
               </button>

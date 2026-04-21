@@ -291,14 +291,8 @@ const NewAppointmentPage = () => {
 
     // Validação inline
     const errors: { [key: string]: string } = {};
-    if (!formData.contacto_nome.trim()) {
-      errors.contacto_nome = 'O nome de contacto é obrigatório.';
-    }
     if (formData.tipoServico === 'Outro' && !formData.notas.trim()) {
       errors.notas = 'A descrição é obrigatória para o tipo de serviço "Outro".';
-    }
-    if (!vehicleFound && !formData.contacto_telefone.trim()) {
-      errors.contacto_telefone = 'O telefone é obrigatório quando o veículo não está registado.';
     }
     setValidationErrors(errors);
     if (Object.keys(errors).length > 0) return;
@@ -524,7 +518,7 @@ const NewAppointmentPage = () => {
                 <h3 className="text-sm font-semibold text-gray-300 mb-3">Informações de Contacto</h3>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1">Nome de Contacto *</label>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Nome de Contacto</label>
                     <input
                       type="text"
                       name="contacto_nome"
@@ -532,7 +526,6 @@ const NewAppointmentPage = () => {
                       onChange={handleInputChange}
                       className={`w-full bg-gray-900 border ${validationErrors.contacto_nome ? 'border-red-500' : 'border-gray-600'} text-white px-3 py-2 rounded-none focus:ring-1 focus:ring-brand-yellow focus:border-brand-yellow outline-none placeholder-gray-600`}
                       placeholder="Nome do contacto"
-                      required
                     />
                     {validationErrors.contacto_nome && (
                       <p className="text-xs text-red-400 mt-1">{validationErrors.contacto_nome}</p>
@@ -540,7 +533,7 @@ const NewAppointmentPage = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-1">
-                      Telefone {!vehicleFound && <span className="text-red-500">*</span>}
+                      Telefone
                     </label>
                     <input
                       type="tel"
@@ -552,7 +545,7 @@ const NewAppointmentPage = () => {
                       required={false}
                     />
                     {!vehicleFound && (
-                      <p className="text-xs text-orange-400 mt-1">⚠ Obrigatório - Veículo não registado</p>
+                      <p className="text-xs text-orange-400 mt-1">Veículo não registado. Pode preencher o telefone se necessário.</p>
                     )}
                     {validationErrors.contacto_telefone && (
                       <p className="text-xs text-red-400 mt-1">{validationErrors.contacto_telefone}</p>

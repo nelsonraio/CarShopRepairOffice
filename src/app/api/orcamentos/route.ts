@@ -17,6 +17,68 @@ import {
 // Import Drizzle connection globally
 import { db } from '@/db/connection';
 
+const normalizeText = (value: unknown) => String(value ?? '').trim().replace(/\s+/g, ' ');
+const normalizeNullable = (value: unknown) => {
+  const normalized = normalizeText(value);
+  return normalized || null;
+};
+
+const NOT_APPLICABLE_CLIENT_NAMES = new Set(['n/a', 'na', 'nao aplicavel', 'não aplicavel', 'nao aplicável', 'não aplicável']);
+
+function normalizeBudgetClientName(value: unknown): string {
+  const normalized = normalizeText(value);
+  if (!normalized) return 'N/A';
+  return NOT_APPLICABLE_CLIENT_NAMES.has(normalized.toLowerCase()) ? 'N/A' : normalized;
+}
+
+async function resolveBudgetClientId(payload: {
+  clientId?: unknown;
+  clientName?: unknown;
+  contactPhone?: unknown;
+}) {
+  const parsedClientId = payload.clientId ? parseInt(String(payload.clientId), 10) : NaN;
+  if (Number.isFinite(parsedClientId) && parsedClientId > 0) {
+    return parsedClientId;
+  }
+
+  const clientName = normalizeBudgetClientName(payload.clientName);
+  const contactPhone = normalizeText(payload.contactPhone) || 'N/A';
+
+  const [clientByNameAndPhone] = await db.select().from(clientes)
+    .where(and(eq(clientes.nome, clientName), eq(clientes.telefone, contactPhone)))
+    .limit(1);
+  if (clientByNameAndPhone) {
+    return Number(clientByNameAndPhone.id);
+  }
+
+  const clientsByName = await db.select().from(clientes)
+    .where(eq(clientes.nome, clientName))
+    .limit(2);
+  if (clientsByName.length > 0) {
+    return Number(clientsByName[0]?.id);
+  }
+
+  const [insertResult]: any = await db.insert(clientes).values({
+    nome: clientName,
+    telefone: contactPhone,
+    email: normalizeNullable(null),
+    nif: normalizeNullable(null),
+    endereco: normalizeNullable(null),
+    perfilId: null,
+    ativo: 1,
+    dataRegisto: new Date().toISOString().slice(0, 10),
+    totalGasto: '0.00',
+    visitas: 0
+  });
+
+  const insertId = insertResult?.insertId ?? insertResult?.[0]?.insertId;
+  if (!insertId) {
+    throw new Error('Falha ao resolver cliente do orçamento.');
+  }
+
+  return Number(insertId);
+}
+
 /**
  * Helper: Serialize budget items with proper type conversion
  */
@@ -128,6 +190,11 @@ export async function POST(request: Request) {
       notas,
       items
     } = body;
+    const resolvedClienteId = await resolveBudgetClientId({
+      clientId: cliente_id,
+      clientName: body.cliente_nome_livre,
+      contactPhone: contacto_telefone,
+    });
 
     if (!veiculo_id) {
       return successResponse({ error: 'veiculo ainda nao existente. Criar primeiro.' }, 400);
@@ -140,7 +207,7 @@ export async function POST(request: Request) {
     // Insert orcamento (MySQL não suporta .returning())
     await db.insert(orcamentos).values({
       refOrcamento: ref_orcamento,
-      clienteId: parseInt(cliente_id),
+      clienteId: resolvedClienteId,
       veiculoId: parseInt(veiculo_id),
       preparadoPor: preparado_por ? parseInt(preparado_por) : null,
       dataEmissao: data_emissao ? data_emissao : new Date().toISOString().slice(0, 10),
@@ -173,7 +240,7 @@ export async function POST(request: Request) {
     if (!orcamento) {
       return successResponse({ error: 'Erro ao criar orçamento' }, 500);
     }
-    await registarAuditoria('CREATE', 'orcamentos', Number(orcamento.id), null, { ref_orcamento, cliente_id: parseInt(cliente_id), total_geral: parseFloat(total_geral) }, request);
+    await registarAuditoria('CREATE', 'orcamentos', Number(orcamento.id), null, { ref_orcamento, cliente_id: resolvedClienteId, total_geral: parseFloat(total_geral) }, request);
     return successResponse({
       success: true,
       orcamento: {
@@ -402,9 +469,16 @@ export async function PUT(request: Request) {
     const body = await request.json();
     const items = body.items;
     if (Array.isArray(items)) {
+      const resolvedClienteId = body.cliente_id || body.cliente_nome_livre
+        ? await resolveBudgetClientId({
+          clientId: body.cliente_id,
+          clientName: body.cliente_nome_livre,
+          contactPhone: body.contacto_telefone,
+        })
+        : currentOrcamento.clienteId;
       const updateData: any = {
         refOrcamento: body.ref_orcamento ?? currentOrcamento.refOrcamento,
-        clienteId: body.cliente_id ? parseInt(body.cliente_id) : currentOrcamento.clienteId,
+        clienteId: resolvedClienteId,
         veiculoId: body.veiculo_id ? BigInt(body.veiculo_id) : currentOrcamento.veiculoId,
         dataEmissao: body.data_emissao ? new Date(body.data_emissao) : currentOrcamento.dataEmissao,
         dataExpiracao: body.data_expiracao ? new Date(body.data_expiracao) : currentOrcamento.dataExpiracao,

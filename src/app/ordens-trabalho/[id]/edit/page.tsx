@@ -435,7 +435,12 @@ const EditWorkOrderPage = () => {
           }));
           setIsVehicleAutoFilled(true);
           setSelectedVehicle(vehicle.id);
-          selectClient(client);
+          if (client) {
+            selectClient(client);
+          } else {
+            setSelectedClient(null);
+            setClientSearch('');
+          }
         }
       }
     } catch (error) {
