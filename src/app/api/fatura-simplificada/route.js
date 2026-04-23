@@ -82,9 +82,20 @@ async function getOAuthToken(code, redirectUri) {
 export async function POST(req) {
   try {
     const { payload, authCode, accessToken, redirectUri, percentual_imposto, subtotal, valor_desconto, ordem_trabalho_id } = await req.json();
-    
+
+    console.log('\n╔══════════════════════════════════════════════════════════╗');
+    console.log('║          [TOConline] PEDIDO RECEBIDO (AUTH)              ║');
+    console.log('╚══════════════════════════════════════════════════════════╝');
+    console.log('[TOConline][IN] authCode    :', authCode ? `${authCode.slice(0, 12)}... (${authCode.length} chars)` : '❌ ausente');
+    console.log('[TOConline][IN] accessToken :', accessToken ? `${accessToken.slice(0, 12)}... (${accessToken.length} chars)` : '❌ ausente');
+    console.log('[TOConline][IN] redirectUri :', redirectUri || '❌ ausente');
+    console.log('[TOConline][IN] CLIENT_ID   :', CLIENT_ID);
+    console.log('[TOConline][IN] OAUTH_URL   :', OAUTH_URL);
+    console.log('[TOConline][IN] payload keys:', payload ? Object.keys(payload) : '(vazio)');
+    console.log('────────────────────────────────────────────────────────────');
+
     let token;
-    
+
     // Se recebeu accessToken, usa diretamente (token já obtido anteriormente)
     if (accessToken) {
       console.log('✅ Usando access_token existente');
@@ -109,6 +120,15 @@ export async function POST(req) {
     }
     
     // Caso contrário, cria fatura normalmente
+    console.log('\n══════════════════════════════════════════════════════');
+    console.log('📤 [TOCONLINE] PAYLOAD COMPLETO ENVIADO:');
+    console.log('   URL:', `${BASE_URL}/api/v1/commercial_sales_documents`);
+    console.log('   Method: POST');
+    console.log('   Headers: Content-Type: application/json | Authorization: Bearer ***');
+    console.log('   Body:');
+    console.log(JSON.stringify(payload, null, 2));
+    console.log('══════════════════════════════════════════════════════\n');
+
     const res = await fetch(`${BASE_URL}/api/v1/commercial_sales_documents`, {
       method: 'POST',
       headers: {

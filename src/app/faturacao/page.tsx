@@ -248,6 +248,18 @@ export default function FaturacaoPage() {
     const [showAuthToast, setShowAuthToast] = useState(false);
 
     const getToconlineRedirectUri = useCallback(() => {
+      if (typeof window !== 'undefined') {
+        const isLocalhost =
+          window.location.hostname === 'localhost' ||
+          window.location.hostname === '127.0.0.1';
+
+        // Em desenvolvimento local, forca callback local para evitar
+        // redirecionar para dominios externos definidos no .env.
+        if (isLocalhost) {
+          return `${window.location.origin}/callback`;
+        }
+      }
+
       const envRedirectUri = process.env.NEXT_PUBLIC_REDIRECT_URI || '';
       if (envRedirectUri) {
         return envRedirectUri;
@@ -261,8 +273,21 @@ export default function FaturacaoPage() {
     }, []);
 
     const iniciarFluxoOAuth = useCallback(() => {
-      const clientId = process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID || 'pt999999990_c101423-6604ef0f5744561b';
+      const clientId = process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID;
+      const oauthUrl = process.env.NEXT_PUBLIC_OAUTH_URL;
       const redirectUri = getToconlineRedirectUri();
+
+      if (!clientId) {
+        setAuthStatus('error');
+        setAuthReasonMsg('NEXT_PUBLIC_OAUTH_CLIENT_ID não configurado.');
+        return;
+      }
+
+      if (!oauthUrl) {
+        setAuthStatus('error');
+        setAuthReasonMsg('NEXT_PUBLIC_OAUTH_URL não configurado.');
+        return;
+      }
 
       if (!redirectUri) {
         setAuthStatus('error');
@@ -271,13 +296,19 @@ export default function FaturacaoPage() {
       }
 
       const authUrl =
-        'https://app7.toconline.pt/oauth/auth?' +
+        `${oauthUrl}/auth?` +
         new URLSearchParams({
           client_id: clientId,
           redirect_uri: redirectUri,
           response_type: 'code',
           scope: 'commercial'
         }).toString();
+
+      console.log('[TOConline][OAuth] A iniciar fluxo');
+      console.log('[TOConline][OAuth] OAUTH_URL  :', oauthUrl);
+      console.log('[TOConline][OAuth] CLIENT_ID  :', clientId);
+      console.log('[TOConline][OAuth] REDIRECT_URI:', redirectUri);
+      console.log('[TOConline][OAuth] Auth URL completo:', authUrl);
 
       setAuthStatus('pending');
       window.location.assign(authUrl);

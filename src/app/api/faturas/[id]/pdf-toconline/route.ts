@@ -47,7 +47,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       }
     });
 
-    const pdfData = await pdfRes.json();
+    const pdfRawText = await pdfRes.text();
+    let pdfData: Record<string, unknown> = {};
+    try {
+      pdfData = JSON.parse(pdfRawText);
+    } catch {
+      console.error('❌ Resposta PDF TOConline não é JSON:', pdfRawText.substring(0, 500));
+      return NextResponse.json(
+        { success: false, error: `Resposta inválida do TOConline (HTTP ${pdfRes.status})`, details: pdfRawText.substring(0, 500) },
+        { status: 502 }
+      );
+    }
     console.log('📡 Resposta TOConline PDF:', JSON.stringify(pdfData, null, 2));
 
     if (!pdfRes.ok) {
@@ -61,8 +71,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       );
     }
 
+    type PdfResponse = { data?: { attributes?: { url?: unknown } } };
+    const typedPdf = pdfData as PdfResponse;
+
     // Extrair URL do PDF
-    if (!pdfData.data || !pdfData.data.attributes || !pdfData.data.attributes.url) {
+    if (!typedPdf.data || !typedPdf.data.attributes || !typedPdf.data.attributes.url) {
       return NextResponse.json(
         { 
           success: false, 
@@ -73,16 +86,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       );
     }
 
-    const urlObj = pdfData.data.attributes.url;
+    const urlObj = typedPdf.data.attributes.url;
     let pdfUrl: string;
 
     if (typeof urlObj === 'string') {
       pdfUrl = urlObj;
-    } else if (typeof urlObj === 'object') {
-      const scheme = urlObj.scheme || 'https';
-      const host = urlObj.host || '';
-      const port = urlObj.port || 443;
-      const path = urlObj.path || '';
+    } else if (urlObj && typeof urlObj === 'object') {
+      const typedUrlObj = urlObj as { scheme?: string; host?: string; port?: number; path?: string };
+      const scheme = typedUrlObj.scheme || 'https';
+      const host = typedUrlObj.host || '';
+      const port = typedUrlObj.port || 443;
+      const path = typedUrlObj.path || '';
       const portStr = (scheme === 'https' && port === 443) || (scheme === 'http' && port === 80)
         ? ''
         : `:${port}`;

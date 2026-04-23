@@ -17,6 +17,7 @@ RUN cp -R .next/standalone/. /out/app/
 RUN mkdir -p /out/app/.next/static
 RUN cp -R .next/static/. /out/app/.next/static/
 RUN if [ -d public ]; then mkdir -p /out/app/public && cp -R public/. /out/app/public/; fi
+RUN if [ -f .env.production ]; then cp .env.production /out/app/.env.production; fi
 RUN tar -C /out -czf /out/carshoprepair-linux-package.tar.gz app
 
 FROM scratch AS export

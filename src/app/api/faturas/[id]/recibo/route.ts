@@ -3,7 +3,7 @@ import { faturas } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api7.toconline.pt';
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://api7.toconline.pt';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -128,8 +128,35 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     });
     
     console.log('   Status resposta:', reciboRes.status, reciboRes.ok);
-    
-    const reciboData = await reciboRes.json();
+
+    type ReciboResponse = {
+      id?: string | number;
+      data?: {
+        id?: string | number;
+        attributes?: {
+          id?: string | number;
+        };
+      };
+      errors?: Array<{ detail?: string }>;
+    };
+
+    const reciboRawText = await reciboRes.text();
+    let reciboData: ReciboResponse = {};
+    try {
+      reciboData = JSON.parse(reciboRawText);
+    } catch {
+      console.error('❌ Resposta TOConline não é JSON válido:');
+      console.error('   Status:', reciboRes.status);
+      console.error('   Body (primeiros 500 chars):', reciboRawText.substring(0, 500));
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Resposta inválida do TOConline (HTTP ${reciboRes.status}). O servidor pode estar indisponível.`,
+          details: reciboRawText.substring(0, 500)
+        },
+        { status: 502 }
+      );
+    }
     console.log('📥 Resposta TOConline completa:', JSON.stringify(reciboData, null, 2));
 
     if (!reciboRes.ok) {
@@ -139,7 +166,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json(
         { 
           success: false, 
-          error: reciboData?.errors?.[0]?.detail || 'Erro ao emitir recibo no TOConline',
+          error: reciboData.errors?.[0]?.detail || 'Erro ao emitir recibo no TOConline',
           details: reciboData 
         },
         { status: reciboRes.status }

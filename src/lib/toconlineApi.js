@@ -71,20 +71,45 @@ export function getOAuthUrl() {
 // Função para trocar authorization_code por access_token
 export async function getOAuthToken(code) {
   const basicAuth = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
-  const res = await fetch(`${OAUTH_URL}/token`, {
+  const tokenUrl = `${OAUTH_URL}/token`;
+  const bodyParams = {
+    grant_type: 'authorization_code',
+    code,
+    scope: SCOPE
+  };
+
+  console.log('[TOConline][AUTH] ── Pedido de token ──────────────────────────');
+  console.log('[TOConline][AUTH] URL:', tokenUrl);
+  console.log('[TOConline][AUTH] Method: POST');
+  console.log('[TOConline][AUTH] Headers:', {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Accept': 'application/json',
+    'Authorization': `Basic ${basicAuth.slice(0, 8)}... (truncated)`
+  });
+  console.log('[TOConline][AUTH] Body params:', bodyParams);
+  console.log('[TOConline][AUTH] ─────────────────────────────────────────────');
+
+  const res = await fetch(tokenUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
       'Accept': 'application/json',
       'Authorization': `Basic ${basicAuth}`
     },
-    body: new URLSearchParams({
-      grant_type: 'authorization_code',
-      code,
-      scope: SCOPE
-    })
+    body: new URLSearchParams(bodyParams)
   });
+
   const json = await res.json();
+
+  console.log('[TOConline][AUTH] ── Resposta do token ──────────────────────');
+  console.log('[TOConline][AUTH] HTTP Status:', res.status, res.statusText);
+  console.log('[TOConline][AUTH] Resposta (sem token completo):',
+    json.access_token
+      ? { ...json, access_token: json.access_token.slice(0, 10) + '...' }
+      : json
+  );
+  console.log('[TOConline][AUTH] ─────────────────────────────────────────────');
+
   if (!json.access_token) {
     throw new Error('Falha ao obter access_token: ' + JSON.stringify(json));
   }

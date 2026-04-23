@@ -41,7 +41,12 @@ export default function CallbackPage() {
       const code = searchParams.get('code');
       const error = searchParams.get('error');
       const errorDescription = searchParams.get('error_description');
-      const redirectUri = process.env.NEXT_PUBLIC_REDIRECT_URI || `${window.location.origin}/callback`;
+      const isLocalhost =
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1';
+      const redirectUri = isLocalhost
+        ? `${window.location.origin}/callback`
+        : (process.env.NEXT_PUBLIC_REDIRECT_URI || `${window.location.origin}/callback`);
 
       if (error) {
         const reason = errorDescription || error;

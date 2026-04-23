@@ -81,24 +81,34 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         }
       });
 
-      const pdfData = await pdfRes.json();
-  lastPdfData = pdfData;
+      const pdfRawText = await pdfRes.text();
+      let pdfData: Record<string, unknown> = {};
+      try {
+        pdfData = JSON.parse(pdfRawText);
+      } catch {
+        console.warn(`⚠️ Resposta PDF TOConline (${filterType}) não é JSON:`, pdfRawText.substring(0, 300));
+        continue;
+      }
+      lastPdfData = pdfData;
       console.log(`📡 Resposta TOConline PDF Recibo (${filterType}):`, JSON.stringify(pdfData, null, 2));
 
-      if (pdfRes.ok && pdfData.data?.attributes?.url) {
-        const urlObj = pdfData.data.attributes.url;
+      if (pdfRes.ok && (pdfData as Record<string, unknown> & { data?: { attributes?: { url?: unknown } } })?.data?.attributes?.url) {
+        type PdfResponse = { data?: { attributes?: { url?: unknown } } };
+        const typedPdf = pdfData as PdfResponse;
+        const urlObj = typedPdf.data!.attributes!.url;
         
         // Construir URL a partir do objeto (scheme, host, port, path)
         let pdfUrl: string;
         if (typeof urlObj === 'string') {
           // Se já for string, usar direto
           pdfUrl = urlObj;
-        } else if (typeof urlObj === 'object') {
+        } else if (urlObj && typeof urlObj === 'object') {
           // Se for objeto, construir a partir dos componentes
-          const scheme = urlObj.scheme || 'https';
-          const host = urlObj.host || '';
-          const port = urlObj.port || 443;
-          const path = urlObj.path || '';
+          const typedUrlObj = urlObj as { scheme?: string; host?: string; port?: number; path?: string };
+          const scheme = typedUrlObj.scheme || 'https';
+          const host = typedUrlObj.host || '';
+          const port = typedUrlObj.port || 443;
+          const path = typedUrlObj.path || '';
           
           // Adicionar porta apenas se não for 80 (HTTP) ou 443 (HTTPS)
           const portStr = (scheme === 'https' && port === 443) || (scheme === 'http' && port === 80) 

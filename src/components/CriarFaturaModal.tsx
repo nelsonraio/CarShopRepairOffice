@@ -325,6 +325,17 @@ export default function CriarFaturaModal({ isOpen, onClose, onSuccess, oauthToke
           accessToken: oauthToken
         };
 
+        console.log('\n══════════════════════════════════════════════════════');
+        console.log('📤 [TOCONLINE] DADOS ENVIADOS PELO FRONTEND:');
+        console.log('   jsonFatura (payload para TOConline):');
+        console.log(JSON.stringify(jsonFatura, null, 2));
+        console.log('   Metadados da fatura:');
+        console.log('     percentual_imposto:', formData.percentual_imposto);
+        console.log('     subtotal:', formData.subtotal);
+        console.log('     valor_desconto:', formData.valor_desconto);
+        console.log('     ordem_trabalho_id:', formData.ordem_trabalho_id || null);
+        console.log('══════════════════════════════════════════════════════\n');
+
         console.log('✅ Usando access_token existente');
         console.log('   Comprimento:', oauthToken.length);
         console.log('   Primeiros 20 chars:', oauthToken.substring(0, 20) + '...');

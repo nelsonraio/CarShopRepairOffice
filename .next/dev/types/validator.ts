@@ -416,6 +416,24 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../../src/app/api/auth-debug/config/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/auth-debug/config">> = Specific
+  const handler = {} as typeof import("../../../src/app/api/auth-debug/config/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../src/app/api/auth-debug/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/auth-debug">> = Specific
+  const handler = {} as typeof import("../../../src/app/api/auth-debug/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../../src/app/api/balanco/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/balanco">> = Specific
